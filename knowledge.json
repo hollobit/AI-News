@@ -762,7 +762,7 @@
         "source:paper:2609.13238"
       ],
       "claims": [
-        "claim:137a08121cef99c0b7c3ad2e"
+        "claim:5ee0b5d2e0138405ebca2f7b"
       ],
       "status": "reviewed"
     },
@@ -845,9 +845,9 @@
       "url": "https://openalex.org/W7213262102"
     },
     {
-      "id": "claim:137a08121cef99c0b7c3ad2e",
+      "id": "claim:5ee0b5d2e0138405ebca2f7b",
       "type": "claim",
-      "title": "제공 자료에서 의료 AI의 검증은 임상 환경의 전향적 평가, 출력 근거 추적, 벤치마크 평가, 의료기기 표준으로 나뉜다. 각각 확인하는 대상이 달라 벤치마크 점수나 표준 승인만으로 치료 효과를 판단할 수 없다.",
+      "title": "这些资料中的医疗 AI 验证涉及临床前瞻性证据、输出依据追溯、问答基准与医疗器械标准。它们检验的对象不同，基准得分提高或标准获批不能直接等同于治疗效果得到证实。",
       "source_ids": [
         "source:52fc30a9f94cbfe4bb639daf",
         "source:f22716264922d6813e829b02",
@@ -858,11 +858,11 @@
       "status": "reviewed"
     },
     {
-      "id": "page:ae85f5f656533c61afe09346",
+      "id": "page:a8f61a13e520664ce08089ee",
       "type": "issue",
-      "title": "의료 LLM의 임상 증거와 기록 감사",
+      "title": "의료 AI의 임상 증거와 기록 감사",
       "page_ids": [
-        "medical:622b533ea04930be00a5"
+        "medical:fef310d5180d90231610"
       ],
       "topics": [
         "medical"
@@ -874,9 +874,9 @@
         "source:f4dcdb69e4750b410d4f4267"
       ],
       "claims": [
-        "claim:ce4904ff92510ceb0f7a185d",
-        "claim:4eabda77fee51e6f54e8456f",
-        "claim:95f957265667db14ec4eb7a5"
+        "claim:cdb5a792381d9c217c3f3989",
+        "claim:47cda637632b197338f56dd1",
+        "claim:93becc1dd5829fdae6b273b0"
       ],
       "status": "reviewed"
     },
@@ -894,9 +894,9 @@
       "url": "https://nature.com/articles/s41746-026-03234-9"
     },
     {
-      "id": "claim:ce4904ff92510ceb0f7a185d",
+      "id": "claim:cdb5a792381d9c217c3f3989",
       "type": "claim",
-      "title": "Nature Medicine 글 소개 발췌는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 출력의 근거 추적·검증 체계를 요구한다. 각각 임상 사용 과정과 답변의 근거를 확인하자는 주장이다.",
+      "title": "Nature Medicine 글 소개는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 의료 LLM 출력의 근거 추적·검증 체계를 요구한다.",
       "source_ids": [
         "source:52fc30a9f94cbfe4bb639daf",
         "source:f4dcdb69e4750b410d4f4267"
@@ -905,9 +905,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:4eabda77fee51e6f54e8456f",
+      "id": "claim:47cda637632b197338f56dd1",
       "type": "claim",
-      "title": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 제공된 발췌에는 오류 빈도나 감사에 따른 개선 수치가 없다.",
+      "title": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 제공된 자료에는 오류 빈도나 감사에 따른 개선 수치는 없다.",
       "source_ids": [
         "source:639957245eb815c1aa388d24"
       ],
@@ -915,13 +915,13 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:95f957265667db14ec4eb7a5",
+      "id": "claim:93becc1dd5829fdae6b273b0",
       "type": "claim",
-      "title": "디지털 헬스 중재의 신속 문헌고찰 소개는 개발사가 직접 수행한 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 다만 발췌에는 효과 크기와 교란요인 분석이 없어 개발사 참여를 결과 차이의 원인으로 단정할 수 없다.",
+      "title": "디지털 헬스 중재의 신속 문헌고찰 소개는 개발사 직접 수행 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 이 발췌만으로는 연구 독립성 외의 조건을 통제했는지 알 수 없어, 개발사 참여가 결과 차이의 원인인지는 남은 쟁점이다.",
       "source_ids": [
         "source:5a3645424fc2f6cf95d7f68c"
       ],
-      "claim_kind": "reported",
+      "claim_kind": "uncertain",
       "status": "reviewed"
     },
     {
@@ -939,7 +939,7 @@
       ],
       "claims": [
         "claim:48c44801b9f268241f9319aa",
-        "claim:f68cea8f790f04655861fc61"
+        "claim:c5a30ea685e6e6ef3b3dbadb"
       ],
       "status": "reviewed"
     },
@@ -954,9 +954,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:f68cea8f790f04655861fc61",
+      "id": "claim:c5a30ea685e6e6ef3b3dbadb",
       "type": "claim",
-      "title": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록의 질의응답 평가 결과이며 임상효과 검증은 아니다.",
+      "title": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록에 제시된 질의응답 평가 결과다.",
       "source_ids": [
         "source:paper:2608.02615"
       ],
@@ -977,15 +977,15 @@
         "source:paper:2609.13238"
       ],
       "claims": [
-        "claim:9c282e549a2c93f22100df21",
+        "claim:461942be21c0f1add6a7414a",
         "claim:c96765765ed1b4c3961b51f9"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:9c282e549a2c93f22100df21",
+      "id": "claim:461942be21c0f1add6a7414a",
       "type": "claim",
-      "title": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수는 0.2909, 복합 목표로 선택한 보고서는 0.4122였으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다.",
+      "title": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수가 0.2909, 복합 목표로 선택한 보고서는 0.4122였으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다.",
       "source_ids": [
         "source:paper:2609.13238"
       ],
@@ -3344,9 +3344,9 @@
       ]
     },
     {
-      "id": "e6c9562354fc4910e2aab600",
+      "id": "0f43dd1eefd323d780d5b8fa",
       "source": "page:b41d81e22da55c3af6d162d9",
-      "target": "claim:137a08121cef99c0b7c3ad2e",
+      "target": "claim:5ee0b5d2e0138405ebca2f7b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3358,8 +3358,8 @@
       ]
     },
     {
-      "id": "ce0f44689d09566b1f1e8376",
-      "source": "claim:137a08121cef99c0b7c3ad2e",
+      "id": "eb84686279d188a568208787",
+      "source": "claim:5ee0b5d2e0138405ebca2f7b",
       "target": "source:52fc30a9f94cbfe4bb639daf",
       "kind": "cites",
       "layer": "provenance",
@@ -3369,8 +3369,8 @@
       ]
     },
     {
-      "id": "06e523b9139f5ae09f643102",
-      "source": "claim:137a08121cef99c0b7c3ad2e",
+      "id": "3c952c0ea90bf25a167e11cd",
+      "source": "claim:5ee0b5d2e0138405ebca2f7b",
       "target": "source:f22716264922d6813e829b02",
       "kind": "cites",
       "layer": "provenance",
@@ -3380,8 +3380,8 @@
       ]
     },
     {
-      "id": "aa43bfdaf81a051fd6a47a1f",
-      "source": "claim:137a08121cef99c0b7c3ad2e",
+      "id": "8e5e8f54436667961b0a72b4",
+      "source": "claim:5ee0b5d2e0138405ebca2f7b",
       "target": "source:f4dcdb69e4750b410d4f4267",
       "kind": "cites",
       "layer": "provenance",
@@ -3391,8 +3391,8 @@
       ]
     },
     {
-      "id": "a072439b49b3439f387d6100",
-      "source": "claim:137a08121cef99c0b7c3ad2e",
+      "id": "821c01b306f3e6a65476ea57",
+      "source": "claim:5ee0b5d2e0138405ebca2f7b",
       "target": "source:paper:2608.02615",
       "kind": "cites",
       "layer": "provenance",
@@ -3402,8 +3402,8 @@
       ]
     },
     {
-      "id": "91311127a17883ff5b1ad677",
-      "source": "page:ae85f5f656533c61afe09346",
+      "id": "954c6f84524723585dddcfc5",
+      "source": "page:a8f61a13e520664ce08089ee",
       "target": "source:52fc30a9f94cbfe4bb639daf",
       "kind": "cites",
       "layer": "provenance",
@@ -3413,8 +3413,8 @@
       ]
     },
     {
-      "id": "57e6573d3453db7666fedc64",
-      "source": "page:ae85f5f656533c61afe09346",
+      "id": "f2bdcfe656c952e2471a69d0",
+      "source": "page:a8f61a13e520664ce08089ee",
       "target": "source:5a3645424fc2f6cf95d7f68c",
       "kind": "cites",
       "layer": "provenance",
@@ -3424,8 +3424,8 @@
       ]
     },
     {
-      "id": "4dae9bc2256df2c5bfb84282",
-      "source": "page:ae85f5f656533c61afe09346",
+      "id": "d95fb80e7a5c89e43ee4ae88",
+      "source": "page:a8f61a13e520664ce08089ee",
       "target": "source:639957245eb815c1aa388d24",
       "kind": "cites",
       "layer": "provenance",
@@ -3435,8 +3435,8 @@
       ]
     },
     {
-      "id": "058800c526bb6c12593b5203",
-      "source": "page:ae85f5f656533c61afe09346",
+      "id": "054f6a4a9a52a7bb2679652b",
+      "source": "page:a8f61a13e520664ce08089ee",
       "target": "source:f4dcdb69e4750b410d4f4267",
       "kind": "cites",
       "layer": "provenance",
@@ -3446,9 +3446,9 @@
       ]
     },
     {
-      "id": "b1d9cbf56d47455cc7d1dded",
-      "source": "page:ae85f5f656533c61afe09346",
-      "target": "claim:ce4904ff92510ceb0f7a185d",
+      "id": "85fed31fc251c95683bcee93",
+      "source": "page:a8f61a13e520664ce08089ee",
+      "target": "claim:cdb5a792381d9c217c3f3989",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3458,8 +3458,8 @@
       ]
     },
     {
-      "id": "8b9d2e07ef38a8becde0e8dc",
-      "source": "claim:ce4904ff92510ceb0f7a185d",
+      "id": "3dbf0bb2c89c0c2ea0755e95",
+      "source": "claim:cdb5a792381d9c217c3f3989",
       "target": "source:52fc30a9f94cbfe4bb639daf",
       "kind": "cites",
       "layer": "provenance",
@@ -3469,8 +3469,8 @@
       ]
     },
     {
-      "id": "6403268845fd2590c3b9a162",
-      "source": "claim:ce4904ff92510ceb0f7a185d",
+      "id": "83e987ff1b8587f9f6c1848a",
+      "source": "claim:cdb5a792381d9c217c3f3989",
       "target": "source:f4dcdb69e4750b410d4f4267",
       "kind": "cites",
       "layer": "provenance",
@@ -3480,9 +3480,9 @@
       ]
     },
     {
-      "id": "51203e82123e5af5bc915b28",
-      "source": "page:ae85f5f656533c61afe09346",
-      "target": "claim:4eabda77fee51e6f54e8456f",
+      "id": "8d54696be80d8fd6e026ae23",
+      "source": "page:a8f61a13e520664ce08089ee",
+      "target": "claim:47cda637632b197338f56dd1",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3491,8 +3491,8 @@
       ]
     },
     {
-      "id": "cac0566e8e4c4d6356e15e8c",
-      "source": "claim:4eabda77fee51e6f54e8456f",
+      "id": "df579e750420ade5d4953fc1",
+      "source": "claim:47cda637632b197338f56dd1",
       "target": "source:639957245eb815c1aa388d24",
       "kind": "cites",
       "layer": "provenance",
@@ -3502,9 +3502,9 @@
       ]
     },
     {
-      "id": "d6b94e3cc4727e4c7825b18d",
-      "source": "page:ae85f5f656533c61afe09346",
-      "target": "claim:95f957265667db14ec4eb7a5",
+      "id": "0bfe1815a6025adca392d936",
+      "source": "page:a8f61a13e520664ce08089ee",
+      "target": "claim:93becc1dd5829fdae6b273b0",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3513,8 +3513,8 @@
       ]
     },
     {
-      "id": "9ebca9b76a80fd03b8d8bc01",
-      "source": "claim:95f957265667db14ec4eb7a5",
+      "id": "a6f073c656cc2d67637d588d",
+      "source": "claim:93becc1dd5829fdae6b273b0",
       "target": "source:5a3645424fc2f6cf95d7f68c",
       "kind": "cites",
       "layer": "provenance",
@@ -3557,9 +3557,9 @@
       ]
     },
     {
-      "id": "1ddbcb068f5c4d953a719d3b",
+      "id": "ae8d271ca8e34ac80b82d7dd",
       "source": "page:e944543690cbedcc8066503a",
-      "target": "claim:f68cea8f790f04655861fc61",
+      "target": "claim:c5a30ea685e6e6ef3b3dbadb",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3568,8 +3568,8 @@
       ]
     },
     {
-      "id": "2d4e5fa648af6745548404be",
-      "source": "claim:f68cea8f790f04655861fc61",
+      "id": "05c0e6408feef9dd1385dab1",
+      "source": "claim:c5a30ea685e6e6ef3b3dbadb",
       "target": "source:paper:2608.02615",
       "kind": "cites",
       "layer": "provenance",
@@ -3590,9 +3590,9 @@
       ]
     },
     {
-      "id": "d09219041096c78943173bde",
+      "id": "649ba3290590de3d6e9ed4fd",
       "source": "page:9baa053aacade6bdb59dbcc5",
-      "target": "claim:9c282e549a2c93f22100df21",
+      "target": "claim:461942be21c0f1add6a7414a",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3601,8 +3601,8 @@
       ]
     },
     {
-      "id": "04bf6da920d7810122346888",
-      "source": "claim:9c282e549a2c93f22100df21",
+      "id": "1119c82ab240feb227fc666c",
+      "source": "claim:461942be21c0f1add6a7414a",
       "target": "source:paper:2609.13238",
       "kind": "cites",
       "layer": "provenance",
@@ -5678,9 +5678,9 @@
       ]
     },
     {
-      "id": "91943309ae49204304efde2c",
+      "id": "424383cc4e1dc764d3b6535c",
       "source": "page:b41d81e22da55c3af6d162d9",
-      "target": "page:ae85f5f656533c61afe09346",
+      "target": "page:a8f61a13e520664ce08089ee",
       "kind": "involves",
       "layer": "semantic",
       "text": "대화형 의료 AI의 전향적 검증과 자동 기록의 정확성 감사가 임상 사용의 검증 과제로 논의된다.",
@@ -5701,12 +5701,12 @@
       ]
     },
     {
-      "id": "08f32e7b541fa35116b0d290",
+      "id": "2aa3efe066fd87b01c8e5108",
       "source": "page:b41d81e22da55c3af6d162d9",
       "target": "page:9baa053aacade6bdb59dbcc5",
       "kind": "involves",
       "layer": "semantic",
-      "text": "악안면 영상 보고서 평가에서 어휘 중복과 사실적 함의 판정의 차이를 분석한다.",
+      "text": "악안면 영상 보고서 평가에서 어휘 중복과 사실적 함의 판정이 다른 선택 결과를 낳는 사례를 분석한다.",
       "source_ids": [
         "source:paper:2609.13238"
       ]
@@ -5937,8 +5937,8 @@
       ]
     },
     {
-      "id": "ab3e3839f483dc9c47b1f163",
-      "source": "page:ae85f5f656533c61afe09346",
+      "id": "cc13a2c7bf195ed11f8b9c33",
+      "source": "page:a8f61a13e520664ce08089ee",
       "target": "page:b41d81e22da55c3af6d162d9",
       "kind": "shared_source",
       "layer": "recommendation",
@@ -6755,7 +6755,7 @@
       "id": "medical",
       "title": "의료",
       "kind": "topic",
-      "revision": 32,
+      "revision": 36,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6766,15 +6766,15 @@
             "source:f22716264922d6813e829b02"
           ],
           "kind": "interpretation",
-          "text": "제공 자료에서 의료 AI의 검증은 임상 환경의 전향적 평가, 출력 근거 추적, 벤치마크 평가, 의료기기 표준으로 나뉜다. 각각 확인하는 대상이 달라 벤치마크 점수나 표준 승인만으로 치료 효과를 판단할 수 없다."
+          "text": "这些资料中的医疗 AI 验证涉及临床前瞻性证据、输出依据追溯、问答基准与医疗器械标准。它们检验的对象不同，基准得分提高或标准获批不能直接等同于治疗效果得到证实。"
         }
       ]
     },
     {
-      "id": "medical:622b533ea04930be00a5",
-      "title": "의료 LLM의 임상 증거와 기록 감사",
+      "id": "medical:fef310d5180d90231610",
+      "title": "의료 AI의 임상 증거와 기록 감사",
       "kind": "issue",
-      "revision": 32,
+      "revision": 36,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6783,21 +6783,21 @@
             "source:f4dcdb69e4750b410d4f4267"
           ],
           "kind": "reported",
-          "text": "Nature Medicine 글 소개 발췌는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 출력의 근거 추적·검증 체계를 요구한다. 각각 임상 사용 과정과 답변의 근거를 확인하자는 주장이다."
+          "text": "Nature Medicine 글 소개는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 의료 LLM 출력의 근거 추적·검증 체계를 요구한다."
         },
         {
           "evidence_ids": [
             "source:639957245eb815c1aa388d24"
           ],
           "kind": "reported",
-          "text": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 제공된 발췌에는 오류 빈도나 감사에 따른 개선 수치가 없다."
+          "text": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 제공된 자료에는 오류 빈도나 감사에 따른 개선 수치는 없다."
         },
         {
           "evidence_ids": [
             "source:5a3645424fc2f6cf95d7f68c"
           ],
-          "kind": "reported",
-          "text": "디지털 헬스 중재의 신속 문헌고찰 소개는 개발사가 직접 수행한 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 다만 발췌에는 효과 크기와 교란요인 분석이 없어 개발사 참여를 결과 차이의 원인으로 단정할 수 없다."
+          "kind": "uncertain",
+          "text": "디지털 헬스 중재의 신속 문헌고찰 소개는 개발사 직접 수행 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 이 발췌만으로는 연구 독립성 외의 조건을 통제했는지 알 수 없어, 개발사 참여가 결과 차이의 원인인지는 남은 쟁점이다."
         }
       ]
     },
@@ -6805,7 +6805,7 @@
       "id": "medical:236e597ee8541af582bb",
       "title": "OncoTriad-QA와 OncoVLM",
       "kind": "entity",
-      "revision": 32,
+      "revision": 36,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6820,7 +6820,7 @@
             "source:paper:2608.02615"
           ],
           "kind": "reported",
-          "text": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록의 질의응답 평가 결과이며 임상효과 검증은 아니다."
+          "text": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록에 제시된 질의응답 평가 결과다."
         }
       ]
     },
@@ -6828,7 +6828,7 @@
       "id": "medical:c093221c9f39bd9b29dc",
       "title": "CBCT 보고서 생성의 평가 지표",
       "kind": "issue",
-      "revision": 32,
+      "revision": 36,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6836,7 +6836,7 @@
             "source:paper:2609.13238"
           ],
           "kind": "reported",
-          "text": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수는 0.2909, 복합 목표로 선택한 보고서는 0.4122였으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다."
+          "text": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수가 0.2909, 복합 목표로 선택한 보고서는 0.4122였으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다."
         },
         {
           "evidence_ids": [
@@ -6851,7 +6851,7 @@
       "id": "medical:175dfe1d244799b4b74d",
       "title": "중국 NMPA의 AI 뇌파 처리 BCI 표준 승인",
       "kind": "event",
-      "revision": 32,
+      "revision": 36,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7414,8 +7414,8 @@
     }
   ],
   "issues": [],
-  "version": "489bad19caf28dbc809058ca7c22b6db8f4f551d9891a9fbafce0389a63c5715",
-  "exported_at": "2026-09-18T21:26:37.755224+00:00",
+  "version": "b10efe379f9b618243d44a816428f13b68c77404f08e3ee6c695abe0716fc3bd",
+  "exported_at": "2026-09-18T21:32:22.329664+00:00",
   "coverage": {
     "pages": 41,
     "claims": 81,
