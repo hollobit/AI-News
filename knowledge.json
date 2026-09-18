@@ -252,16 +252,31 @@
         "china"
       ],
       "source_ids": [
+        "source:5d03910cda5f5397b68f2673",
         "source:ae9d704759baaac69bf840c7",
         "source:d783c787cb6ce78606db6a56",
         "source:da6df76cb3d2a78509c7709d",
+        "source:e7b8a3795d07304b72f60475",
         "source:fc356a3c94782703f13d69b3"
       ],
       "claims": [
-        "claim:c40587dceb9579e70cc438ca",
-        "claim:a6b79529b4fad3d8110fb7ac"
+        "claim:47651b950766a810dc235f6a",
+        "claim:e57fe713f6efccd806a15cff"
       ],
       "status": "reviewed"
+    },
+    {
+      "id": "source:5d03910cda5f5397b68f2673",
+      "type": "source",
+      "title": "알리바바 Qwen, 100만 토큰 컨텍스트 Qwen3.8-Omni-Flash 출시",
+      "source_ids": [
+        "source:5d03910cda5f5397b68f2673"
+      ],
+      "origin": "telegram_excerpt",
+      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
+      "day": "2026-09-19",
+      "status": "original_source_not_fact_checked",
+      "url": "https://technode.com/2026/09/18/alibabas-qwen-releases-qwen3-8-omni-flash-with-1m-token-context"
     },
     {
       "id": "source:ae9d704759baaac69bf840c7",
@@ -303,6 +318,19 @@
       "url": "https://pandaily.com/deepseek-record-funding-domestic-compute-agi-jul2026"
     },
     {
+      "id": "source:e7b8a3795d07304b72f60475",
+      "type": "source",
+      "title": "화웨이, Ascend 950 AI 클러스터 클라우드 서비스 상용화 일정 확정",
+      "source_ids": [
+        "source:e7b8a3795d07304b72f60475"
+      ],
+      "origin": "telegram_excerpt",
+      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
+      "day": "2026-09-19",
+      "status": "original_source_not_fact_checked",
+      "url": "https://technode.com/2026/09/18/huawei-sets-commercial-launch-dates-for-ascend-950-ai-cluster-cloud-service"
+    },
+    {
       "id": "source:fc356a3c94782703f13d69b3",
       "type": "source",
       "title": "「인격화 AI 상호작용 서비스 관리 잠시 조치」",
@@ -316,9 +344,9 @@
       "url": "https://www.jdsupra.com/legalnews/china-s-interim-measures-for-the-7631877"
     },
     {
-      "id": "claim:c40587dceb9579e70cc438ca",
+      "id": "claim:47651b950766a810dc235f6a",
       "type": "claim",
-      "title": "경향신문 링크의 수집 발췌는 중국 AI가 모델 개발에서 에이전트 수익화로 전환하며 토큰 소비가 12배 증가할 것으로 전망한다고 전한다. 전망의 기준·기간이나 실제 매출 변화는 제시하지 않는다.",
+      "title": "경향신문 링크의 수집 발췌는 중국 AI의 초점이 모델 개발에서 에이전트 수익화로 이동하며 토큰 소비가 12배 증가할 것으로 전망한다고 전한다. 전망의 기준·기간과 실제 매출 변화는 제시하지 않는다.",
       "source_ids": [
         "source:ae9d704759baaac69bf840c7"
       ],
@@ -326,12 +354,13 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:a6b79529b4fad3d8110fb7ac",
+      "id": "claim:e57fe713f6efccd806a15cff",
       "type": "claim",
-      "title": "토큰 소비 전망과 DeepSeek의 인프라 구축 계획은 각각 예상 수요와 공급 기반 투자를 다룬다. 이를 중국 AI 산업 전체의 매출 성장이나 기술 자립 달성의 증거로 합산할 수는 없다.",
+      "title": "Qwen의 모델 출시, 화웨이 Ascend 950 클라우드의 상용화 일정 확정, DeepSeek의 인프라 투자 계획은 서로 다른 진행 단계다. 이를 모두 서비스 가동이나 중국 AI 산업의 성장 실적으로 합산할 수는 없다.",
       "source_ids": [
-        "source:ae9d704759baaac69bf840c7",
-        "source:da6df76cb3d2a78509c7709d"
+        "source:5d03910cda5f5397b68f2673",
+        "source:da6df76cb3d2a78509c7709d",
+        "source:e7b8a3795d07304b72f60475"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
@@ -351,8 +380,8 @@
         "source:da6df76cb3d2a78509c7709d"
       ],
       "claims": [
-        "claim:ba88a8c960dfe4ae116b569e",
-        "claim:2ed5d7c2422b74c8b9252130"
+        "claim:3f941e3dc7510db53f799ca6",
+        "claim:a99afdc5216837a5a812087c"
       ],
       "status": "reviewed"
     },
@@ -370,9 +399,9 @@
       "url": "https://csf.kiep.go.kr/issueInfoView.es"
     },
     {
-      "id": "claim:ba88a8c960dfe4ae116b569e",
+      "id": "claim:3f941e3dc7510db53f799ca6",
       "type": "claim",
-      "title": "7월 1일 수집된 Pandaily 링크의 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을 전한다. 9월 18일 수집된 CSF/KIEP 링크의 발췌는 인프라 인력 확충과 상장 준비의 병행을 전한다.",
+      "title": "7월 1일 수집된 Pandaily 링크 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을 전한다. 9월 18일 수집된 CSF/KIEP 링크 발췌는 인프라 인력 확충과 상장 준비의 병행을 전한다.",
       "source_ids": [
         "source:cbb40348e269273787c15dfe",
         "source:da6df76cb3d2a78509c7709d"
@@ -381,9 +410,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:2ed5d7c2422b74c8b9252130",
+      "id": "claim:a99afdc5216837a5a812087c",
       "type": "claim",
-      "title": "두 보도는 개발 기반 확충이라는 방향을 공유하지만, 인력 확충이 앞선 투자금으로 집행됐는지는 설명하지 않는다. 뒤의 보도는 자금 집행이나 상장 완료를 확인하는 근거가 아니다.",
+      "title": "두 보도는 개발 기반 확충이라는 방향을 공유한다. 그러나 인력 확충이 앞선 투자금으로 집행됐다는 연결은 없으며, 뒤의 보도가 자금 집행이나 상장 완료를 확인하지도 않는다.",
       "source_ids": [
         "source:cbb40348e269273787c15dfe",
         "source:da6df76cb3d2a78509c7709d"
@@ -405,15 +434,15 @@
         "source:d783c787cb6ce78606db6a56"
       ],
       "claims": [
-        "claim:77f3ca50b2e1fc0557074422",
-        "claim:e7bac3cfd7f102c9e874be19"
+        "claim:9e85966a15db6b99af359c7a",
+        "claim:f464562c473084eca7e17694"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:77f3ca50b2e1fc0557074422",
+      "id": "claim:9e85966a15db6b99af359c7a",
       "type": "claim",
-      "title": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 타오바오 가격이 공식 서구 API의 약 1/5~1/10이라는 수치는 필자의 관찰이다. 필자는 정식 접근 제한에 대한 불만과 중계 서비스 이용이라는 이해관계도 밝힌다.",
+      "title": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 타오바오 가격이 공식 서구 API의 약 1/5~1/10이라는 수치는 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 서비스 이용이라는 이해관계도 밝힌다.",
       "source_ids": [
         "source:d783c787cb6ce78606db6a56"
       ],
@@ -421,9 +450,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:e7bac3cfd7f102c9e874be19",
+      "id": "claim:f464562c473084eca7e17694",
       "type": "claim",
-      "title": "표시된 모델과 실제 제공 모델의 일치 여부, 입력 데이터의 수집·처리 조건이 공급자 선택의 쟁점이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제시하지 않는다.",
+      "title": "공급자 선택의 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제시하지 않는다.",
       "source_ids": [
         "source:d783c787cb6ce78606db6a56"
       ],
@@ -467,6 +496,34 @@
         "source:fc356a3c94782703f13d69b3"
       ],
       "claim_kind": "uncertain",
+      "status": "reviewed"
+    },
+    {
+      "id": "page:3cb0e3cebd6633f679b0c4ed",
+      "type": "event",
+      "title": "Qwen3.8-Omni-Flash 출시",
+      "page_ids": [
+        "china:49efc0cd5d6a87376807"
+      ],
+      "topics": [
+        "china"
+      ],
+      "source_ids": [
+        "source:5d03910cda5f5397b68f2673"
+      ],
+      "claims": [
+        "claim:0354e56f12445d91b957616e"
+      ],
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:0354e56f12445d91b957616e",
+      "type": "claim",
+      "title": "TechNode 링크의 수집 발췌는 알리바바 Qwen이 100만 토큰 컨텍스트의 Qwen3.8-Omni-Flash를 출시했다고 전한다. 발췌가 제공하는 사양은 컨텍스트 규모이며, 긴 입력에서의 정확도·처리 속도·이용 가격은 제시하지 않는다.",
+      "source_ids": [
+        "source:5d03910cda5f5397b68f2673"
+      ],
+      "claim_kind": "reported",
       "status": "reviewed"
     },
     {
@@ -1870,8 +1927,8 @@
         "source:a617c0dcaf2f826c9303b840"
       ],
       "claims": [
-        "claim:d572c4041cb9b8435e52aefb",
-        "claim:db8878b5c9993ab240c30719"
+        "claim:28b0cb71150940b8bca3d63d",
+        "claim:6f6e6a7c5b701813e908c68d"
       ],
       "status": "reviewed"
     },
@@ -1915,9 +1972,9 @@
       "url": "https://www.redhat.com/en/blog/datacenter-myth-why-sovereign-ai-demands-tenancy-model-not-just-geography"
     },
     {
-      "id": "claim:d572c4041cb9b8435e52aefb",
+      "id": "claim:28b0cb71150940b8bca3d63d",
       "type": "claim",
-      "title": "제공 자료에서 AI 주권은 독자 모델 개발, 반도체 공급체계, 인프라 운영 구조의 문제로 나타난다. 각 층위의 성과를 구분해야 전체 자립 수준을 과대평가하지 않을 수 있다.",
+      "title": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 조건이라는 서로 다른 층위에서 다룬다. 한 층위의 발표만으로 전체 자립 수준을 판단하기는 어렵다.",
       "source_ids": [
         "source:26eea64ed635a308bcc1e552",
         "source:3999b94431374f06e9cac006",
@@ -1927,12 +1984,13 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:db8878b5c9993ab240c30719",
+      "id": "claim:6f6e6a7c5b701813e908c68d",
       "type": "claim",
-      "title": "한국 관련 브리핑은 독자 모델의 평가와 서비스 연결을, 중국 관련 발췌는 AI 반도체 설계부터 HBM까지 자체 공급체계 구축을 강조한다. 이는 자료의 초점 차이이며 국가별 자립 수준의 순위는 아니다.",
+      "title": "한국 브리핑은 독파모 평가와 국민 서비스 연결을, 중국 관련 발췌는 AI 반도체 설계부터 HBM까지 자체 공급체계 구축을 강조한다. 이는 자료의 초점 차이이며 국가별 자립 수준을 비교한 결과는 아니다.",
       "source_ids": [
         "source:26eea64ed635a308bcc1e552",
-        "source:3999b94431374f06e9cac006"
+        "source:3999b94431374f06e9cac006",
+        "source:809f46c21477bbbf5049da92"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
@@ -1948,30 +2006,28 @@
         "sovereign"
       ],
       "source_ids": [
-        "source:3999b94431374f06e9cac006",
-        "source:809f46c21477bbbf5049da92"
+        "source:3999b94431374f06e9cac006"
       ],
       "claims": [
-        "claim:fc988946f9b29a86366e92fc",
-        "claim:4a23d453da1a7dd25b5cc3f9"
+        "claim:327b5b8943d12cbad05b56d3",
+        "claim:c75db1435fb42258641a717e"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:fc988946f9b29a86366e92fc",
+      "id": "claim:327b5b8943d12cbad05b56d3",
       "type": "claim",
-      "title": "9월 12일 브리핑은 독파모 2차 평가 점수를 업스테이지 37점·SKT 35점·LG 31점으로 전했다. 16일 브리핑은 세 참여사가 3차 평가를 앞두고 성능 고도화에 집중한다고 전했다.",
+      "title": "9월 16일 브리핑은 SKT·LG AI연구원·업스테이지가 독파모 3차 평가를 앞두고 성능 고도화에 집중하며, 과기정통부가 사업 성과를 오픈소스 생태계로 확장할 방침이라고 전했다.",
       "source_ids": [
-        "source:3999b94431374f06e9cac006",
-        "source:809f46c21477bbbf5049da92"
+        "source:3999b94431374f06e9cac006"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:4a23d453da1a7dd25b5cc3f9",
+      "id": "claim:c75db1435fb42258641a717e",
       "type": "claim",
-      "title": "9월 16일 브리핑에 따르면 LG AI연구원은 제조·금융·과학 분야의 전문가 AI와 엑사원 외부 공급 계획을 제시했고, 과기정통부는 독파모 성과를 오픈소스 생태계로 확장할 방침이다.",
+      "title": "같은 브리핑은 LG AI연구원이 제조·금융·과학 분야의 전문가 AI와 엑사원 외부 공급 계획을 제시했다고 전했다. 이는 독자 모델을 산업 용도로 확장하려는 계획이다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ],
@@ -1993,15 +2049,15 @@
         "source:809f46c21477bbbf5049da92"
       ],
       "claims": [
-        "claim:921611bff9ea50dcdcf54017",
-        "claim:795cf261823c68c32aa325ba"
+        "claim:df7c966c821bb59997c9749a",
+        "claim:f1ba0d446a2a4f4e09a3ac04"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:921611bff9ea50dcdcf54017",
+      "id": "claim:df7c966c821bb59997c9749a",
       "type": "claim",
-      "title": "9월 12일 브리핑은 모티프테크의 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일에는 조선비즈의 심사 불투명성 비판과 독파모 재설계 논의를 소개했다.",
+      "title": "9월 12일 브리핑은 정부의 모티프테크 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일 브리핑도 심사 불투명성 비판과 사업 재설계 논의를 소개했다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
@@ -2010,9 +2066,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:795cf261823c68c32aa325ba",
+      "id": "claim:f1ba0d446a2a4f4e09a3ac04",
       "type": "claim",
-      "title": "기각의 구체적 사유는 추후 설명 사항으로 보도됐으며, 제공 자료에는 확정된 평가 개편안이 없다. 평가의 타당성과 실제 변경 내용은 이 자료만으로 판단할 수 없다.",
+      "title": "기각의 구체적 사유는 추후 설명 사항으로 보도됐다. 제공 자료에는 후속 설명과 확정된 개편안이 없어, 기각의 타당성과 평가 기준의 실제 변경 여부는 남은 쟁점이다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
@@ -2031,11 +2087,12 @@
         "sovereign"
       ],
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:3999b94431374f06e9cac006",
+        "source:809f46c21477bbbf5049da92"
       ],
       "claims": [
         "claim:0d7705cc2d775c6ee2189fcf",
-        "claim:309bfb81b449a41ae2b33922"
+        "claim:b9d3ebe09a1300e6b40ab0a5"
       ],
       "status": "reviewed"
     },
@@ -2050,11 +2107,12 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:309bfb81b449a41ae2b33922",
+      "id": "claim:b9d3ebe09a1300e6b40ab0a5",
       "type": "claim",
-      "title": "SKT의 독파모 A.X K2와 모두의 AI 통합은 '검토' 단계로 소개됐다. 서비스 출시 계획과 독자 모델 통합 완료는 구분해서 읽어야 한다.",
+      "title": "9월 12일 브리핑은 SKT 컨소시엄의 의료·돌봄·교육 등 8개 특화서비스와 12월 개시 계획을 전했다. 16일에도 출시는 연내 계획이며 독파모 A.X K2 통합은 검토 단계로 소개돼, 서비스 운영이나 모델 통합 완료를 뜻하지 않는다.",
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:3999b94431374f06e9cac006",
+        "source:809f46c21477bbbf5049da92"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
@@ -2073,18 +2131,29 @@
         "source:a617c0dcaf2f826c9303b840"
       ],
       "claims": [
-        "claim:0454c44246728cd639f12d80"
+        "claim:0ad4bc239c8f06b1d9e4459b",
+        "claim:9bcc4324661f030b0a262e3d"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:0454c44246728cd639f12d80",
+      "id": "claim:0ad4bc239c8f06b1d9e4459b",
       "type": "claim",
-      "title": "Red Hat은 소버린 AI에 데이터센터의 지리적 위치만이 아니라 테넌시 모델이 필요하다는 관점을 제시했다. 제공 발췌에는 구체적인 구성이나 충족 기준이 제시되지 않았다.",
+      "title": "Red Hat은 소버린 AI에 지리적 위치만이 아니라 테넌시 모델이 필요하다는 관점을 제시했다.",
       "source_ids": [
         "source:a617c0dcaf2f826c9303b840"
       ],
       "claim_kind": "reported",
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:9bcc4324661f030b0a262e3d",
+      "type": "claim",
+      "title": "제공 발췌에는 테넌시의 정의나 주권 충족 기준이 없다. 어떤 운영 구조가 어떤 기술·법적 조건에서 주권을 보장한다는 주장인지 확인이 필요하다.",
+      "source_ids": [
+        "source:a617c0dcaf2f826c9303b840"
+      ],
+      "claim_kind": "uncertain",
       "status": "reviewed"
     },
     {
@@ -2588,6 +2657,17 @@
       ]
     },
     {
+      "id": "bf0d9b1a20f9fe856254660f",
+      "source": "page:de284b6684f6abbc4e22ed30",
+      "target": "source:5d03910cda5f5397b68f2673",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:5d03910cda5f5397b68f2673"
+      ]
+    },
+    {
       "id": "a09cad614ca635b4543196c8",
       "source": "page:de284b6684f6abbc4e22ed30",
       "target": "source:ae9d704759baaac69bf840c7",
@@ -2621,6 +2701,17 @@
       ]
     },
     {
+      "id": "91c2930f7b829b4753890258",
+      "source": "page:de284b6684f6abbc4e22ed30",
+      "target": "source:e7b8a3795d07304b72f60475",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:e7b8a3795d07304b72f60475"
+      ]
+    },
+    {
       "id": "7aa6c557395e56c5777bf430",
       "source": "page:de284b6684f6abbc4e22ed30",
       "target": "source:fc356a3c94782703f13d69b3",
@@ -2632,9 +2723,9 @@
       ]
     },
     {
-      "id": "8c214fcd695ea80581d0ed97",
+      "id": "78a19cf5477baf0f056f9b0f",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "claim:c40587dceb9579e70cc438ca",
+      "target": "claim:47651b950766a810dc235f6a",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2643,8 +2734,8 @@
       ]
     },
     {
-      "id": "35fa717e949b74f3f1ace0f0",
-      "source": "claim:c40587dceb9579e70cc438ca",
+      "id": "308e0e6e7d37f63a064c2faa",
+      "source": "claim:47651b950766a810dc235f6a",
       "target": "source:ae9d704759baaac69bf840c7",
       "kind": "cites",
       "layer": "provenance",
@@ -2654,37 +2745,49 @@
       ]
     },
     {
-      "id": "5aab32e7cd132ee69e18ba6a",
+      "id": "b0aa18463571aefb693e9d57",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "claim:a6b79529b4fad3d8110fb7ac",
+      "target": "claim:e57fe713f6efccd806a15cff",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:ae9d704759baaac69bf840c7",
-        "source:da6df76cb3d2a78509c7709d"
+        "source:5d03910cda5f5397b68f2673",
+        "source:da6df76cb3d2a78509c7709d",
+        "source:e7b8a3795d07304b72f60475"
       ]
     },
     {
-      "id": "80c49fbe2e0141c045c61089",
-      "source": "claim:a6b79529b4fad3d8110fb7ac",
-      "target": "source:ae9d704759baaac69bf840c7",
+      "id": "94b488844a7da996b2025380",
+      "source": "claim:e57fe713f6efccd806a15cff",
+      "target": "source:5d03910cda5f5397b68f2673",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:ae9d704759baaac69bf840c7"
+        "source:5d03910cda5f5397b68f2673"
       ]
     },
     {
-      "id": "5acbda580bfea8ed340b9bae",
-      "source": "claim:a6b79529b4fad3d8110fb7ac",
+      "id": "4b53b57c728cc3ebcb7a8283",
+      "source": "claim:e57fe713f6efccd806a15cff",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:da6df76cb3d2a78509c7709d"
+      ]
+    },
+    {
+      "id": "1225c179b461e5a31eabcc32",
+      "source": "claim:e57fe713f6efccd806a15cff",
+      "target": "source:e7b8a3795d07304b72f60475",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:e7b8a3795d07304b72f60475"
       ]
     },
     {
@@ -2710,9 +2813,9 @@
       ]
     },
     {
-      "id": "5a97fa9c717c13545db2fa37",
+      "id": "d9d020ba7f7037374ced5785",
       "source": "page:67fb64c7b8e926285a3fd4e9",
-      "target": "claim:ba88a8c960dfe4ae116b569e",
+      "target": "claim:3f941e3dc7510db53f799ca6",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2722,8 +2825,8 @@
       ]
     },
     {
-      "id": "5769013d9bf3404c917fa4d4",
-      "source": "claim:ba88a8c960dfe4ae116b569e",
+      "id": "3f50db66c95b2b1cc90e9df4",
+      "source": "claim:3f941e3dc7510db53f799ca6",
       "target": "source:cbb40348e269273787c15dfe",
       "kind": "cites",
       "layer": "provenance",
@@ -2733,8 +2836,8 @@
       ]
     },
     {
-      "id": "cafb3f5741ee759da59ab43e",
-      "source": "claim:ba88a8c960dfe4ae116b569e",
+      "id": "899ba467e2795fc4f0476be9",
+      "source": "claim:3f941e3dc7510db53f799ca6",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2744,9 +2847,9 @@
       ]
     },
     {
-      "id": "d5e29914bdc993ced0bbd39e",
+      "id": "2aac154f29d974d405cca180",
       "source": "page:67fb64c7b8e926285a3fd4e9",
-      "target": "claim:2ed5d7c2422b74c8b9252130",
+      "target": "claim:a99afdc5216837a5a812087c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2756,8 +2859,8 @@
       ]
     },
     {
-      "id": "ebd7f1be1d131ac0eb787b20",
-      "source": "claim:2ed5d7c2422b74c8b9252130",
+      "id": "c9b103f6081fd5f5ddcfd1d7",
+      "source": "claim:a99afdc5216837a5a812087c",
       "target": "source:cbb40348e269273787c15dfe",
       "kind": "cites",
       "layer": "provenance",
@@ -2767,8 +2870,8 @@
       ]
     },
     {
-      "id": "f750d00be11f7b6745f198da",
-      "source": "claim:2ed5d7c2422b74c8b9252130",
+      "id": "8fdfca0e680849ff18cc8879",
+      "source": "claim:a99afdc5216837a5a812087c",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2789,9 +2892,9 @@
       ]
     },
     {
-      "id": "1ab604132b1394c4e84a0bd3",
+      "id": "784682d17a809b1c1651368b",
       "source": "page:74a3b0b060bf1325d1fb716d",
-      "target": "claim:77f3ca50b2e1fc0557074422",
+      "target": "claim:9e85966a15db6b99af359c7a",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2800,8 +2903,8 @@
       ]
     },
     {
-      "id": "0a881ed5e3446c835526acdf",
-      "source": "claim:77f3ca50b2e1fc0557074422",
+      "id": "4ca2d1845ce1388d1796ba74",
+      "source": "claim:9e85966a15db6b99af359c7a",
       "target": "source:d783c787cb6ce78606db6a56",
       "kind": "cites",
       "layer": "provenance",
@@ -2811,9 +2914,9 @@
       ]
     },
     {
-      "id": "d7ad6b0ece6c675546500dd6",
+      "id": "4685a91674945dc53b062407",
       "source": "page:74a3b0b060bf1325d1fb716d",
-      "target": "claim:e7bac3cfd7f102c9e874be19",
+      "target": "claim:f464562c473084eca7e17694",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2822,8 +2925,8 @@
       ]
     },
     {
-      "id": "7bc5bdd009c610a11c56cde0",
-      "source": "claim:e7bac3cfd7f102c9e874be19",
+      "id": "21c9d9404c4407b757c3ad15",
+      "source": "claim:f464562c473084eca7e17694",
       "target": "source:d783c787cb6ce78606db6a56",
       "kind": "cites",
       "layer": "provenance",
@@ -2885,6 +2988,39 @@
       "text": "",
       "source_ids": [
         "source:fc356a3c94782703f13d69b3"
+      ]
+    },
+    {
+      "id": "e686da2b27006d84f634f16c",
+      "source": "page:3cb0e3cebd6633f679b0c4ed",
+      "target": "source:5d03910cda5f5397b68f2673",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:5d03910cda5f5397b68f2673"
+      ]
+    },
+    {
+      "id": "9a9d5003bdeb55f37ff8e7de",
+      "source": "page:3cb0e3cebd6633f679b0c4ed",
+      "target": "claim:0354e56f12445d91b957616e",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:5d03910cda5f5397b68f2673"
+      ]
+    },
+    {
+      "id": "414697e47529f6d5710c3dd9",
+      "source": "claim:0354e56f12445d91b957616e",
+      "target": "source:5d03910cda5f5397b68f2673",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:5d03910cda5f5397b68f2673"
       ]
     },
     {
@@ -4940,9 +5076,9 @@
       ]
     },
     {
-      "id": "e13602343ce5c5501d9ccf45",
+      "id": "59087e6763d833d67d1c1f22",
       "source": "page:27c4109153e151f87093f92b",
-      "target": "claim:d572c4041cb9b8435e52aefb",
+      "target": "claim:28b0cb71150940b8bca3d63d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4953,8 +5089,8 @@
       ]
     },
     {
-      "id": "47a572549ed199c299f31e64",
-      "source": "claim:d572c4041cb9b8435e52aefb",
+      "id": "c056df25b7d01c3d88a1f6c2",
+      "source": "claim:28b0cb71150940b8bca3d63d",
       "target": "source:26eea64ed635a308bcc1e552",
       "kind": "cites",
       "layer": "provenance",
@@ -4964,8 +5100,8 @@
       ]
     },
     {
-      "id": "50de08efd613b454c8426d2c",
-      "source": "claim:d572c4041cb9b8435e52aefb",
+      "id": "06a0eee49deec7447e026cb8",
+      "source": "claim:28b0cb71150940b8bca3d63d",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -4975,8 +5111,8 @@
       ]
     },
     {
-      "id": "b6cb8af08ff0296422b7924f",
-      "source": "claim:d572c4041cb9b8435e52aefb",
+      "id": "d881258115a200b92a5181f0",
+      "source": "claim:28b0cb71150940b8bca3d63d",
       "target": "source:a617c0dcaf2f826c9303b840",
       "kind": "cites",
       "layer": "provenance",
@@ -4986,20 +5122,21 @@
       ]
     },
     {
-      "id": "1b1a303e47705a5a610ab612",
+      "id": "ffa9478ad2283c23ead96125",
       "source": "page:27c4109153e151f87093f92b",
-      "target": "claim:db8878b5c9993ab240c30719",
+      "target": "claim:6f6e6a7c5b701813e908c68d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:26eea64ed635a308bcc1e552",
-        "source:3999b94431374f06e9cac006"
+        "source:3999b94431374f06e9cac006",
+        "source:809f46c21477bbbf5049da92"
       ]
     },
     {
-      "id": "131ff96ce04a9b0f369076fd",
-      "source": "claim:db8878b5c9993ab240c30719",
+      "id": "614dbfc1192511a93a126f75",
+      "source": "claim:6f6e6a7c5b701813e908c68d",
       "target": "source:26eea64ed635a308bcc1e552",
       "kind": "cites",
       "layer": "provenance",
@@ -5009,14 +5146,25 @@
       ]
     },
     {
-      "id": "4cbbe28a69fc6766aab71349",
-      "source": "claim:db8878b5c9993ab240c30719",
+      "id": "2141a51b654d40906502572b",
+      "source": "claim:6f6e6a7c5b701813e908c68d",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
+      ]
+    },
+    {
+      "id": "04195718c2d3302d1d6e1bd6",
+      "source": "claim:6f6e6a7c5b701813e908c68d",
+      "target": "source:809f46c21477bbbf5049da92",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:809f46c21477bbbf5049da92"
       ]
     },
     {
@@ -5031,31 +5179,19 @@
       ]
     },
     {
-      "id": "90d25e513caac7f4703aa5bf",
+      "id": "e652ed7930cb3e8f4a1078cf",
       "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "source:809f46c21477bbbf5049da92",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:809f46c21477bbbf5049da92"
-      ]
-    },
-    {
-      "id": "d83f504e588ba5fc8260bbe9",
-      "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "claim:fc988946f9b29a86366e92fc",
+      "target": "claim:327b5b8943d12cbad05b56d3",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:3999b94431374f06e9cac006",
-        "source:809f46c21477bbbf5049da92"
+        "source:3999b94431374f06e9cac006"
       ]
     },
     {
-      "id": "5f294e44b130bd05bd41caf4",
-      "source": "claim:fc988946f9b29a86366e92fc",
+      "id": "c6b34d2d84cc86148cf418c0",
+      "source": "claim:327b5b8943d12cbad05b56d3",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5065,20 +5201,9 @@
       ]
     },
     {
-      "id": "fea51f1b009dc1c4e37106ce",
-      "source": "claim:fc988946f9b29a86366e92fc",
-      "target": "source:809f46c21477bbbf5049da92",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:809f46c21477bbbf5049da92"
-      ]
-    },
-    {
-      "id": "fe9902c0a98205d9885c97a3",
+      "id": "78ed42b2bcb279d15c5b93d1",
       "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "claim:4a23d453da1a7dd25b5cc3f9",
+      "target": "claim:c75db1435fb42258641a717e",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5087,8 +5212,8 @@
       ]
     },
     {
-      "id": "65b001456b0c800aa0812ee6",
-      "source": "claim:4a23d453da1a7dd25b5cc3f9",
+      "id": "5acb849d4d9a07e1339fcb33",
+      "source": "claim:c75db1435fb42258641a717e",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5120,9 +5245,9 @@
       ]
     },
     {
-      "id": "8ef815142efc032264dea26f",
+      "id": "8c6c8d29e90bd3a385ae8104",
       "source": "page:fbca10d9f0b1706a2d15f444",
-      "target": "claim:921611bff9ea50dcdcf54017",
+      "target": "claim:df7c966c821bb59997c9749a",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5132,8 +5257,8 @@
       ]
     },
     {
-      "id": "4fcad36c4b1b5ead6fe40d43",
-      "source": "claim:921611bff9ea50dcdcf54017",
+      "id": "97f4d78a33c3e52a4dd21f05",
+      "source": "claim:df7c966c821bb59997c9749a",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5143,8 +5268,8 @@
       ]
     },
     {
-      "id": "2545fbbd24dc3a542669f39d",
-      "source": "claim:921611bff9ea50dcdcf54017",
+      "id": "754cd94e5a70502714bab2b5",
+      "source": "claim:df7c966c821bb59997c9749a",
       "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
@@ -5154,9 +5279,9 @@
       ]
     },
     {
-      "id": "7e81bf18e379fda34fb0faee",
+      "id": "c6ed4633b7fa01dd51016f15",
       "source": "page:fbca10d9f0b1706a2d15f444",
-      "target": "claim:795cf261823c68c32aa325ba",
+      "target": "claim:f1ba0d446a2a4f4e09a3ac04",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5166,8 +5291,8 @@
       ]
     },
     {
-      "id": "3627d49d4e3043d9eaf23028",
-      "source": "claim:795cf261823c68c32aa325ba",
+      "id": "5aaf18134e5b6526a74c5c13",
+      "source": "claim:f1ba0d446a2a4f4e09a3ac04",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5177,8 +5302,8 @@
       ]
     },
     {
-      "id": "c3ae07844de6299dc27389e8",
-      "source": "claim:795cf261823c68c32aa325ba",
+      "id": "b2a55fbe2da0103840538013",
+      "source": "claim:f1ba0d446a2a4f4e09a3ac04",
       "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
@@ -5196,6 +5321,17 @@
       "text": "",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
+      ]
+    },
+    {
+      "id": "4c713bac93792849974990fd",
+      "source": "page:142895cf095139317c59613f",
+      "target": "source:809f46c21477bbbf5049da92",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:809f46c21477bbbf5049da92"
       ]
     },
     {
@@ -5221,10 +5357,22 @@
       ]
     },
     {
-      "id": "a665d5166a4ec08faa1ef847",
+      "id": "10d31c9792dba9bf0c649439",
       "source": "page:142895cf095139317c59613f",
-      "target": "claim:309bfb81b449a41ae2b33922",
+      "target": "claim:b9d3ebe09a1300e6b40ab0a5",
       "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006",
+        "source:809f46c21477bbbf5049da92"
+      ]
+    },
+    {
+      "id": "7a5b2e1abc22f3bd58fad342",
+      "source": "claim:b9d3ebe09a1300e6b40ab0a5",
+      "target": "source:3999b94431374f06e9cac006",
+      "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
@@ -5232,14 +5380,14 @@
       ]
     },
     {
-      "id": "91a377fd383d3b3bff49aad6",
-      "source": "claim:309bfb81b449a41ae2b33922",
-      "target": "source:3999b94431374f06e9cac006",
+      "id": "ccf8514f50db35c93be2c9d2",
+      "source": "claim:b9d3ebe09a1300e6b40ab0a5",
+      "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:809f46c21477bbbf5049da92"
       ]
     },
     {
@@ -5254,9 +5402,9 @@
       ]
     },
     {
-      "id": "7c350b0d7051038e7bfd3dfd",
+      "id": "52f784146013f930089216b5",
       "source": "page:8b0e41c347c6c9234bd957b8",
-      "target": "claim:0454c44246728cd639f12d80",
+      "target": "claim:0ad4bc239c8f06b1d9e4459b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5265,8 +5413,30 @@
       ]
     },
     {
-      "id": "a35397d2db812ec072917412",
-      "source": "claim:0454c44246728cd639f12d80",
+      "id": "83085aa5e708775e27e3aa0a",
+      "source": "claim:0ad4bc239c8f06b1d9e4459b",
+      "target": "source:a617c0dcaf2f826c9303b840",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:a617c0dcaf2f826c9303b840"
+      ]
+    },
+    {
+      "id": "4a5b2598095c56899f2bb17a",
+      "source": "page:8b0e41c347c6c9234bd957b8",
+      "target": "claim:9bcc4324661f030b0a262e3d",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:a617c0dcaf2f826c9303b840"
+      ]
+    },
+    {
+      "id": "dd4e5dd964383178a9b6da4d",
+      "source": "claim:9bcc4324661f030b0a262e3d",
       "target": "source:a617c0dcaf2f826c9303b840",
       "kind": "cites",
       "layer": "provenance",
@@ -5599,12 +5769,12 @@
       ]
     },
     {
-      "id": "4b187d5998bd3c3b139b7dab",
+      "id": "069fb548f1133c38785c8ed4",
       "source": "page:de284b6684f6abbc4e22ed30",
       "target": "page:67fb64c7b8e926285a3fd4e9",
       "kind": "involves",
       "layer": "semantic",
-      "text": "DeepSeek 조달 보도는 중국 AI 기업의 자국산 컴퓨팅 인프라 구축 계획을 다룬다.",
+      "text": "중국 AI 기업의 자국산 컴퓨팅 기반 구축 계획을 다룬다.",
       "source_ids": [
         "source:da6df76cb3d2a78509c7709d"
       ]
@@ -5621,14 +5791,25 @@
       ]
     },
     {
-      "id": "4c634483aa082c33cd752f24",
+      "id": "96b62ef9c1ae83c7b0e59146",
       "source": "page:de284b6684f6abbc4e22ed30",
       "target": "page:cb2ece51fd8bf5f9ab98d74a",
       "kind": "involves",
       "layer": "semantic",
-      "text": "중국 관계기관이 인격화 AI 상호작용 서비스에 관한 조치를 공동 발표했다는 보도다.",
+      "text": "중국 관계기관의 인격화 AI 서비스 조치 공동 발표 보도다.",
       "source_ids": [
         "source:fc356a3c94782703f13d69b3"
+      ]
+    },
+    {
+      "id": "4bded1d4cf4cda9924b529ff",
+      "source": "page:de284b6684f6abbc4e22ed30",
+      "target": "page:3cb0e3cebd6633f679b0c4ed",
+      "kind": "involves",
+      "layer": "semantic",
+      "text": "알리바바 Qwen의 모델 출시와 컨텍스트 사양을 다룬다.",
+      "source_ids": [
+        "source:5d03910cda5f5397b68f2673"
       ]
     },
     {
@@ -5858,57 +6039,57 @@
       ]
     },
     {
-      "id": "41e12c7fd6f863ec49d84ea2",
+      "id": "226388979a34712436b95a7d",
       "source": "page:27c4109153e151f87093f92b",
       "target": "page:6b0e772ad5828bad7fd33b63",
       "kind": "involves",
       "layer": "semantic",
-      "text": "9월 16일 브리핑은 독파모 참여사의 성능 고도화를 소버린 AI 추진과 연결한다.",
+      "text": "브리핑은 독파모 참여사의 성능 고도화를 소버린 AI 추진과 연결한다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ]
     },
     {
-      "id": "6f9e4ae6238aed0746e73eea",
+      "id": "efdaad66faf45051222ab4ad",
       "source": "page:27c4109153e151f87093f92b",
       "target": "page:fbca10d9f0b1706a2d15f444",
       "kind": "involves",
       "layer": "semantic",
-      "text": "소버린 AI 추진과 연결된 독파모 사업에서 평가방식과 사업 재설계가 쟁점으로 보도됐다.",
+      "text": "소버린 AI 추진에 연결된 독파모 사업에서 평가방식과 재설계가 쟁점으로 보도됐다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
       ]
     },
     {
-      "id": "aa5ff52cff6aa05520190724",
+      "id": "8d3e47542039397b79a3e377",
       "source": "page:27c4109153e151f87093f92b",
       "target": "page:142895cf095139317c59613f",
       "kind": "involves",
       "layer": "semantic",
-      "text": "독파모 A.X K2와의 통합 검토가 독자 모델 개발을 국민 서비스로 연결하는 접점으로 제시됐다.",
+      "text": "독파모 A.X K2 통합 검토가 독자 모델과 국민 서비스를 연결하는 접점으로 제시됐다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ]
     },
     {
-      "id": "c7c1dff2d9c3b1c249ddb79b",
+      "id": "7deacb5b4f6541a9fd117297",
       "source": "page:27c4109153e151f87093f92b",
       "target": "page:8b0e41c347c6c9234bd957b8",
       "kind": "involves",
       "layer": "semantic",
-      "text": "Red Hat은 소버린 AI의 조건으로 지리적 위치 외에 테넌시 모델을 제시한다.",
+      "text": "Red Hat은 주권 AI의 요건으로 테넌시 모델을 제시한다.",
       "source_ids": [
         "source:a617c0dcaf2f826c9303b840"
       ]
     },
     {
-      "id": "3789df77d56005f817ae7b66",
+      "id": "0b6b097f0a144f036615b372",
       "source": "page:6b0e772ad5828bad7fd33b63",
       "target": "page:142895cf095139317c59613f",
       "kind": "involves",
       "layer": "semantic",
-      "text": "SKT는 독파모 A.X K2를 모두의 AI와 통합하는 방안을 검토한다고 보도됐다.",
+      "text": "SKT는 독파모 A.X K2와 모두의 AI의 통합을 검토한다고 보도됐다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ]
@@ -5962,9 +6143,21 @@
       ]
     },
     {
-      "id": "28d9b2954864f0b719e945b4",
-      "source": "page:27c4109153e151f87093f92b",
-      "target": "page:6b0e772ad5828bad7fd33b63",
+      "id": "5977c5478f3de13ed6eb09aa",
+      "source": "page:142895cf095139317c59613f",
+      "target": "page:27c4109153e151f87093f92b",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006",
+        "source:809f46c21477bbbf5049da92"
+      ]
+    },
+    {
+      "id": "8c8d2492a06a71ea48c4dccd",
+      "source": "page:142895cf095139317c59613f",
+      "target": "page:fbca10d9f0b1706a2d15f444",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -6007,18 +6200,6 @@
       "source_ids": [
         "source:34fa141b88be994d5c6f08ba",
         "source:ee2c12a40f492a13aa4ec9b8"
-      ]
-    },
-    {
-      "id": "5bffefd2b888ea5bfea7dc98",
-      "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "page:fbca10d9f0b1706a2d15f444",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006",
-        "source:809f46c21477bbbf5049da92"
       ]
     },
     {
@@ -6091,17 +6272,6 @@
       ]
     },
     {
-      "id": "5977c5478f3de13ed6eb09aa",
-      "source": "page:142895cf095139317c59613f",
-      "target": "page:27c4109153e151f87093f92b",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
       "id": "5da1016fc98c15916a5d5496",
       "source": "page:142895cf095139317c59613f",
       "target": "page:6b0e772ad5828bad7fd33b63",
@@ -6135,17 +6305,6 @@
       ]
     },
     {
-      "id": "8c8d2492a06a71ea48c4dccd",
-      "source": "page:142895cf095139317c59613f",
-      "target": "page:fbca10d9f0b1706a2d15f444",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
       "id": "39a2888236b97a55965b1a47",
       "source": "page:1c8af38776bdc0a7fa8ebfb8",
       "target": "page:bc425324302e17abaf8dbf8f",
@@ -6154,6 +6313,17 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:b79db9cf256b029991ced9ac"
+      ]
+    },
+    {
+      "id": "28d9b2954864f0b719e945b4",
+      "source": "page:27c4109153e151f87093f92b",
+      "target": "page:6b0e772ad5828bad7fd33b63",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006"
       ]
     },
     {
@@ -6278,6 +6448,17 @@
       ]
     },
     {
+      "id": "7d4764cf18d12087b9f05d9e",
+      "source": "page:3cb0e3cebd6633f679b0c4ed",
+      "target": "page:de284b6684f6abbc4e22ed30",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:5d03910cda5f5397b68f2673"
+      ]
+    },
+    {
       "id": "b762b96d9910576a0b2a98fa",
       "source": "page:3e7b41c644da4cb118490c7a",
       "target": "page:9b08b924963cb1769f63a232",
@@ -6325,6 +6506,17 @@
       "id": "83ee66a5c5599a98b826a0c8",
       "source": "page:6b0e772ad5828bad7fd33b63",
       "target": "page:d01208b24e7ca273cb0406f3",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006"
+      ]
+    },
+    {
+      "id": "5bffefd2b888ea5bfea7dc98",
+      "source": "page:6b0e772ad5828bad7fd33b63",
+      "target": "page:fbca10d9f0b1706a2d15f444",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -6547,7 +6739,7 @@
       "id": "china",
       "title": "중국",
       "kind": "topic",
-      "revision": 33,
+      "revision": 38,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6555,15 +6747,16 @@
             "source:ae9d704759baaac69bf840c7"
           ],
           "kind": "reported",
-          "text": "경향신문 링크의 수집 발췌는 중국 AI가 모델 개발에서 에이전트 수익화로 전환하며 토큰 소비가 12배 증가할 것으로 전망한다고 전한다. 전망의 기준·기간이나 실제 매출 변화는 제시하지 않는다."
+          "text": "경향신문 링크의 수집 발췌는 중국 AI의 초점이 모델 개발에서 에이전트 수익화로 이동하며 토큰 소비가 12배 증가할 것으로 전망한다고 전한다. 전망의 기준·기간과 실제 매출 변화는 제시하지 않는다."
         },
         {
           "evidence_ids": [
-            "source:ae9d704759baaac69bf840c7",
+            "source:5d03910cda5f5397b68f2673",
+            "source:e7b8a3795d07304b72f60475",
             "source:da6df76cb3d2a78509c7709d"
           ],
           "kind": "interpretation",
-          "text": "토큰 소비 전망과 DeepSeek의 인프라 구축 계획은 각각 예상 수요와 공급 기반 투자를 다룬다. 이를 중국 AI 산업 전체의 매출 성장이나 기술 자립 달성의 증거로 합산할 수는 없다."
+          "text": "Qwen의 모델 출시, 화웨이 Ascend 950 클라우드의 상용화 일정 확정, DeepSeek의 인프라 투자 계획은 서로 다른 진행 단계다. 이를 모두 서비스 가동이나 중국 AI 산업의 성장 실적으로 합산할 수는 없다."
         }
       ]
     },
@@ -6571,7 +6764,7 @@
       "id": "china:0de2183429999f9c1885",
       "title": "DeepSeek의 자금 조달과 인프라 확충",
       "kind": "entity",
-      "revision": 33,
+      "revision": 38,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6580,7 +6773,7 @@
             "source:cbb40348e269273787c15dfe"
           ],
           "kind": "reported",
-          "text": "7월 1일 수집된 Pandaily 링크의 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을 전한다. 9월 18일 수집된 CSF/KIEP 링크의 발췌는 인프라 인력 확충과 상장 준비의 병행을 전한다."
+          "text": "7월 1일 수집된 Pandaily 링크 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을 전한다. 9월 18일 수집된 CSF/KIEP 링크 발췌는 인프라 인력 확충과 상장 준비의 병행을 전한다."
         },
         {
           "evidence_ids": [
@@ -6588,7 +6781,7 @@
             "source:cbb40348e269273787c15dfe"
           ],
           "kind": "interpretation",
-          "text": "두 보도는 개발 기반 확충이라는 방향을 공유하지만, 인력 확충이 앞선 투자금으로 집행됐는지는 설명하지 않는다. 뒤의 보도는 자금 집행이나 상장 완료를 확인하는 근거가 아니다."
+          "text": "두 보도는 개발 기반 확충이라는 방향을 공유한다. 그러나 인력 확충이 앞선 투자금으로 집행됐다는 연결은 없으며, 뒤의 보도가 자금 집행이나 상장 완료를 확인하지도 않는다."
         }
       ]
     },
@@ -6596,7 +6789,7 @@
       "id": "china:407018b50f9d3916425a",
       "title": "중국의 해외 AI API 중계시장",
       "kind": "issue",
-      "revision": 33,
+      "revision": 38,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6604,14 +6797,14 @@
             "source:d783c787cb6ce78606db6a56"
           ],
           "kind": "reported",
-          "text": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 타오바오 가격이 공식 서구 API의 약 1/5~1/10이라는 수치는 필자의 관찰이다. 필자는 정식 접근 제한에 대한 불만과 중계 서비스 이용이라는 이해관계도 밝힌다."
+          "text": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 타오바오 가격이 공식 서구 API의 약 1/5~1/10이라는 수치는 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 서비스 이용이라는 이해관계도 밝힌다."
         },
         {
           "evidence_ids": [
             "source:d783c787cb6ce78606db6a56"
           ],
           "kind": "uncertain",
-          "text": "표시된 모델과 실제 제공 모델의 일치 여부, 입력 데이터의 수집·처리 조건이 공급자 선택의 쟁점이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제시하지 않는다."
+          "text": "공급자 선택의 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제시하지 않는다."
         }
       ]
     },
@@ -6619,7 +6812,7 @@
       "id": "china:bd2cb88abffe36ab3645",
       "title": "인격화 AI 상호작용 서비스 조치 공동 발표",
       "kind": "event",
-      "revision": 33,
+      "revision": 38,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6635,6 +6828,22 @@
           ],
           "kind": "uncertain",
           "text": "적용 대상·사업자 의무·시행일은 제공 발췌에 없다. 자료에 붙은 2026년 4월 10일을 발효일로 확정할 수 없으며, 서비스 설계에 적용할 의무를 판단하려면 조문과 시행 정보가 필요하다."
+        }
+      ]
+    },
+    {
+      "id": "china:49efc0cd5d6a87376807",
+      "title": "Qwen3.8-Omni-Flash 출시",
+      "kind": "event",
+      "revision": 38,
+      "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
+      "claims": [
+        {
+          "evidence_ids": [
+            "source:5d03910cda5f5397b68f2673"
+          ],
+          "kind": "reported",
+          "text": "TechNode 링크의 수집 발췌는 알리바바 Qwen이 100만 토큰 컨텍스트의 Qwen3.8-Omni-Flash를 출시했다고 전한다. 발췌가 제공하는 사양은 컨텍스트 규모이며, 긴 입력에서의 정확도·처리 속도·이용 가격은 제시하지 않는다."
         }
       ]
     },
@@ -7222,7 +7431,7 @@
       "id": "sovereign",
       "title": "소버린 AI",
       "kind": "topic",
-      "revision": 7,
+      "revision": 37,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7232,15 +7441,16 @@
             "source:a617c0dcaf2f826c9303b840"
           ],
           "kind": "interpretation",
-          "text": "제공 자료에서 AI 주권은 독자 모델 개발, 반도체 공급체계, 인프라 운영 구조의 문제로 나타난다. 각 층위의 성과를 구분해야 전체 자립 수준을 과대평가하지 않을 수 있다."
+          "text": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 조건이라는 서로 다른 층위에서 다룬다. 한 층위의 발표만으로 전체 자립 수준을 판단하기는 어렵다."
         },
         {
           "evidence_ids": [
             "source:3999b94431374f06e9cac006",
+            "source:809f46c21477bbbf5049da92",
             "source:26eea64ed635a308bcc1e552"
           ],
           "kind": "interpretation",
-          "text": "한국 관련 브리핑은 독자 모델의 평가와 서비스 연결을, 중국 관련 발췌는 AI 반도체 설계부터 HBM까지 자체 공급체계 구축을 강조한다. 이는 자료의 초점 차이이며 국가별 자립 수준의 순위는 아니다."
+          "text": "한국 브리핑은 독파모 평가와 국민 서비스 연결을, 중국 관련 발췌는 AI 반도체 설계부터 HBM까지 자체 공급체계 구축을 강조한다. 이는 자료의 초점 차이이며 국가별 자립 수준을 비교한 결과는 아니다."
         }
       ]
     },
@@ -7248,23 +7458,22 @@
       "id": "sovereign:f28856625d6794d23c8f",
       "title": "독자 AI 파운데이션 모델 사업",
       "kind": "entity",
-      "revision": 7,
+      "revision": 37,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:809f46c21477bbbf5049da92",
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "reported",
-          "text": "9월 12일 브리핑은 독파모 2차 평가 점수를 업스테이지 37점·SKT 35점·LG 31점으로 전했다. 16일 브리핑은 세 참여사가 3차 평가를 앞두고 성능 고도화에 집중한다고 전했다."
+          "text": "9월 16일 브리핑은 SKT·LG AI연구원·업스테이지가 독파모 3차 평가를 앞두고 성능 고도화에 집중하며, 과기정통부가 사업 성과를 오픈소스 생태계로 확장할 방침이라고 전했다."
         },
         {
           "evidence_ids": [
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "reported",
-          "text": "9월 16일 브리핑에 따르면 LG AI연구원은 제조·금융·과학 분야의 전문가 AI와 엑사원 외부 공급 계획을 제시했고, 과기정통부는 독파모 성과를 오픈소스 생태계로 확장할 방침이다."
+          "text": "같은 브리핑은 LG AI연구원이 제조·금융·과학 분야의 전문가 AI와 엑사원 외부 공급 계획을 제시했다고 전했다. 이는 독자 모델을 산업 용도로 확장하려는 계획이다."
         }
       ]
     },
@@ -7272,7 +7481,7 @@
       "id": "sovereign:700fe97a1bf0ab14f02c",
       "title": "독파모 평가와 사업 설계 논쟁",
       "kind": "issue",
-      "revision": 7,
+      "revision": 37,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7281,7 +7490,7 @@
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "reported",
-          "text": "9월 12일 브리핑은 모티프테크의 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일에는 조선비즈의 심사 불투명성 비판과 독파모 재설계 논의를 소개했다."
+          "text": "9월 12일 브리핑은 정부의 모티프테크 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일 브리핑도 심사 불투명성 비판과 사업 재설계 논의를 소개했다."
         },
         {
           "evidence_ids": [
@@ -7289,7 +7498,7 @@
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "uncertain",
-          "text": "기각의 구체적 사유는 추후 설명 사항으로 보도됐으며, 제공 자료에는 확정된 평가 개편안이 없다. 평가의 타당성과 실제 변경 내용은 이 자료만으로 판단할 수 없다."
+          "text": "기각의 구체적 사유는 추후 설명 사항으로 보도됐다. 제공 자료에는 후속 설명과 확정된 개편안이 없어, 기각의 타당성과 평가 기준의 실제 변경 여부는 남은 쟁점이다."
         }
       ]
     },
@@ -7297,7 +7506,7 @@
       "id": "sovereign:30630acdf559eea80c39",
       "title": "모두의 AI",
       "kind": "entity",
-      "revision": 7,
+      "revision": 37,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7309,10 +7518,11 @@
         },
         {
           "evidence_ids": [
+            "source:809f46c21477bbbf5049da92",
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "interpretation",
-          "text": "SKT의 독파모 A.X K2와 모두의 AI 통합은 '검토' 단계로 소개됐다. 서비스 출시 계획과 독자 모델 통합 완료는 구분해서 읽어야 한다."
+          "text": "9월 12일 브리핑은 SKT 컨소시엄의 의료·돌봄·교육 등 8개 특화서비스와 12월 개시 계획을 전했다. 16일에도 출시는 연내 계획이며 독파모 A.X K2 통합은 검토 단계로 소개돼, 서비스 운영이나 모델 통합 완료를 뜻하지 않는다."
         }
       ]
     },
@@ -7320,7 +7530,7 @@
       "id": "sovereign:2f94c926dc85e43e1b3a",
       "title": "소버린 AI의 지리와 테넌시 조건",
       "kind": "issue",
-      "revision": 7,
+      "revision": 37,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7328,7 +7538,14 @@
             "source:a617c0dcaf2f826c9303b840"
           ],
           "kind": "reported",
-          "text": "Red Hat은 소버린 AI에 데이터센터의 지리적 위치만이 아니라 테넌시 모델이 필요하다는 관점을 제시했다. 제공 발췌에는 구체적인 구성이나 충족 기준이 제시되지 않았다."
+          "text": "Red Hat은 소버린 AI에 지리적 위치만이 아니라 테넌시 모델이 필요하다는 관점을 제시했다."
+        },
+        {
+          "evidence_ids": [
+            "source:a617c0dcaf2f826c9303b840"
+          ],
+          "kind": "uncertain",
+          "text": "제공 발췌에는 테넌시의 정의나 주권 충족 기준이 없다. 어떤 운영 구조가 어떤 기술·법적 조건에서 주권을 보장한다는 주장인지 확인이 필요하다."
         }
       ]
     },
@@ -7414,12 +7631,12 @@
     }
   ],
   "issues": [],
-  "version": "b10efe379f9b618243d44a816428f13b68c77404f08e3ee6c695abe0716fc3bd",
-  "exported_at": "2026-09-18T21:38:06.565141+00:00",
+  "version": "757f5c0d8f615ac75ed2c51ce63735497be125390293d26bad59ccfab51f8d13",
+  "exported_at": "2026-09-18T21:43:49.830181+00:00",
   "coverage": {
-    "pages": 41,
-    "claims": 81,
-    "cited_sources": 46,
+    "pages": 42,
+    "claims": 83,
+    "cited_sources": 48,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
