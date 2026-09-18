@@ -875,7 +875,7 @@
         "source:paper:2609.13238"
       ],
       "claims": [
-        "claim:3e0bb7c49379afe502caa71d"
+        "claim:137a08121cef99c0b7c3ad2e"
       ],
       "status": "reviewed"
     },
@@ -958,14 +958,14 @@
       "url": "https://openalex.org/W7213262102"
     },
     {
-      "id": "claim:3e0bb7c49379afe502caa71d",
+      "id": "claim:137a08121cef99c0b7c3ad2e",
       "type": "claim",
-      "title": "제공 자료는 의료 AI의 임상 근거 확보, 암 다중모달 질의응답 평가, 영상 보고서 채점, 의료기기 표준을 다룬다. 검증 필요성에 관한 주장·벤치마크 결과·표준 승인 보도는 서로 다른 근거이므로 치료 효과의 증거로 합산할 수 없다.",
+      "title": "제공 자료에서 의료 AI의 검증은 임상 환경의 전향적 평가, 출력 근거 추적, 벤치마크 평가, 의료기기 표준으로 나뉜다. 각각 확인하는 대상이 달라 벤치마크 점수나 표준 승인만으로 치료 효과를 판단할 수 없다.",
       "source_ids": [
+        "source:52fc30a9f94cbfe4bb639daf",
         "source:f22716264922d6813e829b02",
         "source:f4dcdb69e4750b410d4f4267",
-        "source:paper:2608.02615",
-        "source:paper:2609.13238"
+        "source:paper:2608.02615"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
@@ -987,9 +987,9 @@
         "source:f4dcdb69e4750b410d4f4267"
       ],
       "claims": [
-        "claim:a7ac1ddc42bd4afb9b43b44d",
-        "claim:9485db59b6153e05e1b1cb5b",
-        "claim:93ef82d13194ce65bf5e6b0a"
+        "claim:ce4904ff92510ceb0f7a185d",
+        "claim:4eabda77fee51e6f54e8456f",
+        "claim:95f957265667db14ec4eb7a5"
       ],
       "status": "reviewed"
     },
@@ -1007,9 +1007,9 @@
       "url": "https://nature.com/articles/s41746-026-03234-9"
     },
     {
-      "id": "claim:a7ac1ddc42bd4afb9b43b44d",
+      "id": "claim:ce4904ff92510ceb0f7a185d",
       "type": "claim",
-      "title": "Nature Medicine 글을 소개한 발췌는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 모델 출력의 근거 추적·검증 체계를 요구한다. 각각 임상 환경에서의 검증과 출력 근거 확인을 강조한다.",
+      "title": "Nature Medicine 글 소개 발췌는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 출력의 근거 추적·검증 체계를 요구한다. 각각 임상 사용 과정과 답변의 근거를 확인하자는 주장이다.",
       "source_ids": [
         "source:52fc30a9f94cbfe4bb639daf",
         "source:f4dcdb69e4750b410d4f4267"
@@ -1018,9 +1018,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:9485db59b6153e05e1b1cb5b",
+      "id": "claim:4eabda77fee51e6f54e8456f",
       "type": "claim",
-      "title": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 이는 검증 요구를 소개한 자료이며 오류 빈도나 감사로 인한 개선 수치는 제공하지 않는다.",
+      "title": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 제공된 발췌에는 오류 빈도나 감사에 따른 개선 수치가 없다.",
       "source_ids": [
         "source:639957245eb815c1aa388d24"
       ],
@@ -1028,9 +1028,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:93ef82d13194ce65bf5e6b0a",
+      "id": "claim:95f957265667db14ec4eb7a5",
       "type": "claim",
-      "title": "디지털 헬스 중재의 신속 문헌고찰을 소개한 발췌는 개발사가 직접 수행한 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 제공 자료에는 효과 크기와 교란요인 분석이 없어 개발사 참여가 결과 차이의 원인인지는 판단할 수 없다.",
+      "title": "디지털 헬스 중재의 신속 문헌고찰 소개는 개발사가 직접 수행한 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 다만 발췌에는 효과 크기와 교란요인 분석이 없어 개발사 참여를 결과 차이의 원인으로 단정할 수 없다.",
       "source_ids": [
         "source:5a3645424fc2f6cf95d7f68c"
       ],
@@ -1052,7 +1052,7 @@
       ],
       "claims": [
         "claim:48c44801b9f268241f9319aa",
-        "claim:1003c240505c54014e2f681c"
+        "claim:f68cea8f790f04655861fc61"
       ],
       "status": "reviewed"
     },
@@ -1067,9 +1067,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:1003c240505c54014e2f681c",
+      "id": "claim:f68cea8f790f04655861fc61",
       "type": "claim",
-      "title": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록의 질의응답 평가 결과이며 임상 검증 결과가 아니다.",
+      "title": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록의 질의응답 평가 결과이며 임상효과 검증은 아니다.",
       "source_ids": [
         "source:paper:2608.02615"
       ],
@@ -1090,15 +1090,15 @@
         "source:paper:2609.13238"
       ],
       "claims": [
-        "claim:f49ec24c15f2e82e7c15693a",
-        "claim:32b81166ce37e9c00e85eca3"
+        "claim:9c282e549a2c93f22100df21",
+        "claim:c96765765ed1b4c3961b51f9"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:f49ec24c15f2e82e7c15693a",
+      "id": "claim:9c282e549a2c93f22100df21",
       "type": "claim",
-      "title": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 보였다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서는 복합 점수 0.2909, 복합 목표로 선택한 보고서는 0.4122를 얻었으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다.",
+      "title": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수는 0.2909, 복합 목표로 선택한 보고서는 0.4122였으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다.",
       "source_ids": [
         "source:paper:2609.13238"
       ],
@@ -1106,9 +1106,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:32b81166ce37e9c00e85eca3",
+      "id": "claim:c96765765ed1b4c3961b51f9",
       "type": "claim",
-      "title": "문장 선택 예측에서 촬영기관 정보가 0.718로 영상 모델의 0.663보다 높았다는 저자 보고는 해당 데이터의 어휘 평가가 기관별 서술 관행을 보상할 수 있음을 시사한다. 복합 점수도 LLM 판정을 포함하므로 점수 상승만으로 임상 정확성을 입증하지는 못한다.",
+      "title": "문장 선택 예측 AUC가 촬영기관 정보에서 0.718, 영상 모델에서 0.663이었다는 결과는 해당 데이터의 어휘 평가가 기관별 서술 관행을 보상할 수 있음을 시사한다. 복합 점수 역시 LLM 판정을 포함하므로 점수 상승을 환자별 임상 정확성의 입증으로 읽기는 어렵다.",
       "source_ids": [
         "source:paper:2609.13238"
       ],
@@ -1131,8 +1131,8 @@
         "source:f22716264922d6813e829b02"
       ],
       "claims": [
-        "claim:c39c376d966a1b0bff72e8ab",
-        "claim:d155eeea93fcfad3864665ad"
+        "claim:7c2472a7450ff98152c16162",
+        "claim:57e5730de8d1243e770623cc"
       ],
       "status": "reviewed"
     },
@@ -1163,9 +1163,9 @@
       "url": "https://www.globaltimes.cn/page/202609/1370493.shtml"
     },
     {
-      "id": "claim:c39c376d966a1b0bff72e8ab",
+      "id": "claim:7c2472a7450ff98152c16162",
       "type": "claim",
-      "title": "ECNS를 소개한 발췌는 NMPA가 AI로 뇌파 데이터를 처리하는 뇌-컴퓨터 인터페이스(BCI) 의료기기 제품 표준을 승인했다고 전한다. 다른 발췌들은 이를 뇌파 처리 품질 요건의 법제화 또는 AI 뇌 임플란트 표준으로 표현한다.",
+      "title": "ECNS 소개 발췌는 NMPA가 AI로 뇌파 데이터를 처리하는 뇌-컴퓨터 인터페이스(BCI) 의료기기 제품 표준을 승인했다고 전한다. 다른 발췌들은 이를 뇌파 처리 품질 요건의 법제화 또는 AI 뇌 임플란트 표준으로 표현한다.",
       "source_ids": [
         "source:9c82dab071a2a3996b5aea89",
         "source:a7aa20a2bcf5aac3f7a49288",
@@ -1175,9 +1175,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:d155eeea93fcfad3864665ad",
+      "id": "claim:57e5730de8d1243e770623cc",
       "type": "claim",
-      "title": "현재 근거에는 표준 원문이 없어 임플란트에 한정되는지, 법적 구속력이 무엇인지, ‘세계 최초’의 비교 범위가 무엇인지 확인되지 않는다. 시행일도 DATA의 발췌에서는 확인할 수 없다.",
+      "title": "현재 근거에는 표준 원문이 없어 임플란트에 한정되는지, 법적 구속력이 무엇인지, ‘세계 최초’의 비교 범위가 무엇인지 확인되지 않는다. 시행일도 제공된 발췌에서는 확인할 수 없다.",
       "source_ids": [
         "source:9c82dab071a2a3996b5aea89",
         "source:a7aa20a2bcf5aac3f7a49288",
@@ -3661,22 +3661,33 @@
       ]
     },
     {
-      "id": "bf9facf03ee64c0f2fd8b819",
+      "id": "e6c9562354fc4910e2aab600",
       "source": "page:b41d81e22da55c3af6d162d9",
-      "target": "claim:3e0bb7c49379afe502caa71d",
+      "target": "claim:137a08121cef99c0b7c3ad2e",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
+        "source:52fc30a9f94cbfe4bb639daf",
         "source:f22716264922d6813e829b02",
         "source:f4dcdb69e4750b410d4f4267",
-        "source:paper:2608.02615",
-        "source:paper:2609.13238"
+        "source:paper:2608.02615"
       ]
     },
     {
-      "id": "2c87a79d37e0903b6d4f7fbd",
-      "source": "claim:3e0bb7c49379afe502caa71d",
+      "id": "ce0f44689d09566b1f1e8376",
+      "source": "claim:137a08121cef99c0b7c3ad2e",
+      "target": "source:52fc30a9f94cbfe4bb639daf",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:52fc30a9f94cbfe4bb639daf"
+      ]
+    },
+    {
+      "id": "06e523b9139f5ae09f643102",
+      "source": "claim:137a08121cef99c0b7c3ad2e",
       "target": "source:f22716264922d6813e829b02",
       "kind": "cites",
       "layer": "provenance",
@@ -3686,8 +3697,8 @@
       ]
     },
     {
-      "id": "5168b2cf7b6ce926cff63f31",
-      "source": "claim:3e0bb7c49379afe502caa71d",
+      "id": "aa43bfdaf81a051fd6a47a1f",
+      "source": "claim:137a08121cef99c0b7c3ad2e",
       "target": "source:f4dcdb69e4750b410d4f4267",
       "kind": "cites",
       "layer": "provenance",
@@ -3697,25 +3708,14 @@
       ]
     },
     {
-      "id": "94e1360d3a2b59f01aa5858b",
-      "source": "claim:3e0bb7c49379afe502caa71d",
+      "id": "a072439b49b3439f387d6100",
+      "source": "claim:137a08121cef99c0b7c3ad2e",
       "target": "source:paper:2608.02615",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:paper:2608.02615"
-      ]
-    },
-    {
-      "id": "727cde61ac6e25d43ed16b1b",
-      "source": "claim:3e0bb7c49379afe502caa71d",
-      "target": "source:paper:2609.13238",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:paper:2609.13238"
       ]
     },
     {
@@ -3763,9 +3763,9 @@
       ]
     },
     {
-      "id": "ab35dffa835442bfab0659ee",
+      "id": "b1d9cbf56d47455cc7d1dded",
       "source": "page:ae85f5f656533c61afe09346",
-      "target": "claim:a7ac1ddc42bd4afb9b43b44d",
+      "target": "claim:ce4904ff92510ceb0f7a185d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3775,8 +3775,8 @@
       ]
     },
     {
-      "id": "baad9dca2163466b3ec45ae0",
-      "source": "claim:a7ac1ddc42bd4afb9b43b44d",
+      "id": "8b9d2e07ef38a8becde0e8dc",
+      "source": "claim:ce4904ff92510ceb0f7a185d",
       "target": "source:52fc30a9f94cbfe4bb639daf",
       "kind": "cites",
       "layer": "provenance",
@@ -3786,8 +3786,8 @@
       ]
     },
     {
-      "id": "60ea12ad1376f34ad81e0b20",
-      "source": "claim:a7ac1ddc42bd4afb9b43b44d",
+      "id": "6403268845fd2590c3b9a162",
+      "source": "claim:ce4904ff92510ceb0f7a185d",
       "target": "source:f4dcdb69e4750b410d4f4267",
       "kind": "cites",
       "layer": "provenance",
@@ -3797,9 +3797,9 @@
       ]
     },
     {
-      "id": "f804652d91e12bf86dbbc6eb",
+      "id": "51203e82123e5af5bc915b28",
       "source": "page:ae85f5f656533c61afe09346",
-      "target": "claim:9485db59b6153e05e1b1cb5b",
+      "target": "claim:4eabda77fee51e6f54e8456f",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3808,8 +3808,8 @@
       ]
     },
     {
-      "id": "b4634924bae0ebadc5cf0c96",
-      "source": "claim:9485db59b6153e05e1b1cb5b",
+      "id": "cac0566e8e4c4d6356e15e8c",
+      "source": "claim:4eabda77fee51e6f54e8456f",
       "target": "source:639957245eb815c1aa388d24",
       "kind": "cites",
       "layer": "provenance",
@@ -3819,9 +3819,9 @@
       ]
     },
     {
-      "id": "754f4acdd248f09e87db05cd",
+      "id": "d6b94e3cc4727e4c7825b18d",
       "source": "page:ae85f5f656533c61afe09346",
-      "target": "claim:93ef82d13194ce65bf5e6b0a",
+      "target": "claim:95f957265667db14ec4eb7a5",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3830,8 +3830,8 @@
       ]
     },
     {
-      "id": "1d215026f87c8c072e9ca373",
-      "source": "claim:93ef82d13194ce65bf5e6b0a",
+      "id": "9ebca9b76a80fd03b8d8bc01",
+      "source": "claim:95f957265667db14ec4eb7a5",
       "target": "source:5a3645424fc2f6cf95d7f68c",
       "kind": "cites",
       "layer": "provenance",
@@ -3874,9 +3874,9 @@
       ]
     },
     {
-      "id": "9f8db7f188a698e865b872da",
+      "id": "1ddbcb068f5c4d953a719d3b",
       "source": "page:e944543690cbedcc8066503a",
-      "target": "claim:1003c240505c54014e2f681c",
+      "target": "claim:f68cea8f790f04655861fc61",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3885,8 +3885,8 @@
       ]
     },
     {
-      "id": "62cbb5d98d22389a6a800d0c",
-      "source": "claim:1003c240505c54014e2f681c",
+      "id": "2d4e5fa648af6745548404be",
+      "source": "claim:f68cea8f790f04655861fc61",
       "target": "source:paper:2608.02615",
       "kind": "cites",
       "layer": "provenance",
@@ -3907,9 +3907,9 @@
       ]
     },
     {
-      "id": "b049c008c76b34c3f15a25f8",
+      "id": "d09219041096c78943173bde",
       "source": "page:9baa053aacade6bdb59dbcc5",
-      "target": "claim:f49ec24c15f2e82e7c15693a",
+      "target": "claim:9c282e549a2c93f22100df21",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3918,8 +3918,8 @@
       ]
     },
     {
-      "id": "2bc6860f03fca46ecb46ab50",
-      "source": "claim:f49ec24c15f2e82e7c15693a",
+      "id": "04bf6da920d7810122346888",
+      "source": "claim:9c282e549a2c93f22100df21",
       "target": "source:paper:2609.13238",
       "kind": "cites",
       "layer": "provenance",
@@ -3929,9 +3929,9 @@
       ]
     },
     {
-      "id": "86165a917f84d649e43d5a60",
+      "id": "4972861a5423999af0421804",
       "source": "page:9baa053aacade6bdb59dbcc5",
-      "target": "claim:32b81166ce37e9c00e85eca3",
+      "target": "claim:c96765765ed1b4c3961b51f9",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3940,8 +3940,8 @@
       ]
     },
     {
-      "id": "b200e9891cad7d62b482e45a",
-      "source": "claim:32b81166ce37e9c00e85eca3",
+      "id": "91b2434109cdaef978ae8f86",
+      "source": "claim:c96765765ed1b4c3961b51f9",
       "target": "source:paper:2609.13238",
       "kind": "cites",
       "layer": "provenance",
@@ -3984,9 +3984,9 @@
       ]
     },
     {
-      "id": "a7ba049d84fdc088fdcdfbb0",
+      "id": "d5e812622def22e8fa21cbe2",
       "source": "page:396071fd89aa658edbaefebb",
-      "target": "claim:c39c376d966a1b0bff72e8ab",
+      "target": "claim:7c2472a7450ff98152c16162",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3997,8 +3997,8 @@
       ]
     },
     {
-      "id": "dc6c1511ffdc304458058440",
-      "source": "claim:c39c376d966a1b0bff72e8ab",
+      "id": "7798349e4b1fe955d6b555fb",
+      "source": "claim:7c2472a7450ff98152c16162",
       "target": "source:9c82dab071a2a3996b5aea89",
       "kind": "cites",
       "layer": "provenance",
@@ -4008,8 +4008,8 @@
       ]
     },
     {
-      "id": "1431953ee8d561f9f0fec18c",
-      "source": "claim:c39c376d966a1b0bff72e8ab",
+      "id": "e4d094f4d78937cb526c2a72",
+      "source": "claim:7c2472a7450ff98152c16162",
       "target": "source:a7aa20a2bcf5aac3f7a49288",
       "kind": "cites",
       "layer": "provenance",
@@ -4019,8 +4019,8 @@
       ]
     },
     {
-      "id": "83e7d34d821592bfdb053fed",
-      "source": "claim:c39c376d966a1b0bff72e8ab",
+      "id": "5ea0b7e17cf395162e7f7738",
+      "source": "claim:7c2472a7450ff98152c16162",
       "target": "source:f22716264922d6813e829b02",
       "kind": "cites",
       "layer": "provenance",
@@ -4030,9 +4030,9 @@
       ]
     },
     {
-      "id": "6d2f9bb2e13b2c7c030df21e",
+      "id": "7cd32c31e9e95aa27e84b2aa",
       "source": "page:396071fd89aa658edbaefebb",
-      "target": "claim:d155eeea93fcfad3864665ad",
+      "target": "claim:57e5730de8d1243e770623cc",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4043,8 +4043,8 @@
       ]
     },
     {
-      "id": "ac118267ef93e4a0458c8c50",
-      "source": "claim:d155eeea93fcfad3864665ad",
+      "id": "b8e3be4f48c9d75a4b956925",
+      "source": "claim:57e5730de8d1243e770623cc",
       "target": "source:9c82dab071a2a3996b5aea89",
       "kind": "cites",
       "layer": "provenance",
@@ -4054,8 +4054,8 @@
       ]
     },
     {
-      "id": "cd0f21971edaff9d25bc8e36",
-      "source": "claim:d155eeea93fcfad3864665ad",
+      "id": "90287276ade260cb208d0ef6",
+      "source": "claim:57e5730de8d1243e770623cc",
       "target": "source:a7aa20a2bcf5aac3f7a49288",
       "kind": "cites",
       "layer": "provenance",
@@ -4065,8 +4065,8 @@
       ]
     },
     {
-      "id": "0bc79749e3ed8bbd617e946e",
-      "source": "claim:d155eeea93fcfad3864665ad",
+      "id": "8e2cb921f0afa2d36273d25a",
+      "source": "claim:57e5730de8d1243e770623cc",
       "target": "source:f22716264922d6813e829b02",
       "kind": "cites",
       "layer": "provenance",
@@ -6019,12 +6019,12 @@
       ]
     },
     {
-      "id": "623e43667400e7a3b9a14684",
+      "id": "91943309ae49204304efde2c",
       "source": "page:b41d81e22da55c3af6d162d9",
       "target": "page:ae85f5f656533c61afe09346",
       "kind": "involves",
       "layer": "semantic",
-      "text": "임상 대화 시스템의 전향적 검증과 자동 기록의 정확성 감사가 의료 AI의 검증 과제로 논의된다.",
+      "text": "대화형 의료 AI의 전향적 검증과 자동 기록의 정확성 감사가 임상 사용의 검증 과제로 논의된다.",
       "source_ids": [
         "source:52fc30a9f94cbfe4bb639daf",
         "source:639957245eb815c1aa388d24"
@@ -6042,12 +6042,12 @@
       ]
     },
     {
-      "id": "e4f606304caf6e69840ee8d9",
+      "id": "08f32e7b541fa35116b0d290",
       "source": "page:b41d81e22da55c3af6d162d9",
       "target": "page:9baa053aacade6bdb59dbcc5",
       "kind": "involves",
       "layer": "semantic",
-      "text": "악안면 영상 보고서 평가에서 어휘 중복과 사실적 함의 점수의 차이를 분석한다.",
+      "text": "악안면 영상 보고서 평가에서 어휘 중복과 사실적 함의 판정의 차이를 분석한다.",
       "source_ids": [
         "source:paper:2609.13238"
       ]
@@ -7146,18 +7146,18 @@
       "id": "medical",
       "title": "의료",
       "kind": "topic",
-      "revision": 27,
+      "revision": 32,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
+            "source:52fc30a9f94cbfe4bb639daf",
             "source:f4dcdb69e4750b410d4f4267",
             "source:paper:2608.02615",
-            "source:paper:2609.13238",
             "source:f22716264922d6813e829b02"
           ],
           "kind": "interpretation",
-          "text": "제공 자료는 의료 AI의 임상 근거 확보, 암 다중모달 질의응답 평가, 영상 보고서 채점, 의료기기 표준을 다룬다. 검증 필요성에 관한 주장·벤치마크 결과·표준 승인 보도는 서로 다른 근거이므로 치료 효과의 증거로 합산할 수 없다."
+          "text": "제공 자료에서 의료 AI의 검증은 임상 환경의 전향적 평가, 출력 근거 추적, 벤치마크 평가, 의료기기 표준으로 나뉜다. 각각 확인하는 대상이 달라 벤치마크 점수나 표준 승인만으로 치료 효과를 판단할 수 없다."
         }
       ]
     },
@@ -7165,7 +7165,7 @@
       "id": "medical:622b533ea04930be00a5",
       "title": "의료 LLM의 임상 증거와 기록 감사",
       "kind": "issue",
-      "revision": 27,
+      "revision": 32,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7174,21 +7174,21 @@
             "source:f4dcdb69e4750b410d4f4267"
           ],
           "kind": "reported",
-          "text": "Nature Medicine 글을 소개한 발췌는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 모델 출력의 근거 추적·검증 체계를 요구한다. 각각 임상 환경에서의 검증과 출력 근거 확인을 강조한다."
+          "text": "Nature Medicine 글 소개 발췌는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 출력의 근거 추적·검증 체계를 요구한다. 각각 임상 사용 과정과 답변의 근거를 확인하자는 주장이다."
         },
         {
           "evidence_ids": [
             "source:639957245eb815c1aa388d24"
           ],
           "kind": "reported",
-          "text": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 이는 검증 요구를 소개한 자료이며 오류 빈도나 감사로 인한 개선 수치는 제공하지 않는다."
+          "text": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 제공된 발췌에는 오류 빈도나 감사에 따른 개선 수치가 없다."
         },
         {
           "evidence_ids": [
             "source:5a3645424fc2f6cf95d7f68c"
           ],
           "kind": "reported",
-          "text": "디지털 헬스 중재의 신속 문헌고찰을 소개한 발췌는 개발사가 직접 수행한 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 제공 자료에는 효과 크기와 교란요인 분석이 없어 개발사 참여가 결과 차이의 원인인지는 판단할 수 없다."
+          "text": "디지털 헬스 중재의 신속 문헌고찰 소개는 개발사가 직접 수행한 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 다만 발췌에는 효과 크기와 교란요인 분석이 없어 개발사 참여를 결과 차이의 원인으로 단정할 수 없다."
         }
       ]
     },
@@ -7196,7 +7196,7 @@
       "id": "medical:236e597ee8541af582bb",
       "title": "OncoTriad-QA와 OncoVLM",
       "kind": "entity",
-      "revision": 27,
+      "revision": 32,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7211,7 +7211,7 @@
             "source:paper:2608.02615"
           ],
           "kind": "reported",
-          "text": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록의 질의응답 평가 결과이며 임상 검증 결과가 아니다."
+          "text": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록의 질의응답 평가 결과이며 임상효과 검증은 아니다."
         }
       ]
     },
@@ -7219,7 +7219,7 @@
       "id": "medical:c093221c9f39bd9b29dc",
       "title": "CBCT 보고서 생성의 평가 지표",
       "kind": "issue",
-      "revision": 27,
+      "revision": 32,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7227,14 +7227,14 @@
             "source:paper:2609.13238"
           ],
           "kind": "reported",
-          "text": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 보였다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서는 복합 점수 0.2909, 복합 목표로 선택한 보고서는 0.4122를 얻었으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다."
+          "text": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수는 0.2909, 복합 목표로 선택한 보고서는 0.4122였으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.13238"
           ],
           "kind": "interpretation",
-          "text": "문장 선택 예측에서 촬영기관 정보가 0.718로 영상 모델의 0.663보다 높았다는 저자 보고는 해당 데이터의 어휘 평가가 기관별 서술 관행을 보상할 수 있음을 시사한다. 복합 점수도 LLM 판정을 포함하므로 점수 상승만으로 임상 정확성을 입증하지는 못한다."
+          "text": "문장 선택 예측 AUC가 촬영기관 정보에서 0.718, 영상 모델에서 0.663이었다는 결과는 해당 데이터의 어휘 평가가 기관별 서술 관행을 보상할 수 있음을 시사한다. 복합 점수 역시 LLM 판정을 포함하므로 점수 상승을 환자별 임상 정확성의 입증으로 읽기는 어렵다."
         }
       ]
     },
@@ -7242,7 +7242,7 @@
       "id": "medical:175dfe1d244799b4b74d",
       "title": "중국 NMPA의 AI 뇌파 처리 BCI 표준 승인",
       "kind": "event",
-      "revision": 27,
+      "revision": 32,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7252,7 +7252,7 @@
             "source:9c82dab071a2a3996b5aea89"
           ],
           "kind": "reported",
-          "text": "ECNS를 소개한 발췌는 NMPA가 AI로 뇌파 데이터를 처리하는 뇌-컴퓨터 인터페이스(BCI) 의료기기 제품 표준을 승인했다고 전한다. 다른 발췌들은 이를 뇌파 처리 품질 요건의 법제화 또는 AI 뇌 임플란트 표준으로 표현한다."
+          "text": "ECNS 소개 발췌는 NMPA가 AI로 뇌파 데이터를 처리하는 뇌-컴퓨터 인터페이스(BCI) 의료기기 제품 표준을 승인했다고 전한다. 다른 발췌들은 이를 뇌파 처리 품질 요건의 법제화 또는 AI 뇌 임플란트 표준으로 표현한다."
         },
         {
           "evidence_ids": [
@@ -7261,7 +7261,7 @@
             "source:9c82dab071a2a3996b5aea89"
           ],
           "kind": "uncertain",
-          "text": "현재 근거에는 표준 원문이 없어 임플란트에 한정되는지, 법적 구속력이 무엇인지, ‘세계 최초’의 비교 범위가 무엇인지 확인되지 않는다. 시행일도 DATA의 발췌에서는 확인할 수 없다."
+          "text": "현재 근거에는 표준 원문이 없어 임플란트에 한정되는지, 법적 구속력이 무엇인지, ‘세계 최초’의 비교 범위가 무엇인지 확인되지 않는다. 시행일도 제공된 발췌에서는 확인할 수 없다."
         }
       ]
     },
@@ -7805,8 +7805,8 @@
     }
   ],
   "issues": [],
-  "version": "f48fe9374d3c57513c44fed4dcc0850921ebb3571f8e08cbca14c36825e0c7fa",
-  "exported_at": "2026-09-18T20:40:43.314554+00:00",
+  "version": "e8c5d9aff0d4e927ca1cffcf8934a35b5c95cae5cc198a6e831fdafba3f776bb",
+  "exported_at": "2026-09-18T20:46:26.186535+00:00",
   "coverage": {
     "pages": 42,
     "claims": 84,
