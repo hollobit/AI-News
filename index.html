@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="ko" data-mode="static"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>뉴스 지식 연결 지도</title><link rel="stylesheet" href="./wiki-network.css"><script src="./wiki-network.js" defer></script></head>
+<body><header><div><small>NEWS KNOWLEDGE ATLAS</small><h1>흩어진 소식, 이어지는 지식</h1></div><nav id="live-nav"><a href="/wiki">위키</a><a href="/observatory">관측 지도</a><a href="/graph">질문</a><a href="/api/wiki/vault">Obsidian ZIP</a></nav></header>
+<p id="status" role="status" aria-live="polite">현재 검토된 지식 연결을 읽고 있습니다.</p>
+<main><aside class="panel"><h2>지식 탐색</h2><label for="search">제목·주장 검색</label><input id="search" type="search" maxlength="200" placeholder="기업 · 기술 · 사건 · 질문">
+<label for="layer">관계 층</label><select id="layer"><option value="all">모든 층</option><option value="semantic">검토된 의미 관계</option><option value="provenance">원출처·주장 연결</option><option value="recommendation">탐색 추천 (사실 관계 아님)</option></select>
+<label for="color">노드 색상</label><select id="color"><option value="type">페이지 유형</option><option value="community">의미 관계 연결 묶음</option></select><div id="legend"></div><p id="counts"></p><button id="more">표시 범위 확대</button><button id="reset">전체 보기</button><nav id="node-list" aria-label="지식 노드 목록"></nav></aside>
+<section class="canvas-panel panel"><div class="graph-toolbar"><span>드래그 이동 · 휠 확대 · 노드 선택</span><button id="fit">화면 맞춤</button></div><svg id="network" viewBox="0 0 1000 740" aria-label="출처·주장·의미 관계 지식 지도" role="img"><g id="scene"><g id="edges"></g><g id="nodes"></g></g></svg><p class="caution">실선: 검토된 의미 관계 · 가는 선: 인용 · 점선: 탐색 추천. 같은 출처·동시 등장·유사도는 인과관계나 사실성의 증명이 아닙니다.</p></section>
+<article class="panel" id="detail"><h2>노드를 선택하세요</h2><p>설명과 출처, 다른 주제와의 연결을 확인합니다.</p></article></main>
+<section class="panel lint"><h2>지식 점검</h2><p>공개하지 않은 판, 동일 표기 후보, 고립 페이지, 검토된 조건 차이를 구분합니다. 동일 표기는 자동 병합하지 않습니다.</p><div id="issues"></div></section>
+<footer>원자료와 해석을 구분합니다. 검토 통과는 현실의 사실성 보증이 아닙니다. 공개 스냅샷은 생성 시점 기준이며 이후 정정은 다음 게시 때 반영됩니다.</footer></body></html>
