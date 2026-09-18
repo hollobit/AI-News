@@ -14,6 +14,7 @@
   function select(id){selected=id;location.hash=new URLSearchParams({id}).toString();load();}
   function transform(){$('scene').setAttribute('transform',`translate(${panX} ${panY}) scale(${zoom})`);}
   function staticView(){
+    if(!selected){const hash=new URLSearchParams(location.hash.slice(1));if(hash.has('source_url')){const url=safeURL(hash.get('source_url'));selected=snapshot.nodes.find(n=>n.type==='source'&&n.url===url)?.id||'';}}
     const layer=$('layer').value,q=$('search').value.trim().toLocaleLowerCase();
     const edges=snapshot.edges.filter(e=>layer==='all'||e.layer===layer);let nodes=snapshot.nodes;
     if(layer!=='all'){const connected=new Set(edges.flatMap(e=>[e.source,e.target]));if(selected)connected.add(selected);nodes=nodes.filter(n=>connected.has(n.id));}
