@@ -1384,13 +1384,13 @@
       ],
       "source_ids": [
         "source:0fbb2545a72a30b7553c8e7c",
-        "source:paper:2609.17771",
-        "source:paper:2609.18004",
-        "source:paper:2609.19801"
+        "source:paper:2609.19194",
+        "source:paper:2609.19200",
+        "source:paper:2609.19228"
       ],
       "claims": [
-        "claim:5d0d7cc7d90bec1cfb0d552b",
-        "claim:5db303edf832046358ec8c13"
+        "claim:8b51f844ba1b11dc6be386a5",
+        "claim:7c2c8c0a8079505e8675eb5d"
       ],
       "status": "reviewed"
     },
@@ -1408,168 +1408,181 @@
       "url": "https://techcrunch.com/2026/09/18/world-model-companies-are-keeping-a-lot-of-secrets"
     },
     {
-      "id": "source:paper:2609.17771",
+      "id": "source:paper:2609.19194",
       "type": "source",
-      "title": "HINT-Plan: Human Intention-Aware Robot Task Planning in Context-Rich Environments using Vision Language Models",
+      "title": "AthenaZero: A low-inertia, bimanual robot for dynamic manipulation",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ],
       "origin": "arxiv_abstract",
       "scope": "검토 논문의 제목·초록; 전문·제품 성능·임상 검증 아님",
       "day": "2026-09-15",
       "status": "original_source_not_fact_checked",
-      "url": "https://arxiv.org/abs/2609.17771v1"
+      "url": "https://arxiv.org/abs/2609.19194v1"
     },
     {
-      "id": "source:paper:2609.18004",
+      "id": "source:paper:2609.19200",
       "type": "source",
-      "title": "Missing Bridges: Composition-Aware Active Imitation Learning",
+      "title": "ULOHA: An Underwater Bimanual Robot System for Robot Learning",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ],
       "origin": "arxiv_abstract",
       "scope": "검토 논문의 제목·초록; 전문·제품 성능·임상 검증 아님",
       "day": "2026-09-16",
       "status": "original_source_not_fact_checked",
-      "url": "https://arxiv.org/abs/2609.18004v1"
+      "url": "https://arxiv.org/abs/2609.19200v1"
     },
     {
-      "id": "claim:5d0d7cc7d90bec1cfb0d552b",
-      "type": "claim",
-      "title": "세 연구는 행동 계획의 서로 다른 병목을 다룬다. HINT-Plan은 사람의 의도를 공동 계획에 반영하고, AALT는 여러 과제를 연결하는 시연을 선택하며, DeliveryGym은 이후 작업까지 고려한 자원 배분을 학습하게 한다.",
+      "id": "source:paper:2609.19228",
+      "type": "source",
+      "title": "Grasping by interconnection: robust closing motions from coarse object templates",
       "source_ids": [
-        "source:paper:2609.17771",
-        "source:paper:2609.18004",
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
+      ],
+      "origin": "arxiv_abstract",
+      "scope": "검토 논문의 제목·초록; 전문·제품 성능·임상 검증 아님",
+      "day": "2026-09-16",
+      "status": "original_source_not_fact_checked",
+      "url": "https://arxiv.org/abs/2609.19228v1"
+    },
+    {
+      "id": "claim:8b51f844ba1b11dc6be386a5",
+      "type": "claim",
+      "title": "이번 연구들은 물리적 상호작용의 서로 다른 병목을 다룬다. AthenaZero는 팔의 관성을 줄이고, ULOHA는 수중 양팔 학습 과정을 통합하며, 거친 형상 기반 파지 연구는 닫힘 동작 자체가 물체 정보의 오차를 견디도록 설계한다.",
+      "source_ids": [
+        "source:paper:2609.19194",
+        "source:paper:2609.19200",
+        "source:paper:2609.19228"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
     },
     {
-      "id": "claim:5db303edf832046358ec8c13",
+      "id": "claim:7c2c8c0a8079505e8675eb5d",
       "type": "claim",
-      "title": "공동 작업 성공률, 회수 과제 성공 개수, 배송 순수입은 서로 다른 평가 지표다. 제공된 초록의 시뮬레이션 성과를 하나의 실물 로봇 성능 순위로 읽을 수 없다.",
+      "title": "투구·포구 속도, 수중 협동 동작, 파지 오차 허용 범위는 평가 대상이 다르다. 세 초록은 설계 선택을 이해하는 근거이며, 수치를 합쳐 범용 로봇의 성능 순위를 만들 근거는 아니다.",
       "source_ids": [
-        "source:paper:2609.17771",
-        "source:paper:2609.18004",
-        "source:paper:2609.19801"
+        "source:paper:2609.19194",
+        "source:paper:2609.19200",
+        "source:paper:2609.19228"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
     },
     {
-      "id": "page:9ecfe5a440798dc56bbe3e6b",
+      "id": "page:35dbd793846ebd8927212027",
       "type": "entity",
-      "title": "HINT-Plan",
+      "title": "AthenaZero",
       "page_ids": [
-        "physical:3dbcaeb9306c2a444583"
+        "physical:0d7cba79673851e7e353"
       ],
       "topics": [
         "physical"
       ],
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ],
       "claims": [
-        "claim:14eff644c462eee9f36bc613",
-        "claim:7587920bf63c05c8c1a6cfc1"
+        "claim:30601f1d527ec3dd62169982",
+        "claim:88aabc51ca858c2cc9c823c5"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:14eff644c462eee9f36bc613",
+      "id": "claim:30601f1d527ec3dd62169982",
       "type": "claim",
-      "title": "연구진은 VLM으로 제3자 시점 이미지에서 사람의 고수준 의도를 추론해 목표 상태로 변환한다. 계층적 장면 그래프의 환경 구조와 행동 지식을 형식 계획 언어로 옮겨 인간·로봇 공동 계획을 만든다.",
+      "title": "연구진은 준직접 구동과 전달계 원격 배치로 말단 유효 질량을 사람과 비슷한 수준, 기존 로봇 팔보다 약 한 자릿수 규모 낮게 줄였다고 설명한다. 낮은 관성과 토크 투명성을 빠른 물체 상호작용에 활용하는 양팔 설계다.",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:7587920bf63c05c8c1a6cfc1",
+      "id": "claim:88aabc51ca858c2cc9c823c5",
       "type": "claim",
-      "title": "초록은 사실적 시뮬레이션에서 전체 성공률 69.71%와 기능적 충돌 감소를 보고한다. 기준선 대비 최대 35.29% 개선도 제시하지만, 상대 개선율인지 퍼센트포인트 차이인지는 명시하지 않는다.",
+      "title": "초록은 투구 속도 30m/s 초과, 7.3m 거리에서 포구·타격 속도 14m/s 초과를 보고한다. 로봇끼리 및 사람과 로봇의 시연도 기술하지만, 시행 횟수와 성공률은 제시하지 않는다.",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "page:59f4dd507e53e74129b29c64",
+      "id": "page:ebfef15f7701a6f007c7e8fd",
       "type": "entity",
-      "title": "AALT",
+      "title": "ULOHA",
       "page_ids": [
-        "physical:bbff377df344cb661378"
+        "physical:bccebcc73870bc64186b"
       ],
       "topics": [
         "physical"
       ],
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ],
       "claims": [
-        "claim:cb44082828a2547032dd66f9",
-        "claim:67ae992c56440cee72b711ae"
+        "claim:597f2107c1c3f2a5a367e93c",
+        "claim:55a9fc55ffc9961e5805d91c"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:cb44082828a2547032dd66f9",
+      "id": "claim:597f2107c1c3f2a5a367e93c",
       "type": "claim",
-      "title": "연구진은 기존 시연을 잠재 허브 상태와 학습된 행동의 연결망으로 구성한다. 시작–목표 연결을 많이 늘릴 브리지 시연을 전문가에게 요청하고, 실행 때 허브 경로의 각 전이에 조건화한 확산 정책을 사용한다.",
+      "title": "연구진은 리더–팔로어 하드웨어와 LeRobot 확장을 결합해 원격조작, 다중 시점 관측, 시연 수집, 정책 학습, 자율 실행을 연결했다. 초록은 실제 수중 양팔 로봇의 팔 사이 물체 전달, 공동 조작, 부력으로 움직이는 물체 포착을 보고한다.",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:67ae992c56440cee72b711ae",
+      "id": "claim:55a9fc55ffc9961e5805d91c",
       "type": "claim",
-      "title": "초록은 UR5e 순서 지정 회수 시뮬레이션에서 초기 데이터에 시연 3개·전이 5개를 추가해 성공 과제가 42/72에서 72/72로 늘었다고 보고한다. 가장 강한 기준선은 시연 20개·전이 98개를 사용한 뒤 평균 성공률 88.6%였다. 결과 범위는 해당 72개 과제다.",
+      "title": "초록은 ACT·Diffusion Policy·SmolVLA를 평가하고 기포, 부력, 행동 실행 구간과 실시간 청킹을 조사했다고 설명한다. 공기·수중 시연을 함께 사용해 두 환경에서 실행한 전이 결과는 별도의 단일 팔 실험이며, 시험 조건 안의 결과다.",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "page:b227ab45492b01b6fd04bcbe",
-      "type": "entity",
-      "title": "DeliveryGym",
+      "id": "page:3602c77d4a0bf4ed1a3a88ad",
+      "type": "concept",
+      "title": "거친 물체 형상 기반 파지",
       "page_ids": [
-        "physical:df523259c6f6a7ab4406"
+        "physical:857ab6a0be6eae976af1"
       ],
       "topics": [
         "physical"
       ],
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ],
       "claims": [
-        "claim:22b22e5fec0af6c7d7b319c0",
-        "claim:c42dcf5ddd74e054a08b7afa"
+        "claim:46ac3fab8591c6b63d81f989",
+        "claim:da35fe8ba8c10d4cff5e7868"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:22b22e5fec0af6c7d7b319c0",
+      "id": "claim:46ac3fab8591c6b63d81f989",
       "type": "claim",
-      "title": "연구진이 제안한 3D 배송 환경은 시간·에너지·돈의 소모가 이후 주문에 미치는 영향을 유지하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산한다. 평가는 고정한 채 정책의 관측된 약점에 맞춰 이후 훈련 작업을 조정한다.",
+      "title": "연구진은 대략적인 물체 템플릿, 인간의 파지 유형, 물체 중심 상호작용, 유연하게 미끄러지는 접촉을 결합한 운동 계획기를 제안했다. 정확한 접점을 미리 지정하기보다 닫힘 동작 자체에 오차 허용 능력을 넣는 접근이다.",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:c42dcf5ddd74e054a08b7afa",
+      "id": "claim:da35fe8ba8c10d4cff5e7868",
       "type": "claim",
-      "title": "초록은 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다고 보고한다. 별도 비교에서 적응형 훈련은 같은 rollout 예산의 균등 샘플링보다 테스트 수입이 16.5% 높았다. 두 수치는 비교 조건이 달라 합산할 수 없다.",
+      "title": "초록은 피드백 없이 약 1cm의 크기 오차와 수cm·수십 도의 자세 오차를 견디고, 27개 시험 조건 중 25개에서 비교 계획기보다 넓은 허용 범위를 보였다고 보고한다. 일상 물체 80개 중 82.5% 파지도 보고하지만, 제공 초록만으로 실기·시뮬레이션 평가 구분은 확인되지 않는다.",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
@@ -1589,7 +1602,7 @@
       ],
       "claims": [
         "claim:4bc683ac114bf5be3b7bfd71",
-        "claim:5bc508f07bd6891121ee743b"
+        "claim:1420c17482bca68dc7348fac"
       ],
       "status": "reviewed"
     },
@@ -1604,9 +1617,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:5bc508f07bd6891121ee743b",
+      "id": "claim:1420c17482bca68dc7348fac",
       "type": "claim",
-      "title": "어느 기업이 어떤 데이터·평가 항목을 비공개로 두었는지는 제공 발췌에 없다. 기업별 성능 주장의 검증 가능성을 판단하려면 해당 공개 범위를 확인해야 한다.",
+      "title": "어느 기업이 어떤 데이터·평가 항목을 비공개로 두었는지는 발췌에 없다. 기업별 성능 주장의 검증 가능성을 판단하려면 비공개 항목과 실제 공개 자료의 범위를 확인해야 한다.",
       "source_ids": [
         "source:0fbb2545a72a30b7553c8e7c"
       ],
@@ -1915,8 +1928,7 @@
         "source:a617c0dcaf2f826c9303b840"
       ],
       "claims": [
-        "claim:28b0cb71150940b8bca3d63d",
-        "claim:6f6e6a7c5b701813e908c68d"
+        "claim:2854dcfd943268a123975cc4"
       ],
       "status": "reviewed"
     },
@@ -1960,25 +1972,13 @@
       "url": "https://www.redhat.com/en/blog/datacenter-myth-why-sovereign-ai-demands-tenancy-model-not-just-geography"
     },
     {
-      "id": "claim:28b0cb71150940b8bca3d63d",
+      "id": "claim:2854dcfd943268a123975cc4",
       "type": "claim",
-      "title": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 조건이라는 서로 다른 층위에서 다룬다. 한 층위의 발표만으로 전체 자립 수준을 판단하기는 어렵다.",
+      "title": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 요건으로 나누어 다룬다. 한국의 독파모 추진, 중국의 설계·HBM 공급망 구축 보도, Red Hat의 테넌시 주장은 평가 대상이 달라 어느 하나로 전체 자립 수준을 판단하기 어렵다.",
       "source_ids": [
         "source:26eea64ed635a308bcc1e552",
         "source:3999b94431374f06e9cac006",
         "source:a617c0dcaf2f826c9303b840"
-      ],
-      "claim_kind": "interpretation",
-      "status": "reviewed"
-    },
-    {
-      "id": "claim:6f6e6a7c5b701813e908c68d",
-      "type": "claim",
-      "title": "한국 브리핑은 독파모 평가와 국민 서비스 연결을, 중국 관련 발췌는 AI 반도체 설계부터 HBM까지 자체 공급체계 구축을 강조한다. 이는 자료의 초점 차이이며 국가별 자립 수준을 비교한 결과는 아니다.",
-      "source_ids": [
-        "source:26eea64ed635a308bcc1e552",
-        "source:3999b94431374f06e9cac006",
-        "source:809f46c21477bbbf5049da92"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
@@ -1997,15 +1997,15 @@
         "source:3999b94431374f06e9cac006"
       ],
       "claims": [
-        "claim:327b5b8943d12cbad05b56d3",
-        "claim:c75db1435fb42258641a717e"
+        "claim:5f3b93afc378befe269681a7",
+        "claim:a83fe76cdf875d2ad028c64a"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:327b5b8943d12cbad05b56d3",
+      "id": "claim:5f3b93afc378befe269681a7",
       "type": "claim",
-      "title": "9월 16일 브리핑은 SKT·LG AI연구원·업스테이지가 독파모 3차 평가를 앞두고 성능 고도화에 집중하며, 과기정통부가 사업 성과를 오픈소스 생태계로 확장할 방침이라고 전했다.",
+      "title": "9월 16일 브리핑은 SKT·LG AI연구원·업스테이지가 독파모 3차 평가에 대비해 성능을 고도화하고, 과기정통부는 성과를 오픈소스 생태계로 확장할 방침이라고 전했다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ],
@@ -2013,9 +2013,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:c75db1435fb42258641a717e",
+      "id": "claim:a83fe76cdf875d2ad028c64a",
       "type": "claim",
-      "title": "같은 브리핑은 LG AI연구원이 제조·금융·과학 분야의 전문가 AI와 엑사원 외부 공급 계획을 제시했다고 전했다. 이는 독자 모델을 산업 용도로 확장하려는 계획이다.",
+      "title": "같은 브리핑은 LG AI연구원의 제조·금융·과학 분야 전문가 AI 공개와 엑사원 외부 공급 계획, SKT의 A.X K2와 모두의 AI 통합 검토를 전했다. 외부 공급과 서비스 통합은 완료 실적으로 제시되지 않았다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ],
@@ -2037,15 +2037,15 @@
         "source:809f46c21477bbbf5049da92"
       ],
       "claims": [
-        "claim:df7c966c821bb59997c9749a",
-        "claim:f1ba0d446a2a4f4e09a3ac04"
+        "claim:de8548f56f87214cb8540693",
+        "claim:189295ad245dd35c05bcc3d6"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:df7c966c821bb59997c9749a",
+      "id": "claim:de8548f56f87214cb8540693",
       "type": "claim",
-      "title": "9월 12일 브리핑은 정부의 모티프테크 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일 브리핑도 심사 불투명성 비판과 사업 재설계 논의를 소개했다.",
+      "title": "9월 12일 브리핑은 정부의 모티프테크 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일 브리핑은 조선비즈의 심사 불투명성 비판과 사업 재설계 논의도 소개했다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
@@ -2054,9 +2054,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:f1ba0d446a2a4f4e09a3ac04",
+      "id": "claim:189295ad245dd35c05bcc3d6",
       "type": "claim",
-      "title": "기각의 구체적 사유는 추후 설명 사항으로 보도됐다. 제공 자료에는 후속 설명과 확정된 개편안이 없어, 기각의 타당성과 평가 기준의 실제 변경 여부는 남은 쟁점이다.",
+      "title": "기각 사유의 구체적 설명은 추후 사항으로 보도됐으며 현재 자료에는 후속 설명이나 확정 개편안이 없다. 이의신청을 어떤 기준으로 판단했는지, 그 기준이 3차 평가에서 바뀌는지가 남은 확인 사항이다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
@@ -2065,11 +2065,11 @@
       "status": "reviewed"
     },
     {
-      "id": "page:142895cf095139317c59613f",
-      "type": "entity",
-      "title": "모두의 AI",
+      "id": "page:8e9347b11db4e118fbc420c6",
+      "type": "event",
+      "title": "모두의 AI 출시 계획",
       "page_ids": [
-        "sovereign:30630acdf559eea80c39"
+        "sovereign:5ff7f7b76b79705343b0"
       ],
       "topics": [
         "sovereign"
@@ -2079,15 +2079,15 @@
         "source:809f46c21477bbbf5049da92"
       ],
       "claims": [
-        "claim:0d7705cc2d775c6ee2189fcf",
-        "claim:b9d3ebe09a1300e6b40ab0a5"
+        "claim:f249fd2660702c8aa0fe0677",
+        "claim:7180d0b524f2478277db8e10"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:0d7705cc2d775c6ee2189fcf",
+      "id": "claim:f249fd2660702c8aa0fe0677",
       "type": "claim",
-      "title": "9월 16일 브리핑은 정부가 SKT·카카오·KT 등 3개 컨소시엄을 통해 국민 무료 AI 서비스를 연내 출시할 계획이라고 전했다. SKT는 전화·문자 접근과 병원·택시 예약을 수행하는 실행형 에이전트를 예고했다.",
+      "title": "9월 16일 브리핑은 정부가 SKT·카카오·KT 등 3개 컨소시엄을 통해 국민 무료 AI 서비스 ‘모두의 AI’를 연내 출시할 계획이라고 전했다. SKT는 전화·문자 접근과 식당 대기 인원 확인, 병원·택시 예약을 수행하는 실행형 에이전트를 예고했다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ],
@@ -2095,9 +2095,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:b9d3ebe09a1300e6b40ab0a5",
+      "id": "claim:7180d0b524f2478277db8e10",
       "type": "claim",
-      "title": "9월 12일 브리핑은 SKT 컨소시엄의 의료·돌봄·교육 등 8개 특화서비스와 12월 개시 계획을 전했다. 16일에도 출시는 연내 계획이며 독파모 A.X K2 통합은 검토 단계로 소개돼, 서비스 운영이나 모델 통합 완료를 뜻하지 않는다.",
+      "title": "9월 12일 브리핑의 SKT 서비스 ‘12월 개시’와 16일의 ‘연내 출시’는 양립하는 일정 표현이다. 의료·돌봄·교육 등 특화서비스와 예약 기능은 계획 단계이며, 반복 보도가 운영 개시나 이용 성과를 확인해 주지는 않는다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
@@ -2119,15 +2119,15 @@
         "source:a617c0dcaf2f826c9303b840"
       ],
       "claims": [
-        "claim:0ad4bc239c8f06b1d9e4459b",
-        "claim:9bcc4324661f030b0a262e3d"
+        "claim:97d9c8bda63ecd15c51f59ba",
+        "claim:09c97fb708d54594c85b8a3d"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:0ad4bc239c8f06b1d9e4459b",
+      "id": "claim:97d9c8bda63ecd15c51f59ba",
       "type": "claim",
-      "title": "Red Hat은 소버린 AI에 지리적 위치만이 아니라 테넌시 모델이 필요하다는 관점을 제시했다.",
+      "title": "Red Hat은 소버린 AI에 데이터센터의 지리적 위치만이 아니라 테넌시 모델이 필요하다는 주장을 제시했다.",
       "source_ids": [
         "source:a617c0dcaf2f826c9303b840"
       ],
@@ -2135,9 +2135,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:9bcc4324661f030b0a262e3d",
+      "id": "claim:09c97fb708d54594c85b8a3d",
       "type": "claim",
-      "title": "제공 발췌에는 테넌시의 정의나 주권 충족 기준이 없다. 어떤 운영 구조가 어떤 기술·법적 조건에서 주권을 보장한다는 주장인지 확인이 필요하다.",
+      "title": "현재 발췌에는 테넌시의 정의와 주권 충족 기준이 없다. 어떤 운영 구조와 통제 권한을 요구하는지 확인하기 전에는 이 주장을 구체적인 인프라 선정 기준으로 적용하기 어렵다.",
       "source_ids": [
         "source:a617c0dcaf2f826c9303b840"
       ],
@@ -4295,293 +4295,293 @@
       ]
     },
     {
-      "id": "c1923d4b86fe4bdf824b1f95",
+      "id": "af7c1130e782e308a16e4ca9",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "source:paper:2609.17771",
+      "target": "source:paper:2609.19194",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ]
     },
     {
-      "id": "187d50a4022a4ff6d7f18c30",
+      "id": "9d9bffdabe535a254bdd626e",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "source:paper:2609.18004",
+      "target": "source:paper:2609.19200",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ]
     },
     {
-      "id": "15692244256eda2a18d3ea76",
+      "id": "44e1fdf5fc8f66c0c3ad2c3f",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "source:paper:2609.19801",
+      "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "e619ef680b6268d11683b8fe",
+      "id": "20e0417a1275f1fea7c91071",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "claim:5d0d7cc7d90bec1cfb0d552b",
+      "target": "claim:8b51f844ba1b11dc6be386a5",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771",
-        "source:paper:2609.18004",
-        "source:paper:2609.19801"
+        "source:paper:2609.19194",
+        "source:paper:2609.19200",
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "345f924cfb428e5e7cd27d7c",
-      "source": "claim:5d0d7cc7d90bec1cfb0d552b",
-      "target": "source:paper:2609.17771",
+      "id": "5a3c63ed0a100ab5f99dde0b",
+      "source": "claim:8b51f844ba1b11dc6be386a5",
+      "target": "source:paper:2609.19194",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ]
     },
     {
-      "id": "a21dc33688a3882a34fa3f3b",
-      "source": "claim:5d0d7cc7d90bec1cfb0d552b",
-      "target": "source:paper:2609.18004",
+      "id": "22726ae146c680410382cd37",
+      "source": "claim:8b51f844ba1b11dc6be386a5",
+      "target": "source:paper:2609.19200",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ]
     },
     {
-      "id": "00bb045a6955c48c467cfd1e",
-      "source": "claim:5d0d7cc7d90bec1cfb0d552b",
-      "target": "source:paper:2609.19801",
+      "id": "088f2496202f86f97ff90678",
+      "source": "claim:8b51f844ba1b11dc6be386a5",
+      "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "09ed3736b215872a3f5e2197",
+      "id": "f252a1ba98da29061b0951af",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "claim:5db303edf832046358ec8c13",
+      "target": "claim:7c2c8c0a8079505e8675eb5d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771",
-        "source:paper:2609.18004",
-        "source:paper:2609.19801"
+        "source:paper:2609.19194",
+        "source:paper:2609.19200",
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "2666e7d2286930ba4647c7e8",
-      "source": "claim:5db303edf832046358ec8c13",
-      "target": "source:paper:2609.17771",
+      "id": "a3390514cabbc92874087085",
+      "source": "claim:7c2c8c0a8079505e8675eb5d",
+      "target": "source:paper:2609.19194",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ]
     },
     {
-      "id": "1dc61c7f4bf14dcbdea1d13d",
-      "source": "claim:5db303edf832046358ec8c13",
-      "target": "source:paper:2609.18004",
+      "id": "845cfff0ffbb87bb121ab093",
+      "source": "claim:7c2c8c0a8079505e8675eb5d",
+      "target": "source:paper:2609.19200",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ]
     },
     {
-      "id": "192a4916111b3c45d9bbb8c6",
-      "source": "claim:5db303edf832046358ec8c13",
-      "target": "source:paper:2609.19801",
+      "id": "3b3e28479b39d72290b210c5",
+      "source": "claim:7c2c8c0a8079505e8675eb5d",
+      "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "70adb2538c47f1148b71ae55",
-      "source": "page:9ecfe5a440798dc56bbe3e6b",
-      "target": "source:paper:2609.17771",
+      "id": "d5bf48f5e2d0aebfa926ef5e",
+      "source": "page:35dbd793846ebd8927212027",
+      "target": "source:paper:2609.19194",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ]
     },
     {
-      "id": "5c97281c4c990af8a3c4f20f",
-      "source": "page:9ecfe5a440798dc56bbe3e6b",
-      "target": "claim:14eff644c462eee9f36bc613",
+      "id": "a2f78ae34b0eb580341f6be5",
+      "source": "page:35dbd793846ebd8927212027",
+      "target": "claim:30601f1d527ec3dd62169982",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ]
     },
     {
-      "id": "10fac0cdf9db9aac6a606004",
-      "source": "claim:14eff644c462eee9f36bc613",
-      "target": "source:paper:2609.17771",
+      "id": "7997127fd382f4b20f344b84",
+      "source": "claim:30601f1d527ec3dd62169982",
+      "target": "source:paper:2609.19194",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ]
     },
     {
-      "id": "00c7d8d6383274b51e36db5a",
-      "source": "page:9ecfe5a440798dc56bbe3e6b",
-      "target": "claim:7587920bf63c05c8c1a6cfc1",
+      "id": "2f2b59a7f8191436b16cb367",
+      "source": "page:35dbd793846ebd8927212027",
+      "target": "claim:88aabc51ca858c2cc9c823c5",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ]
     },
     {
-      "id": "3f029194cf8fe5a77180e12c",
-      "source": "claim:7587920bf63c05c8c1a6cfc1",
-      "target": "source:paper:2609.17771",
+      "id": "a690a326723c1d91dd0d3150",
+      "source": "claim:88aabc51ca858c2cc9c823c5",
+      "target": "source:paper:2609.19194",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ]
     },
     {
-      "id": "6692c51f3c7186077c8a19c8",
-      "source": "page:59f4dd507e53e74129b29c64",
-      "target": "source:paper:2609.18004",
+      "id": "dd556cdb3693b4f88338873c",
+      "source": "page:ebfef15f7701a6f007c7e8fd",
+      "target": "source:paper:2609.19200",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ]
     },
     {
-      "id": "d6d3727a0d7ed9a593f10c05",
-      "source": "page:59f4dd507e53e74129b29c64",
-      "target": "claim:cb44082828a2547032dd66f9",
+      "id": "590f4396ede99d0ac54ede5d",
+      "source": "page:ebfef15f7701a6f007c7e8fd",
+      "target": "claim:597f2107c1c3f2a5a367e93c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ]
     },
     {
-      "id": "efd70b47d342e4c760a30cc4",
-      "source": "claim:cb44082828a2547032dd66f9",
-      "target": "source:paper:2609.18004",
+      "id": "dfd7d54c9bd82cd049582071",
+      "source": "claim:597f2107c1c3f2a5a367e93c",
+      "target": "source:paper:2609.19200",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ]
     },
     {
-      "id": "b4deb831e0e46b24df31efa5",
-      "source": "page:59f4dd507e53e74129b29c64",
-      "target": "claim:67ae992c56440cee72b711ae",
+      "id": "835ff377dd9d0af6dcc6cebe",
+      "source": "page:ebfef15f7701a6f007c7e8fd",
+      "target": "claim:55a9fc55ffc9961e5805d91c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ]
     },
     {
-      "id": "e04ac9ba2fff609c754ffa72",
-      "source": "claim:67ae992c56440cee72b711ae",
-      "target": "source:paper:2609.18004",
+      "id": "ecd1eec90c6f38ee74fa3827",
+      "source": "claim:55a9fc55ffc9961e5805d91c",
+      "target": "source:paper:2609.19200",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ]
     },
     {
-      "id": "9aabf1f219ceaa4664c8802f",
-      "source": "page:b227ab45492b01b6fd04bcbe",
-      "target": "source:paper:2609.19801",
+      "id": "862d36bc291784ab5b1372fd",
+      "source": "page:3602c77d4a0bf4ed1a3a88ad",
+      "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "656f36a4d3d44c8e5b2180e1",
-      "source": "page:b227ab45492b01b6fd04bcbe",
-      "target": "claim:22b22e5fec0af6c7d7b319c0",
+      "id": "19b7091e1e3dcd964abc43ce",
+      "source": "page:3602c77d4a0bf4ed1a3a88ad",
+      "target": "claim:46ac3fab8591c6b63d81f989",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "cf727d20d266f675377ee7ea",
-      "source": "claim:22b22e5fec0af6c7d7b319c0",
-      "target": "source:paper:2609.19801",
+      "id": "ad364205c8a257a50fc818ea",
+      "source": "claim:46ac3fab8591c6b63d81f989",
+      "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "5b8d8656e29c392d5013dbf7",
-      "source": "page:b227ab45492b01b6fd04bcbe",
-      "target": "claim:c42dcf5ddd74e054a08b7afa",
+      "id": "712211169e524fb700bcbf0e",
+      "source": "page:3602c77d4a0bf4ed1a3a88ad",
+      "target": "claim:da35fe8ba8c10d4cff5e7868",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "e52a76f68a40895ae5a22413",
-      "source": "claim:c42dcf5ddd74e054a08b7afa",
-      "target": "source:paper:2609.19801",
+      "id": "ff698ec00e71a5966fbabfd5",
+      "source": "claim:da35fe8ba8c10d4cff5e7868",
+      "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ]
     },
     {
@@ -4618,9 +4618,9 @@
       ]
     },
     {
-      "id": "4e6831b2310b22ecd326c718",
+      "id": "ddc4d2c62b52aac0cb52e35b",
       "source": "page:4b93b30d9007e205c19dd499",
-      "target": "claim:5bc508f07bd6891121ee743b",
+      "target": "claim:1420c17482bca68dc7348fac",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4629,8 +4629,8 @@
       ]
     },
     {
-      "id": "1a9dcce4b47ccfc4b6c5c8cd",
-      "source": "claim:5bc508f07bd6891121ee743b",
+      "id": "acbc739820c855309da4ff2e",
+      "source": "claim:1420c17482bca68dc7348fac",
       "target": "source:0fbb2545a72a30b7553c8e7c",
       "kind": "cites",
       "layer": "provenance",
@@ -5120,9 +5120,9 @@
       ]
     },
     {
-      "id": "59087e6763d833d67d1c1f22",
+      "id": "d5eb7168216e3d307c860c5b",
       "source": "page:27c4109153e151f87093f92b",
-      "target": "claim:28b0cb71150940b8bca3d63d",
+      "target": "claim:2854dcfd943268a123975cc4",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5133,8 +5133,8 @@
       ]
     },
     {
-      "id": "c056df25b7d01c3d88a1f6c2",
-      "source": "claim:28b0cb71150940b8bca3d63d",
+      "id": "ae7bd0e91a8da5d9a6161e79",
+      "source": "claim:2854dcfd943268a123975cc4",
       "target": "source:26eea64ed635a308bcc1e552",
       "kind": "cites",
       "layer": "provenance",
@@ -5144,8 +5144,8 @@
       ]
     },
     {
-      "id": "06a0eee49deec7447e026cb8",
-      "source": "claim:28b0cb71150940b8bca3d63d",
+      "id": "da5f34d8f0c55d7d6b205537",
+      "source": "claim:2854dcfd943268a123975cc4",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5155,60 +5155,14 @@
       ]
     },
     {
-      "id": "d881258115a200b92a5181f0",
-      "source": "claim:28b0cb71150940b8bca3d63d",
+      "id": "2f15ca31d4bb09f5dcb2df42",
+      "source": "claim:2854dcfd943268a123975cc4",
       "target": "source:a617c0dcaf2f826c9303b840",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:a617c0dcaf2f826c9303b840"
-      ]
-    },
-    {
-      "id": "ffa9478ad2283c23ead96125",
-      "source": "page:27c4109153e151f87093f92b",
-      "target": "claim:6f6e6a7c5b701813e908c68d",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:26eea64ed635a308bcc1e552",
-        "source:3999b94431374f06e9cac006",
-        "source:809f46c21477bbbf5049da92"
-      ]
-    },
-    {
-      "id": "614dbfc1192511a93a126f75",
-      "source": "claim:6f6e6a7c5b701813e908c68d",
-      "target": "source:26eea64ed635a308bcc1e552",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:26eea64ed635a308bcc1e552"
-      ]
-    },
-    {
-      "id": "2141a51b654d40906502572b",
-      "source": "claim:6f6e6a7c5b701813e908c68d",
-      "target": "source:3999b94431374f06e9cac006",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
-      "id": "04195718c2d3302d1d6e1bd6",
-      "source": "claim:6f6e6a7c5b701813e908c68d",
-      "target": "source:809f46c21477bbbf5049da92",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:809f46c21477bbbf5049da92"
       ]
     },
     {
@@ -5223,9 +5177,9 @@
       ]
     },
     {
-      "id": "e652ed7930cb3e8f4a1078cf",
+      "id": "4bc73af9ec7ce778c553b78f",
       "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "claim:327b5b8943d12cbad05b56d3",
+      "target": "claim:5f3b93afc378befe269681a7",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5234,8 +5188,8 @@
       ]
     },
     {
-      "id": "c6b34d2d84cc86148cf418c0",
-      "source": "claim:327b5b8943d12cbad05b56d3",
+      "id": "fa7c2f5c63d3132747b62a4a",
+      "source": "claim:5f3b93afc378befe269681a7",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5245,9 +5199,9 @@
       ]
     },
     {
-      "id": "78ed42b2bcb279d15c5b93d1",
+      "id": "6b527b8561b25c2aa321a11d",
       "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "claim:c75db1435fb42258641a717e",
+      "target": "claim:a83fe76cdf875d2ad028c64a",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5256,8 +5210,8 @@
       ]
     },
     {
-      "id": "5acb849d4d9a07e1339fcb33",
-      "source": "claim:c75db1435fb42258641a717e",
+      "id": "db2053b43b7de8dd34e3f3e4",
+      "source": "claim:a83fe76cdf875d2ad028c64a",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5289,9 +5243,9 @@
       ]
     },
     {
-      "id": "8c6c8d29e90bd3a385ae8104",
+      "id": "f7dd0c964e0a86580e0ab377",
       "source": "page:fbca10d9f0b1706a2d15f444",
-      "target": "claim:df7c966c821bb59997c9749a",
+      "target": "claim:de8548f56f87214cb8540693",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5301,8 +5255,8 @@
       ]
     },
     {
-      "id": "97f4d78a33c3e52a4dd21f05",
-      "source": "claim:df7c966c821bb59997c9749a",
+      "id": "9a706addba8bd5ee317b3317",
+      "source": "claim:de8548f56f87214cb8540693",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5312,8 +5266,8 @@
       ]
     },
     {
-      "id": "754cd94e5a70502714bab2b5",
-      "source": "claim:df7c966c821bb59997c9749a",
+      "id": "30138f3d624ad86353ed349a",
+      "source": "claim:de8548f56f87214cb8540693",
       "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
@@ -5323,9 +5277,9 @@
       ]
     },
     {
-      "id": "c6ed4633b7fa01dd51016f15",
+      "id": "6b4ee752605af70dda293bc5",
       "source": "page:fbca10d9f0b1706a2d15f444",
-      "target": "claim:f1ba0d446a2a4f4e09a3ac04",
+      "target": "claim:189295ad245dd35c05bcc3d6",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5335,8 +5289,8 @@
       ]
     },
     {
-      "id": "5aaf18134e5b6526a74c5c13",
-      "source": "claim:f1ba0d446a2a4f4e09a3ac04",
+      "id": "5da52a4751234a84f4626290",
+      "source": "claim:189295ad245dd35c05bcc3d6",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5346,8 +5300,8 @@
       ]
     },
     {
-      "id": "b2a55fbe2da0103840538013",
-      "source": "claim:f1ba0d446a2a4f4e09a3ac04",
+      "id": "c17e62408883de11a5d31e92",
+      "source": "claim:189295ad245dd35c05bcc3d6",
       "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
@@ -5357,8 +5311,8 @@
       ]
     },
     {
-      "id": "41c47fbe8e6d6d9cfd3aa04b",
-      "source": "page:142895cf095139317c59613f",
+      "id": "2b6eeb1c399e471acaf8c6ba",
+      "source": "page:8e9347b11db4e118fbc420c6",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5368,8 +5322,8 @@
       ]
     },
     {
-      "id": "4c713bac93792849974990fd",
-      "source": "page:142895cf095139317c59613f",
+      "id": "b4d2866644d2e841e1786049",
+      "source": "page:8e9347b11db4e118fbc420c6",
       "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
@@ -5379,9 +5333,9 @@
       ]
     },
     {
-      "id": "43bc0f9d70913f57c4d564ea",
-      "source": "page:142895cf095139317c59613f",
-      "target": "claim:0d7705cc2d775c6ee2189fcf",
+      "id": "a7d2e54e6299c2eccaa39afe",
+      "source": "page:8e9347b11db4e118fbc420c6",
+      "target": "claim:f249fd2660702c8aa0fe0677",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5390,8 +5344,8 @@
       ]
     },
     {
-      "id": "ea9c3281060665b09362729d",
-      "source": "claim:0d7705cc2d775c6ee2189fcf",
+      "id": "729bc73d9f4500e54092d09e",
+      "source": "claim:f249fd2660702c8aa0fe0677",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5401,9 +5355,9 @@
       ]
     },
     {
-      "id": "10d31c9792dba9bf0c649439",
-      "source": "page:142895cf095139317c59613f",
-      "target": "claim:b9d3ebe09a1300e6b40ab0a5",
+      "id": "42c41bb27e4a1c2693e18154",
+      "source": "page:8e9347b11db4e118fbc420c6",
+      "target": "claim:7180d0b524f2478277db8e10",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5413,8 +5367,8 @@
       ]
     },
     {
-      "id": "7a5b2e1abc22f3bd58fad342",
-      "source": "claim:b9d3ebe09a1300e6b40ab0a5",
+      "id": "997159ce5eab1017d7a20d5c",
+      "source": "claim:7180d0b524f2478277db8e10",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5424,8 +5378,8 @@
       ]
     },
     {
-      "id": "ccf8514f50db35c93be2c9d2",
-      "source": "claim:b9d3ebe09a1300e6b40ab0a5",
+      "id": "dbf6c757aab5ae1b964994ac",
+      "source": "claim:7180d0b524f2478277db8e10",
       "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
@@ -5446,9 +5400,9 @@
       ]
     },
     {
-      "id": "52f784146013f930089216b5",
+      "id": "9b3add5c194c77a34221bb91",
       "source": "page:8b0e41c347c6c9234bd957b8",
-      "target": "claim:0ad4bc239c8f06b1d9e4459b",
+      "target": "claim:97d9c8bda63ecd15c51f59ba",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5457,8 +5411,8 @@
       ]
     },
     {
-      "id": "83085aa5e708775e27e3aa0a",
-      "source": "claim:0ad4bc239c8f06b1d9e4459b",
+      "id": "2d47f5c6dc22a768e047b512",
+      "source": "claim:97d9c8bda63ecd15c51f59ba",
       "target": "source:a617c0dcaf2f826c9303b840",
       "kind": "cites",
       "layer": "provenance",
@@ -5468,9 +5422,9 @@
       ]
     },
     {
-      "id": "4a5b2598095c56899f2bb17a",
+      "id": "cb777294b27030bf4efc7c03",
       "source": "page:8b0e41c347c6c9234bd957b8",
-      "target": "claim:9bcc4324661f030b0a262e3d",
+      "target": "claim:09c97fb708d54594c85b8a3d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5479,8 +5433,8 @@
       ]
     },
     {
-      "id": "dd4e5dd964383178a9b6da4d",
-      "source": "claim:9bcc4324661f030b0a262e3d",
+      "id": "e0b83e38226fda5a6af36e7d",
+      "source": "claim:09c97fb708d54594c85b8a3d",
       "target": "source:a617c0dcaf2f826c9303b840",
       "kind": "cites",
       "layer": "provenance",
@@ -6050,45 +6004,45 @@
       ]
     },
     {
-      "id": "ac9dd5c2946f083fb2598b3c",
+      "id": "97c6755a0d1c19be4a2d7415",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "page:9ecfe5a440798dc56bbe3e6b",
+      "target": "page:35dbd793846ebd8927212027",
       "kind": "involves",
       "layer": "semantic",
-      "text": "인간 의도 추론을 로봇의 공동 작업 계획에 연결하는 연구를 포함한다.",
+      "text": "빠른 투구·포구·타격을 위한 저관성 양팔 설계를 포함한다.",
       "source_ids": [
-        "source:paper:2609.17771"
+        "source:paper:2609.19194"
       ]
     },
     {
-      "id": "ba50708f160d20ce0c36a193",
+      "id": "8aa2d8f459c5272440f5558e",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "page:59f4dd507e53e74129b29c64",
+      "target": "page:ebfef15f7701a6f007c7e8fd",
       "kind": "involves",
       "layer": "semantic",
-      "text": "여러 로봇 과제에 재사용할 행동을 얻도록 추가 시연을 선택하는 연구를 포함한다.",
+      "text": "수중의 지각·물리 조건에서 양팔 정책을 학습하고 실행하는 실험 플랫폼을 포함한다.",
       "source_ids": [
-        "source:paper:2609.18004"
+        "source:paper:2609.19200"
       ]
     },
     {
-      "id": "242fec81f6f141d670b6f331",
+      "id": "84c76ae83b4e406b5f313b51",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "page:b227ab45492b01b6fd04bcbe",
+      "target": "page:3602c77d4a0bf4ed1a3a88ad",
       "kind": "involves",
       "layer": "semantic",
-      "text": "행동의 누적 비용을 반영해 체화 에이전트의 장기 계획을 훈련·평가하는 환경을 포함한다.",
+      "text": "물체 정보의 오차를 견디도록 로봇 손의 닫힘 동작을 설계하는 연구를 포함한다.",
       "source_ids": [
-        "source:paper:2609.19801"
+        "source:paper:2609.19228"
       ]
     },
     {
-      "id": "c425ac211d2bd8bd3f4d1d2c",
+      "id": "2502cd5df2576432922f822b",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
       "target": "page:4b93b30d9007e205c19dd499",
       "kind": "involves",
       "layer": "semantic",
-      "text": "물리 세계 모델 개발사의 학습 데이터·평가 방법 공개 문제가 보도됐다.",
+      "text": "물리 세계 모델의 학습 데이터·평가 방법 공개 문제가 보도됐다.",
       "source_ids": [
         "source:0fbb2545a72a30b7553c8e7c"
       ]
@@ -6162,46 +6116,46 @@
       ]
     },
     {
-      "id": "efdaad66faf45051222ab4ad",
+      "id": "39ea3c352f9d82947a983b9c",
       "source": "page:27c4109153e151f87093f92b",
       "target": "page:fbca10d9f0b1706a2d15f444",
       "kind": "involves",
       "layer": "semantic",
-      "text": "소버린 AI 추진에 연결된 독파모 사업에서 평가방식과 재설계가 쟁점으로 보도됐다.",
+      "text": "소버린 AI 추진에 연결된 독파모 사업의 평가 기준과 재설계가 쟁점으로 보도됐다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
       ]
     },
     {
-      "id": "8d3e47542039397b79a3e377",
+      "id": "627dae250279d51807feafc4",
       "source": "page:27c4109153e151f87093f92b",
-      "target": "page:142895cf095139317c59613f",
+      "target": "page:8e9347b11db4e118fbc420c6",
       "kind": "involves",
       "layer": "semantic",
-      "text": "독파모 A.X K2 통합 검토가 독자 모델과 국민 서비스를 연결하는 접점으로 제시됐다.",
+      "text": "SKT의 독파모 A.X K2 통합 검토가 독자 모델을 국민 서비스에 연결하는 접점이다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ]
     },
     {
-      "id": "7deacb5b4f6541a9fd117297",
+      "id": "c2e1190bed3b7f94f9f3ffeb",
       "source": "page:27c4109153e151f87093f92b",
       "target": "page:8b0e41c347c6c9234bd957b8",
       "kind": "involves",
       "layer": "semantic",
-      "text": "Red Hat은 주권 AI의 요건으로 테넌시 모델을 제시한다.",
+      "text": "Red Hat은 주권 AI의 인프라 요건으로 테넌시 모델을 제시한다.",
       "source_ids": [
         "source:a617c0dcaf2f826c9303b840"
       ]
     },
     {
-      "id": "0b6b097f0a144f036615b372",
+      "id": "c042864e1048239bee4d508d",
       "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "page:142895cf095139317c59613f",
+      "target": "page:8e9347b11db4e118fbc420c6",
       "kind": "involves",
       "layer": "semantic",
-      "text": "SKT는 독파모 A.X K2와 모두의 AI의 통합을 검토한다고 보도됐다.",
+      "text": "SKT는 모두의 AI와 독파모 A.X K2의 통합을 검토한다고 보도됐다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ]
@@ -6266,21 +6220,9 @@
       ]
     },
     {
-      "id": "5977c5478f3de13ed6eb09aa",
-      "source": "page:142895cf095139317c59613f",
-      "target": "page:27c4109153e151f87093f92b",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006",
-        "source:809f46c21477bbbf5049da92"
-      ]
-    },
-    {
-      "id": "8c8d2492a06a71ea48c4dccd",
-      "source": "page:142895cf095139317c59613f",
-      "target": "page:fbca10d9f0b1706a2d15f444",
+      "id": "3dec0fadb97f2b9b276b3c7b",
+      "source": "page:27c4109153e151f87093f92b",
+      "target": "page:8e9347b11db4e118fbc420c6",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -6350,6 +6292,18 @@
       ]
     },
     {
+      "id": "2aa1656303a604934a82ceda",
+      "source": "page:8e9347b11db4e118fbc420c6",
+      "target": "page:fbca10d9f0b1706a2d15f444",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006",
+        "source:809f46c21477bbbf5049da92"
+      ]
+    },
+    {
       "id": "94ee47f8c9b67fa76e9d46a4",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "page:b4b6849ccb163ad60f4f21c8",
@@ -6362,31 +6316,9 @@
       ]
     },
     {
-      "id": "8182d679742fe4f8a1eb3e40",
-      "source": "page:0084b4bedb806557faf2b1d6",
-      "target": "page:b227ab45492b01b6fd04bcbe",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19801"
-      ]
-    },
-    {
       "id": "7e73e78f9a9fcdbf982f8a15",
       "source": "page:0084b4bedb806557faf2b1d6",
       "target": "page:bc425324302e17abaf8dbf8f",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19801"
-      ]
-    },
-    {
-      "id": "5dfc4199a2747c0553669953",
-      "source": "page:0084b4bedb806557faf2b1d6",
-      "target": "page:d6bbe9193e8dfe2f58f0670a",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -6414,39 +6346,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:df803567b853098953fdf550"
-      ]
-    },
-    {
-      "id": "5da1016fc98c15916a5d5496",
-      "source": "page:142895cf095139317c59613f",
-      "target": "page:6b0e772ad5828bad7fd33b63",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
-      "id": "1ace2588dafe3d6c8a0cb856",
-      "source": "page:142895cf095139317c59613f",
-      "target": "page:88a7d76c1e37f65910e69c84",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
-      "id": "dffe9004d34822a92a5500f9",
-      "source": "page:142895cf095139317c59613f",
-      "target": "page:d01208b24e7ca273cb0406f3",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
       ]
     },
     {
@@ -6516,6 +6415,17 @@
       ]
     },
     {
+      "id": "8b05b600299f4bc3a437771e",
+      "source": "page:35dbd793846ebd8927212027",
+      "target": "page:d6bbe9193e8dfe2f58f0670a",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19194"
+      ]
+    },
+    {
       "id": "8bc5aaef31d7e63f03d7f1db",
       "source": "page:35ff74aeea25311f4fe759a6",
       "target": "page:6e4b3fdaa525513fe6df8a52",
@@ -6535,6 +6445,17 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:paper:2609.20370"
+      ]
+    },
+    {
+      "id": "637bda8ff008e81141f03984",
+      "source": "page:3602c77d4a0bf4ed1a3a88ad",
+      "target": "page:d6bbe9193e8dfe2f58f0670a",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19228"
       ]
     },
     {
@@ -6604,17 +6525,6 @@
       ]
     },
     {
-      "id": "e8c34fe70f503f5d64f6112b",
-      "source": "page:59f4dd507e53e74129b29c64",
-      "target": "page:d6bbe9193e8dfe2f58f0670a",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.18004"
-      ]
-    },
-    {
       "id": "2c895ee72667cab48e646849",
       "source": "page:67fb64c7b8e926285a3fd4e9",
       "target": "page:de284b6684f6abbc4e22ed30",
@@ -6629,6 +6539,17 @@
       "id": "d07737f18232aef0d79e5077",
       "source": "page:6b0e772ad5828bad7fd33b63",
       "target": "page:88a7d76c1e37f65910e69c84",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006"
+      ]
+    },
+    {
+      "id": "bee08ad26d2f3498ab35df8a",
+      "source": "page:6b0e772ad5828bad7fd33b63",
+      "target": "page:8e9347b11db4e118fbc420c6",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -6692,6 +6613,17 @@
       ]
     },
     {
+      "id": "4a6cf9269ddd50255a344f2b",
+      "source": "page:88a7d76c1e37f65910e69c84",
+      "target": "page:8e9347b11db4e118fbc420c6",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006"
+      ]
+    },
+    {
       "id": "808b754c6824064d0a692835",
       "source": "page:88a7d76c1e37f65910e69c84",
       "target": "page:d32072f869e1e3032e5723a5",
@@ -6714,6 +6646,17 @@
       ]
     },
     {
+      "id": "bb75d0754e17d1dad3d913e8",
+      "source": "page:8e9347b11db4e118fbc420c6",
+      "target": "page:d01208b24e7ca273cb0406f3",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006"
+      ]
+    },
+    {
       "id": "a2ea4e0f1bf83d06beb0a634",
       "source": "page:9baa053aacade6bdb59dbcc5",
       "target": "page:b41d81e22da55c3af6d162d9",
@@ -6725,39 +6668,6 @@
       ]
     },
     {
-      "id": "9beff89cbbc570e89015d730",
-      "source": "page:9ecfe5a440798dc56bbe3e6b",
-      "target": "page:d6bbe9193e8dfe2f58f0670a",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.17771"
-      ]
-    },
-    {
-      "id": "75ae4bd447606c4f77b0dfab",
-      "source": "page:b227ab45492b01b6fd04bcbe",
-      "target": "page:bc425324302e17abaf8dbf8f",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19801"
-      ]
-    },
-    {
-      "id": "58794193c5ef982ec218f355",
-      "source": "page:b227ab45492b01b6fd04bcbe",
-      "target": "page:d6bbe9193e8dfe2f58f0670a",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19801"
-      ]
-    },
-    {
       "id": "84f897489c8494287b0828e7",
       "source": "page:b41d81e22da55c3af6d162d9",
       "target": "page:e944543690cbedcc8066503a",
@@ -6766,17 +6676,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:paper:2608.02615"
-      ]
-    },
-    {
-      "id": "ceb78e593b279e65f5fa9f72",
-      "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "page:d6bbe9193e8dfe2f58f0670a",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19801"
       ]
     },
     {
@@ -6799,6 +6698,17 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
+      ]
+    },
+    {
+      "id": "0d6a66b8702aeb2fc1f1a8ac",
+      "source": "page:d6bbe9193e8dfe2f58f0670a",
+      "target": "page:ebfef15f7701a6f007c7e8fd",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19200"
       ]
     }
   ],
@@ -7369,95 +7279,95 @@
       "id": "physical",
       "title": "Physical AI",
       "kind": "topic",
-      "revision": 40,
+      "revision": 43,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:paper:2609.17771",
-            "source:paper:2609.18004",
-            "source:paper:2609.19801"
+            "source:paper:2609.19194",
+            "source:paper:2609.19200",
+            "source:paper:2609.19228"
           ],
           "kind": "interpretation",
-          "text": "세 연구는 행동 계획의 서로 다른 병목을 다룬다. HINT-Plan은 사람의 의도를 공동 계획에 반영하고, AALT는 여러 과제를 연결하는 시연을 선택하며, DeliveryGym은 이후 작업까지 고려한 자원 배분을 학습하게 한다."
+          "text": "이번 연구들은 물리적 상호작용의 서로 다른 병목을 다룬다. AthenaZero는 팔의 관성을 줄이고, ULOHA는 수중 양팔 학습 과정을 통합하며, 거친 형상 기반 파지 연구는 닫힘 동작 자체가 물체 정보의 오차를 견디도록 설계한다."
         },
         {
           "evidence_ids": [
-            "source:paper:2609.17771",
-            "source:paper:2609.18004",
-            "source:paper:2609.19801"
+            "source:paper:2609.19194",
+            "source:paper:2609.19200",
+            "source:paper:2609.19228"
           ],
           "kind": "interpretation",
-          "text": "공동 작업 성공률, 회수 과제 성공 개수, 배송 순수입은 서로 다른 평가 지표다. 제공된 초록의 시뮬레이션 성과를 하나의 실물 로봇 성능 순위로 읽을 수 없다."
+          "text": "투구·포구 속도, 수중 협동 동작, 파지 오차 허용 범위는 평가 대상이 다르다. 세 초록은 설계 선택을 이해하는 근거이며, 수치를 합쳐 범용 로봇의 성능 순위를 만들 근거는 아니다."
         }
       ]
     },
     {
-      "id": "physical:3dbcaeb9306c2a444583",
-      "title": "HINT-Plan",
+      "id": "physical:0d7cba79673851e7e353",
+      "title": "AthenaZero",
       "kind": "entity",
-      "revision": 40,
+      "revision": 43,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:paper:2609.17771"
+            "source:paper:2609.19194"
           ],
           "kind": "reported",
-          "text": "연구진은 VLM으로 제3자 시점 이미지에서 사람의 고수준 의도를 추론해 목표 상태로 변환한다. 계층적 장면 그래프의 환경 구조와 행동 지식을 형식 계획 언어로 옮겨 인간·로봇 공동 계획을 만든다."
+          "text": "연구진은 준직접 구동과 전달계 원격 배치로 말단 유효 질량을 사람과 비슷한 수준, 기존 로봇 팔보다 약 한 자릿수 규모 낮게 줄였다고 설명한다. 낮은 관성과 토크 투명성을 빠른 물체 상호작용에 활용하는 양팔 설계다."
         },
         {
           "evidence_ids": [
-            "source:paper:2609.17771"
+            "source:paper:2609.19194"
           ],
           "kind": "reported",
-          "text": "초록은 사실적 시뮬레이션에서 전체 성공률 69.71%와 기능적 충돌 감소를 보고한다. 기준선 대비 최대 35.29% 개선도 제시하지만, 상대 개선율인지 퍼센트포인트 차이인지는 명시하지 않는다."
+          "text": "초록은 투구 속도 30m/s 초과, 7.3m 거리에서 포구·타격 속도 14m/s 초과를 보고한다. 로봇끼리 및 사람과 로봇의 시연도 기술하지만, 시행 횟수와 성공률은 제시하지 않는다."
         }
       ]
     },
     {
-      "id": "physical:bbff377df344cb661378",
-      "title": "AALT",
+      "id": "physical:bccebcc73870bc64186b",
+      "title": "ULOHA",
       "kind": "entity",
-      "revision": 40,
+      "revision": 43,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:paper:2609.18004"
+            "source:paper:2609.19200"
           ],
           "kind": "reported",
-          "text": "연구진은 기존 시연을 잠재 허브 상태와 학습된 행동의 연결망으로 구성한다. 시작–목표 연결을 많이 늘릴 브리지 시연을 전문가에게 요청하고, 실행 때 허브 경로의 각 전이에 조건화한 확산 정책을 사용한다."
+          "text": "연구진은 리더–팔로어 하드웨어와 LeRobot 확장을 결합해 원격조작, 다중 시점 관측, 시연 수집, 정책 학습, 자율 실행을 연결했다. 초록은 실제 수중 양팔 로봇의 팔 사이 물체 전달, 공동 조작, 부력으로 움직이는 물체 포착을 보고한다."
         },
         {
           "evidence_ids": [
-            "source:paper:2609.18004"
+            "source:paper:2609.19200"
           ],
           "kind": "reported",
-          "text": "초록은 UR5e 순서 지정 회수 시뮬레이션에서 초기 데이터에 시연 3개·전이 5개를 추가해 성공 과제가 42/72에서 72/72로 늘었다고 보고한다. 가장 강한 기준선은 시연 20개·전이 98개를 사용한 뒤 평균 성공률 88.6%였다. 결과 범위는 해당 72개 과제다."
+          "text": "초록은 ACT·Diffusion Policy·SmolVLA를 평가하고 기포, 부력, 행동 실행 구간과 실시간 청킹을 조사했다고 설명한다. 공기·수중 시연을 함께 사용해 두 환경에서 실행한 전이 결과는 별도의 단일 팔 실험이며, 시험 조건 안의 결과다."
         }
       ]
     },
     {
-      "id": "physical:df523259c6f6a7ab4406",
-      "title": "DeliveryGym",
-      "kind": "entity",
-      "revision": 40,
+      "id": "physical:857ab6a0be6eae976af1",
+      "title": "거친 물체 형상 기반 파지",
+      "kind": "concept",
+      "revision": 43,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:paper:2609.19801"
+            "source:paper:2609.19228"
           ],
           "kind": "reported",
-          "text": "연구진이 제안한 3D 배송 환경은 시간·에너지·돈의 소모가 이후 주문에 미치는 영향을 유지하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산한다. 평가는 고정한 채 정책의 관측된 약점에 맞춰 이후 훈련 작업을 조정한다."
+          "text": "연구진은 대략적인 물체 템플릿, 인간의 파지 유형, 물체 중심 상호작용, 유연하게 미끄러지는 접촉을 결합한 운동 계획기를 제안했다. 정확한 접점을 미리 지정하기보다 닫힘 동작 자체에 오차 허용 능력을 넣는 접근이다."
         },
         {
           "evidence_ids": [
-            "source:paper:2609.19801"
+            "source:paper:2609.19228"
           ],
           "kind": "reported",
-          "text": "초록은 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다고 보고한다. 별도 비교에서 적응형 훈련은 같은 rollout 예산의 균등 샘플링보다 테스트 수입이 16.5% 높았다. 두 수치는 비교 조건이 달라 합산할 수 없다."
+          "text": "초록은 피드백 없이 약 1cm의 크기 오차와 수cm·수십 도의 자세 오차를 견디고, 27개 시험 조건 중 25개에서 비교 계획기보다 넓은 허용 범위를 보였다고 보고한다. 일상 물체 80개 중 82.5% 파지도 보고하지만, 제공 초록만으로 실기·시뮬레이션 평가 구분은 확인되지 않는다."
         }
       ]
     },
@@ -7465,7 +7375,7 @@
       "id": "physical:c710ca08923cd04ceda5",
       "title": "물리 월드 모델의 정보 공개",
       "kind": "issue",
-      "revision": 40,
+      "revision": 43,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7480,7 +7390,7 @@
             "source:0fbb2545a72a30b7553c8e7c"
           ],
           "kind": "uncertain",
-          "text": "어느 기업이 어떤 데이터·평가 항목을 비공개로 두었는지는 제공 발췌에 없다. 기업별 성능 주장의 검증 가능성을 판단하려면 해당 공개 범위를 확인해야 한다."
+          "text": "어느 기업이 어떤 데이터·평가 항목을 비공개로 두었는지는 발췌에 없다. 기업별 성능 주장의 검증 가능성을 판단하려면 비공개 항목과 실제 공개 자료의 범위를 확인해야 한다."
         }
       ]
     },
@@ -7610,7 +7520,7 @@
       "id": "sovereign",
       "title": "소버린 AI",
       "kind": "topic",
-      "revision": 37,
+      "revision": 42,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7620,16 +7530,7 @@
             "source:a617c0dcaf2f826c9303b840"
           ],
           "kind": "interpretation",
-          "text": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 조건이라는 서로 다른 층위에서 다룬다. 한 층위의 발표만으로 전체 자립 수준을 판단하기는 어렵다."
-        },
-        {
-          "evidence_ids": [
-            "source:3999b94431374f06e9cac006",
-            "source:809f46c21477bbbf5049da92",
-            "source:26eea64ed635a308bcc1e552"
-          ],
-          "kind": "interpretation",
-          "text": "한국 브리핑은 독파모 평가와 국민 서비스 연결을, 중국 관련 발췌는 AI 반도체 설계부터 HBM까지 자체 공급체계 구축을 강조한다. 이는 자료의 초점 차이이며 국가별 자립 수준을 비교한 결과는 아니다."
+          "text": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 요건으로 나누어 다룬다. 한국의 독파모 추진, 중국의 설계·HBM 공급망 구축 보도, Red Hat의 테넌시 주장은 평가 대상이 달라 어느 하나로 전체 자립 수준을 판단하기 어렵다."
         }
       ]
     },
@@ -7637,7 +7538,7 @@
       "id": "sovereign:f28856625d6794d23c8f",
       "title": "독자 AI 파운데이션 모델 사업",
       "kind": "entity",
-      "revision": 37,
+      "revision": 42,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7645,14 +7546,14 @@
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "reported",
-          "text": "9월 16일 브리핑은 SKT·LG AI연구원·업스테이지가 독파모 3차 평가를 앞두고 성능 고도화에 집중하며, 과기정통부가 사업 성과를 오픈소스 생태계로 확장할 방침이라고 전했다."
+          "text": "9월 16일 브리핑은 SKT·LG AI연구원·업스테이지가 독파모 3차 평가에 대비해 성능을 고도화하고, 과기정통부는 성과를 오픈소스 생태계로 확장할 방침이라고 전했다."
         },
         {
           "evidence_ids": [
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "reported",
-          "text": "같은 브리핑은 LG AI연구원이 제조·금융·과학 분야의 전문가 AI와 엑사원 외부 공급 계획을 제시했다고 전했다. 이는 독자 모델을 산업 용도로 확장하려는 계획이다."
+          "text": "같은 브리핑은 LG AI연구원의 제조·금융·과학 분야 전문가 AI 공개와 엑사원 외부 공급 계획, SKT의 A.X K2와 모두의 AI 통합 검토를 전했다. 외부 공급과 서비스 통합은 완료 실적으로 제시되지 않았다."
         }
       ]
     },
@@ -7660,7 +7561,7 @@
       "id": "sovereign:700fe97a1bf0ab14f02c",
       "title": "독파모 평가와 사업 설계 논쟁",
       "kind": "issue",
-      "revision": 37,
+      "revision": 42,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7669,7 +7570,7 @@
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "reported",
-          "text": "9월 12일 브리핑은 정부의 모티프테크 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일 브리핑도 심사 불투명성 비판과 사업 재설계 논의를 소개했다."
+          "text": "9월 12일 브리핑은 정부의 모티프테크 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일 브리핑은 조선비즈의 심사 불투명성 비판과 사업 재설계 논의도 소개했다."
         },
         {
           "evidence_ids": [
@@ -7677,15 +7578,15 @@
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "uncertain",
-          "text": "기각의 구체적 사유는 추후 설명 사항으로 보도됐다. 제공 자료에는 후속 설명과 확정된 개편안이 없어, 기각의 타당성과 평가 기준의 실제 변경 여부는 남은 쟁점이다."
+          "text": "기각 사유의 구체적 설명은 추후 사항으로 보도됐으며 현재 자료에는 후속 설명이나 확정 개편안이 없다. 이의신청을 어떤 기준으로 판단했는지, 그 기준이 3차 평가에서 바뀌는지가 남은 확인 사항이다."
         }
       ]
     },
     {
-      "id": "sovereign:30630acdf559eea80c39",
-      "title": "모두의 AI",
-      "kind": "entity",
-      "revision": 37,
+      "id": "sovereign:5ff7f7b76b79705343b0",
+      "title": "모두의 AI 출시 계획",
+      "kind": "event",
+      "revision": 42,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7693,7 +7594,7 @@
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "reported",
-          "text": "9월 16일 브리핑은 정부가 SKT·카카오·KT 등 3개 컨소시엄을 통해 국민 무료 AI 서비스를 연내 출시할 계획이라고 전했다. SKT는 전화·문자 접근과 병원·택시 예약을 수행하는 실행형 에이전트를 예고했다."
+          "text": "9월 16일 브리핑은 정부가 SKT·카카오·KT 등 3개 컨소시엄을 통해 국민 무료 AI 서비스 ‘모두의 AI’를 연내 출시할 계획이라고 전했다. SKT는 전화·문자 접근과 식당 대기 인원 확인, 병원·택시 예약을 수행하는 실행형 에이전트를 예고했다."
         },
         {
           "evidence_ids": [
@@ -7701,7 +7602,7 @@
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "interpretation",
-          "text": "9월 12일 브리핑은 SKT 컨소시엄의 의료·돌봄·교육 등 8개 특화서비스와 12월 개시 계획을 전했다. 16일에도 출시는 연내 계획이며 독파모 A.X K2 통합은 검토 단계로 소개돼, 서비스 운영이나 모델 통합 완료를 뜻하지 않는다."
+          "text": "9월 12일 브리핑의 SKT 서비스 ‘12월 개시’와 16일의 ‘연내 출시’는 양립하는 일정 표현이다. 의료·돌봄·교육 등 특화서비스와 예약 기능은 계획 단계이며, 반복 보도가 운영 개시나 이용 성과를 확인해 주지는 않는다."
         }
       ]
     },
@@ -7709,7 +7610,7 @@
       "id": "sovereign:2f94c926dc85e43e1b3a",
       "title": "소버린 AI의 지리와 테넌시 조건",
       "kind": "issue",
-      "revision": 37,
+      "revision": 42,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7717,14 +7618,14 @@
             "source:a617c0dcaf2f826c9303b840"
           ],
           "kind": "reported",
-          "text": "Red Hat은 소버린 AI에 지리적 위치만이 아니라 테넌시 모델이 필요하다는 관점을 제시했다."
+          "text": "Red Hat은 소버린 AI에 데이터센터의 지리적 위치만이 아니라 테넌시 모델이 필요하다는 주장을 제시했다."
         },
         {
           "evidence_ids": [
             "source:a617c0dcaf2f826c9303b840"
           ],
           "kind": "uncertain",
-          "text": "제공 발췌에는 테넌시의 정의나 주권 충족 기준이 없다. 어떤 운영 구조가 어떤 기술·법적 조건에서 주권을 보장한다는 주장인지 확인이 필요하다."
+          "text": "현재 발췌에는 테넌시의 정의와 주권 충족 기준이 없다. 어떤 운영 구조와 통제 권한을 요구하는지 확인하기 전에는 이 주장을 구체적인 인프라 선정 기준으로 적용하기 어렵다."
         }
       ]
     },
@@ -7828,12 +7729,12 @@
     }
   ],
   "issues": [],
-  "version": "b44737c0ae9a67b79440e84b2b64946ef5e01c12280701345a2ed939697387be",
-  "exported_at": "2026-09-18T22:01:27.160187+00:00",
+  "version": "c1be71cf9c8481a6e61cae90bd383827f55309eec029ea62421d9c67b6671072",
+  "exported_at": "2026-09-18T22:07:14.399183+00:00",
   "coverage": {
     "pages": 43,
-    "claims": 84,
-    "cited_sources": 48,
+    "claims": 83,
+    "cited_sources": 49,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
