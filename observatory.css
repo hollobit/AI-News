@@ -9,3 +9,4 @@
 #network .search-match circle{stroke:#dc9b46;stroke-width:3}#network .search-match text{font-weight:700}
 
 .stage.replaying{outline:2px solid #b28147;outline-offset:2px}#history-position{width:100%;accent-color:#3566a8}#history-detail{overflow-wrap:anywhere}
+:root [hidden]{display:none!important}
