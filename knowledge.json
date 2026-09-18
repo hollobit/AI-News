@@ -11,29 +11,15 @@
         "agents"
       ],
       "source_ids": [
-        "source:b79db9cf256b029991ced9ac",
         "source:eb60c32471b1eb3a9bbc02f1",
         "source:paper:2609.19182",
-        "source:paper:2609.19203"
+        "source:paper:2609.19203",
+        "source:paper:2609.19801"
       ],
       "claims": [
-        "claim:9402500590a9f352df0a002d",
-        "claim:d67add4c435c8c5bd7f8a58d"
+        "claim:cc49dabae7b18c829c3b46b5"
       ],
       "status": "reviewed"
-    },
-    {
-      "id": "source:b79db9cf256b029991ced9ac",
-      "type": "source",
-      "title": "Resy, AI 에이전트로 예약 시도한 VC 계정 정지",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ],
-      "origin": "telegram_excerpt",
-      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-18",
-      "status": "original_source_not_fact_checked",
-      "url": "https://www.businessinsider.com/resy-suspends-vcs-account-ai-agent-reservation-attempt-2026-9"
     },
     {
       "id": "source:eb60c32471b1eb3a9bbc02f1",
@@ -75,23 +61,26 @@
       "url": "https://arxiv.org/abs/2609.19203v1"
     },
     {
-      "id": "claim:9402500590a9f352df0a002d",
-      "type": "claim",
-      "title": "제공 연구는 에이전트의 실행 관리와 평가 기준을 다룬다. FMOS 논문은 공통 실행 계층을 제안하고, 평가 동향 연구는 행동·상호작용 중심 시험의 확대를 보고한다. 설계 제안과 평가 관행의 관측을 구분해 읽어야 한다.",
+      "id": "source:paper:2609.19801",
+      "type": "source",
+      "title": "DeliveryGym: An RL Environment for Long-Horizon Embodied Agent Planning with Adaptive Curriculum",
       "source_ids": [
-        "source:paper:2609.19182",
-        "source:paper:2609.19203"
+        "source:paper:2609.19801"
       ],
-      "claim_kind": "interpretation",
-      "status": "reviewed"
+      "origin": "arxiv_abstract",
+      "scope": "검토 논문의 제목·초록; 전문·제품 성능·임상 검증 아님",
+      "day": "2026-09-17",
+      "status": "original_source_not_fact_checked",
+      "url": "https://arxiv.org/abs/2609.19801v1"
     },
     {
-      "id": "claim:d67add4c435c8c5bd7f8a58d",
+      "id": "claim:cc49dabae7b18c829c3b46b5",
       "type": "claim",
-      "title": "실행 도구와 외부 서비스의 이용 조건도 구분할 필요가 있다. Respawn은 에이전트용 실행 취소 도구로 소개되지만, Resy에서는 AI 예약 시도자의 계정 정지가 보도됐다. 두 발췌만으로 실행 취소의 보장 범위나 예약 허용 조건을 알 수는 없다.",
+      "title": "제공 연구는 에이전트의 실행 관리와 행동 평가를 다룬다. FMOS는 공통 실행 계층의 설계 제안이고, 벤치마크 연구는 평가 관행의 변화 분석이며, DeliveryGym은 시뮬레이터 내 학습 성과 보고다. 이들은 각각 설계 방향·평가 기준·특정 환경의 성능을 판단하는 근거다.",
       "source_ids": [
-        "source:b79db9cf256b029991ced9ac",
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:paper:2609.19182",
+        "source:paper:2609.19203",
+        "source:paper:2609.19801"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
@@ -111,7 +100,7 @@
       ],
       "claims": [
         "claim:560facc5cfa787aac399c241",
-        "claim:3016a6cf87028cfcdee18b10"
+        "claim:8289f1918386a351273eadb7"
       ],
       "status": "reviewed"
     },
@@ -126,11 +115,61 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:3016a6cf87028cfcdee18b10",
+      "id": "claim:8289f1918386a351273eadb7",
       "type": "claim",
-      "title": "저자들은 기반모델 상호작용을 가상화하고 메모리 계층, 모델 선택·자원 배분, 검증·정책 집행을 통합하는 FMOS를 제안한다. 운영 경험에 따라 개입 정책을 적응시키는 구상이지만, 제공 초록에는 구현 성능을 입증하는 실험 수치가 없다.",
+      "title": "저자들은 기반모델 상호작용을 가상화하고 메모리 계층, 모델 선택·자원 배분, 검증·정책 집행을 통합하는 FMOS를 제안한다. 운영 경험에 따라 개입 정책을 적응시키는 구상이며, 제공 초록에는 구현 성능을 입증하는 실험 수치가 없다.",
       "source_ids": [
         "source:paper:2609.19203"
+      ],
+      "claim_kind": "reported",
+      "status": "reviewed"
+    },
+    {
+      "id": "page:0084b4bedb806557faf2b1d6",
+      "type": "entity",
+      "title": "DeliveryGym: 배송 근무 전체의 계획과 학습",
+      "page_ids": [
+        "agents:ebb45c7d17ab98be65c7"
+      ],
+      "topics": [
+        "agents"
+      ],
+      "source_ids": [
+        "source:paper:2609.19801"
+      ],
+      "claims": [
+        "claim:15cb2203b9c5fd47885333dc",
+        "claim:e07ba85043e6cb13db75e785",
+        "claim:2261dd09a217946229317e27"
+      ],
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:15cb2203b9c5fd47885333dc",
+      "type": "claim",
+      "title": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경 DeliveryGym을 소개한다. 멀티모달 도구 상호작용과 지속되는 세계 상태를 연결하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산해 현재 배송이 이후 작업의 시간·에너지·돈에 미치는 비용을 학습에 반영한다.",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ],
+      "claim_kind": "reported",
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:e07ba85043e6cb13db75e785",
+      "type": "claim",
+      "title": "저자들은 6개 모델·13개 도시 지도에서 배정된 배송의 실행 능력과 근무 전체의 작업 선택·순서 계획 능력 사이에 격차가 있다고 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 해당 시뮬레이션 조건의 보고다.",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ],
+      "claim_kind": "reported",
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:2261dd09a217946229317e27",
+      "type": "claim",
+      "title": "정책의 관측된 약점에 맞춰 이후 훈련 근무를 조정하되 평가는 고정한다. 저자들은 같은 rollout 예산에서 적응형 훈련이 균등 샘플링보다 테스트 수입을 16.5% 높였다고 보고한다. 이는 강화학습 적용 후 54.3% 개선과 비교 조건이 다른 수치다.",
+      "source_ids": [
+        "source:paper:2609.19801"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
@@ -149,15 +188,15 @@
         "source:paper:2609.19182"
       ],
       "claims": [
-        "claim:c10942b2e749dacb4f885d97",
+        "claim:bb679b88ac7fac3ff284c139",
         "claim:50638098cadacdc0663abdf9"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:c10942b2e749dacb4f885d97",
+      "id": "claim:bb679b88ac7fac3ff284c139",
       "type": "claim",
-      "title": "저자들은 2022년 1월~2026년 8월 arXiv에서 평가 자원을 제안·갱신한 논문 14,767개를 선별하고 본문을 자동 코딩했다. 에이전트·비에이전트 양쪽에서 LLM 채점은 늘었지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다.",
+      "title": "저자들은 2022년 1월~2026년 8월 arXiv에서 평가 자원을 제안·갱신한 논문 14,767개를 선별하고 본문을 자동 코딩했다. 행동·상호작용·전문 분야 평가의 강조와 에이전트·비에이전트 양쪽의 LLM 채점은 늘었지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다.",
       "source_ids": [
         "source:paper:2609.19182"
       ],
@@ -188,57 +227,18 @@
         "source:eb60c32471b1eb3a9bbc02f1"
       ],
       "claims": [
-        "claim:90958c589beb59725f8c2522"
+        "claim:2475a9094eeaef1e86617ff5"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:90958c589beb59725f8c2522",
+      "id": "claim:2475a9094eeaef1e86617ff5",
       "type": "claim",
-      "title": "저장소 링크를 포함한 수집 발췌는 Respawn을 Rust 기반이며 로컬 우선·클라우드 없이 사용하는 AI 에이전트용 실행 취소 도구로 소개한다. 어떤 작업까지 되돌릴 수 있는지는 발췌에 제시되지 않았다.",
+      "title": "저장소 링크를 포함한 수집 발췌는 Respawn을 Rust 기반의 로컬 우선·클라우드 없는 AI 에이전트용 실행 취소 도구로 소개한다. 되돌릴 수 있는 작업과 복구 보장 범위는 발췌에 제시되지 않았다.",
       "source_ids": [
         "source:eb60c32471b1eb3a9bbc02f1"
       ],
       "claim_kind": "reported",
-      "status": "reviewed"
-    },
-    {
-      "id": "page:1c8af38776bdc0a7fa8ebfb8",
-      "type": "event",
-      "title": "Resy의 AI 예약 시도 계정 정지",
-      "page_ids": [
-        "agents:b293e8f91c490c57852f"
-      ],
-      "topics": [
-        "agents"
-      ],
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ],
-      "claims": [
-        "claim:c665c8865f1cde0e3f033e01",
-        "claim:c442fbda94c412437de87945"
-      ],
-      "status": "reviewed"
-    },
-    {
-      "id": "claim:c665c8865f1cde0e3f033e01",
-      "type": "claim",
-      "title": "Business Insider 기사를 소개한 수집 발췌는 Resy가 AI 에이전트로 예약을 시도한 벤처투자자의 계정을 정지했다고 전한다. 사건 발생 시각은 제시되지 않았다.",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ],
-      "claim_kind": "reported",
-      "status": "reviewed"
-    },
-    {
-      "id": "claim:c442fbda94c412437de87945",
-      "type": "claim",
-      "title": "정지의 구체적 사유와 적용 약관은 제공 발췌로 확인되지 않는다. 이 사례가 Resy의 모든 AI 예약을 금지하는 정책을 뜻하는지는 미확인이다.",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ],
-      "claim_kind": "uncertain",
       "status": "reviewed"
     },
     {
@@ -1434,19 +1434,6 @@
       "url": "https://arxiv.org/abs/2609.18004v1"
     },
     {
-      "id": "source:paper:2609.19801",
-      "type": "source",
-      "title": "DeliveryGym: An RL Environment for Long-Horizon Embodied Agent Planning with Adaptive Curriculum",
-      "source_ids": [
-        "source:paper:2609.19801"
-      ],
-      "origin": "arxiv_abstract",
-      "scope": "검토 논문의 제목·초록; 전문·제품 성능·임상 검증 아님",
-      "day": "2026-09-17",
-      "status": "original_source_not_fact_checked",
-      "url": "https://arxiv.org/abs/2609.19801v1"
-    },
-    {
       "id": "claim:5d0d7cc7d90bec1cfb0d552b",
       "type": "claim",
       "title": "세 연구는 행동 계획의 서로 다른 병목을 다룬다. HINT-Plan은 사람의 의도를 공동 계획에 반영하고, AALT는 여러 과제를 연결하는 시연을 선택하며, DeliveryGym은 이후 작업까지 고려한 자원 배분을 학습하게 한다.",
@@ -2392,17 +2379,6 @@
   ],
   "edges": [
     {
-      "id": "a7776c75bb86b389271ad292",
-      "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "source:b79db9cf256b029991ced9ac",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ]
-    },
-    {
       "id": "21f95c2e5976889c9161c66a",
       "source": "page:bc425324302e17abaf8dbf8f",
       "target": "source:eb60c32471b1eb3a9bbc02f1",
@@ -2436,20 +2412,32 @@
       ]
     },
     {
-      "id": "c71eefe10b8f993effb59367",
+      "id": "2e5d5b2dfafabdef46165bcc",
       "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "claim:9402500590a9f352df0a002d",
+      "target": "source:paper:2609.19801",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "79bcbe93e4524b6e235d3417",
+      "source": "page:bc425324302e17abaf8dbf8f",
+      "target": "claim:cc49dabae7b18c829c3b46b5",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:paper:2609.19182",
-        "source:paper:2609.19203"
+        "source:paper:2609.19203",
+        "source:paper:2609.19801"
       ]
     },
     {
-      "id": "ce6561dfea1408b005d12902",
-      "source": "claim:9402500590a9f352df0a002d",
+      "id": "c6d542b3ddd55d250c2978e3",
+      "source": "claim:cc49dabae7b18c829c3b46b5",
       "target": "source:paper:2609.19182",
       "kind": "cites",
       "layer": "provenance",
@@ -2459,8 +2447,8 @@
       ]
     },
     {
-      "id": "75cf0b1c9eb123a43b9bb81c",
-      "source": "claim:9402500590a9f352df0a002d",
+      "id": "aa74e2a2eeef57ec73bcf5d0",
+      "source": "claim:cc49dabae7b18c829c3b46b5",
       "target": "source:paper:2609.19203",
       "kind": "cites",
       "layer": "provenance",
@@ -2470,37 +2458,14 @@
       ]
     },
     {
-      "id": "28744204a58a3d51f62d92c9",
-      "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "claim:d67add4c435c8c5bd7f8a58d",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac",
-        "source:eb60c32471b1eb3a9bbc02f1"
-      ]
-    },
-    {
-      "id": "a6847a493c65615853311a99",
-      "source": "claim:d67add4c435c8c5bd7f8a58d",
-      "target": "source:b79db9cf256b029991ced9ac",
+      "id": "76a051909422cc1402060704",
+      "source": "claim:cc49dabae7b18c829c3b46b5",
+      "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ]
-    },
-    {
-      "id": "1c4a9673b51ae1029e76f357",
-      "source": "claim:d67add4c435c8c5bd7f8a58d",
-      "target": "source:eb60c32471b1eb3a9bbc02f1",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:paper:2609.19801"
       ]
     },
     {
@@ -2537,9 +2502,9 @@
       ]
     },
     {
-      "id": "9deb25d5ef983d5b3d9a5871",
+      "id": "6082318181d7bec4399340e0",
       "source": "page:83ff4beb7405cba174689eea",
-      "target": "claim:3016a6cf87028cfcdee18b10",
+      "target": "claim:8289f1918386a351273eadb7",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2548,14 +2513,91 @@
       ]
     },
     {
-      "id": "3f541968b7d493b157906488",
-      "source": "claim:3016a6cf87028cfcdee18b10",
+      "id": "ea9079c935968b00be254824",
+      "source": "claim:8289f1918386a351273eadb7",
       "target": "source:paper:2609.19203",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:paper:2609.19203"
+      ]
+    },
+    {
+      "id": "a4b8c24613ea8de914a01af4",
+      "source": "page:0084b4bedb806557faf2b1d6",
+      "target": "source:paper:2609.19801",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "2eb78b54ee93b49f9636be0f",
+      "source": "page:0084b4bedb806557faf2b1d6",
+      "target": "claim:15cb2203b9c5fd47885333dc",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "036f93d497cad23cea48c5d4",
+      "source": "claim:15cb2203b9c5fd47885333dc",
+      "target": "source:paper:2609.19801",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "17030e1a119abca96cba144a",
+      "source": "page:0084b4bedb806557faf2b1d6",
+      "target": "claim:e07ba85043e6cb13db75e785",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "450a997fcfad65f8f2bfd9ac",
+      "source": "claim:e07ba85043e6cb13db75e785",
+      "target": "source:paper:2609.19801",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "cb53d9bae8da3d8b754f260f",
+      "source": "page:0084b4bedb806557faf2b1d6",
+      "target": "claim:2261dd09a217946229317e27",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "bc4b721ab02dc342b80d133a",
+      "source": "claim:2261dd09a217946229317e27",
+      "target": "source:paper:2609.19801",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19801"
       ]
     },
     {
@@ -2570,9 +2612,9 @@
       ]
     },
     {
-      "id": "9c3d0ebb875f875b0e6cf664",
+      "id": "7c93278bc60d1dc833089329",
       "source": "page:2f45ff667da36a854021b4ff",
-      "target": "claim:c10942b2e749dacb4f885d97",
+      "target": "claim:bb679b88ac7fac3ff284c139",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2581,8 +2623,8 @@
       ]
     },
     {
-      "id": "6740cb4147cf6fdf86e44991",
-      "source": "claim:c10942b2e749dacb4f885d97",
+      "id": "df04086d42d5ef51b41ff24d",
+      "source": "claim:bb679b88ac7fac3ff284c139",
       "target": "source:paper:2609.19182",
       "kind": "cites",
       "layer": "provenance",
@@ -2625,9 +2667,9 @@
       ]
     },
     {
-      "id": "2d5d562775cc07aac18c6c2d",
+      "id": "4756707c8da1045e3ce3b731",
       "source": "page:8147ff6734f6055b8e8c12b8",
-      "target": "claim:90958c589beb59725f8c2522",
+      "target": "claim:2475a9094eeaef1e86617ff5",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2636,69 +2678,14 @@
       ]
     },
     {
-      "id": "cc693e9cc0801eb24425c971",
-      "source": "claim:90958c589beb59725f8c2522",
+      "id": "192d33b4d64dcc0af83c4b4f",
+      "source": "claim:2475a9094eeaef1e86617ff5",
       "target": "source:eb60c32471b1eb3a9bbc02f1",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:eb60c32471b1eb3a9bbc02f1"
-      ]
-    },
-    {
-      "id": "4bef9706a56a4806ad7d34e5",
-      "source": "page:1c8af38776bdc0a7fa8ebfb8",
-      "target": "source:b79db9cf256b029991ced9ac",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ]
-    },
-    {
-      "id": "71277120770fcadc7990076b",
-      "source": "page:1c8af38776bdc0a7fa8ebfb8",
-      "target": "claim:c665c8865f1cde0e3f033e01",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ]
-    },
-    {
-      "id": "4d7ceffb661969e6014c241d",
-      "source": "claim:c665c8865f1cde0e3f033e01",
-      "target": "source:b79db9cf256b029991ced9ac",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ]
-    },
-    {
-      "id": "416f81b41812959f51a91b1f",
-      "source": "page:1c8af38776bdc0a7fa8ebfb8",
-      "target": "claim:c442fbda94c412437de87945",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
-      ]
-    },
-    {
-      "id": "0e24bb8a2f1d057cd71a3285",
-      "source": "claim:c442fbda94c412437de87945",
-      "target": "source:b79db9cf256b029991ced9ac",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
       ]
     },
     {
@@ -5861,12 +5848,23 @@
       ]
     },
     {
-      "id": "ba326a8ad82d9efeafdc5897",
+      "id": "c430f5547753b88bed41db0e",
+      "source": "page:bc425324302e17abaf8dbf8f",
+      "target": "page:0084b4bedb806557faf2b1d6",
+      "kind": "involves",
+      "layer": "semantic",
+      "text": "에이전트가 배송 수행과 자원 보존을 근무 전체에 걸쳐 조율하도록 평가·훈련하는 환경이다.",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "3a8cd36d2ce3c85d25d153ce",
       "source": "page:bc425324302e17abaf8dbf8f",
       "target": "page:2f45ff667da36a854021b4ff",
       "kind": "involves",
       "layer": "semantic",
-      "text": "에이전트 평가에서도 LLM 채점이 증가하며 평가 근거의 독립성 문제가 제기된다.",
+      "text": "에이전트 평가에서도 LLM 채점이 증가하며 모델이 참여한 평가 근거의 독립성 문제가 제기된다.",
       "source_ids": [
         "source:paper:2609.19182"
       ]
@@ -5880,17 +5878,6 @@
       "text": "에이전트 작업을 되돌리는 용도의 도구로 소개된다.",
       "source_ids": [
         "source:eb60c32471b1eb3a9bbc02f1"
-      ]
-    },
-    {
-      "id": "5917bcd749fdb8cee6dab8b2",
-      "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "page:1c8af38776bdc0a7fa8ebfb8",
-      "kind": "involves",
-      "layer": "semantic",
-      "text": "외부 예약 서비스에서 AI 에이전트를 이용한 시도와 계정 정지가 보도된 사례다.",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
       ]
     },
     {
@@ -6375,6 +6362,39 @@
       ]
     },
     {
+      "id": "8182d679742fe4f8a1eb3e40",
+      "source": "page:0084b4bedb806557faf2b1d6",
+      "target": "page:b227ab45492b01b6fd04bcbe",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "7e73e78f9a9fcdbf982f8a15",
+      "source": "page:0084b4bedb806557faf2b1d6",
+      "target": "page:bc425324302e17abaf8dbf8f",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
+      "id": "5dfc4199a2747c0553669953",
+      "source": "page:0084b4bedb806557faf2b1d6",
+      "target": "page:d6bbe9193e8dfe2f58f0670a",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
       "id": "28375e2503b2f7fe6da788de",
       "source": "page:07c3c9f013fa991e9daddcd3",
       "target": "page:21b8ff7cfc90d628d726bbf6",
@@ -6427,17 +6447,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
-      "id": "39a2888236b97a55965b1a47",
-      "source": "page:1c8af38776bdc0a7fa8ebfb8",
-      "target": "page:bc425324302e17abaf8dbf8f",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:b79db9cf256b029991ced9ac"
       ]
     },
     {
@@ -6727,6 +6736,17 @@
       ]
     },
     {
+      "id": "75ae4bd447606c4f77b0dfab",
+      "source": "page:b227ab45492b01b6fd04bcbe",
+      "target": "page:bc425324302e17abaf8dbf8f",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19801"
+      ]
+    },
+    {
       "id": "58794193c5ef982ec218f355",
       "source": "page:b227ab45492b01b6fd04bcbe",
       "target": "page:d6bbe9193e8dfe2f58f0670a",
@@ -6746,6 +6766,17 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:paper:2608.02615"
+      ]
+    },
+    {
+      "id": "ceb78e593b279e65f5fa9f72",
+      "source": "page:bc425324302e17abaf8dbf8f",
+      "target": "page:d6bbe9193e8dfe2f58f0670a",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19801"
       ]
     },
     {
@@ -6776,24 +6807,17 @@
       "id": "agents",
       "title": "Agentic AI",
       "kind": "topic",
-      "revision": 35,
+      "revision": 41,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
             "source:paper:2609.19203",
-            "source:paper:2609.19182"
+            "source:paper:2609.19182",
+            "source:paper:2609.19801"
           ],
           "kind": "interpretation",
-          "text": "제공 연구는 에이전트의 실행 관리와 평가 기준을 다룬다. FMOS 논문은 공통 실행 계층을 제안하고, 평가 동향 연구는 행동·상호작용 중심 시험의 확대를 보고한다. 설계 제안과 평가 관행의 관측을 구분해 읽어야 한다."
-        },
-        {
-          "evidence_ids": [
-            "source:eb60c32471b1eb3a9bbc02f1",
-            "source:b79db9cf256b029991ced9ac"
-          ],
-          "kind": "interpretation",
-          "text": "실행 도구와 외부 서비스의 이용 조건도 구분할 필요가 있다. Respawn은 에이전트용 실행 취소 도구로 소개되지만, Resy에서는 AI 예약 시도자의 계정 정지가 보도됐다. 두 발췌만으로 실행 취소의 보장 범위나 예약 허용 조건을 알 수는 없다."
+          "text": "제공 연구는 에이전트의 실행 관리와 행동 평가를 다룬다. FMOS는 공통 실행 계층의 설계 제안이고, 벤치마크 연구는 평가 관행의 변화 분석이며, DeliveryGym은 시뮬레이터 내 학습 성과 보고다. 이들은 각각 설계 방향·평가 기준·특정 환경의 성능을 판단하는 근거다."
         }
       ]
     },
@@ -6801,7 +6825,7 @@
       "id": "agents:7cd7513050a79270f58d",
       "title": "FMOS: 기반모델 공통 실행 계층",
       "kind": "concept",
-      "revision": 35,
+      "revision": 41,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6816,7 +6840,37 @@
             "source:paper:2609.19203"
           ],
           "kind": "reported",
-          "text": "저자들은 기반모델 상호작용을 가상화하고 메모리 계층, 모델 선택·자원 배분, 검증·정책 집행을 통합하는 FMOS를 제안한다. 운영 경험에 따라 개입 정책을 적응시키는 구상이지만, 제공 초록에는 구현 성능을 입증하는 실험 수치가 없다."
+          "text": "저자들은 기반모델 상호작용을 가상화하고 메모리 계층, 모델 선택·자원 배분, 검증·정책 집행을 통합하는 FMOS를 제안한다. 운영 경험에 따라 개입 정책을 적응시키는 구상이며, 제공 초록에는 구현 성능을 입증하는 실험 수치가 없다."
+        }
+      ]
+    },
+    {
+      "id": "agents:ebb45c7d17ab98be65c7",
+      "title": "DeliveryGym: 배송 근무 전체의 계획과 학습",
+      "kind": "entity",
+      "revision": 41,
+      "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
+      "claims": [
+        {
+          "evidence_ids": [
+            "source:paper:2609.19801"
+          ],
+          "kind": "reported",
+          "text": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경 DeliveryGym을 소개한다. 멀티모달 도구 상호작용과 지속되는 세계 상태를 연결하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산해 현재 배송이 이후 작업의 시간·에너지·돈에 미치는 비용을 학습에 반영한다."
+        },
+        {
+          "evidence_ids": [
+            "source:paper:2609.19801"
+          ],
+          "kind": "reported",
+          "text": "저자들은 6개 모델·13개 도시 지도에서 배정된 배송의 실행 능력과 근무 전체의 작업 선택·순서 계획 능력 사이에 격차가 있다고 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 해당 시뮬레이션 조건의 보고다."
+        },
+        {
+          "evidence_ids": [
+            "source:paper:2609.19801"
+          ],
+          "kind": "reported",
+          "text": "정책의 관측된 약점에 맞춰 이후 훈련 근무를 조정하되 평가는 고정한다. 저자들은 같은 rollout 예산에서 적응형 훈련이 균등 샘플링보다 테스트 수입을 16.5% 높였다고 보고한다. 이는 강화학습 적용 후 54.3% 개선과 비교 조건이 다른 수치다."
         }
       ]
     },
@@ -6824,7 +6878,7 @@
       "id": "agents:5fef8ff0aa6c5049863b",
       "title": "LLM 참여 평가의 근거 독립성",
       "kind": "issue",
-      "revision": 35,
+      "revision": 41,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6832,7 +6886,7 @@
             "source:paper:2609.19182"
           ],
           "kind": "reported",
-          "text": "저자들은 2022년 1월~2026년 8월 arXiv에서 평가 자원을 제안·갱신한 논문 14,767개를 선별하고 본문을 자동 코딩했다. 에이전트·비에이전트 양쪽에서 LLM 채점은 늘었지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다."
+          "text": "저자들은 2022년 1월~2026년 8월 arXiv에서 평가 자원을 제안·갱신한 논문 14,767개를 선별하고 본문을 자동 코딩했다. 행동·상호작용·전문 분야 평가의 강조와 에이전트·비에이전트 양쪽의 LLM 채점은 늘었지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다."
         },
         {
           "evidence_ids": [
@@ -6847,7 +6901,7 @@
       "id": "agents:bea931b72b06abb6f7a8",
       "title": "Respawn",
       "kind": "entity",
-      "revision": 35,
+      "revision": 41,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6855,30 +6909,7 @@
             "source:eb60c32471b1eb3a9bbc02f1"
           ],
           "kind": "reported",
-          "text": "저장소 링크를 포함한 수집 발췌는 Respawn을 Rust 기반이며 로컬 우선·클라우드 없이 사용하는 AI 에이전트용 실행 취소 도구로 소개한다. 어떤 작업까지 되돌릴 수 있는지는 발췌에 제시되지 않았다."
-        }
-      ]
-    },
-    {
-      "id": "agents:b293e8f91c490c57852f",
-      "title": "Resy의 AI 예약 시도 계정 정지",
-      "kind": "event",
-      "revision": 35,
-      "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
-      "claims": [
-        {
-          "evidence_ids": [
-            "source:b79db9cf256b029991ced9ac"
-          ],
-          "kind": "reported",
-          "text": "Business Insider 기사를 소개한 수집 발췌는 Resy가 AI 에이전트로 예약을 시도한 벤처투자자의 계정을 정지했다고 전한다. 사건 발생 시각은 제시되지 않았다."
-        },
-        {
-          "evidence_ids": [
-            "source:b79db9cf256b029991ced9ac"
-          ],
-          "kind": "uncertain",
-          "text": "정지의 구체적 사유와 적용 약관은 제공 발췌로 확인되지 않는다. 이 사례가 Resy의 모든 AI 예약을 금지하는 정책을 뜻하는지는 미확인이다."
+          "text": "저장소 링크를 포함한 수집 발췌는 Respawn을 Rust 기반의 로컬 우선·클라우드 없는 AI 에이전트용 실행 취소 도구로 소개한다. 되돌릴 수 있는 작업과 복구 보장 범위는 발췌에 제시되지 않았다."
         }
       ]
     },
@@ -7797,12 +7828,12 @@
     }
   ],
   "issues": [],
-  "version": "705335bec2ec52078d7cd461a666c38b8da0677ded20a03ece6f37dc4d60133d",
-  "exported_at": "2026-09-18T21:49:33.153098+00:00",
+  "version": "b44737c0ae9a67b79440e84b2b64946ef5e01c12280701345a2ed939697387be",
+  "exported_at": "2026-09-18T21:55:42.967897+00:00",
   "coverage": {
     "pages": 43,
     "claims": 84,
-    "cited_sources": 49,
+    "cited_sources": 48,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
