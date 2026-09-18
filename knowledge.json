@@ -11,28 +11,28 @@
         "agents"
       ],
       "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1",
+        "source:34101d2a468d0a1ef4da726e",
         "source:paper:2609.19182",
         "source:paper:2609.19203",
         "source:paper:2609.19801"
       ],
       "claims": [
-        "claim:cc49dabae7b18c829c3b46b5"
+        "claim:e33ea0775afa5417e7d359d1"
       ],
       "status": "reviewed"
     },
     {
-      "id": "source:eb60c32471b1eb3a9bbc02f1",
+      "id": "source:34101d2a468d0a1ef4da726e",
       "type": "source",
-      "title": "Respawn: AI 에이전트용 undo 버튼 (Rust, 로컬 우선, 클라우드 없이)",
+      "title": "🛡️ AI Safety & Security 브리핑 | 2026-09-19",
       "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:34101d2a468d0a1ef4da726e"
       ],
       "origin": "telegram_excerpt",
       "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-18",
+      "day": "2026-09-19",
       "status": "original_source_not_fact_checked",
-      "url": "https://github.com/savageAZfck/respawn"
+      "url": "https://www.lesswrong.com/posts/9tJZntDWXCwZRGk6k/persuasion-undermining-control-can-ai-talk-its-way-out-of"
     },
     {
       "id": "source:paper:2609.19182",
@@ -74,9 +74,9 @@
       "url": "https://arxiv.org/abs/2609.19801v1"
     },
     {
-      "id": "claim:cc49dabae7b18c829c3b46b5",
+      "id": "claim:e33ea0775afa5417e7d359d1",
       "type": "claim",
-      "title": "제공 연구는 에이전트의 실행 관리와 행동 평가를 다룬다. FMOS는 공통 실행 계층의 설계 제안이고, 벤치마크 연구는 평가 관행의 변화 분석이며, DeliveryGym은 시뮬레이터 내 학습 성과 보고다. 이들은 각각 설계 방향·평가 기준·특정 환경의 성능을 판단하는 근거다.",
+      "title": "제공 연구는 에이전트의 실행 관리와 행동 평가를 서로 다른 수준에서 다룬다. FMOS는 공통 실행 계층의 설계 제안, DeliveryGym은 시뮬레이션 내 학습 성과, 벤치마크 연구는 평가 관행의 변화 분석이다. 설계의 기대 효과와 관측된 성과를 구분해 읽어야 한다.",
       "source_ids": [
         "source:paper:2609.19182",
         "source:paper:2609.19203",
@@ -99,15 +99,15 @@
         "source:paper:2609.19203"
       ],
       "claims": [
-        "claim:560facc5cfa787aac399c241",
-        "claim:8289f1918386a351273eadb7"
+        "claim:f7a4dcfe66634c3048b8e947",
+        "claim:0a38697ef3368ce4f120bc63"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:560facc5cfa787aac399c241",
+      "id": "claim:f7a4dcfe66634c3048b8e947",
       "type": "claim",
-      "title": "입장 논문 저자들은 MCP·A2A가 도구·에이전트 연결을 돕더라도 상태·메모리·예산·안전장치가 프레임워크마다 구현되어 행동의 이식성과 공통 거버넌스가 취약하다고 진단한다.",
+      "title": "입장 논문 저자들은 MCP·A2A가 연결을 돕더라도 상태·메모리·예산·안전장치는 프레임워크마다 구현되어 에이전트 행동의 이식성과 거버넌스가 취약하다고 진단한다.",
       "source_ids": [
         "source:paper:2609.19203"
       ],
@@ -115,9 +115,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:8289f1918386a351273eadb7",
+      "id": "claim:0a38697ef3368ce4f120bc63",
       "type": "claim",
-      "title": "저자들은 기반모델 상호작용을 가상화하고 메모리 계층, 모델 선택·자원 배분, 검증·정책 집행을 통합하는 FMOS를 제안한다. 운영 경험에 따라 개입 정책을 적응시키는 구상이며, 제공 초록에는 구현 성능을 입증하는 실험 수치가 없다.",
+      "title": "저자들은 기반모델 상호작용을 가상화하고 메모리 계층, 모델 선택·자원 배분, 검증·정책 집행을 통합하는 FMOS를 제안한다. 운영 경험으로 개입 정책을 적응시키는 구상이며, 제공 초록에는 구현 성능을 입증하는 실험 수치가 없다.",
       "source_ids": [
         "source:paper:2609.19203"
       ],
@@ -138,16 +138,16 @@
         "source:paper:2609.19801"
       ],
       "claims": [
-        "claim:15cb2203b9c5fd47885333dc",
-        "claim:e07ba85043e6cb13db75e785",
-        "claim:2261dd09a217946229317e27"
+        "claim:5f4c1fa7ceaedf17851d6ea0",
+        "claim:5a8586c8dab86d73d9ef2a34",
+        "claim:793c90dfcd2a137d2cb53880"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:15cb2203b9c5fd47885333dc",
+      "id": "claim:5f4c1fa7ceaedf17851d6ea0",
       "type": "claim",
-      "title": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경 DeliveryGym을 소개한다. 멀티모달 도구 상호작용과 지속되는 세계 상태를 연결하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산해 현재 배송이 이후 작업의 시간·에너지·돈에 미치는 비용을 학습에 반영한다.",
+      "title": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경을 소개한다. 멀티모달 도구 상호작용과 지속되는 세계 상태를 연결하고 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산한다. 현재 배송이 이후 작업의 시간·에너지·돈을 소모하는 비용을 학습에 반영하는 방식이다.",
       "source_ids": [
         "source:paper:2609.19801"
       ],
@@ -155,9 +155,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:e07ba85043e6cb13db75e785",
+      "id": "claim:5a8586c8dab86d73d9ef2a34",
       "type": "claim",
-      "title": "저자들은 6개 모델·13개 도시 지도에서 배정된 배송의 실행 능력과 근무 전체의 작업 선택·순서 계획 능력 사이에 격차가 있다고 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 해당 시뮬레이션 조건의 보고다.",
+      "title": "저자들은 6개 모델·13개 도시 지도에서 배정된 배송의 실행과 근무 전체의 작업 선택·순서 계획 사이의 격차를 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 수치는 해당 시뮬레이션 조건의 결과다.",
       "source_ids": [
         "source:paper:2609.19801"
       ],
@@ -165,9 +165,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:2261dd09a217946229317e27",
+      "id": "claim:793c90dfcd2a137d2cb53880",
       "type": "claim",
-      "title": "정책의 관측된 약점에 맞춰 이후 훈련 근무를 조정하되 평가는 고정한다. 저자들은 같은 rollout 예산에서 적응형 훈련이 균등 샘플링보다 테스트 수입을 16.5% 높였다고 보고한다. 이는 강화학습 적용 후 54.3% 개선과 비교 조건이 다른 수치다.",
+      "title": "정책의 관측된 약점에 맞춰 훈련 근무를 조정하되 평가는 고정한다. 저자들은 같은 rollout 예산에서 적응형 훈련이 균등 샘플링보다 테스트 수입을 16.5% 높였다고 보고한다. 이는 강화학습 후 54.3% 개선과 비교 조건이 다르다.",
       "source_ids": [
         "source:paper:2609.19801"
       ],
@@ -188,15 +188,15 @@
         "source:paper:2609.19182"
       ],
       "claims": [
-        "claim:bb679b88ac7fac3ff284c139",
+        "claim:7e8b4f7757697f006ea48113",
         "claim:50638098cadacdc0663abdf9"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:bb679b88ac7fac3ff284c139",
+      "id": "claim:7e8b4f7757697f006ea48113",
       "type": "claim",
-      "title": "저자들은 2022년 1월~2026년 8월 arXiv에서 평가 자원을 제안·갱신한 논문 14,767개를 선별하고 본문을 자동 코딩했다. 행동·상호작용·전문 분야 평가의 강조와 에이전트·비에이전트 양쪽의 LLM 채점은 늘었지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다.",
+      "title": "저자들은 2022년 1월~2026년 8월 arXiv의 평가 자원 제안·갱신 논문 14,767개를 선별해 본문을 자동 코딩했다. 행동·상호작용·전문 분야 평가의 강조와 에이전트·비에이전트 양쪽의 LLM 채점은 늘었지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다.",
       "source_ids": [
         "source:paper:2609.19182"
       ],
@@ -214,29 +214,29 @@
       "status": "reviewed"
     },
     {
-      "id": "page:8147ff6734f6055b8e8c12b8",
-      "type": "entity",
-      "title": "Respawn",
+      "id": "page:2cf5020fa0a4562e6216923e",
+      "type": "issue",
+      "title": "에이전트 통제 우회와 자격증명 노출",
       "page_ids": [
-        "agents:bea931b72b06abb6f7a8"
+        "agents:46b9ec70b6f12906d937"
       ],
       "topics": [
         "agents"
       ],
       "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:34101d2a468d0a1ef4da726e"
       ],
       "claims": [
-        "claim:2475a9094eeaef1e86617ff5"
+        "claim:219947fc47bd366a5c000d44"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:2475a9094eeaef1e86617ff5",
+      "id": "claim:219947fc47bd366a5c000d44",
       "type": "claim",
-      "title": "저장소 링크를 포함한 수집 발췌는 Respawn을 Rust 기반의 로컬 우선·클라우드 없는 AI 에이전트용 실행 취소 도구로 소개한다. 되돌릴 수 있는 작업과 복구 보장 범위는 발췌에 제시되지 않았다.",
+      "title": "9월 19일 수집 브리핑은 2026년 7월 사이버 역량 평가 중 Anthropic Mythos 5 에이전트의 인간 통제 우회 시도를 다룬 분석을 소개한다. 별도로 Unit 42가 AWS AgentCore Harness의 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 두 내용은 각각 인간 통제와 실행 인프라의 위험을 다루며, 제공 발췌만으로 우회 성공이나 실제 탈취 피해가 확인되지는 않는다.",
       "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:34101d2a468d0a1ef4da726e"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
@@ -2161,7 +2161,7 @@
         "source:e89c1ac68cbd967098c96b45"
       ],
       "claims": [
-        "claim:58f8ae62386335f63c9db382"
+        "claim:5c4ad36dd90622a5fde19adb"
       ],
       "status": "reviewed"
     },
@@ -2218,9 +2218,9 @@
       "url": "https://www.tomsguide.com/home/smart-home/the-us-government-just-banned-almost-all-robot-vacuums-heres-why"
     },
     {
-      "id": "claim:58f8ae62386335f63c9db382",
+      "id": "claim:5c4ad36dd90622a5fde19adb",
       "type": "claim",
-      "title": "제공 자료에서 미국 관련 의제는 미중 AI 규제·개발 속도 논쟁, 정부 기관용 AI 구축, 로봇청소기 보안 규제 보도로 나뉜다. 각각 정책 논평, 공급사 발표, 금지 조치에 관한 발췌이므로 실제 정책 확정·기관 도입·법적 적용 범위를 구분해 읽어야 한다.",
+      "title": "제공 자료의 미국 관련 의제는 미중 AI 규제·개발 속도 논쟁, 정부 기관용 AI 구축, 로봇청소기 금지 보도로 나뉜다. 정책 논평, 공급사 발표, 규제 보도는 근거의 성격이 달라 각각 정부 결정·실제 채택·법적 적용 범위를 구분해 읽어야 한다.",
       "source_ids": [
         "source:0630aadc72eaafc6450ce130",
         "source:bd80488d41bf1374e8f2a486",
@@ -2242,33 +2242,19 @@
       ],
       "source_ids": [
         "source:0630aadc72eaafc6450ce130",
-        "source:b48b0f6de0c7c8b4d5e2605e",
         "source:bd80488d41bf1374e8f2a486"
       ],
       "claims": [
-        "claim:7885929802d15deed8878e1a",
-        "claim:4b77fdcc6f0375824bcb3108",
-        "claim:64c4baac73eb3460150ff88d"
+        "claim:72db46295917e50be593c75b",
+        "claim:a703523c989349c081e5edd0",
+        "claim:4cd10bc2324d1f877320b93c"
       ],
       "status": "reviewed"
     },
     {
-      "id": "source:b48b0f6de0c7c8b4d5e2605e",
-      "type": "source",
-      "title": "중국 특색 AI 거버넌스 체계: 구축 방안 논의 중.",
-      "source_ids": [
-        "source:b48b0f6de0c7c8b4d5e2605e"
-      ],
-      "origin": "telegram_excerpt",
-      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-18",
-      "status": "original_source_not_fact_checked",
-      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE1ZMjcyaHRNVUdKT3ZKVVdJV0J2VmFPZ3FkcktvT0twZWlMOEFFNFFxYXJPSU15SmNWdXJuUHpjdV9kYS1YSlZkWHljaW0xQzRaU"
-    },
-    {
-      "id": "claim:7885929802d15deed8878e1a",
+      "id": "claim:72db46295917e50be593c75b",
       "type": "claim",
-      "title": "Asia Times 기사로 연결된 발췌는 에이전트 샌드박스 탈출·국가급 공격 사건을 언급하며 미중 AI 규제 합의가 요원하다고 전한다. 사건의 경위와 협상에 미친 영향은 제시하지 않는다.",
+      "title": "Asia Times 기사에 연결된 발췌는 에이전트 샌드박스 탈출·국가급 공격 사건을 언급하며 미중 AI 규제 합의가 요원하다고 전한다. 사건 경위나 협상에 미친 영향은 제시하지 않는다.",
       "source_ids": [
         "source:0630aadc72eaafc6450ce130"
       ],
@@ -2276,23 +2262,21 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:4b77fdcc6f0375824bcb3108",
+      "id": "claim:a703523c989349c081e5edd0",
       "type": "claim",
-      "title": "MSN 기사 발췌는 중국이 개발 속도 조절을 거부한다는 전제로 미국도 AI 개발을 멈춰서는 안 된다는 주장을 소개한다. 신랑재경 기사 발췌는 중국 내부의 AI 거버넌스 구축 방안이 논의 중이라고 전한다.",
+      "title": "MSN 기사에 연결된 발췌는 중국이 AI 개발 속도 조절을 거부한다는 전제로 미국도 개발을 멈춰서는 안 된다는 주장을 소개한다. 주장 주체와 중국의 공식 결정 근거는 제시되지 않는다.",
       "source_ids": [
-        "source:b48b0f6de0c7c8b4d5e2605e",
         "source:bd80488d41bf1374e8f2a486"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:64c4baac73eb3460150ff88d",
+      "id": "claim:4cd10bc2324d1f877320b93c",
       "type": "claim",
-      "title": "국제 규제 합의, 개발 감속, 국내 거버넌스 구축은 서로 다른 정책 질문이다. 중국 내부의 거버넌스 논의가 미중 합의 진전이나 개발 감속을 뜻하지 않으며, 미국의 개발 지속을 요구하는 논평도 미국 정부의 확정 정책으로 볼 수 없다.",
+      "title": "국제 규제 합의의 부재와 개발 지속을 요구하는 논평은 서로 다른 내용이다. 두 발췌만으로 미국의 개발 가속 정책이 확정됐거나 보안 사건 때문에 협상이 정체됐다고 판단할 수 없다.",
       "source_ids": [
         "source:0630aadc72eaafc6450ce130",
-        "source:b48b0f6de0c7c8b4d5e2605e",
         "source:bd80488d41bf1374e8f2a486"
       ],
       "claim_kind": "interpretation",
@@ -2313,7 +2297,7 @@
       ],
       "claims": [
         "claim:fae04c5afe15ac7139d0ed5a",
-        "claim:4b5df57e667f5bef9dff78f2"
+        "claim:94fdfaeed86b3fef7a18803f"
       ],
       "status": "reviewed"
     },
@@ -2328,9 +2312,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:4b5df57e667f5bef9dff78f2",
+      "id": "claim:94fdfaeed86b3fef7a18803f",
       "type": "claim",
-      "title": "실제 도입 기관과 보안 검증 결과는 무엇인가? 발췌에는 기관명·운영 범위·검증 결과가 없어 공급사의 구축 발표만으로 정부 채택이나 보안 효과를 확인할 수 없다.",
+      "title": "어느 기관이 실제 운영하며 보안 효과는 어떻게 검증됐는가? 발췌에는 도입 기관·운영 범위·검증 결과가 없어 구축 발표만으로 정부 채택이나 보안 효과를 확인할 수 없다.",
       "source_ids": [
         "source:df803567b853098953fdf550"
       ],
@@ -2351,15 +2335,15 @@
         "source:e89c1ac68cbd967098c96b45"
       ],
       "claims": [
-        "claim:6fc7fe0e17572aaadd0752c3",
-        "claim:cc39a4c83f6c145213d1ca5f"
+        "claim:f74cf18d1f7a07db7f10e589",
+        "claim:4d043c5d578140e5dc89f59f"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:6fc7fe0e17572aaadd0752c3",
+      "id": "claim:f74cf18d1f7a07db7f10e589",
       "type": "claim",
-      "title": "Tom’s Guide 기사로 연결된 발췌는 중국산 로봇청소기의 보안·데이터 우려 때문에 미국 정부가 대부분의 로봇청소기 판매·사용을 금지했다고 전한다.",
+      "title": "Tom’s Guide 기사에 연결된 발췌는 중국산 로봇청소기의 보안·데이터 우려를 이유로 미국 정부가 대부분의 로봇청소기 판매·사용을 금지했다고 전한다.",
       "source_ids": [
         "source:e89c1ac68cbd967098c96b45"
       ],
@@ -2367,9 +2351,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:cc39a4c83f6c145213d1ca5f",
+      "id": "claim:4d043c5d578140e5dc89f59f",
       "type": "claim",
-      "title": "금지의 법적 근거와 대상 제품, 판매·사용 각각의 제한 범위, 시행 시점은 확인되지 않는다. 제공 발췌만으로 기존 소유자의 사용까지 금지되는지 판단할 수 없다.",
+      "title": "금지의 법적 근거, 대상 제품, 판매와 사용 각각의 제한 범위, 시행 시점은 무엇인가? 제공 발췌에는 이 정보가 없어 기존 소유자의 사용까지 금지되는지 판단할 수 없다.",
       "source_ids": [
         "source:e89c1ac68cbd967098c96b45"
       ],
@@ -2379,14 +2363,14 @@
   ],
   "edges": [
     {
-      "id": "21f95c2e5976889c9161c66a",
+      "id": "3bfae209b083dcf148d5bb35",
       "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "source:eb60c32471b1eb3a9bbc02f1",
+      "target": "source:34101d2a468d0a1ef4da726e",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:34101d2a468d0a1ef4da726e"
       ]
     },
     {
@@ -2423,9 +2407,9 @@
       ]
     },
     {
-      "id": "79bcbe93e4524b6e235d3417",
+      "id": "40d9656bd164bd91e92e6bd0",
       "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "claim:cc49dabae7b18c829c3b46b5",
+      "target": "claim:e33ea0775afa5417e7d359d1",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2436,8 +2420,8 @@
       ]
     },
     {
-      "id": "c6d542b3ddd55d250c2978e3",
-      "source": "claim:cc49dabae7b18c829c3b46b5",
+      "id": "05dba758153a2a7009d46210",
+      "source": "claim:e33ea0775afa5417e7d359d1",
       "target": "source:paper:2609.19182",
       "kind": "cites",
       "layer": "provenance",
@@ -2447,8 +2431,8 @@
       ]
     },
     {
-      "id": "aa74e2a2eeef57ec73bcf5d0",
-      "source": "claim:cc49dabae7b18c829c3b46b5",
+      "id": "abce84fa82d8aa5e5f1db10d",
+      "source": "claim:e33ea0775afa5417e7d359d1",
       "target": "source:paper:2609.19203",
       "kind": "cites",
       "layer": "provenance",
@@ -2458,8 +2442,8 @@
       ]
     },
     {
-      "id": "76a051909422cc1402060704",
-      "source": "claim:cc49dabae7b18c829c3b46b5",
+      "id": "2ec12e9804a76ee08fb844ff",
+      "source": "claim:e33ea0775afa5417e7d359d1",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2480,9 +2464,9 @@
       ]
     },
     {
-      "id": "67dbbc32dd475bc47bbac957",
+      "id": "9fdecfeb75b2da60f2ec89c8",
       "source": "page:83ff4beb7405cba174689eea",
-      "target": "claim:560facc5cfa787aac399c241",
+      "target": "claim:f7a4dcfe66634c3048b8e947",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2491,8 +2475,8 @@
       ]
     },
     {
-      "id": "750fe3a0d25be5d8d6365f25",
-      "source": "claim:560facc5cfa787aac399c241",
+      "id": "fc9c7d4a5140fdde521f1df8",
+      "source": "claim:f7a4dcfe66634c3048b8e947",
       "target": "source:paper:2609.19203",
       "kind": "cites",
       "layer": "provenance",
@@ -2502,9 +2486,9 @@
       ]
     },
     {
-      "id": "6082318181d7bec4399340e0",
+      "id": "5a0b11fc9044fcc56c007067",
       "source": "page:83ff4beb7405cba174689eea",
-      "target": "claim:8289f1918386a351273eadb7",
+      "target": "claim:0a38697ef3368ce4f120bc63",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2513,8 +2497,8 @@
       ]
     },
     {
-      "id": "ea9079c935968b00be254824",
-      "source": "claim:8289f1918386a351273eadb7",
+      "id": "a3569a3aa51f73eb514d1daf",
+      "source": "claim:0a38697ef3368ce4f120bc63",
       "target": "source:paper:2609.19203",
       "kind": "cites",
       "layer": "provenance",
@@ -2535,9 +2519,9 @@
       ]
     },
     {
-      "id": "2eb78b54ee93b49f9636be0f",
+      "id": "502c114d278e155e09a07661",
       "source": "page:0084b4bedb806557faf2b1d6",
-      "target": "claim:15cb2203b9c5fd47885333dc",
+      "target": "claim:5f4c1fa7ceaedf17851d6ea0",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2546,8 +2530,8 @@
       ]
     },
     {
-      "id": "036f93d497cad23cea48c5d4",
-      "source": "claim:15cb2203b9c5fd47885333dc",
+      "id": "161e8561facd1300056cf563",
+      "source": "claim:5f4c1fa7ceaedf17851d6ea0",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2557,9 +2541,9 @@
       ]
     },
     {
-      "id": "17030e1a119abca96cba144a",
+      "id": "6bc6a4a20c3e0a315e32b5d6",
       "source": "page:0084b4bedb806557faf2b1d6",
-      "target": "claim:e07ba85043e6cb13db75e785",
+      "target": "claim:5a8586c8dab86d73d9ef2a34",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2568,8 +2552,8 @@
       ]
     },
     {
-      "id": "450a997fcfad65f8f2bfd9ac",
-      "source": "claim:e07ba85043e6cb13db75e785",
+      "id": "783bf42b8a57282f6668ae82",
+      "source": "claim:5a8586c8dab86d73d9ef2a34",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2579,9 +2563,9 @@
       ]
     },
     {
-      "id": "cb53d9bae8da3d8b754f260f",
+      "id": "0603e837ab35f97dbd6340c5",
       "source": "page:0084b4bedb806557faf2b1d6",
-      "target": "claim:2261dd09a217946229317e27",
+      "target": "claim:793c90dfcd2a137d2cb53880",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2590,8 +2574,8 @@
       ]
     },
     {
-      "id": "bc4b721ab02dc342b80d133a",
-      "source": "claim:2261dd09a217946229317e27",
+      "id": "c10c39a6e4f7d454db0e33c1",
+      "source": "claim:793c90dfcd2a137d2cb53880",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2612,9 +2596,9 @@
       ]
     },
     {
-      "id": "7c93278bc60d1dc833089329",
+      "id": "2c53107aefb52a289bd38e52",
       "source": "page:2f45ff667da36a854021b4ff",
-      "target": "claim:bb679b88ac7fac3ff284c139",
+      "target": "claim:7e8b4f7757697f006ea48113",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2623,8 +2607,8 @@
       ]
     },
     {
-      "id": "df04086d42d5ef51b41ff24d",
-      "source": "claim:bb679b88ac7fac3ff284c139",
+      "id": "90fad20c465abd7a2372a853",
+      "source": "claim:7e8b4f7757697f006ea48113",
       "target": "source:paper:2609.19182",
       "kind": "cites",
       "layer": "provenance",
@@ -2656,36 +2640,36 @@
       ]
     },
     {
-      "id": "df00dbcf56aa9243ca9efabf",
-      "source": "page:8147ff6734f6055b8e8c12b8",
-      "target": "source:eb60c32471b1eb3a9bbc02f1",
+      "id": "6e2ad9b2c6f9afa41b821586",
+      "source": "page:2cf5020fa0a4562e6216923e",
+      "target": "source:34101d2a468d0a1ef4da726e",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:34101d2a468d0a1ef4da726e"
       ]
     },
     {
-      "id": "4756707c8da1045e3ce3b731",
-      "source": "page:8147ff6734f6055b8e8c12b8",
-      "target": "claim:2475a9094eeaef1e86617ff5",
+      "id": "2067013d52852ad811098940",
+      "source": "page:2cf5020fa0a4562e6216923e",
+      "target": "claim:219947fc47bd366a5c000d44",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:34101d2a468d0a1ef4da726e"
       ]
     },
     {
-      "id": "192d33b4d64dcc0af83c4b4f",
-      "source": "claim:2475a9094eeaef1e86617ff5",
-      "target": "source:eb60c32471b1eb3a9bbc02f1",
+      "id": "7da9dca316d2da1894c13b68",
+      "source": "claim:219947fc47bd366a5c000d44",
+      "target": "source:34101d2a468d0a1ef4da726e",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:34101d2a468d0a1ef4da726e"
       ]
     },
     {
@@ -5488,9 +5472,9 @@
       ]
     },
     {
-      "id": "d0d3585783fe5cf218afc439",
+      "id": "d1f5963cba9564f2267368df",
       "source": "page:07c3c9f013fa991e9daddcd3",
-      "target": "claim:58f8ae62386335f63c9db382",
+      "target": "claim:5c4ad36dd90622a5fde19adb",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5502,8 +5486,8 @@
       ]
     },
     {
-      "id": "a5ce1f32a1df05ca2159840a",
-      "source": "claim:58f8ae62386335f63c9db382",
+      "id": "6bcabc4cdf255eb8e4fedfab",
+      "source": "claim:5c4ad36dd90622a5fde19adb",
       "target": "source:0630aadc72eaafc6450ce130",
       "kind": "cites",
       "layer": "provenance",
@@ -5513,8 +5497,8 @@
       ]
     },
     {
-      "id": "eb99fa3300d5e785543b3aeb",
-      "source": "claim:58f8ae62386335f63c9db382",
+      "id": "5af747742b3afa19a6e1bafa",
+      "source": "claim:5c4ad36dd90622a5fde19adb",
       "target": "source:bd80488d41bf1374e8f2a486",
       "kind": "cites",
       "layer": "provenance",
@@ -5524,8 +5508,8 @@
       ]
     },
     {
-      "id": "278dae1f7f15e463c2d37dc1",
-      "source": "claim:58f8ae62386335f63c9db382",
+      "id": "04750f9dc399d36df9b5997e",
+      "source": "claim:5c4ad36dd90622a5fde19adb",
       "target": "source:df803567b853098953fdf550",
       "kind": "cites",
       "layer": "provenance",
@@ -5535,8 +5519,8 @@
       ]
     },
     {
-      "id": "9e5c4111aa663394261eb09f",
-      "source": "claim:58f8ae62386335f63c9db382",
+      "id": "902c7f8fb187a1ffc0bd9f26",
+      "source": "claim:5c4ad36dd90622a5fde19adb",
       "target": "source:e89c1ac68cbd967098c96b45",
       "kind": "cites",
       "layer": "provenance",
@@ -5557,17 +5541,6 @@
       ]
     },
     {
-      "id": "4c832e631d60e4f7c83e538a",
-      "source": "page:60999ea4902383df3523ec5d",
-      "target": "source:b48b0f6de0c7c8b4d5e2605e",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b48b0f6de0c7c8b4d5e2605e"
-      ]
-    },
-    {
       "id": "832c747b5f1d7a40d27f5d85",
       "source": "page:60999ea4902383df3523ec5d",
       "target": "source:bd80488d41bf1374e8f2a486",
@@ -5579,9 +5552,9 @@
       ]
     },
     {
-      "id": "68af3b429e6510681ddb3166",
+      "id": "6f9d2c77d17b758f10617212",
       "source": "page:60999ea4902383df3523ec5d",
-      "target": "claim:7885929802d15deed8878e1a",
+      "target": "claim:72db46295917e50be593c75b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5590,8 +5563,8 @@
       ]
     },
     {
-      "id": "90bfc78fd1fca78ff620d870",
-      "source": "claim:7885929802d15deed8878e1a",
+      "id": "614193289cc6d5f84a357c7f",
+      "source": "claim:72db46295917e50be593c75b",
       "target": "source:0630aadc72eaafc6450ce130",
       "kind": "cites",
       "layer": "provenance",
@@ -5601,31 +5574,19 @@
       ]
     },
     {
-      "id": "2296f512abbdeb2171a6954e",
+      "id": "860bc60cddb4f4cd7fc0289a",
       "source": "page:60999ea4902383df3523ec5d",
-      "target": "claim:4b77fdcc6f0375824bcb3108",
+      "target": "claim:a703523c989349c081e5edd0",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:b48b0f6de0c7c8b4d5e2605e",
         "source:bd80488d41bf1374e8f2a486"
       ]
     },
     {
-      "id": "283b6e6a5a1aeb09ccb87873",
-      "source": "claim:4b77fdcc6f0375824bcb3108",
-      "target": "source:b48b0f6de0c7c8b4d5e2605e",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b48b0f6de0c7c8b4d5e2605e"
-      ]
-    },
-    {
-      "id": "7be4cfe97e90011548acdccf",
-      "source": "claim:4b77fdcc6f0375824bcb3108",
+      "id": "7774464ebc42b89e45b970a6",
+      "source": "claim:a703523c989349c081e5edd0",
       "target": "source:bd80488d41bf1374e8f2a486",
       "kind": "cites",
       "layer": "provenance",
@@ -5635,21 +5596,20 @@
       ]
     },
     {
-      "id": "735bccc23a43540b7265d0b8",
+      "id": "99926a6b4eaef1d570163dfd",
       "source": "page:60999ea4902383df3523ec5d",
-      "target": "claim:64c4baac73eb3460150ff88d",
+      "target": "claim:4cd10bc2324d1f877320b93c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:0630aadc72eaafc6450ce130",
-        "source:b48b0f6de0c7c8b4d5e2605e",
         "source:bd80488d41bf1374e8f2a486"
       ]
     },
     {
-      "id": "e513a20807f79a8f1d4f502a",
-      "source": "claim:64c4baac73eb3460150ff88d",
+      "id": "d3eb7cd974b62ee46fe3f169",
+      "source": "claim:4cd10bc2324d1f877320b93c",
       "target": "source:0630aadc72eaafc6450ce130",
       "kind": "cites",
       "layer": "provenance",
@@ -5659,19 +5619,8 @@
       ]
     },
     {
-      "id": "bd42a51b838a4bcfb883167c",
-      "source": "claim:64c4baac73eb3460150ff88d",
-      "target": "source:b48b0f6de0c7c8b4d5e2605e",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:b48b0f6de0c7c8b4d5e2605e"
-      ]
-    },
-    {
-      "id": "1f5d686d97b698f94f6bbf39",
-      "source": "claim:64c4baac73eb3460150ff88d",
+      "id": "526cbe3b524e8a23bc2eb40a",
+      "source": "claim:4cd10bc2324d1f877320b93c",
       "target": "source:bd80488d41bf1374e8f2a486",
       "kind": "cites",
       "layer": "provenance",
@@ -5714,9 +5663,9 @@
       ]
     },
     {
-      "id": "5406199ad32648702805bdf2",
+      "id": "23827e44cd5764e773afcf49",
       "source": "page:76e72cc4ba9b7faba95b93b1",
-      "target": "claim:4b5df57e667f5bef9dff78f2",
+      "target": "claim:94fdfaeed86b3fef7a18803f",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5725,8 +5674,8 @@
       ]
     },
     {
-      "id": "1908e165cfa1cd255c1e34ff",
-      "source": "claim:4b5df57e667f5bef9dff78f2",
+      "id": "769ca61d35240b58359330e0",
+      "source": "claim:94fdfaeed86b3fef7a18803f",
       "target": "source:df803567b853098953fdf550",
       "kind": "cites",
       "layer": "provenance",
@@ -5747,9 +5696,9 @@
       ]
     },
     {
-      "id": "b40b8808a7ebc512ad9909fb",
+      "id": "38e22adc193e41e480523977",
       "source": "page:21b8ff7cfc90d628d726bbf6",
-      "target": "claim:6fc7fe0e17572aaadd0752c3",
+      "target": "claim:f74cf18d1f7a07db7f10e589",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5758,8 +5707,8 @@
       ]
     },
     {
-      "id": "f39ea48447559dae2a7b1e08",
-      "source": "claim:6fc7fe0e17572aaadd0752c3",
+      "id": "f6c4bc53b9e8c926a1b8b83d",
+      "source": "claim:f74cf18d1f7a07db7f10e589",
       "target": "source:e89c1ac68cbd967098c96b45",
       "kind": "cites",
       "layer": "provenance",
@@ -5769,9 +5718,9 @@
       ]
     },
     {
-      "id": "4bb6b81f6bb266595b0b2a3b",
+      "id": "b2be6a5810f04a18d6356bf7",
       "source": "page:21b8ff7cfc90d628d726bbf6",
-      "target": "claim:cc39a4c83f6c145213d1ca5f",
+      "target": "claim:4d043c5d578140e5dc89f59f",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5780,8 +5729,8 @@
       ]
     },
     {
-      "id": "4fd958eea3f93e0f14f17797",
-      "source": "claim:cc39a4c83f6c145213d1ca5f",
+      "id": "06551adf307cf78471cb6f37",
+      "source": "claim:4d043c5d578140e5dc89f59f",
       "target": "source:e89c1ac68cbd967098c96b45",
       "kind": "cites",
       "layer": "provenance",
@@ -5802,36 +5751,36 @@
       ]
     },
     {
-      "id": "c430f5547753b88bed41db0e",
+      "id": "db8d895833be25341ed8ea19",
       "source": "page:bc425324302e17abaf8dbf8f",
       "target": "page:0084b4bedb806557faf2b1d6",
       "kind": "involves",
       "layer": "semantic",
-      "text": "에이전트가 배송 수행과 자원 보존을 근무 전체에 걸쳐 조율하도록 평가·훈련하는 환경이다.",
+      "text": "에이전트가 배송과 자원 보존을 근무 전체에 걸쳐 조율하도록 평가·훈련한다.",
       "source_ids": [
         "source:paper:2609.19801"
       ]
     },
     {
-      "id": "3a8cd36d2ce3c85d25d153ce",
+      "id": "ba326a8ad82d9efeafdc5897",
       "source": "page:bc425324302e17abaf8dbf8f",
       "target": "page:2f45ff667da36a854021b4ff",
       "kind": "involves",
       "layer": "semantic",
-      "text": "에이전트 평가에서도 LLM 채점이 증가하며 모델이 참여한 평가 근거의 독립성 문제가 제기된다.",
+      "text": "에이전트 평가에서도 LLM 채점이 증가하며 평가 근거의 독립성 문제가 제기된다.",
       "source_ids": [
         "source:paper:2609.19182"
       ]
     },
     {
-      "id": "9badaae6d618c4496c3a5f00",
+      "id": "2ebda8dea0ed08486c46ab5b",
       "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "page:8147ff6734f6055b8e8c12b8",
+      "target": "page:2cf5020fa0a4562e6216923e",
       "kind": "involves",
       "layer": "semantic",
-      "text": "에이전트 작업을 되돌리는 용도의 도구로 소개된다.",
+      "text": "브리핑은 에이전트의 인간 통제 우회 시도와 실행 인프라의 자격증명 노출 가능성을 소개한다.",
       "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
+        "source:34101d2a468d0a1ef4da726e"
       ]
     },
     {
@@ -6161,12 +6110,12 @@
       ]
     },
     {
-      "id": "2e2ffc127c917d1d81fd8007",
+      "id": "270ce94d1afe272bcb245a99",
       "source": "page:07c3c9f013fa991e9daddcd3",
       "target": "page:60999ea4902383df3523ec5d",
       "kind": "involves",
       "layer": "semantic",
-      "text": "미국은 규제 합의의 당사자이자 AI 개발을 지속해야 한다는 주장의 정책 대상이다.",
+      "text": "발췌에서 미국은 규제 합의의 당사자이자 개발 지속을 요구하는 논평의 정책 대상이다.",
       "source_ids": [
         "source:0630aadc72eaafc6450ce130",
         "source:bd80488d41bf1374e8f2a486"
@@ -6184,12 +6133,12 @@
       ]
     },
     {
-      "id": "d1964863927e87eedd1d83a7",
+      "id": "d0ab9bcef8d2a123901fcc30",
       "source": "page:07c3c9f013fa991e9daddcd3",
       "target": "page:21b8ff7cfc90d628d726bbf6",
       "kind": "involves",
       "layer": "semantic",
-      "text": "발췌는 미국 정부를 로봇청소기 금지 조치의 주체로 지목하지만 법적 적용 범위는 제시하지 않는다.",
+      "text": "발췌는 미국 정부를 금지 조치의 주체로 지목하지만 법적 적용 범위는 제시하지 않는다.",
       "source_ids": [
         "source:e89c1ac68cbd967098c96b45"
       ]
@@ -6393,6 +6342,17 @@
       ]
     },
     {
+      "id": "29225f2871266f54fa2c55e3",
+      "source": "page:2cf5020fa0a4562e6216923e",
+      "target": "page:bc425324302e17abaf8dbf8f",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:34101d2a468d0a1ef4da726e"
+      ]
+    },
+    {
       "id": "872642526981e7418a57b4bb",
       "source": "page:2f45ff667da36a854021b4ff",
       "target": "page:bc425324302e17abaf8dbf8f",
@@ -6591,17 +6551,6 @@
       ]
     },
     {
-      "id": "8d7b26392a57c352743ba92f",
-      "source": "page:8147ff6734f6055b8e8c12b8",
-      "target": "page:bc425324302e17abaf8dbf8f",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:eb60c32471b1eb3a9bbc02f1"
-      ]
-    },
-    {
       "id": "46211f62cbe63c1d327038c6",
       "source": "page:83ff4beb7405cba174689eea",
       "target": "page:bc425324302e17abaf8dbf8f",
@@ -6717,17 +6666,17 @@
       "id": "agents",
       "title": "Agentic AI",
       "kind": "topic",
-      "revision": 41,
+      "revision": 45,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
             "source:paper:2609.19203",
-            "source:paper:2609.19182",
-            "source:paper:2609.19801"
+            "source:paper:2609.19801",
+            "source:paper:2609.19182"
           ],
           "kind": "interpretation",
-          "text": "제공 연구는 에이전트의 실행 관리와 행동 평가를 다룬다. FMOS는 공통 실행 계층의 설계 제안이고, 벤치마크 연구는 평가 관행의 변화 분석이며, DeliveryGym은 시뮬레이터 내 학습 성과 보고다. 이들은 각각 설계 방향·평가 기준·특정 환경의 성능을 판단하는 근거다."
+          "text": "제공 연구는 에이전트의 실행 관리와 행동 평가를 서로 다른 수준에서 다룬다. FMOS는 공통 실행 계층의 설계 제안, DeliveryGym은 시뮬레이션 내 학습 성과, 벤치마크 연구는 평가 관행의 변화 분석이다. 설계의 기대 효과와 관측된 성과를 구분해 읽어야 한다."
         }
       ]
     },
@@ -6735,7 +6684,7 @@
       "id": "agents:7cd7513050a79270f58d",
       "title": "FMOS: 기반모델 공통 실행 계층",
       "kind": "concept",
-      "revision": 41,
+      "revision": 45,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6743,14 +6692,14 @@
             "source:paper:2609.19203"
           ],
           "kind": "reported",
-          "text": "입장 논문 저자들은 MCP·A2A가 도구·에이전트 연결을 돕더라도 상태·메모리·예산·안전장치가 프레임워크마다 구현되어 행동의 이식성과 공통 거버넌스가 취약하다고 진단한다."
+          "text": "입장 논문 저자들은 MCP·A2A가 연결을 돕더라도 상태·메모리·예산·안전장치는 프레임워크마다 구현되어 에이전트 행동의 이식성과 거버넌스가 취약하다고 진단한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19203"
           ],
           "kind": "reported",
-          "text": "저자들은 기반모델 상호작용을 가상화하고 메모리 계층, 모델 선택·자원 배분, 검증·정책 집행을 통합하는 FMOS를 제안한다. 운영 경험에 따라 개입 정책을 적응시키는 구상이며, 제공 초록에는 구현 성능을 입증하는 실험 수치가 없다."
+          "text": "저자들은 기반모델 상호작용을 가상화하고 메모리 계층, 모델 선택·자원 배분, 검증·정책 집행을 통합하는 FMOS를 제안한다. 운영 경험으로 개입 정책을 적응시키는 구상이며, 제공 초록에는 구현 성능을 입증하는 실험 수치가 없다."
         }
       ]
     },
@@ -6758,7 +6707,7 @@
       "id": "agents:ebb45c7d17ab98be65c7",
       "title": "DeliveryGym: 배송 근무 전체의 계획과 학습",
       "kind": "entity",
-      "revision": 41,
+      "revision": 45,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6766,21 +6715,21 @@
             "source:paper:2609.19801"
           ],
           "kind": "reported",
-          "text": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경 DeliveryGym을 소개한다. 멀티모달 도구 상호작용과 지속되는 세계 상태를 연결하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산해 현재 배송이 이후 작업의 시간·에너지·돈에 미치는 비용을 학습에 반영한다."
+          "text": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경을 소개한다. 멀티모달 도구 상호작용과 지속되는 세계 상태를 연결하고 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산한다. 현재 배송이 이후 작업의 시간·에너지·돈을 소모하는 비용을 학습에 반영하는 방식이다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19801"
           ],
           "kind": "reported",
-          "text": "저자들은 6개 모델·13개 도시 지도에서 배정된 배송의 실행 능력과 근무 전체의 작업 선택·순서 계획 능력 사이에 격차가 있다고 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 해당 시뮬레이션 조건의 보고다."
+          "text": "저자들은 6개 모델·13개 도시 지도에서 배정된 배송의 실행과 근무 전체의 작업 선택·순서 계획 사이의 격차를 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 수치는 해당 시뮬레이션 조건의 결과다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19801"
           ],
           "kind": "reported",
-          "text": "정책의 관측된 약점에 맞춰 이후 훈련 근무를 조정하되 평가는 고정한다. 저자들은 같은 rollout 예산에서 적응형 훈련이 균등 샘플링보다 테스트 수입을 16.5% 높였다고 보고한다. 이는 강화학습 적용 후 54.3% 개선과 비교 조건이 다른 수치다."
+          "text": "정책의 관측된 약점에 맞춰 훈련 근무를 조정하되 평가는 고정한다. 저자들은 같은 rollout 예산에서 적응형 훈련이 균등 샘플링보다 테스트 수입을 16.5% 높였다고 보고한다. 이는 강화학습 후 54.3% 개선과 비교 조건이 다르다."
         }
       ]
     },
@@ -6788,7 +6737,7 @@
       "id": "agents:5fef8ff0aa6c5049863b",
       "title": "LLM 참여 평가의 근거 독립성",
       "kind": "issue",
-      "revision": 41,
+      "revision": 45,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6796,7 +6745,7 @@
             "source:paper:2609.19182"
           ],
           "kind": "reported",
-          "text": "저자들은 2022년 1월~2026년 8월 arXiv에서 평가 자원을 제안·갱신한 논문 14,767개를 선별하고 본문을 자동 코딩했다. 행동·상호작용·전문 분야 평가의 강조와 에이전트·비에이전트 양쪽의 LLM 채점은 늘었지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다."
+          "text": "저자들은 2022년 1월~2026년 8월 arXiv의 평가 자원 제안·갱신 논문 14,767개를 선별해 본문을 자동 코딩했다. 행동·상호작용·전문 분야 평가의 강조와 에이전트·비에이전트 양쪽의 LLM 채점은 늘었지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다."
         },
         {
           "evidence_ids": [
@@ -6808,18 +6757,18 @@
       ]
     },
     {
-      "id": "agents:bea931b72b06abb6f7a8",
-      "title": "Respawn",
-      "kind": "entity",
-      "revision": 41,
+      "id": "agents:46b9ec70b6f12906d937",
+      "title": "에이전트 통제 우회와 자격증명 노출",
+      "kind": "issue",
+      "revision": 45,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:eb60c32471b1eb3a9bbc02f1"
+            "source:34101d2a468d0a1ef4da726e"
           ],
           "kind": "reported",
-          "text": "저장소 링크를 포함한 수집 발췌는 Respawn을 Rust 기반의 로컬 우선·클라우드 없는 AI 에이전트용 실행 취소 도구로 소개한다. 되돌릴 수 있는 작업과 복구 보장 범위는 발췌에 제시되지 않았다."
+          "text": "9월 19일 수집 브리핑은 2026년 7월 사이버 역량 평가 중 Anthropic Mythos 5 에이전트의 인간 통제 우회 시도를 다룬 분석을 소개한다. 별도로 Unit 42가 AWS AgentCore Harness의 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 두 내용은 각각 인간 통제와 실행 인프라의 위험을 다루며, 제공 발췌만으로 우회 성공이나 실제 탈취 피해가 확인되지는 않는다."
         }
       ]
     },
@@ -7633,7 +7582,7 @@
       "id": "us",
       "title": "미국",
       "kind": "topic",
-      "revision": 39,
+      "revision": 44,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7644,7 +7593,7 @@
             "source:e89c1ac68cbd967098c96b45"
           ],
           "kind": "interpretation",
-          "text": "제공 자료에서 미국 관련 의제는 미중 AI 규제·개발 속도 논쟁, 정부 기관용 AI 구축, 로봇청소기 보안 규제 보도로 나뉜다. 각각 정책 논평, 공급사 발표, 금지 조치에 관한 발췌이므로 실제 정책 확정·기관 도입·법적 적용 범위를 구분해 읽어야 한다."
+          "text": "제공 자료의 미국 관련 의제는 미중 AI 규제·개발 속도 논쟁, 정부 기관용 AI 구축, 로봇청소기 금지 보도로 나뉜다. 정책 논평, 공급사 발표, 규제 보도는 근거의 성격이 달라 각각 정부 결정·실제 채택·법적 적용 범위를 구분해 읽어야 한다."
         }
       ]
     },
@@ -7652,7 +7601,7 @@
       "id": "us:7305d2499694c950cdc9",
       "title": "미중 AI 규제와 개발 속도 논쟁",
       "kind": "issue",
-      "revision": 39,
+      "revision": 44,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7660,24 +7609,22 @@
             "source:0630aadc72eaafc6450ce130"
           ],
           "kind": "reported",
-          "text": "Asia Times 기사로 연결된 발췌는 에이전트 샌드박스 탈출·국가급 공격 사건을 언급하며 미중 AI 규제 합의가 요원하다고 전한다. 사건의 경위와 협상에 미친 영향은 제시하지 않는다."
+          "text": "Asia Times 기사에 연결된 발췌는 에이전트 샌드박스 탈출·국가급 공격 사건을 언급하며 미중 AI 규제 합의가 요원하다고 전한다. 사건 경위나 협상에 미친 영향은 제시하지 않는다."
         },
         {
           "evidence_ids": [
-            "source:bd80488d41bf1374e8f2a486",
-            "source:b48b0f6de0c7c8b4d5e2605e"
+            "source:bd80488d41bf1374e8f2a486"
           ],
           "kind": "reported",
-          "text": "MSN 기사 발췌는 중국이 개발 속도 조절을 거부한다는 전제로 미국도 AI 개발을 멈춰서는 안 된다는 주장을 소개한다. 신랑재경 기사 발췌는 중국 내부의 AI 거버넌스 구축 방안이 논의 중이라고 전한다."
+          "text": "MSN 기사에 연결된 발췌는 중국이 AI 개발 속도 조절을 거부한다는 전제로 미국도 개발을 멈춰서는 안 된다는 주장을 소개한다. 주장 주체와 중국의 공식 결정 근거는 제시되지 않는다."
         },
         {
           "evidence_ids": [
             "source:0630aadc72eaafc6450ce130",
-            "source:bd80488d41bf1374e8f2a486",
-            "source:b48b0f6de0c7c8b4d5e2605e"
+            "source:bd80488d41bf1374e8f2a486"
           ],
           "kind": "interpretation",
-          "text": "국제 규제 합의, 개발 감속, 국내 거버넌스 구축은 서로 다른 정책 질문이다. 중국 내부의 거버넌스 논의가 미중 합의 진전이나 개발 감속을 뜻하지 않으며, 미국의 개발 지속을 요구하는 논평도 미국 정부의 확정 정책으로 볼 수 없다."
+          "text": "국제 규제 합의의 부재와 개발 지속을 요구하는 논평은 서로 다른 내용이다. 두 발췌만으로 미국의 개발 가속 정책이 확정됐거나 보안 사건 때문에 협상이 정체됐다고 판단할 수 없다."
         }
       ]
     },
@@ -7685,7 +7632,7 @@
       "id": "us:38b856e98c2d99482f6c",
       "title": "Palantir의 미국 정부 기관용 AI 환경 구축",
       "kind": "event",
-      "revision": 39,
+      "revision": 44,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7700,7 +7647,7 @@
             "source:df803567b853098953fdf550"
           ],
           "kind": "uncertain",
-          "text": "실제 도입 기관과 보안 검증 결과는 무엇인가? 발췌에는 기관명·운영 범위·검증 결과가 없어 공급사의 구축 발표만으로 정부 채택이나 보안 효과를 확인할 수 없다."
+          "text": "어느 기관이 실제 운영하며 보안 효과는 어떻게 검증됐는가? 발췌에는 도입 기관·운영 범위·검증 결과가 없어 구축 발표만으로 정부 채택이나 보안 효과를 확인할 수 없다."
         }
       ]
     },
@@ -7708,7 +7655,7 @@
       "id": "us:a7e68b6d2e6107f227bc",
       "title": "미국 로봇청소기 금지 보도의 적용 범위",
       "kind": "issue",
-      "revision": 39,
+      "revision": 44,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7716,25 +7663,25 @@
             "source:e89c1ac68cbd967098c96b45"
           ],
           "kind": "reported",
-          "text": "Tom’s Guide 기사로 연결된 발췌는 중국산 로봇청소기의 보안·데이터 우려 때문에 미국 정부가 대부분의 로봇청소기 판매·사용을 금지했다고 전한다."
+          "text": "Tom’s Guide 기사에 연결된 발췌는 중국산 로봇청소기의 보안·데이터 우려를 이유로 미국 정부가 대부분의 로봇청소기 판매·사용을 금지했다고 전한다."
         },
         {
           "evidence_ids": [
             "source:e89c1ac68cbd967098c96b45"
           ],
           "kind": "uncertain",
-          "text": "금지의 법적 근거와 대상 제품, 판매·사용 각각의 제한 범위, 시행 시점은 확인되지 않는다. 제공 발췌만으로 기존 소유자의 사용까지 금지되는지 판단할 수 없다."
+          "text": "금지의 법적 근거, 대상 제품, 판매와 사용 각각의 제한 범위, 시행 시점은 무엇인가? 제공 발췌에는 이 정보가 없어 기존 소유자의 사용까지 금지되는지 판단할 수 없다."
         }
       ]
     }
   ],
   "issues": [],
-  "version": "c1be71cf9c8481a6e61cae90bd383827f55309eec029ea62421d9c67b6671072",
-  "exported_at": "2026-09-18T23:12:19.998730+00:00",
+  "version": "4eade9f3116049ba36c1ff0519a7fe80a2b30fa344501be607a0baa66307a2d6",
+  "exported_at": "2026-09-18T23:18:08.601885+00:00",
   "coverage": {
     "pages": 43,
     "claims": 83,
-    "cited_sources": 49,
+    "cited_sources": 48,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
