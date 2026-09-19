@@ -257,12 +257,11 @@
         "source:d783c787cb6ce78606db6a56",
         "source:da6df76cb3d2a78509c7709d",
         "source:e7b8a3795d07304b72f60475",
-        "source:fc356a3c94782703f13d69b3",
-        "source:paper:2609.19969"
+        "source:fc356a3c94782703f13d69b3"
       ],
       "claims": [
         "claim:45f21dae12398b450cc2dfb6",
-        "claim:d230ddc38fcdca7d64be716c"
+        "claim:d8c116334ed85b4d5f0c19af"
       ],
       "status": "reviewed"
     },
@@ -355,9 +354,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:d230ddc38fcdca7d64be716c",
+      "id": "claim:d8c116334ed85b4d5f0c19af",
       "type": "claim",
-      "title": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정, DeepSeek의 인프라 투자 계획은 제품·일정·투자라는 서로 다른 단계의 소식이다. 이를 모두 서비스 가동이나 시장 성장 실적으로 합산할 수는 없다.",
+      "title": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정 확정, DeepSeek의 인프라 투자 계획은 제품·일정·투자라는 서로 다른 단계의 소식이다. 이를 모두 서비스 가동이나 시장 성장 실적으로 합산할 수는 없다.",
       "source_ids": [
         "source:5d03910cda5f5397b68f2673",
         "source:da6df76cb3d2a78509c7709d",
@@ -382,7 +381,8 @@
       ],
       "claims": [
         "claim:45d11806ed5fc5343681dc68",
-        "claim:bfca17836caa838968dc41ea"
+        "claim:1ce1149890c8b13f3511d9be",
+        "claim:9b530a9ae2681d6138bea1da"
       ],
       "status": "reviewed"
     },
@@ -397,40 +397,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:bfca17836caa838968dc41ea",
+      "id": "claim:1ce1149890c8b13f3511d9be",
       "type": "claim",
-      "title": "DeepSeek-V4.1-Flash 초록의 연산·메모리 절감 보고와 자국산 인프라 투자 계획은 확인 대상이 다르다. 모델 설계 보고만으로 투자 집행이나 자국산 칩에서의 성능을 판단할 수 없다.",
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d",
-        "source:paper:2609.19969"
-      ],
-      "claim_kind": "interpretation",
-      "status": "reviewed"
-    },
-    {
-      "id": "page:43e0c8b63cb61bda06ef289e",
-      "type": "concept",
-      "title": "DeepSeek-V4.1-Flash의 연산·캐시 절감",
-      "page_ids": [
-        "china:ae34d2cb008c92c72682"
-      ],
-      "topics": [
-        "china"
-      ],
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d",
-        "source:paper:2609.19969"
-      ],
-      "claims": [
-        "claim:9635253ec00155cf087807e8",
-        "claim:35db40eb6a0e42e278a9199b"
-      ],
-      "status": "reviewed"
-    },
-    {
-      "id": "claim:9635253ec00155cf087807e8",
-      "type": "claim",
-      "title": "저자들은 입력 비중이 큰 에이전트 작업의 비용을 줄이기 위해 CED 구조를 도입했다고 설명한다. 초록에 따르면 토큰당 활성 파라미터는 입력 처리(prefill)에서 80억 개, 출력 생성(decode)에서 160억 개다.",
+      "title": "DeepSeek-V4.1-Flash 초록에서 저자들은 입력 비중이 큰 에이전트 작업의 비용을 줄이는 CED 구조를 설명한다. 토큰당 활성 파라미터는 입력 처리(prefill)에서 80억 개, 출력 생성(decode)에서 160억 개라고 보고한다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -438,9 +407,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:35db40eb6a0e42e278a9199b",
+      "id": "claim:9b530a9ae2681d6138bea1da",
       "type": "claim",
-      "title": "초록은 CSA2의 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리의 영속 캐시도 약 1/8로 줄였다는 저자 보고이며, 서비스 요금 절감률을 측정한 결과는 아니다.",
+      "title": "저자들은 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리의 영속 캐시도 약 1/8로 줄였다는 초록의 설명이며, 실제 서비스 요금이나 자국산 칩에서의 성능 측정은 제시하지 않는다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -1654,7 +1623,7 @@
         "source:fc674bb50b9225f597450b43"
       ],
       "claims": [
-        "claim:543e26d55317a3587d9714c0"
+        "claim:aa9dbde2522d69218a68aca8"
       ],
       "status": "reviewed"
     },
@@ -1722,9 +1691,9 @@
       "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE9hcWY3dHYyWEhmdnBmdTRKM3E0eGtiSVR3VVNYQ3FJMjIza0VDRUE0cTYtdERVMjJfM3RnRmpHMGFuYy1LaHJyNWVRczgtZG8"
     },
     {
-      "id": "claim:543e26d55317a3587d9714c0",
+      "id": "claim:aa9dbde2522d69218a68aca8",
       "type": "claim",
-      "title": "공공 AX 자료는 서비스 공급, 기관의 AI 활용 수준 진단, 현장 업무 적용을 다룬다. 실행 단계 비율은 도입 현황 분석이고, 서비스 공개는 공급 소식이며, 현장 감소 실적과 확대 목표는 달성 여부가 다르므로 구분해 읽어야 한다.",
+      "title": "제공 자료는 공공 AX를 서비스 공급, 기관의 활용 수준 진단, 현장 업무 적용으로 보여준다. 실행 단계 비율·서비스 공개·현장 성과·확대 목표는 서로 다른 지표이므로, 이를 합쳐 도입 확산이나 효과의 증거로 읽어서는 안 된다.",
       "source_ids": [
         "source:60ff9f57f8546564f9e86bfb",
         "source:b8c2184e0cd368d30930e0eb",
@@ -1748,15 +1717,15 @@
         "source:b8c2184e0cd368d30930e0eb"
       ],
       "claims": [
-        "claim:ec5a6d0c49bd82c2da7eba64",
-        "claim:f340a810a18fc353dca39a73"
+        "claim:6ebf588585f132220b4f1046",
+        "claim:bc3f286d64753caad27cd076"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:ec5a6d0c49bd82c2da7eba64",
+      "id": "claim:6ebf588585f132220b4f1046",
       "type": "claim",
-      "title": "KT 리포트를 소개한 발췌는 금융 59.5%·공공 30%가 AX ‘실행 단계’라고 전한다. 별도 발췌는 KT가 지자체 대상 공공 AX 서비스 10종을 공개했다고 보도한다.",
+      "title": "KT 리포트를 소개한 발췌는 금융 59.5%·공공 30%가 AX ‘실행 단계’라고 전한다. 별도 발췌는 KT의 지자체 대상 공공 AX 서비스 10종 공개를 보도한다.",
       "source_ids": [
         "source:60ff9f57f8546564f9e86bfb",
         "source:b8c2184e0cd368d30930e0eb"
@@ -1765,9 +1734,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:f340a810a18fc353dca39a73",
+      "id": "claim:bc3f286d64753caad27cd076",
       "type": "claim",
-      "title": "조사 표본·분모·실행 단계 정의가 제시되지 않아 30%를 전체 공공기관의 보급률로 일반화하기 어렵다. 서비스 10종 공개 역시 실제 도입 기관 수나 업무 개선 효과를 보여주지는 않는다.",
+      "title": "발췌에는 조사 표본·분모·실행 단계 정의가 없어 30%를 전체 공공기관 보급률로 일반화하기 어렵다. 서비스 10종 공개도 실제 도입 기관 수나 업무 개선 효과를 뜻하지 않는다.",
       "source_ids": [
         "source:60ff9f57f8546564f9e86bfb",
         "source:b8c2184e0cd368d30930e0eb"
@@ -1789,15 +1758,15 @@
         "source:fc674bb50b9225f597450b43"
       ],
       "claims": [
-        "claim:bb4dcf8ea920d17478acd095",
-        "claim:5e6e3884bebb90363daf9117"
+        "claim:bf792176c8728d01c84f215c",
+        "claim:19a207cab72da58764c54843"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:bb4dcf8ea920d17478acd095",
+      "id": "claim:bf792176c8728d01c84f215c",
       "type": "claim",
-      "title": "MBN에 따르면 NPAI는 서울AI재단·한국생산성본부·MBN이 공동 개발한 공공부문 AI 진단체계다. 거버넌스·인프라·서비스·정합성을 점검하고 기관 간 비교로 AI 활용 수준과 발전 방향을 살핀다.",
+      "title": "MBN은 NPAI를 서울AI재단·한국생산성본부·MBN이 공동 개발한 공공부문 AI 진단체계로 설명한다. 거버넌스·인프라·서비스·정합성을 점검하고 기관 간 비교를 통해 활용 수준과 발전 방향을 살피는 방식이다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ],
@@ -1805,9 +1774,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:5e6e3884bebb90363daf9117",
+      "id": "claim:19a207cab72da58764c54843",
       "type": "claim",
-      "title": "한국도로공사는 진단을 통해 부족한 제도·정책·조직을 보완하고 추가 AI 활용 과제를 발굴할 계획이라고 밝혔다. 제공 기사에는 진단 결과나 점수가 제시되지 않았다.",
+      "title": "한국도로공사는 진단을 바탕으로 제도·정책·조직을 보완하고 추가 AI 활용 과제를 발굴할 계획이라고 밝혔다. 이는 진단 참여 목적에 관한 발표이며, 제공 기사에는 진단 점수나 결과가 없다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ],
@@ -1829,8 +1798,8 @@
       ],
       "claims": [
         "claim:526540ad063db2834a25d4b7",
-        "claim:101d3ab014bf7d17b4a95503",
-        "claim:652c0046aa3f35170d51ccfb"
+        "claim:3a1a6e6caf34e5b56bf4211a",
+        "claim:5af963d6eb96b93a4a1a2d80"
       ],
       "status": "reviewed"
     },
@@ -1845,9 +1814,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:101d3ab014bf7d17b4a95503",
+      "id": "claim:3a1a6e6caf34e5b56bf4211a",
       "type": "claim",
-      "title": "감소율의 비교 기간·산정 방법과 다른 관리 조치의 영향은 무엇인가? 제공 본문에는 설명이 없어 AI의 독립적인 기여도는 확인되지 않는다.",
+      "title": "감소율의 비교 기간·산정 방식과 다른 관리 조치의 영향은 무엇인가? 제공 본문에는 설명이 없어 AI의 독립적인 기여도는 확인되지 않는다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ],
@@ -1855,9 +1824,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:652c0046aa3f35170d51ccfb",
+      "id": "claim:5af963d6eb96b93a4a1a2d80",
       "type": "claim",
-      "title": "도로공사는 2026년 말까지 고속도로 CCTV 약 9,500대 중 약 4,000대에 AI를 적용할 계획이라고 밝혔다. 돌발상황 검지 정확도 50%→96%는 목표이고, 인지부터 대응까지 6분 31초→80초는 기대치다.",
+      "title": "도로공사는 2026년 말까지 고속도로 CCTV 약 9,500대 중 약 4,000대에 AI를 적용할 계획이라고 밝혔다. 돌발상황 검지 정확도 50%→96%는 목표이며, 인지부터 대응까지 6분 31초→80초는 기대치다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ],
@@ -1879,15 +1848,15 @@
         "source:3999b94431374f06e9cac006"
       ],
       "claims": [
-        "claim:c3a304fad5b26aea486bb03b",
-        "claim:2e8ae789a069a00c81534d27"
+        "claim:ba7ebd263208f542238a392b",
+        "claim:cd1a03c08d8d9013d9c1278d"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:c3a304fad5b26aea486bb03b",
+      "id": "claim:ba7ebd263208f542238a392b",
       "type": "claim",
-      "title": "브리핑들은 엑스페릭스의 퓨리오사AI NPU 기반 공공 AX 풀스택 구축과 소요 기간 2~3개월→2주 단축을 소개했다.",
+      "title": "엑스페릭스의 퓨리오사AI NPU 기반 공공 AX 풀스택을 소개하면서, 9월 16일 브리핑은 ‘부정수급 적발’ 기간을, 9월 18일 브리핑은 ‘검증’ 기간을 2~3개월에서 2주로 줄였다고 전한다.",
       "source_ids": [
         "source:07917f5939f3ec5d21d05ff0",
         "source:3999b94431374f06e9cac006"
@@ -1896,9 +1865,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:2e8ae789a069a00c81534d27",
+      "id": "claim:cd1a03c08d8d9013d9c1278d",
       "type": "claim",
-      "title": "9월 16일 브리핑은 단축 대상을 ‘부정수급 적발’, 9월 18일 브리핑은 ‘검증’으로 표현한다. 같은 업무 단계인지 확인되지 않아 적발 전체 기간이 단축됐다고 단정할 수 없다. 브리핑 날짜 차이만으로 성과의 후속 변경이라고 볼 수도 없다.",
+      "title": "‘적발’과 ‘검증’이 같은 업무 단계인지 발췌만으로 확인되지 않는다. 적발 전체 기간의 단축으로 단정하거나, 브리핑 날짜 차이를 성과의 후속 변경으로 해석할 근거가 없다.",
       "source_ids": [
         "source:07917f5939f3ec5d21d05ff0",
         "source:3999b94431374f06e9cac006"
@@ -2734,17 +2703,6 @@
       ]
     },
     {
-      "id": "9469f1cc1c12a53bcce7e973",
-      "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "source:paper:2609.19969",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
       "id": "a0a56d865a51687e1b35e341",
       "source": "page:de284b6684f6abbc4e22ed30",
       "target": "claim:45f21dae12398b450cc2dfb6",
@@ -2767,9 +2725,9 @@
       ]
     },
     {
-      "id": "87f278ca9d49bcddc8b71e74",
+      "id": "24156abc919d0cefa6530b2a",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "claim:d230ddc38fcdca7d64be716c",
+      "target": "claim:d8c116334ed85b4d5f0c19af",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2780,8 +2738,8 @@
       ]
     },
     {
-      "id": "c86313990936a6e9e5a3232d",
-      "source": "claim:d230ddc38fcdca7d64be716c",
+      "id": "1ac542b69e86dbe438f67e15",
+      "source": "claim:d8c116334ed85b4d5f0c19af",
       "target": "source:5d03910cda5f5397b68f2673",
       "kind": "cites",
       "layer": "provenance",
@@ -2791,8 +2749,8 @@
       ]
     },
     {
-      "id": "4d7e81ac580877adbccb0f2f",
-      "source": "claim:d230ddc38fcdca7d64be716c",
+      "id": "23198208f40f62873759c0f4",
+      "source": "claim:d8c116334ed85b4d5f0c19af",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2802,8 +2760,8 @@
       ]
     },
     {
-      "id": "5fb0147ea99d7d1b7c2459d7",
-      "source": "claim:d230ddc38fcdca7d64be716c",
+      "id": "6415320d3219db5649c7b213",
+      "source": "claim:d8c116334ed85b4d5f0c19af",
       "target": "source:e7b8a3795d07304b72f60475",
       "kind": "cites",
       "layer": "provenance",
@@ -2857,31 +2815,19 @@
       ]
     },
     {
-      "id": "51b5128fe66c393ce516733c",
+      "id": "ea634d68a1e36e3e897340d5",
       "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "claim:bfca17836caa838968dc41ea",
+      "target": "claim:1ce1149890c8b13f3511d9be",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:da6df76cb3d2a78509c7709d",
         "source:paper:2609.19969"
       ]
     },
     {
-      "id": "89dc569d6f67735fb737e669",
-      "source": "claim:bfca17836caa838968dc41ea",
-      "target": "source:da6df76cb3d2a78509c7709d",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d"
-      ]
-    },
-    {
-      "id": "23c1d24d37e0f04ee4c6e391",
-      "source": "claim:bfca17836caa838968dc41ea",
+      "id": "a4d565f3f5506c963b3adeea",
+      "source": "claim:1ce1149890c8b13f3511d9be",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2891,31 +2837,9 @@
       ]
     },
     {
-      "id": "3a97658043c9afe5a12c767a",
-      "source": "page:43e0c8b63cb61bda06ef289e",
-      "target": "source:da6df76cb3d2a78509c7709d",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d"
-      ]
-    },
-    {
-      "id": "f682307252b65d9f9d7e471a",
-      "source": "page:43e0c8b63cb61bda06ef289e",
-      "target": "source:paper:2609.19969",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
-      "id": "90a05be2f192e81ca62cb283",
-      "source": "page:43e0c8b63cb61bda06ef289e",
-      "target": "claim:9635253ec00155cf087807e8",
+      "id": "0c6862418db315c7fb227733",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
+      "target": "claim:9b530a9ae2681d6138bea1da",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2924,30 +2848,8 @@
       ]
     },
     {
-      "id": "81f53658c02cfc18f02302ec",
-      "source": "claim:9635253ec00155cf087807e8",
-      "target": "source:paper:2609.19969",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
-      "id": "db52213cfb1c9cba06ac4ca6",
-      "source": "page:43e0c8b63cb61bda06ef289e",
-      "target": "claim:35db40eb6a0e42e278a9199b",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
-      "id": "8d02373d4642477dc2a15279",
-      "source": "claim:35db40eb6a0e42e278a9199b",
+      "id": "21064533fce9486368483883",
+      "source": "claim:9b530a9ae2681d6138bea1da",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -4728,9 +4630,9 @@
       ]
     },
     {
-      "id": "9c5271fdcddc5f6d0cf1d773",
+      "id": "745e825819fb32950009c2a4",
       "source": "page:88a7d76c1e37f65910e69c84",
-      "target": "claim:543e26d55317a3587d9714c0",
+      "target": "claim:aa9dbde2522d69218a68aca8",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4741,8 +4643,8 @@
       ]
     },
     {
-      "id": "43c5160abb1ae98f4974d5eb",
-      "source": "claim:543e26d55317a3587d9714c0",
+      "id": "5552581090550c50028a294e",
+      "source": "claim:aa9dbde2522d69218a68aca8",
       "target": "source:60ff9f57f8546564f9e86bfb",
       "kind": "cites",
       "layer": "provenance",
@@ -4752,8 +4654,8 @@
       ]
     },
     {
-      "id": "0419527deee0c0cade7ba617",
-      "source": "claim:543e26d55317a3587d9714c0",
+      "id": "c4f63a05ab0d0d8e8a4e433e",
+      "source": "claim:aa9dbde2522d69218a68aca8",
       "target": "source:b8c2184e0cd368d30930e0eb",
       "kind": "cites",
       "layer": "provenance",
@@ -4763,8 +4665,8 @@
       ]
     },
     {
-      "id": "25c9200f6aa346a51279fbb5",
-      "source": "claim:543e26d55317a3587d9714c0",
+      "id": "90456227e355b2155de11494",
+      "source": "claim:aa9dbde2522d69218a68aca8",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -4796,9 +4698,9 @@
       ]
     },
     {
-      "id": "45db89a70fedeca725733343",
+      "id": "a69a6f2f2c16039cc8bb08f6",
       "source": "page:f11aacb4b405a2d876d32733",
-      "target": "claim:ec5a6d0c49bd82c2da7eba64",
+      "target": "claim:6ebf588585f132220b4f1046",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4808,8 +4710,8 @@
       ]
     },
     {
-      "id": "c2cb1e1f64ed421ebdeecd13",
-      "source": "claim:ec5a6d0c49bd82c2da7eba64",
+      "id": "eebca6f76dc3239836f2c6e4",
+      "source": "claim:6ebf588585f132220b4f1046",
       "target": "source:60ff9f57f8546564f9e86bfb",
       "kind": "cites",
       "layer": "provenance",
@@ -4819,8 +4721,8 @@
       ]
     },
     {
-      "id": "1a0fba3698fceb7cb1cbf2ca",
-      "source": "claim:ec5a6d0c49bd82c2da7eba64",
+      "id": "84993030227c25166c7b0e04",
+      "source": "claim:6ebf588585f132220b4f1046",
       "target": "source:b8c2184e0cd368d30930e0eb",
       "kind": "cites",
       "layer": "provenance",
@@ -4830,9 +4732,9 @@
       ]
     },
     {
-      "id": "60a5140046b9713aa3c1a818",
+      "id": "e3324e176c02f1d8ecfb581a",
       "source": "page:f11aacb4b405a2d876d32733",
-      "target": "claim:f340a810a18fc353dca39a73",
+      "target": "claim:bc3f286d64753caad27cd076",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4842,8 +4744,8 @@
       ]
     },
     {
-      "id": "553f4443af80e7820e828da3",
-      "source": "claim:f340a810a18fc353dca39a73",
+      "id": "b31b1efef45884411f3a8291",
+      "source": "claim:bc3f286d64753caad27cd076",
       "target": "source:60ff9f57f8546564f9e86bfb",
       "kind": "cites",
       "layer": "provenance",
@@ -4853,8 +4755,8 @@
       ]
     },
     {
-      "id": "b5a16955a124c9b5e4b471c3",
-      "source": "claim:f340a810a18fc353dca39a73",
+      "id": "6bebe41eec1ca16f27eeeafb",
+      "source": "claim:bc3f286d64753caad27cd076",
       "target": "source:b8c2184e0cd368d30930e0eb",
       "kind": "cites",
       "layer": "provenance",
@@ -4875,9 +4777,9 @@
       ]
     },
     {
-      "id": "833df143cb27b2d4aa6483df",
+      "id": "be25a5062aebd7f6eac56b8d",
       "source": "page:4945318849eb1c503eb30e15",
-      "target": "claim:bb4dcf8ea920d17478acd095",
+      "target": "claim:bf792176c8728d01c84f215c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4886,8 +4788,8 @@
       ]
     },
     {
-      "id": "7b6ffa7260a37e1af875fe6d",
-      "source": "claim:bb4dcf8ea920d17478acd095",
+      "id": "1517a420ad1332ae7b7b3213",
+      "source": "claim:bf792176c8728d01c84f215c",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -4897,9 +4799,9 @@
       ]
     },
     {
-      "id": "1359721ce9ecf8701dbb4997",
+      "id": "64b56de39e882749b097339d",
       "source": "page:4945318849eb1c503eb30e15",
-      "target": "claim:5e6e3884bebb90363daf9117",
+      "target": "claim:19a207cab72da58764c54843",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4908,8 +4810,8 @@
       ]
     },
     {
-      "id": "8b3c50bb1e0979cfced54fb3",
-      "source": "claim:5e6e3884bebb90363daf9117",
+      "id": "05673df305f2d4de9e14fcfd",
+      "source": "claim:19a207cab72da58764c54843",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -4952,9 +4854,9 @@
       ]
     },
     {
-      "id": "d72a4e66c21a52afcf8c3460",
+      "id": "f4ff652f9f5d7e234ebfad85",
       "source": "page:7f6e5e62d3fd03511b96bf71",
-      "target": "claim:101d3ab014bf7d17b4a95503",
+      "target": "claim:3a1a6e6caf34e5b56bf4211a",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4963,8 +4865,8 @@
       ]
     },
     {
-      "id": "3a82e899e32faa86aa8e8b14",
-      "source": "claim:101d3ab014bf7d17b4a95503",
+      "id": "d0afc1ea9ca65da807d3bc3f",
+      "source": "claim:3a1a6e6caf34e5b56bf4211a",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -4974,9 +4876,9 @@
       ]
     },
     {
-      "id": "9dcbdee9bc16c5c790d6178a",
+      "id": "87823ab43aa8f877a1f71411",
       "source": "page:7f6e5e62d3fd03511b96bf71",
-      "target": "claim:652c0046aa3f35170d51ccfb",
+      "target": "claim:5af963d6eb96b93a4a1a2d80",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4985,8 +4887,8 @@
       ]
     },
     {
-      "id": "d9bf75abfca3e522cd57c261",
-      "source": "claim:652c0046aa3f35170d51ccfb",
+      "id": "062bb291101bf9b99141f49a",
+      "source": "claim:5af963d6eb96b93a4a1a2d80",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -5018,9 +4920,9 @@
       ]
     },
     {
-      "id": "10fccad8cf916eb0420fda89",
+      "id": "4dfc535136e9f130c73e348e",
       "source": "page:d01208b24e7ca273cb0406f3",
-      "target": "claim:c3a304fad5b26aea486bb03b",
+      "target": "claim:ba7ebd263208f542238a392b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5030,8 +4932,8 @@
       ]
     },
     {
-      "id": "691106daadc9680fd1790d5a",
-      "source": "claim:c3a304fad5b26aea486bb03b",
+      "id": "ea54cf37bc2f8da73bb4db1f",
+      "source": "claim:ba7ebd263208f542238a392b",
       "target": "source:07917f5939f3ec5d21d05ff0",
       "kind": "cites",
       "layer": "provenance",
@@ -5041,8 +4943,8 @@
       ]
     },
     {
-      "id": "928f84bba9fd337c273167eb",
-      "source": "claim:c3a304fad5b26aea486bb03b",
+      "id": "948ea1d6ba85ef87329d2fcd",
+      "source": "claim:ba7ebd263208f542238a392b",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5052,9 +4954,9 @@
       ]
     },
     {
-      "id": "393f8e2826b09c0d87149bac",
+      "id": "5ab290e68c8d92e64f2a7a4c",
       "source": "page:d01208b24e7ca273cb0406f3",
-      "target": "claim:2e8ae789a069a00c81534d27",
+      "target": "claim:cd1a03c08d8d9013d9c1278d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5064,8 +4966,8 @@
       ]
     },
     {
-      "id": "6bb9c38d0554633e906cd09c",
-      "source": "claim:2e8ae789a069a00c81534d27",
+      "id": "94eec4dd2c73f13a10272642",
+      "source": "claim:cd1a03c08d8d9013d9c1278d",
       "target": "source:07917f5939f3ec5d21d05ff0",
       "kind": "cites",
       "layer": "provenance",
@@ -5075,8 +4977,8 @@
       ]
     },
     {
-      "id": "674bfd48bcbe8162f4ae5a42",
-      "source": "claim:2e8ae789a069a00c81534d27",
+      "id": "21fc005a26df702c09f0c4ec",
+      "source": "claim:cd1a03c08d8d9013d9c1278d",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5810,26 +5712,14 @@
       ]
     },
     {
-      "id": "96f6c51ca5f7020cd8724eb9",
+      "id": "87578afdec8770963bbf66f1",
       "source": "page:de284b6684f6abbc4e22ed30",
       "target": "page:9cd0bf59dbd0b917be7acd84",
       "kind": "involves",
       "layer": "semantic",
-      "text": "중국 AI 기업의 자금 조달과 자국산 컴퓨팅 구축 계획을 다룬다.",
+      "text": "중국 AI 기업의 자금 조달과 자국산 컴퓨팅 인프라 구축 계획을 다룬다.",
       "source_ids": [
         "source:da6df76cb3d2a78509c7709d"
-      ]
-    },
-    {
-      "id": "9a98d76fd6806850a441a202",
-      "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "page:43e0c8b63cb61bda06ef289e",
-      "kind": "involves",
-      "layer": "semantic",
-      "text": "중국 AI 기업 DeepSeek의 모델 연구는 에이전트 작업의 연산·메모리 비용을 다룬다.",
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d",
-        "source:paper:2609.19969"
       ]
     },
     {
@@ -5852,17 +5742,6 @@
       "text": "중국 관계기관이 인격화 AI 서비스 조치를 공동 발표했다는 보도다.",
       "source_ids": [
         "source:fc356a3c94782703f13d69b3"
-      ]
-    },
-    {
-      "id": "2f6562106b0f96e45721014e",
-      "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "page:43e0c8b63cb61bda06ef289e",
-      "kind": "involves",
-      "layer": "semantic",
-      "text": "해당 모델 초록은 CED와 KV 캐시 압축을 배포 비용 절감 설계로 제시한다.",
-      "source_ids": [
-        "source:paper:2609.19969"
       ]
     },
     {
@@ -6069,12 +5948,12 @@
       ]
     },
     {
-      "id": "d444b5156e09dc54748d088e",
+      "id": "8d180373c6d8f8cb886e3a97",
       "source": "page:88a7d76c1e37f65910e69c84",
       "target": "page:d01208b24e7ca273cb0406f3",
       "kind": "involves",
       "layer": "semantic",
-      "text": "NPU 기반 공공 AX 성과 보도에서 단축된 업무 범위가 다르게 표현됐다.",
+      "text": "NPU 기반 공공 AX 성과 보도에서 단축된 업무의 명칭이 달라 측정 대상 확인이 필요하다.",
       "source_ids": [
         "source:07917f5939f3ec5d21d05ff0",
         "source:3999b94431374f06e9cac006"
@@ -6230,30 +6109,6 @@
       ]
     },
     {
-      "id": "aa66d8509958eed5595925cf",
-      "source": "page:43e0c8b63cb61bda06ef289e",
-      "target": "page:9cd0bf59dbd0b917be7acd84",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d",
-        "source:paper:2609.19969"
-      ]
-    },
-    {
-      "id": "f62e06c3f3aef5b318ca3a44",
-      "source": "page:43e0c8b63cb61bda06ef289e",
-      "target": "page:de284b6684f6abbc4e22ed30",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d",
-        "source:paper:2609.19969"
-      ]
-    },
-    {
       "id": "a09934519e5930d7ade3d16f",
       "source": "page:496f722e3a061b8ca1a39ff6",
       "target": "page:9b08b924963cb1769f63a232",
@@ -6314,18 +6169,6 @@
       ]
     },
     {
-      "id": "70ae76e2b04fd05936da1de1",
-      "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "page:de284b6684f6abbc4e22ed30",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d",
-        "source:paper:2609.19969"
-      ]
-    },
-    {
       "id": "cc13a2c7bf195ed11f8b9c33",
       "source": "page:a8f61a13e520664ce08089ee",
       "target": "page:b41d81e22da55c3af6d162d9",
@@ -6382,17 +6225,6 @@
       ]
     },
     {
-      "id": "fcc54edcd06f8f6afa9e3946",
-      "source": "page:16ddcc70c777744bd4e89688",
-      "target": "page:43e0c8b63cb61bda06ef289e",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
       "id": "81d998c724422040f7d66acd",
       "source": "page:16ddcc70c777744bd4e89688",
       "target": "page:9b08b924963cb1769f63a232",
@@ -6418,17 +6250,6 @@
       "id": "9dbebec71af4a1c5b016dfe8",
       "source": "page:16ddcc70c777744bd4e89688",
       "target": "page:bc425324302e17abaf8dbf8f",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
-      "id": "084883c67818e8d7d3784f13",
-      "source": "page:16ddcc70c777744bd4e89688",
-      "target": "page:de284b6684f6abbc4e22ed30",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -6558,17 +6379,6 @@
       ]
     },
     {
-      "id": "7e8b5c4e7af141ae018c1bc1",
-      "source": "page:3afbfd6ffa6dce8b19fc3b5f",
-      "target": "page:43e0c8b63cb61bda06ef289e",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
       "id": "9e648b186cabf29f7221f0d8",
       "source": "page:3afbfd6ffa6dce8b19fc3b5f",
       "target": "page:9b08b924963cb1769f63a232",
@@ -6602,17 +6412,6 @@
       ]
     },
     {
-      "id": "c9751dfffdf8e30c7c4436e3",
-      "source": "page:3afbfd6ffa6dce8b19fc3b5f",
-      "target": "page:de284b6684f6abbc4e22ed30",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
       "id": "b762b96d9910576a0b2a98fa",
       "source": "page:3e7b41c644da4cb118490c7a",
       "target": "page:9b08b924963cb1769f63a232",
@@ -6621,28 +6420,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:paper:2609.19242"
-      ]
-    },
-    {
-      "id": "47f8a7d07167b978d789a124",
-      "source": "page:43e0c8b63cb61bda06ef289e",
-      "target": "page:9b08b924963cb1769f63a232",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
-      "id": "9dfc2ad7a4a272cbe6892da3",
-      "source": "page:43e0c8b63cb61bda06ef289e",
-      "target": "page:bc425324302e17abaf8dbf8f",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19969"
       ]
     },
     {
@@ -6800,17 +6577,6 @@
       ]
     },
     {
-      "id": "2e41e050b6fc997a96195317",
-      "source": "page:9b08b924963cb1769f63a232",
-      "target": "page:de284b6684f6abbc4e22ed30",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19969"
-      ]
-    },
-    {
       "id": "a2ea4e0f1bf83d06beb0a634",
       "source": "page:9baa053aacade6bdb59dbcc5",
       "target": "page:b41d81e22da55c3af6d162d9",
@@ -6833,6 +6599,17 @@
       ]
     },
     {
+      "id": "70ae76e2b04fd05936da1de1",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
+      "target": "page:de284b6684f6abbc4e22ed30",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:da6df76cb3d2a78509c7709d"
+      ]
+    },
+    {
       "id": "581c17a0c48f946f8a052d62",
       "source": "page:a302d20ff83b1c4c1f4dcd4c",
       "target": "page:b41d81e22da55c3af6d162d9",
@@ -6841,17 +6618,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:paper:2609.17532"
-      ]
-    },
-    {
-      "id": "3ff2f2c70367ea0fec9c6ab7",
-      "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "page:de284b6684f6abbc4e22ed30",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:paper:2609.19969"
       ]
     },
     {
@@ -7003,7 +6769,7 @@
       "id": "china",
       "title": "중국",
       "kind": "topic",
-      "revision": 55,
+      "revision": 58,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7020,7 +6786,7 @@
             "source:da6df76cb3d2a78509c7709d"
           ],
           "kind": "interpretation",
-          "text": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정, DeepSeek의 인프라 투자 계획은 제품·일정·투자라는 서로 다른 단계의 소식이다. 이를 모두 서비스 가동이나 시장 성장 실적으로 합산할 수는 없다."
+          "text": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정 확정, DeepSeek의 인프라 투자 계획은 제품·일정·투자라는 서로 다른 단계의 소식이다. 이를 모두 서비스 가동이나 시장 성장 실적으로 합산할 수는 없다."
         }
       ]
     },
@@ -7028,7 +6794,7 @@
       "id": "china:af4940ba1db0eb032757",
       "title": "DeepSeek",
       "kind": "entity",
-      "revision": 55,
+      "revision": 58,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7040,34 +6806,17 @@
         },
         {
           "evidence_ids": [
-            "source:paper:2609.19969",
-            "source:da6df76cb3d2a78509c7709d"
-          ],
-          "kind": "interpretation",
-          "text": "DeepSeek-V4.1-Flash 초록의 연산·메모리 절감 보고와 자국산 인프라 투자 계획은 확인 대상이 다르다. 모델 설계 보고만으로 투자 집행이나 자국산 칩에서의 성능을 판단할 수 없다."
-        }
-      ]
-    },
-    {
-      "id": "china:ae34d2cb008c92c72682",
-      "title": "DeepSeek-V4.1-Flash의 연산·캐시 절감",
-      "kind": "concept",
-      "revision": 55,
-      "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
-      "claims": [
-        {
-          "evidence_ids": [
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "저자들은 입력 비중이 큰 에이전트 작업의 비용을 줄이기 위해 CED 구조를 도입했다고 설명한다. 초록에 따르면 토큰당 활성 파라미터는 입력 처리(prefill)에서 80억 개, 출력 생성(decode)에서 160억 개다."
+          "text": "DeepSeek-V4.1-Flash 초록에서 저자들은 입력 비중이 큰 에이전트 작업의 비용을 줄이는 CED 구조를 설명한다. 토큰당 활성 파라미터는 입력 처리(prefill)에서 80억 개, 출력 생성(decode)에서 160억 개라고 보고한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "초록은 CSA2의 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리의 영속 캐시도 약 1/8로 줄였다는 저자 보고이며, 서비스 요금 절감률을 측정한 결과는 아니다."
+          "text": "저자들은 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리의 영속 캐시도 약 1/8로 줄였다는 초록의 설명이며, 실제 서비스 요금이나 자국산 칩에서의 성능 측정은 제시하지 않는다."
         }
       ]
     },
@@ -7075,7 +6824,7 @@
       "id": "china:407018b50f9d3916425a",
       "title": "중국의 해외 AI API 중계시장",
       "kind": "issue",
-      "revision": 55,
+      "revision": 58,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7098,7 +6847,7 @@
       "id": "china:bd2cb88abffe36ab3645",
       "title": "인격화 AI 상호작용 서비스 조치 공동 발표",
       "kind": "event",
-      "revision": 55,
+      "revision": 58,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7587,7 +7336,7 @@
       "id": "public_ax",
       "title": "공공 AX",
       "kind": "topic",
-      "revision": 49,
+      "revision": 57,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7597,7 +7346,7 @@
             "source:fc674bb50b9225f597450b43"
           ],
           "kind": "interpretation",
-          "text": "공공 AX 자료는 서비스 공급, 기관의 AI 활용 수준 진단, 현장 업무 적용을 다룬다. 실행 단계 비율은 도입 현황 분석이고, 서비스 공개는 공급 소식이며, 현장 감소 실적과 확대 목표는 달성 여부가 다르므로 구분해 읽어야 한다."
+          "text": "제공 자료는 공공 AX를 서비스 공급, 기관의 활용 수준 진단, 현장 업무 적용으로 보여준다. 실행 단계 비율·서비스 공개·현장 성과·확대 목표는 서로 다른 지표이므로, 이를 합쳐 도입 확산이나 효과의 증거로 읽어서는 안 된다."
         }
       ]
     },
@@ -7605,7 +7354,7 @@
       "id": "public_ax:2a61a70733c8545542fc",
       "title": "KT의 금융·공공 AX",
       "kind": "entity",
-      "revision": 49,
+      "revision": 57,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7614,7 +7363,7 @@
             "source:b8c2184e0cd368d30930e0eb"
           ],
           "kind": "reported",
-          "text": "KT 리포트를 소개한 발췌는 금융 59.5%·공공 30%가 AX ‘실행 단계’라고 전한다. 별도 발췌는 KT가 지자체 대상 공공 AX 서비스 10종을 공개했다고 보도한다."
+          "text": "KT 리포트를 소개한 발췌는 금융 59.5%·공공 30%가 AX ‘실행 단계’라고 전한다. 별도 발췌는 KT의 지자체 대상 공공 AX 서비스 10종 공개를 보도한다."
         },
         {
           "evidence_ids": [
@@ -7622,7 +7371,7 @@
             "source:b8c2184e0cd368d30930e0eb"
           ],
           "kind": "interpretation",
-          "text": "조사 표본·분모·실행 단계 정의가 제시되지 않아 30%를 전체 공공기관의 보급률로 일반화하기 어렵다. 서비스 10종 공개 역시 실제 도입 기관 수나 업무 개선 효과를 보여주지는 않는다."
+          "text": "발췌에는 조사 표본·분모·실행 단계 정의가 없어 30%를 전체 공공기관 보급률로 일반화하기 어렵다. 서비스 10종 공개도 실제 도입 기관 수나 업무 개선 효과를 뜻하지 않는다."
         }
       ]
     },
@@ -7630,7 +7379,7 @@
       "id": "public_ax:de54de4ac587c82f8c7a",
       "title": "공공AI진단(NPAI)",
       "kind": "concept",
-      "revision": 49,
+      "revision": 57,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7638,14 +7387,14 @@
             "source:fc674bb50b9225f597450b43"
           ],
           "kind": "reported",
-          "text": "MBN에 따르면 NPAI는 서울AI재단·한국생산성본부·MBN이 공동 개발한 공공부문 AI 진단체계다. 거버넌스·인프라·서비스·정합성을 점검하고 기관 간 비교로 AI 활용 수준과 발전 방향을 살핀다."
+          "text": "MBN은 NPAI를 서울AI재단·한국생산성본부·MBN이 공동 개발한 공공부문 AI 진단체계로 설명한다. 거버넌스·인프라·서비스·정합성을 점검하고 기관 간 비교를 통해 활용 수준과 발전 방향을 살피는 방식이다."
         },
         {
           "evidence_ids": [
             "source:fc674bb50b9225f597450b43"
           ],
           "kind": "reported",
-          "text": "한국도로공사는 진단을 통해 부족한 제도·정책·조직을 보완하고 추가 AI 활용 과제를 발굴할 계획이라고 밝혔다. 제공 기사에는 진단 결과나 점수가 제시되지 않았다."
+          "text": "한국도로공사는 진단을 바탕으로 제도·정책·조직을 보완하고 추가 AI 활용 과제를 발굴할 계획이라고 밝혔다. 이는 진단 참여 목적에 관한 발표이며, 제공 기사에는 진단 점수나 결과가 없다."
         }
       ]
     },
@@ -7653,7 +7402,7 @@
       "id": "public_ax:4a11785501d9f48c754a",
       "title": "한국도로공사의 NPAI 참여와 AI 확대 계획",
       "kind": "event",
-      "revision": 49,
+      "revision": 57,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7668,14 +7417,14 @@
             "source:fc674bb50b9225f597450b43"
           ],
           "kind": "uncertain",
-          "text": "감소율의 비교 기간·산정 방법과 다른 관리 조치의 영향은 무엇인가? 제공 본문에는 설명이 없어 AI의 독립적인 기여도는 확인되지 않는다."
+          "text": "감소율의 비교 기간·산정 방식과 다른 관리 조치의 영향은 무엇인가? 제공 본문에는 설명이 없어 AI의 독립적인 기여도는 확인되지 않는다."
         },
         {
           "evidence_ids": [
             "source:fc674bb50b9225f597450b43"
           ],
           "kind": "reported",
-          "text": "도로공사는 2026년 말까지 고속도로 CCTV 약 9,500대 중 약 4,000대에 AI를 적용할 계획이라고 밝혔다. 돌발상황 검지 정확도 50%→96%는 목표이고, 인지부터 대응까지 6분 31초→80초는 기대치다."
+          "text": "도로공사는 2026년 말까지 고속도로 CCTV 약 9,500대 중 약 4,000대에 AI를 적용할 계획이라고 밝혔다. 돌발상황 검지 정확도 50%→96%는 목표이며, 인지부터 대응까지 6분 31초→80초는 기대치다."
         }
       ]
     },
@@ -7683,7 +7432,7 @@
       "id": "public_ax:dc48cb658f3e2f116885",
       "title": "엑스페릭스 공공 AX 기간 단축의 측정 대상",
       "kind": "issue",
-      "revision": 49,
+      "revision": 57,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7692,7 +7441,7 @@
             "source:07917f5939f3ec5d21d05ff0"
           ],
           "kind": "reported",
-          "text": "브리핑들은 엑스페릭스의 퓨리오사AI NPU 기반 공공 AX 풀스택 구축과 소요 기간 2~3개월→2주 단축을 소개했다."
+          "text": "엑스페릭스의 퓨리오사AI NPU 기반 공공 AX 풀스택을 소개하면서, 9월 16일 브리핑은 ‘부정수급 적발’ 기간을, 9월 18일 브리핑은 ‘검증’ 기간을 2~3개월에서 2주로 줄였다고 전한다."
         },
         {
           "evidence_ids": [
@@ -7700,7 +7449,7 @@
             "source:07917f5939f3ec5d21d05ff0"
           ],
           "kind": "uncertain",
-          "text": "9월 16일 브리핑은 단축 대상을 ‘부정수급 적발’, 9월 18일 브리핑은 ‘검증’으로 표현한다. 같은 업무 단계인지 확인되지 않아 적발 전체 기간이 단축됐다고 단정할 수 없다. 브리핑 날짜 차이만으로 성과의 후속 변경이라고 볼 수도 없다."
+          "text": "‘적발’과 ‘검증’이 같은 업무 단계인지 발췌만으로 확인되지 않는다. 적발 전체 기간의 단축으로 단정하거나, 브리핑 날짜 차이를 성과의 후속 변경으로 해석할 근거가 없다."
         }
       ]
     },
@@ -7915,11 +7664,11 @@
     }
   ],
   "issues": [],
-  "version": "5f700be857f3608ff3011bd32949013c99a83da1215cec84076eae70b8b71374",
-  "exported_at": "2026-09-19T13:40:22.215538+00:00",
+  "version": "55b51dd90ec7d77d04719a147254d04e6cb05376dd9fa89e07373fa1db73903a",
+  "exported_at": "2026-09-19T13:52:08.821161+00:00",
   "coverage": {
-    "pages": 43,
-    "claims": 85,
+    "pages": 42,
+    "claims": 84,
     "cited_sources": 46,
     "all_sources_compiled": false
   },
