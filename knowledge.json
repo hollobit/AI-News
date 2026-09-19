@@ -839,12 +839,11 @@
         "source:52fc30a9f94cbfe4bb639daf",
         "source:639957245eb815c1aa388d24",
         "source:f22716264922d6813e829b02",
-        "source:f4dcdb69e4750b410d4f4267",
-        "source:paper:2608.02615",
-        "source:paper:2609.13238"
+        "source:paper:2609.13238",
+        "source:paper:2609.17532"
       ],
       "claims": [
-        "claim:5ee0b5d2e0138405ebca2f7b"
+        "claim:ef02667dd3628ceb99bfdb25"
       ],
       "status": "reviewed"
     },
@@ -888,32 +887,6 @@
       "url": "https://www.ecns.cn/cns-wire/2026-09-14/detail-ihfkanuz5382256.shtml"
     },
     {
-      "id": "source:f4dcdb69e4750b410d4f4267",
-      "type": "source",
-      "title": "The evidence challenge facing large language models in medicine",
-      "source_ids": [
-        "source:f4dcdb69e4750b410d4f4267"
-      ],
-      "origin": "telegram_excerpt",
-      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-19",
-      "status": "original_source_not_fact_checked",
-      "url": "https://nature.com/articles/s41746-026-03262-5"
-    },
-    {
-      "id": "source:paper:2608.02615",
-      "type": "source",
-      "title": "OncoTriad-QA: A Patient-Level Radiology-Pathology-Genomics Benchmark for Pan-Cancer Reasoning",
-      "source_ids": [
-        "source:paper:2608.02615"
-      ],
-      "origin": "arxiv_abstract",
-      "scope": "검토 논문의 제목·초록; 전문·제품 성능·임상 검증 아님",
-      "day": "2026-05-21",
-      "status": "original_source_not_fact_checked",
-      "url": "https://arxiv.org/abs/2608.02615v1"
-    },
-    {
       "id": "source:paper:2609.13238",
       "type": "source",
       "title": "Clinical Reasoning Under a Partially Observed Objective in Cone Beam CT Report Generation",
@@ -927,14 +900,27 @@
       "url": "https://openalex.org/W7213262102"
     },
     {
-      "id": "claim:5ee0b5d2e0138405ebca2f7b",
+      "id": "source:paper:2609.17532",
+      "type": "source",
+      "title": "Enhancing Extubation Failure Prediction with LLM-Derived Features from Respiratory Therapy Clinical Notes",
+      "source_ids": [
+        "source:paper:2609.17532"
+      ],
+      "origin": "scholarly_index_abstract",
+      "scope": "검토 논문의 제목·초록; 전문·제품 성능·임상 검증 아님",
+      "day": "2026-06-17",
+      "status": "original_source_not_fact_checked",
+      "url": "https://openalex.org/W7213511978"
+    },
+    {
+      "id": "claim:ef02667dd3628ceb99bfdb25",
       "type": "claim",
-      "title": "这些资料中的医疗 AI 验证涉及临床前瞻性证据、输出依据追溯、问答基准与医疗器械标准。它们检验的对象不同，基准得分提高或标准获批不能直接等同于治疗效果得到证实。",
+      "title": "이번 자료의 의료 AI 평가는 예측 성능, 보고서의 사실성, 실제 임상 환경의 검증, 의료기기 표준으로 나뉜다. 각 근거가 평가하는 대상이 달라 예측 점수 향상이나 표준 승인을 환자 치료 효과의 입증으로 읽어서는 안 된다.",
       "source_ids": [
         "source:52fc30a9f94cbfe4bb639daf",
         "source:f22716264922d6813e829b02",
-        "source:f4dcdb69e4750b410d4f4267",
-        "source:paper:2608.02615"
+        "source:paper:2609.13238",
+        "source:paper:2609.17532"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
@@ -956,9 +942,9 @@
         "source:f4dcdb69e4750b410d4f4267"
       ],
       "claims": [
-        "claim:cdb5a792381d9c217c3f3989",
-        "claim:47cda637632b197338f56dd1",
-        "claim:93becc1dd5829fdae6b273b0"
+        "claim:70cf1c608de9733c7bfe2ac3",
+        "claim:bb91665ced680bc8fb379de4",
+        "claim:0bd6ec5340187aa9638fe301"
       ],
       "status": "reviewed"
     },
@@ -976,30 +962,44 @@
       "url": "https://nature.com/articles/s41746-026-03234-9"
     },
     {
-      "id": "claim:cdb5a792381d9c217c3f3989",
+      "id": "source:f4dcdb69e4750b410d4f4267",
+      "type": "source",
+      "title": "The evidence challenge facing large language models in medicine",
+      "source_ids": [
+        "source:f4dcdb69e4750b410d4f4267"
+      ],
+      "origin": "telegram_excerpt",
+      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
+      "day": "2026-09-19",
+      "status": "original_source_not_fact_checked",
+      "url": "https://nature.com/articles/s41746-026-03262-5"
+    },
+    {
+      "id": "claim:70cf1c608de9733c7bfe2ac3",
       "type": "claim",
-      "title": "Nature Medicine 글 소개는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 의료 LLM 출력의 근거 추적·검증 체계를 요구한다.",
+      "title": "논문 소개 발췌들은 대화형 의료 AI의 전향적 검증, 의료 LLM 출력의 근거 추적, 환자·의사 대화를 자동 기록·요약하는 앰비언트 AI의 정확성 감사를 각각 강조한다. 실제 사용 결과와 출력·기록의 신뢰성을 서로 다른 층위에서 확인하자는 요구다.",
       "source_ids": [
         "source:52fc30a9f94cbfe4bb639daf",
+        "source:639957245eb815c1aa388d24",
         "source:f4dcdb69e4750b410d4f4267"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:47cda637632b197338f56dd1",
+      "id": "claim:bb91665ced680bc8fb379de4",
       "type": "claim",
-      "title": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 제공된 자료에는 오류 빈도나 감사에 따른 개선 수치는 없다.",
+      "title": "디지털 헬스 임상시험의 신속 문헌고찰 소개는 개발사 직접 수행 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 제공된 발췌에는 효과 크기와 교란요인 통제 내용이 없다.",
       "source_ids": [
-        "source:639957245eb815c1aa388d24"
+        "source:5a3645424fc2f6cf95d7f68c"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:93becc1dd5829fdae6b273b0",
+      "id": "claim:0bd6ec5340187aa9638fe301",
       "type": "claim",
-      "title": "디지털 헬스 중재의 신속 문헌고찰 소개는 개발사 직접 수행 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 이 발췌만으로는 연구 독립성 외의 조건을 통제했는지 알 수 없어, 개발사 참여가 결과 차이의 원인인지는 남은 쟁점이다.",
+      "title": "개발사 참여 자체가 긍정 결과 차이의 원인인가? 시험 대상·설계 등 다른 조건을 통제했는지 발췌로는 확인되지 않아 인과관계는 남은 쟁점이다.",
       "source_ids": [
         "source:5a3645424fc2f6cf95d7f68c"
       ],
@@ -1007,42 +1007,42 @@
       "status": "reviewed"
     },
     {
-      "id": "page:e944543690cbedcc8066503a",
-      "type": "entity",
-      "title": "OncoTriad-QA와 OncoVLM",
+      "id": "page:a302d20ff83b1c4c1f4dcd4c",
+      "type": "concept",
+      "title": "LLM 임상 노트 특징을 이용한 발관 실패 예측",
       "page_ids": [
-        "medical:236e597ee8541af582bb"
+        "medical:ee59956546abda2f0f17"
       ],
       "topics": [
         "medical"
       ],
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:paper:2609.17532"
       ],
       "claims": [
-        "claim:48c44801b9f268241f9319aa",
-        "claim:c5a30ea685e6e6ef3b3dbadb"
+        "claim:f0caf1b922f37e7ec2032b0b",
+        "claim:5057946849ef5d5b9f6e3720"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:48c44801b9f268241f9319aa",
+      "id": "claim:f0caf1b922f37e7ec2032b0b",
       "type": "claim",
-      "title": "저자들은 OncoTriad-QA가 TCGA 환자 9,281명·32개 암 코호트의 약 8만 6,100개 문항에 영상·병리·분자·임상정보를 연결한다고 설명한다. 원자료 기반 LLM 보조 주석에 자동 일관성 검사와 임상의 검토를 적용해 환자별 증거 통합 능력을 평가한다.",
+      "title": "저자들은 자유서술 호흡치료 기록에서 LLM으로 특징을 분류하고 구조화 환자 데이터와 함께 로지스틱 회귀에 넣는다. 초록은 University of Washington Medicine 환자 코호트에서 이 특징들이 발관 실패 예측 성능을 높였다고 보고하나 개선 수치는 제시하지 않는다.",
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:paper:2609.17532"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:c5a30ea685e6e6ef3b3dbadb",
+      "id": "claim:5057946849ef5d5b9f6e3720",
       "type": "claim",
-      "title": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록에 제시된 질의응답 평가 결과다.",
+      "title": "저자들은 기존 연구의 환자 포함 기준과 발관 실패 정의 차이가 성능 차이를 만들고 연구 간 일반화를 방해할 수 있다고 지적한다. 따라서 성능을 비교할 때 같은 환자군과 실패 정의를 썼는지 확인해야 한다.",
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:paper:2609.17532"
       ],
-      "claim_kind": "reported",
+      "claim_kind": "interpretation",
       "status": "reviewed"
     },
     {
@@ -1059,15 +1059,15 @@
         "source:paper:2609.13238"
       ],
       "claims": [
-        "claim:461942be21c0f1add6a7414a",
-        "claim:c96765765ed1b4c3961b51f9"
+        "claim:09c211a56942b4eeb9834e6a",
+        "claim:dbc9c53e053229e87f8b5af0"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:461942be21c0f1add6a7414a",
+      "id": "claim:09c211a56942b4eeb9834e6a",
       "type": "claim",
-      "title": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수가 0.2909, 복합 목표로 선택한 보고서는 0.4122였으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다.",
+      "title": "초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되며 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수가 0.2909, 복합 목표로 선택한 보고서는 0.4122였고, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다.",
       "source_ids": [
         "source:paper:2609.13238"
       ],
@@ -1075,9 +1075,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:c96765765ed1b4c3961b51f9",
+      "id": "claim:dbc9c53e053229e87f8b5af0",
       "type": "claim",
-      "title": "문장 선택 예측 AUC가 촬영기관 정보에서 0.718, 영상 모델에서 0.663이었다는 결과는 해당 데이터의 어휘 평가가 기관별 서술 관행을 보상할 수 있음을 시사한다. 복합 점수 역시 LLM 판정을 포함하므로 점수 상승을 환자별 임상 정확성의 입증으로 읽기는 어렵다.",
+      "title": "문장 선택 예측 AUC가 촬영기관 정보에서 0.718, 영상 모델에서 0.663이었다는 결과는 해당 데이터의 어휘 평가가 기관별 서술 관행을 보상할 수 있음을 시사한다. 복합 점수도 LLM 판정을 포함하므로 상승 자체가 임상적 정확성의 입증은 아니다.",
       "source_ids": [
         "source:paper:2609.13238"
       ],
@@ -3549,28 +3549,6 @@
       ]
     },
     {
-      "id": "a0ccd73773287eee4a4afa9c",
-      "source": "page:b41d81e22da55c3af6d162d9",
-      "target": "source:f4dcdb69e4750b410d4f4267",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:f4dcdb69e4750b410d4f4267"
-      ]
-    },
-    {
-      "id": "537915367a9165f6cae0ec58",
-      "source": "page:b41d81e22da55c3af6d162d9",
-      "target": "source:paper:2608.02615",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:paper:2608.02615"
-      ]
-    },
-    {
       "id": "7e1ce11f5e37ab5c2b998194",
       "source": "page:b41d81e22da55c3af6d162d9",
       "target": "source:paper:2609.13238",
@@ -3582,22 +3560,33 @@
       ]
     },
     {
-      "id": "0f43dd1eefd323d780d5b8fa",
+      "id": "12224f891a8297171d7e9d83",
       "source": "page:b41d81e22da55c3af6d162d9",
-      "target": "claim:5ee0b5d2e0138405ebca2f7b",
+      "target": "source:paper:2609.17532",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.17532"
+      ]
+    },
+    {
+      "id": "4486108e5e1a327ba6ceaaba",
+      "source": "page:b41d81e22da55c3af6d162d9",
+      "target": "claim:ef02667dd3628ceb99bfdb25",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:52fc30a9f94cbfe4bb639daf",
         "source:f22716264922d6813e829b02",
-        "source:f4dcdb69e4750b410d4f4267",
-        "source:paper:2608.02615"
+        "source:paper:2609.13238",
+        "source:paper:2609.17532"
       ]
     },
     {
-      "id": "eb84686279d188a568208787",
-      "source": "claim:5ee0b5d2e0138405ebca2f7b",
+      "id": "50ed297c95c81839d09dfb4c",
+      "source": "claim:ef02667dd3628ceb99bfdb25",
       "target": "source:52fc30a9f94cbfe4bb639daf",
       "kind": "cites",
       "layer": "provenance",
@@ -3607,8 +3596,8 @@
       ]
     },
     {
-      "id": "3c952c0ea90bf25a167e11cd",
-      "source": "claim:5ee0b5d2e0138405ebca2f7b",
+      "id": "f9d3556d7a0efaf1d3b3334e",
+      "source": "claim:ef02667dd3628ceb99bfdb25",
       "target": "source:f22716264922d6813e829b02",
       "kind": "cites",
       "layer": "provenance",
@@ -3618,25 +3607,25 @@
       ]
     },
     {
-      "id": "8e5e8f54436667961b0a72b4",
-      "source": "claim:5ee0b5d2e0138405ebca2f7b",
-      "target": "source:f4dcdb69e4750b410d4f4267",
+      "id": "a6b447958b2c0fde28d3ff5c",
+      "source": "claim:ef02667dd3628ceb99bfdb25",
+      "target": "source:paper:2609.13238",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:f4dcdb69e4750b410d4f4267"
+        "source:paper:2609.13238"
       ]
     },
     {
-      "id": "821c01b306f3e6a65476ea57",
-      "source": "claim:5ee0b5d2e0138405ebca2f7b",
-      "target": "source:paper:2608.02615",
+      "id": "9f47ccbe9452ed8029e6db62",
+      "source": "claim:ef02667dd3628ceb99bfdb25",
+      "target": "source:paper:2609.17532",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:paper:2609.17532"
       ]
     },
     {
@@ -3684,20 +3673,21 @@
       ]
     },
     {
-      "id": "85fed31fc251c95683bcee93",
+      "id": "eee2e9fbd3d43808ba816c7c",
       "source": "page:a8f61a13e520664ce08089ee",
-      "target": "claim:cdb5a792381d9c217c3f3989",
+      "target": "claim:70cf1c608de9733c7bfe2ac3",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:52fc30a9f94cbfe4bb639daf",
+        "source:639957245eb815c1aa388d24",
         "source:f4dcdb69e4750b410d4f4267"
       ]
     },
     {
-      "id": "3dbf0bb2c89c0c2ea0755e95",
-      "source": "claim:cdb5a792381d9c217c3f3989",
+      "id": "8406ada00ae78b8886f7bcc8",
+      "source": "claim:70cf1c608de9733c7bfe2ac3",
       "target": "source:52fc30a9f94cbfe4bb639daf",
       "kind": "cites",
       "layer": "provenance",
@@ -3707,30 +3697,8 @@
       ]
     },
     {
-      "id": "83e987ff1b8587f9f6c1848a",
-      "source": "claim:cdb5a792381d9c217c3f3989",
-      "target": "source:f4dcdb69e4750b410d4f4267",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:f4dcdb69e4750b410d4f4267"
-      ]
-    },
-    {
-      "id": "8d54696be80d8fd6e026ae23",
-      "source": "page:a8f61a13e520664ce08089ee",
-      "target": "claim:47cda637632b197338f56dd1",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:639957245eb815c1aa388d24"
-      ]
-    },
-    {
-      "id": "df579e750420ade5d4953fc1",
-      "source": "claim:47cda637632b197338f56dd1",
+      "id": "bff79a747520399a65f146d2",
+      "source": "claim:70cf1c608de9733c7bfe2ac3",
       "target": "source:639957245eb815c1aa388d24",
       "kind": "cites",
       "layer": "provenance",
@@ -3740,9 +3708,20 @@
       ]
     },
     {
-      "id": "0bfe1815a6025adca392d936",
+      "id": "31c406b89a664ef09ae71e6b",
+      "source": "claim:70cf1c608de9733c7bfe2ac3",
+      "target": "source:f4dcdb69e4750b410d4f4267",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:f4dcdb69e4750b410d4f4267"
+      ]
+    },
+    {
+      "id": "8691ae119a01c77b8ecf84d5",
       "source": "page:a8f61a13e520664ce08089ee",
-      "target": "claim:93becc1dd5829fdae6b273b0",
+      "target": "claim:bb91665ced680bc8fb379de4",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3751,8 +3730,8 @@
       ]
     },
     {
-      "id": "a6f073c656cc2d67637d588d",
-      "source": "claim:93becc1dd5829fdae6b273b0",
+      "id": "25b63c0fe131193ee9f56a80",
+      "source": "claim:bb91665ced680bc8fb379de4",
       "target": "source:5a3645424fc2f6cf95d7f68c",
       "kind": "cites",
       "layer": "provenance",
@@ -3762,58 +3741,80 @@
       ]
     },
     {
-      "id": "fccb65e1103df4614800bca7",
-      "source": "page:e944543690cbedcc8066503a",
-      "target": "source:paper:2608.02615",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:paper:2608.02615"
-      ]
-    },
-    {
-      "id": "0effd48bcaaa9bc73d97070a",
-      "source": "page:e944543690cbedcc8066503a",
-      "target": "claim:48c44801b9f268241f9319aa",
+      "id": "1cfb9e92c8359b94be9f94c3",
+      "source": "page:a8f61a13e520664ce08089ee",
+      "target": "claim:0bd6ec5340187aa9638fe301",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:5a3645424fc2f6cf95d7f68c"
       ]
     },
     {
-      "id": "65550bdfe440a3516f0ae41b",
-      "source": "claim:48c44801b9f268241f9319aa",
-      "target": "source:paper:2608.02615",
+      "id": "fa33738ab048f5c12dff3818",
+      "source": "claim:0bd6ec5340187aa9638fe301",
+      "target": "source:5a3645424fc2f6cf95d7f68c",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:5a3645424fc2f6cf95d7f68c"
       ]
     },
     {
-      "id": "ae8d271ca8e34ac80b82d7dd",
-      "source": "page:e944543690cbedcc8066503a",
-      "target": "claim:c5a30ea685e6e6ef3b3dbadb",
+      "id": "393a62087e2ae65548a55cd1",
+      "source": "page:a302d20ff83b1c4c1f4dcd4c",
+      "target": "source:paper:2609.17532",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.17532"
+      ]
+    },
+    {
+      "id": "01c98610abe9b16c15a14bb6",
+      "source": "page:a302d20ff83b1c4c1f4dcd4c",
+      "target": "claim:f0caf1b922f37e7ec2032b0b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:paper:2609.17532"
       ]
     },
     {
-      "id": "05c0e6408feef9dd1385dab1",
-      "source": "claim:c5a30ea685e6e6ef3b3dbadb",
-      "target": "source:paper:2608.02615",
+      "id": "b85a5f35fcffe098491abf2f",
+      "source": "claim:f0caf1b922f37e7ec2032b0b",
+      "target": "source:paper:2609.17532",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:paper:2609.17532"
+      ]
+    },
+    {
+      "id": "975ea4b94c1beae60190b23a",
+      "source": "page:a302d20ff83b1c4c1f4dcd4c",
+      "target": "claim:5057946849ef5d5b9f6e3720",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.17532"
+      ]
+    },
+    {
+      "id": "f490ca831ad2a81c7a04321d",
+      "source": "claim:5057946849ef5d5b9f6e3720",
+      "target": "source:paper:2609.17532",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.17532"
       ]
     },
     {
@@ -3828,9 +3829,9 @@
       ]
     },
     {
-      "id": "649ba3290590de3d6e9ed4fd",
+      "id": "ca9bbeb5297a0cd020729251",
       "source": "page:9baa053aacade6bdb59dbcc5",
-      "target": "claim:461942be21c0f1add6a7414a",
+      "target": "claim:09c211a56942b4eeb9834e6a",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3839,8 +3840,8 @@
       ]
     },
     {
-      "id": "1119c82ab240feb227fc666c",
-      "source": "claim:461942be21c0f1add6a7414a",
+      "id": "8b36087883e0df25e4b4795d",
+      "source": "claim:09c211a56942b4eeb9834e6a",
       "target": "source:paper:2609.13238",
       "kind": "cites",
       "layer": "provenance",
@@ -3850,9 +3851,9 @@
       ]
     },
     {
-      "id": "4972861a5423999af0421804",
+      "id": "5c6d68e81153b5a3b664c1a3",
       "source": "page:9baa053aacade6bdb59dbcc5",
-      "target": "claim:c96765765ed1b4c3961b51f9",
+      "target": "claim:dbc9c53e053229e87f8b5af0",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3861,8 +3862,8 @@
       ]
     },
     {
-      "id": "91b2434109cdaef978ae8f86",
-      "source": "claim:c96765765ed1b4c3961b51f9",
+      "id": "21faa056d52b08b89fbb1e63",
+      "source": "claim:dbc9c53e053229e87f8b5af0",
       "target": "source:paper:2609.13238",
       "kind": "cites",
       "layer": "provenance",
@@ -5949,35 +5950,35 @@
       ]
     },
     {
-      "id": "424383cc4e1dc764d3b6535c",
+      "id": "3490ca36008b2dce4f9130dc",
       "source": "page:b41d81e22da55c3af6d162d9",
       "target": "page:a8f61a13e520664ce08089ee",
       "kind": "involves",
       "layer": "semantic",
-      "text": "대화형 의료 AI의 전향적 검증과 자동 기록의 정확성 감사가 임상 사용의 검증 과제로 논의된다.",
+      "text": "의료 AI의 임상 사용을 위한 전향적 검증과 자동 기록 감사가 논의된다.",
       "source_ids": [
         "source:52fc30a9f94cbfe4bb639daf",
         "source:639957245eb815c1aa388d24"
       ]
     },
     {
-      "id": "a992f034311c3adaa7ef1f8d",
+      "id": "03d2974ca996f751f8dda0be",
       "source": "page:b41d81e22da55c3af6d162d9",
-      "target": "page:e944543690cbedcc8066503a",
+      "target": "page:a302d20ff83b1c4c1f4dcd4c",
       "kind": "involves",
       "layer": "semantic",
-      "text": "암 환자의 영상·병리·분자 증거를 통합하는 질의응답 벤치마크와 모델을 제안한다.",
+      "text": "호흡치료 기록의 특징을 구조화 데이터에 더해 발관 실패 예측을 개선하는 연구다.",
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:paper:2609.17532"
       ]
     },
     {
-      "id": "2aa3efe066fd87b01c8e5108",
+      "id": "3a2696de16f9c03fa33a98a5",
       "source": "page:b41d81e22da55c3af6d162d9",
       "target": "page:9baa053aacade6bdb59dbcc5",
       "kind": "involves",
       "layer": "semantic",
-      "text": "악안면 영상 보고서 평가에서 어휘 중복과 사실적 함의 판정이 다른 선택 결과를 낳는 사례를 분석한다.",
+      "text": "악안면 영상 보고서에서 어휘 중복과 사실적 함의 평가가 다른 선택 결과를 낳는 사례다.",
       "source_ids": [
         "source:paper:2609.13238"
       ]
@@ -6219,19 +6220,6 @@
       ]
     },
     {
-      "id": "cc13a2c7bf195ed11f8b9c33",
-      "source": "page:a8f61a13e520664ce08089ee",
-      "target": "page:b41d81e22da55c3af6d162d9",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:52fc30a9f94cbfe4bb639daf",
-        "source:639957245eb815c1aa388d24",
-        "source:f4dcdb69e4750b410d4f4267"
-      ]
-    },
-    {
       "id": "adb161eb97cf1a219be8d7f8",
       "source": "page:07c3c9f013fa991e9daddcd3",
       "target": "page:60999ea4902383df3523ec5d",
@@ -6373,6 +6361,18 @@
       "source_ids": [
         "source:da6df76cb3d2a78509c7709d",
         "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "cc13a2c7bf195ed11f8b9c33",
+      "source": "page:a8f61a13e520664ce08089ee",
+      "target": "page:b41d81e22da55c3af6d162d9",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:52fc30a9f94cbfe4bb639daf",
+        "source:639957245eb815c1aa388d24"
       ]
     },
     {
@@ -6871,14 +6871,14 @@
       ]
     },
     {
-      "id": "84f897489c8494287b0828e7",
-      "source": "page:b41d81e22da55c3af6d162d9",
-      "target": "page:e944543690cbedcc8066503a",
+      "id": "581c17a0c48f946f8a052d62",
+      "source": "page:a302d20ff83b1c4c1f4dcd4c",
+      "target": "page:b41d81e22da55c3af6d162d9",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
-        "source:paper:2608.02615"
+        "source:paper:2609.17532"
       ]
     },
     {
@@ -7279,18 +7279,18 @@
       "id": "medical",
       "title": "의료",
       "kind": "topic",
-      "revision": 36,
+      "revision": 54,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
+            "source:paper:2609.17532",
+            "source:paper:2609.13238",
             "source:52fc30a9f94cbfe4bb639daf",
-            "source:f4dcdb69e4750b410d4f4267",
-            "source:paper:2608.02615",
             "source:f22716264922d6813e829b02"
           ],
           "kind": "interpretation",
-          "text": "这些资料中的医疗 AI 验证涉及临床前瞻性证据、输出依据追溯、问答基准与医疗器械标准。它们检验的对象不同，基准得分提高或标准获批不能直接等同于治疗效果得到证实。"
+          "text": "이번 자료의 의료 AI 평가는 예측 성능, 보고서의 사실성, 실제 임상 환경의 검증, 의료기기 표준으로 나뉜다. 각 근거가 평가하는 대상이 달라 예측 점수 향상이나 표준 승인을 환자 치료 효과의 입증으로 읽어서는 안 된다."
         }
       ]
     },
@@ -7298,53 +7298,54 @@
       "id": "medical:fef310d5180d90231610",
       "title": "의료 AI의 임상 증거와 기록 감사",
       "kind": "issue",
-      "revision": 36,
+      "revision": 54,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
             "source:52fc30a9f94cbfe4bb639daf",
-            "source:f4dcdb69e4750b410d4f4267"
-          ],
-          "kind": "reported",
-          "text": "Nature Medicine 글 소개는 대화형 의료 AI의 전향적 검증이 어렵더라도 필수라고 전한다. 별도 npj Digital Medicine 글 소개는 의료 LLM 출력의 근거 추적·검증 체계를 요구한다."
-        },
-        {
-          "evidence_ids": [
+            "source:f4dcdb69e4750b410d4f4267",
             "source:639957245eb815c1aa388d24"
           ],
           "kind": "reported",
-          "text": "앰비언트 AI 관련 발췌는 환자·의사 대화를 자동 기록·요약하는 시스템의 정확성 감사를 강조한다. 제공된 자료에는 오류 빈도나 감사에 따른 개선 수치는 없다."
+          "text": "논문 소개 발췌들은 대화형 의료 AI의 전향적 검증, 의료 LLM 출력의 근거 추적, 환자·의사 대화를 자동 기록·요약하는 앰비언트 AI의 정확성 감사를 각각 강조한다. 실제 사용 결과와 출력·기록의 신뢰성을 서로 다른 층위에서 확인하자는 요구다."
+        },
+        {
+          "evidence_ids": [
+            "source:5a3645424fc2f6cf95d7f68c"
+          ],
+          "kind": "reported",
+          "text": "디지털 헬스 임상시험의 신속 문헌고찰 소개는 개발사 직접 수행 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 제공된 발췌에는 효과 크기와 교란요인 통제 내용이 없다."
         },
         {
           "evidence_ids": [
             "source:5a3645424fc2f6cf95d7f68c"
           ],
           "kind": "uncertain",
-          "text": "디지털 헬스 중재의 신속 문헌고찰 소개는 개발사 직접 수행 시험에서 긍정 결과 비율이 유의하게 높았다고 전한다. 이 발췌만으로는 연구 독립성 외의 조건을 통제했는지 알 수 없어, 개발사 참여가 결과 차이의 원인인지는 남은 쟁점이다."
+          "text": "개발사 참여 자체가 긍정 결과 차이의 원인인가? 시험 대상·설계 등 다른 조건을 통제했는지 발췌로는 확인되지 않아 인과관계는 남은 쟁점이다."
         }
       ]
     },
     {
-      "id": "medical:236e597ee8541af582bb",
-      "title": "OncoTriad-QA와 OncoVLM",
-      "kind": "entity",
-      "revision": 36,
+      "id": "medical:ee59956546abda2f0f17",
+      "title": "LLM 임상 노트 특징을 이용한 발관 실패 예측",
+      "kind": "concept",
+      "revision": 54,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:paper:2608.02615"
+            "source:paper:2609.17532"
           ],
           "kind": "reported",
-          "text": "저자들은 OncoTriad-QA가 TCGA 환자 9,281명·32개 암 코호트의 약 8만 6,100개 문항에 영상·병리·분자·임상정보를 연결한다고 설명한다. 원자료 기반 LLM 보조 주석에 자동 일관성 검사와 임상의 검토를 적용해 환자별 증거 통합 능력을 평가한다."
+          "text": "저자들은 자유서술 호흡치료 기록에서 LLM으로 특징을 분류하고 구조화 환자 데이터와 함께 로지스틱 회귀에 넣는다. 초록은 University of Washington Medicine 환자 코호트에서 이 특징들이 발관 실패 예측 성능을 높였다고 보고하나 개선 수치는 제시하지 않는다."
         },
         {
           "evidence_ids": [
-            "source:paper:2608.02615"
+            "source:paper:2609.17532"
           ],
-          "kind": "reported",
-          "text": "OncoVLM은 학습형 프로젝터로 영상·병리·DNA 메틸화·RNA-seq 정보를 LLM에 연결한다. 저자들은 미세조정 후 객관식 정확도와 BERTScore-F1 기준 MedGemma-4B 대비 평균 10.7점 향상을 보고한다. 이는 초록에 제시된 질의응답 평가 결과다."
+          "kind": "interpretation",
+          "text": "저자들은 기존 연구의 환자 포함 기준과 발관 실패 정의 차이가 성능 차이를 만들고 연구 간 일반화를 방해할 수 있다고 지적한다. 따라서 성능을 비교할 때 같은 환자군과 실패 정의를 썼는지 확인해야 한다."
         }
       ]
     },
@@ -7352,7 +7353,7 @@
       "id": "medical:c093221c9f39bd9b29dc",
       "title": "CBCT 보고서 생성의 평가 지표",
       "kind": "issue",
-      "revision": 36,
+      "revision": 54,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7360,14 +7361,14 @@
             "source:paper:2609.13238"
           ],
           "kind": "reported",
-          "text": "연구 초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되지만 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수가 0.2909, 복합 목표로 선택한 보고서는 0.4122였으며, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다."
+          "text": "초록의 복합 평가는 LLM의 사실적 함의 판정 80%와 어휘 중복 20%로 구성되며 개발 중에는 어휘 부분만 공개됐다. 저자들은 공개 622건에서 어휘 순위로 선택한 보고서의 복합 점수가 0.2909, 복합 목표로 선택한 보고서는 0.4122였고, 어휘 중복 추구 시 함의 정밀도가 0.522에서 0.266으로 낮아졌다고 보고한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.13238"
           ],
           "kind": "interpretation",
-          "text": "문장 선택 예측 AUC가 촬영기관 정보에서 0.718, 영상 모델에서 0.663이었다는 결과는 해당 데이터의 어휘 평가가 기관별 서술 관행을 보상할 수 있음을 시사한다. 복합 점수 역시 LLM 판정을 포함하므로 점수 상승을 환자별 임상 정확성의 입증으로 읽기는 어렵다."
+          "text": "문장 선택 예측 AUC가 촬영기관 정보에서 0.718, 영상 모델에서 0.663이었다는 결과는 해당 데이터의 어휘 평가가 기관별 서술 관행을 보상할 수 있음을 시사한다. 복합 점수도 LLM 판정을 포함하므로 상승 자체가 임상적 정확성의 입증은 아니다."
         }
       ]
     },
@@ -7375,7 +7376,7 @@
       "id": "medical:175dfe1d244799b4b74d",
       "title": "중국 NMPA의 AI 뇌파 처리 BCI 표준 승인",
       "kind": "event",
-      "revision": 36,
+      "revision": 54,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7953,8 +7954,8 @@
     }
   ],
   "issues": [],
-  "version": "99bca02071135e7c24c19f1c932016f1529dd1e77e14fb706549b43e36f51cff",
-  "exported_at": "2026-09-19T03:08:36.081820+00:00",
+  "version": "9f27153facd0fa8596f6adf1aedf713bf3825a75b4b21f116e7b26955930c950",
+  "exported_at": "2026-09-19T03:14:31.473225+00:00",
   "coverage": {
     "pages": 43,
     "claims": 85,
