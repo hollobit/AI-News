@@ -10,3 +10,7 @@
 
 .stage.replaying{outline:2px solid #b28147;outline-offset:2px}#history-position{width:100%;accent-color:#3566a8}#history-detail{overflow-wrap:anywhere}
 :root [hidden]{display:none!important}
+
+/* Let the inspector grow with its document list; scroll the page, not a pane. */
+#evidence{max-height:none;height:auto;overflow:visible}
+.lower-grid{align-items:start}
