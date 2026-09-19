@@ -555,11 +555,13 @@
         "source:4379d4e7f64f8347134ecb12",
         "source:9d953b0bbdc80a4de4f271cf",
         "source:ee2c12a40f492a13aa4ec9b8",
+        "source:paper:2609.19213",
         "source:paper:2609.19242",
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:37b51d958cb75522ce20615f"
+        "claim:65751abd8ddc8dc5a98afe70",
+        "claim:0f80b9561ddef573e22fceea"
       ],
       "status": "reviewed"
     },
@@ -616,6 +618,19 @@
       "url": "https://www.leiphone.com/category/industrynews/ZAv4gLB8zM5B5PBX.html"
     },
     {
+      "id": "source:paper:2609.19213",
+      "type": "source",
+      "title": "Layer-wise Curriculum Learning for Efficient LLM Compression",
+      "source_ids": [
+        "source:paper:2609.19213"
+      ],
+      "origin": "arxiv_abstract",
+      "scope": "검토 논문의 제목·초록; 전문·제품 성능·임상 검증 아님",
+      "day": "2026-09-16",
+      "status": "original_source_not_fact_checked",
+      "url": "https://arxiv.org/abs/2609.19213v1"
+    },
+    {
       "id": "source:paper:2609.19242",
       "type": "source",
       "title": "Block Parallelism For Efficient Distributed Long-Context Diffusion Language Model Training",
@@ -629,9 +644,9 @@
       "url": "https://arxiv.org/abs/2609.19242v1"
     },
     {
-      "id": "claim:37b51d958cb75522ce20615f",
+      "id": "claim:65751abd8ddc8dc5a98afe70",
       "type": "claim",
-      "title": "자료는 AI 인프라의 변화를 칩·연결망 확대, 데이터센터 전력 확보, 학습 통신과 추론 캐시의 절감으로 보여준다. 설비 규모에 관한 발표와 특정 조건에서 측정한 효율 개선은 구분해 판단해야 한다.",
+      "title": "제공 자료는 AI 인프라를 칩·연결망 확장, 전력 확보, 학습·추론의 자원 절감이라는 서로 다른 층위에서 다룬다. 설비 규모 발표와 특정 실험 조건의 효율 수치는 구분해야 하며, 모델의 메모리 절감만으로 데이터센터 전력 문제가 해소됐다고 판단할 수 없다.",
       "source_ids": [
         "source:4379d4e7f64f8347134ecb12",
         "source:ee2c12a40f492a13aa4ec9b8",
@@ -639,6 +654,16 @@
         "source:paper:2609.19969"
       ],
       "claim_kind": "interpretation",
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:0f80b9561ddef573e22fceea",
+      "type": "claim",
+      "title": "모델 압축도 학습 자원을 줄이는 접근이다. 계층별 커리큘럼 학습 논문 초록은 모델을 층 구간으로 나누어 쉬운 최적화부터 지식을 전달하고 특징 캐싱을 활용한다고 설명한다. 저자들은 BERT·GPT-2에서 GPU 메모리와 학습 시간을 각각 50% 넘게 줄였다고 보고하지만, 초록에는 비교 구성의 세부 조건이 없다.",
+      "source_ids": [
+        "source:paper:2609.19213"
+      ],
+      "claim_kind": "reported",
       "status": "reviewed"
     },
     {
@@ -656,15 +681,15 @@
         "source:ee2c12a40f492a13aa4ec9b8"
       ],
       "claims": [
-        "claim:4769918dcb24ded2ff4eb3a6",
-        "claim:8d3da238cdf21733341b3bd9"
+        "claim:37023dd5b5161b6c4ff8e197",
+        "claim:b893903aa3309e946528a6c2"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:4769918dcb24ded2ff4eb3a6",
+      "id": "claim:37023dd5b5161b6c4ff8e197",
       "type": "claim",
-      "title": "InfoQ를 인용한 수집 발췌는 왕타오가 컴퓨팅을 AI 전략의 핵심으로 제시하며 Ascend 960의 조기 등장과 PB급 KV Cache를 언급했다고 전한다. 구체적인 출시 일정이나 캐시 구성·성능은 제시되지 않았다.",
+      "title": "InfoQ를 인용한 수집 발췌는 왕타오가 AI 전략의 핵심으로 컴퓨팅을 제시하며 Ascend 960의 조기 등장과 PB급 KV 캐시를 언급했다고 전한다. 출시 일정과 캐시 구성·성능은 제시되지 않았다.",
       "source_ids": [
         "source:34fa141b88be994d5c6f08ba"
       ],
@@ -672,9 +697,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:8d3da238cdf21733341b3bd9",
+      "id": "claim:b893903aa3309e946528a6c2",
       "type": "claim",
-      "title": "레이펑왕을 인용한 발췌는 화웨이가 Nested BSP 기반 Peerium과 백만 프로세서를 단일 컴퓨터로 통합한다는 인터커넥트 ‘영형(灵衢)’을 공개했다고 전한다. 해당 규모의 실제 가동을 입증하는 측정치는 제공되지 않았다.",
+      "title": "레이펑왕을 인용한 발췌는 화웨이가 Nested BSP 기반 Peerium과 백만 프로세서를 단일 컴퓨터로 통합한다는 인터커넥트 ‘영형(灵衢)’을 공개했다고 전한다. 이 규모의 실제 가동을 입증하는 측정치는 제공되지 않았다.",
       "source_ids": [
         "source:ee2c12a40f492a13aa4ec9b8"
       ],
@@ -696,15 +721,15 @@
         "source:9d953b0bbdc80a4de4f271cf"
       ],
       "claims": [
-        "claim:8cbc32d06d7253295130ea05",
-        "claim:5bf60b18ddf2d1c697b9ef13"
+        "claim:553c97b0cb0a33c1a8c7251f",
+        "claim:1cc69d756b8ceeb71c96b33c"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:8cbc32d06d7253295130ea05",
+      "id": "claim:553c97b0cb0a33c1a8c7251f",
       "type": "claim",
-      "title": "7월 1일 Pandaily를 인용한 발췌는 AI 수요가 세계 전력망에 부담을 준다고 주장한다. 6월 29일 TechCrunch를 인용한 발췌는 미국 행정부 규제로 신규 전력 92GW가 위협받으며 AI 데이터센터 전력 수급에 악영향이 우려된다고 전한다.",
+      "title": "7월 1일 Pandaily 인용 발췌는 AI 수요가 세계 전력망에 부담을 준다고 주장한다. 6월 29일 TechCrunch 인용 발췌는 미국 행정부 규제로 신규 전력 92GW가 위협받으며 AI 데이터센터 전력 수급에 악영향이 우려된다고 전한다. 각각 수요 압력과 공급 위험에 관한 보도다.",
       "source_ids": [
         "source:4379d4e7f64f8347134ecb12",
         "source:9d953b0bbdc80a4de4f271cf"
@@ -713,12 +738,11 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:5bf60b18ddf2d1c697b9ef13",
+      "id": "claim:1cc69d756b8ceeb71c96b33c",
       "type": "claim",
-      "title": "두 발췌는 각각 수요 압력과 공급 위험을 다룬다. 92GW는 확정 취소량이나 이미 발생한 AI 전용 전력 부족량으로 읽을 수 없다. 어느 지역·데이터센터의 공급 일정이 영향을 받는지는 제공 자료로 확인되지 않는다.",
+      "title": "92GW가 실제로 얼마나 취소되거나 지연됐는지, 어느 데이터센터의 공급 일정에 영향을 주는지는 발췌로 확인되지 않는다. 이를 확정 취소량이나 이미 발생한 AI 전용 전력 부족량으로 읽을 근거는 없다.",
       "source_ids": [
-        "source:4379d4e7f64f8347134ecb12",
-        "source:9d953b0bbdc80a4de4f271cf"
+        "source:4379d4e7f64f8347134ecb12"
       ],
       "claim_kind": "uncertain",
       "status": "reviewed"
@@ -737,15 +761,15 @@
         "source:paper:2609.19242"
       ],
       "claims": [
-        "claim:965ba018c77a5486a0069249",
-        "claim:f17a607d4bc50cef924081dc"
+        "claim:1b69be162c4482c65491f8bb",
+        "claim:9aa0448ee80d4b479a621f4c"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:965ba018c77a5486a0069249",
+      "id": "claim:1b69be162c4482c65491f8bb",
       "type": "claim",
-      "title": "논문 초록에서 저자들은 블록 확산 언어모델의 오염 블록 계산을 개별 GPU 프로세스에 배정하고, 공유하는 정상 문맥도 분할하는 CSBP를 제안한다. 오염 K/V와 기울기를 로컬에 유지하고 정상 접두부의 복제를 줄여 통신·메모리 부담을 낮춘다는 설명이다.",
+      "title": "논문 초록에서 저자들은 블록 확산 언어모델의 오염 블록 계산을 개별 분산 프로세스에 배정하고 공유하는 정상 문맥도 분할하는 CSBP를 제안한다. 오염 K/V와 기울기를 로컬에 유지하고 정상 접두부 복제를 줄여 통신·메모리 부담을 낮춘다는 설명이다.",
       "source_ids": [
         "source:paper:2609.19242"
       ],
@@ -753,9 +777,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:f17a607d4bc50cef924081dc",
+      "id": "claim:9aa0448ee80d4b479a621f4c",
       "type": "claim",
-      "title": "저자들은 H200 16대·256K 문맥에서 최선의 기준선 대비 처리량이 지도 미세조정에서 1.18~1.45배, 자기회귀 모델의 블록 확산 모델 전환에서 1.27~1.33배였다고 보고한다. 최대 HBM 사용량은 같거나 낮았으며, 이는 초록에 제시된 학습 조건의 결과다.",
+      "title": "저자들은 H200 GPU 16개·256K 문맥에서 최선 기준선 대비 처리량이 지도 미세조정에서 1.18~1.45배, 자기회귀 모델의 블록 확산 모델 전환에서 1.27~1.33배였다고 보고한다. 최대 HBM 사용량은 같거나 낮았다. 이는 초록에 제시된 학습 조건의 결과다.",
       "source_ids": [
         "source:paper:2609.19242"
       ],
@@ -776,15 +800,15 @@
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:890007e6c15be23317d42a7a",
-        "claim:f95793674a934d4d6487574c"
+        "claim:6552c924c6a6f08469eb28d7",
+        "claim:27840119645a8a4b0f7fcc3d"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:890007e6c15be23317d42a7a",
+      "id": "claim:6552c924c6a6f08469eb28d7",
       "type": "claim",
-      "title": "논문 초록은 긴 입력 처리의 계산량과 KV 캐시의 저장·전송 부담을 배포 비용의 병목으로 제시한다. 저자들은 CED 구조로 토큰당 활성 파라미터를 디코드 시 16B, 입력 사전 처리 시 8B로 달리해 입력 처리 비용을 줄인다고 설명한다.",
+      "title": "논문 초록은 DeepSeek-V4.1-Flash를 552B 규모의 멀티모달 MoE로 소개한다. 저자들은 입력 비중이 높은 에이전트 작업을 겨냥해 CED 구조의 토큰당 활성 파라미터를 입력 사전 처리(prefill)에서는 8B, 생성(decode)에서는 16B로 구성했다고 설명한다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -792,9 +816,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:f95793674a934d4d6487574c",
+      "id": "claim:27840119645a8a4b0f7fcc3d",
       "type": "claim",
-      "title": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV 캐시를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. 별도의 SWA Bounded Replay는 SSD·호스트 메모리 상주 영속 캐시를 약 1/8로 줄인다는 주장이다. 두 수치는 서로 다른 저장 영역의 초록 보고치다.",
+      "title": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV 캐시를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리 상주 영속 캐시를 약 1/8로 줄인다고 한다. 서로 다른 저장 영역의 초록 보고치이므로 두 비율을 전체 메모리 절감률로 합칠 수 없다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -1390,8 +1414,8 @@
         "source:paper:2609.19228"
       ],
       "claims": [
-        "claim:8b51f844ba1b11dc6be386a5",
-        "claim:7c2c8c0a8079505e8675eb5d"
+        "claim:2e9d2fe7c88b871a986ce765",
+        "claim:157c7af02bced7f6466d120d"
       ],
       "status": "reviewed"
     },
@@ -1448,9 +1472,9 @@
       "url": "https://arxiv.org/abs/2609.19228v1"
     },
     {
-      "id": "claim:8b51f844ba1b11dc6be386a5",
+      "id": "claim:2e9d2fe7c88b871a986ce765",
       "type": "claim",
-      "title": "이번 연구들은 물리적 상호작용의 서로 다른 병목을 다룬다. AthenaZero는 팔의 관성을 줄이고, ULOHA는 수중 양팔 학습 과정을 통합하며, 거친 형상 기반 파지 연구는 닫힘 동작 자체가 물체 정보의 오차를 견디도록 설계한다.",
+      "title": "세 연구는 물리적 상호작용의 서로 다른 병목을 다룬다. AthenaZero는 팔의 관성, ULOHA는 수중 양팔 학습 환경, 거친 형상 기반 파지는 부정확한 물체 정보에 대응하는 닫힘 동작을 설계 대상으로 삼는다.",
       "source_ids": [
         "source:paper:2609.19194",
         "source:paper:2609.19200",
@@ -1460,9 +1484,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:7c2c8c0a8079505e8675eb5d",
+      "id": "claim:157c7af02bced7f6466d120d",
       "type": "claim",
-      "title": "투구·포구 속도, 수중 협동 동작, 파지 오차 허용 범위는 평가 대상이 다르다. 세 초록은 설계 선택을 이해하는 근거이며, 수치를 합쳐 범용 로봇의 성능 순위를 만들 근거는 아니다.",
+      "title": "투구·포구 속도, 수중 협동 동작, 파지 오차 허용 범위는 서로 다른 평가 대상이다. 제공된 초록은 설계와 시험 결과를 이해하는 근거이며, 수치를 합쳐 범용 로봇의 성능 순위를 판단할 근거는 아니다.",
       "source_ids": [
         "source:paper:2609.19194",
         "source:paper:2609.19200",
@@ -1485,15 +1509,15 @@
         "source:paper:2609.19194"
       ],
       "claims": [
-        "claim:30601f1d527ec3dd62169982",
+        "claim:bc313b267634a8fa1e22167b",
         "claim:88aabc51ca858c2cc9c823c5"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:30601f1d527ec3dd62169982",
+      "id": "claim:bc313b267634a8fa1e22167b",
       "type": "claim",
-      "title": "연구진은 준직접 구동과 전달계 원격 배치로 말단 유효 질량을 사람과 비슷한 수준, 기존 로봇 팔보다 약 한 자릿수 규모 낮게 줄였다고 설명한다. 낮은 관성과 토크 투명성을 빠른 물체 상호작용에 활용하는 양팔 설계다.",
+      "title": "연구진은 준직접 구동과 전달계 원격 배치로 말단 유효 질량을 사람과 비슷한 수준이자 기존 로봇 팔의 약 10분의 1로 낮췄다고 설명한다. 낮은 관성과 토크 투명성을 빠른 물체 상호작용에 활용하는 양팔 설계다.",
       "source_ids": [
         "source:paper:2609.19194"
       ],
@@ -1524,15 +1548,15 @@
         "source:paper:2609.19200"
       ],
       "claims": [
-        "claim:597f2107c1c3f2a5a367e93c",
+        "claim:31b9882328f144dcb30f9897",
         "claim:55a9fc55ffc9961e5805d91c"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:597f2107c1c3f2a5a367e93c",
+      "id": "claim:31b9882328f144dcb30f9897",
       "type": "claim",
-      "title": "연구진은 리더–팔로어 하드웨어와 LeRobot 확장을 결합해 원격조작, 다중 시점 관측, 시연 수집, 정책 학습, 자율 실행을 연결했다. 초록은 실제 수중 양팔 로봇의 팔 사이 물체 전달, 공동 조작, 부력으로 움직이는 물체 포착을 보고한다.",
+      "title": "연구진은 리더–팔로어 하드웨어와 LeRobot 확장으로 원격조작, 다중 시점 관측, 시연 수집, 정책 학습, 자율 실행을 연결했다. 초록은 실제 수중 양팔 로봇의 팔 사이 물체 전달, 공동 조작, 부력으로 움직이는 물체 포착을 보고한다.",
       "source_ids": [
         "source:paper:2609.19200"
       ],
@@ -1563,15 +1587,15 @@
         "source:paper:2609.19228"
       ],
       "claims": [
-        "claim:46ac3fab8591c6b63d81f989",
-        "claim:da35fe8ba8c10d4cff5e7868"
+        "claim:5ecd13a67fdd54ecc02da585",
+        "claim:d6f77cebac10b14f47179e2d"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:46ac3fab8591c6b63d81f989",
+      "id": "claim:5ecd13a67fdd54ecc02da585",
       "type": "claim",
-      "title": "연구진은 대략적인 물체 템플릿, 인간의 파지 유형, 물체 중심 상호작용, 유연하게 미끄러지는 접촉을 결합한 운동 계획기를 제안했다. 정확한 접점을 미리 지정하기보다 닫힘 동작 자체에 오차 허용 능력을 넣는 접근이다.",
+      "title": "연구진은 대략적인 물체 템플릿, 인간의 파지 유형, 물체 중심 상호작용, 유연하게 미끄러지는 접촉을 결합한 운동 계획기를 제안했다. 정확한 접점을 미리 지정하기보다 닫힘 동작 자체가 물체 정보의 오차를 견디도록 설계한다.",
       "source_ids": [
         "source:paper:2609.19228"
       ],
@@ -1579,9 +1603,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:da35fe8ba8c10d4cff5e7868",
+      "id": "claim:d6f77cebac10b14f47179e2d",
       "type": "claim",
-      "title": "초록은 피드백 없이 약 1cm의 크기 오차와 수cm·수십 도의 자세 오차를 견디고, 27개 시험 조건 중 25개에서 비교 계획기보다 넓은 허용 범위를 보였다고 보고한다. 일상 물체 80개 중 82.5% 파지도 보고하지만, 제공 초록만으로 실기·시뮬레이션 평가 구분은 확인되지 않는다.",
+      "title": "초록은 피드백 없이 약 1cm의 크기 오차와 수cm·수십 도의 자세 오차를 견디고, 27개 시험 조건 중 25개에서 비교 계획기보다 넓은 허용 범위를 보였다고 보고한다. 일상 물체 80개 중 82.5% 파지도 보고하나, 초록만으로 실기·시뮬레이션 평가 구분은 확인되지 않는다.",
       "source_ids": [
         "source:paper:2609.19228"
       ],
@@ -1603,7 +1627,7 @@
       ],
       "claims": [
         "claim:4bc683ac114bf5be3b7bfd71",
-        "claim:1420c17482bca68dc7348fac"
+        "claim:586f310e1cf69a4b299f08b4"
       ],
       "status": "reviewed"
     },
@@ -1618,9 +1642,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:1420c17482bca68dc7348fac",
+      "id": "claim:586f310e1cf69a4b299f08b4",
       "type": "claim",
-      "title": "어느 기업이 어떤 데이터·평가 항목을 비공개로 두었는지는 발췌에 없다. 기업별 성능 주장의 검증 가능성을 판단하려면 비공개 항목과 실제 공개 자료의 범위를 확인해야 한다.",
+      "title": "어느 기업이 어떤 데이터·평가 항목을 비공개로 두었는지는 발췌에 없다. 기업별 성능 주장의 검증 가능성을 판단하려면 대상 기업과 실제 공개 자료의 범위를 확인해야 한다.",
       "source_ids": [
         "source:0fbb2545a72a30b7553c8e7c"
       ],
@@ -3125,6 +3149,17 @@
       ]
     },
     {
+      "id": "18318e977ebe68f6aa593458",
+      "source": "page:9b08b924963cb1769f63a232",
+      "target": "source:paper:2609.19213",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19213"
+      ]
+    },
+    {
       "id": "98af9e45570ecbae34c7d6a6",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "source:paper:2609.19242",
@@ -3147,9 +3182,9 @@
       ]
     },
     {
-      "id": "7163701d6f4bb432b46e6df0",
+      "id": "20836a549194064c9e07431e",
       "source": "page:9b08b924963cb1769f63a232",
-      "target": "claim:37b51d958cb75522ce20615f",
+      "target": "claim:65751abd8ddc8dc5a98afe70",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3161,8 +3196,8 @@
       ]
     },
     {
-      "id": "6b9f005d86774dc088cc78f4",
-      "source": "claim:37b51d958cb75522ce20615f",
+      "id": "b9bb91303be5d2cdda412afc",
+      "source": "claim:65751abd8ddc8dc5a98afe70",
       "target": "source:4379d4e7f64f8347134ecb12",
       "kind": "cites",
       "layer": "provenance",
@@ -3172,8 +3207,8 @@
       ]
     },
     {
-      "id": "3a0944ba09652a1b73a0d6de",
-      "source": "claim:37b51d958cb75522ce20615f",
+      "id": "e6fa29a20996450c5ee87a80",
+      "source": "claim:65751abd8ddc8dc5a98afe70",
       "target": "source:ee2c12a40f492a13aa4ec9b8",
       "kind": "cites",
       "layer": "provenance",
@@ -3183,8 +3218,8 @@
       ]
     },
     {
-      "id": "5ef94cc9f7fed7b86ebda497",
-      "source": "claim:37b51d958cb75522ce20615f",
+      "id": "a4c97e7a8987724c85e5cd80",
+      "source": "claim:65751abd8ddc8dc5a98afe70",
       "target": "source:paper:2609.19242",
       "kind": "cites",
       "layer": "provenance",
@@ -3194,14 +3229,36 @@
       ]
     },
     {
-      "id": "0eacbe366743543528d66c06",
-      "source": "claim:37b51d958cb75522ce20615f",
+      "id": "e704e76f2b9db6c97f04b9c8",
+      "source": "claim:65751abd8ddc8dc5a98afe70",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "0a4efbda43af19cd6f70e66a",
+      "source": "page:9b08b924963cb1769f63a232",
+      "target": "claim:0f80b9561ddef573e22fceea",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19213"
+      ]
+    },
+    {
+      "id": "f5c7b3bb67835048aed60a1e",
+      "source": "claim:0f80b9561ddef573e22fceea",
+      "target": "source:paper:2609.19213",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19213"
       ]
     },
     {
@@ -3227,9 +3284,9 @@
       ]
     },
     {
-      "id": "a2bb1b0125687dfc7d4fe056",
+      "id": "f72d3d994750cfc8356f293d",
       "source": "page:496f722e3a061b8ca1a39ff6",
-      "target": "claim:4769918dcb24ded2ff4eb3a6",
+      "target": "claim:37023dd5b5161b6c4ff8e197",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3238,8 +3295,8 @@
       ]
     },
     {
-      "id": "571a92257c880c05b879c89f",
-      "source": "claim:4769918dcb24ded2ff4eb3a6",
+      "id": "e936e57db46214e004754501",
+      "source": "claim:37023dd5b5161b6c4ff8e197",
       "target": "source:34fa141b88be994d5c6f08ba",
       "kind": "cites",
       "layer": "provenance",
@@ -3249,9 +3306,9 @@
       ]
     },
     {
-      "id": "580984cfe16cf868b8b28775",
+      "id": "453c8fe46f9206174371ea6a",
       "source": "page:496f722e3a061b8ca1a39ff6",
-      "target": "claim:8d3da238cdf21733341b3bd9",
+      "target": "claim:b893903aa3309e946528a6c2",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3260,8 +3317,8 @@
       ]
     },
     {
-      "id": "88300f5155bc0e68ba80b014",
-      "source": "claim:8d3da238cdf21733341b3bd9",
+      "id": "bcf3f4ace40760bbf7a7b1c8",
+      "source": "claim:b893903aa3309e946528a6c2",
       "target": "source:ee2c12a40f492a13aa4ec9b8",
       "kind": "cites",
       "layer": "provenance",
@@ -3293,9 +3350,9 @@
       ]
     },
     {
-      "id": "7a067281bc07d6723a5cb090",
+      "id": "d24cb5456dc5b47bd22afaba",
       "source": "page:b4b6849ccb163ad60f4f21c8",
-      "target": "claim:8cbc32d06d7253295130ea05",
+      "target": "claim:553c97b0cb0a33c1a8c7251f",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3305,8 +3362,8 @@
       ]
     },
     {
-      "id": "cd8acd766a62e196e1beab8a",
-      "source": "claim:8cbc32d06d7253295130ea05",
+      "id": "1fa40fb85104c518551e027d",
+      "source": "claim:553c97b0cb0a33c1a8c7251f",
       "target": "source:4379d4e7f64f8347134ecb12",
       "kind": "cites",
       "layer": "provenance",
@@ -3316,8 +3373,8 @@
       ]
     },
     {
-      "id": "a5457a65e466793d1febc6b9",
-      "source": "claim:8cbc32d06d7253295130ea05",
+      "id": "f08281217ddabf34a375dfd7",
+      "source": "claim:553c97b0cb0a33c1a8c7251f",
       "target": "source:9d953b0bbdc80a4de4f271cf",
       "kind": "cites",
       "layer": "provenance",
@@ -3327,37 +3384,25 @@
       ]
     },
     {
-      "id": "21e9767707906081fa100f33",
+      "id": "8f920cab8b3802fe0cec22de",
       "source": "page:b4b6849ccb163ad60f4f21c8",
-      "target": "claim:5bf60b18ddf2d1c697b9ef13",
+      "target": "claim:1cc69d756b8ceeb71c96b33c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:4379d4e7f64f8347134ecb12",
-        "source:9d953b0bbdc80a4de4f271cf"
+        "source:4379d4e7f64f8347134ecb12"
       ]
     },
     {
-      "id": "4aee0fd24fe2754ea5e1c9ce",
-      "source": "claim:5bf60b18ddf2d1c697b9ef13",
+      "id": "828bb668ca5a1f2c36596960",
+      "source": "claim:1cc69d756b8ceeb71c96b33c",
       "target": "source:4379d4e7f64f8347134ecb12",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:4379d4e7f64f8347134ecb12"
-      ]
-    },
-    {
-      "id": "75c581580b6bbd038635b0f7",
-      "source": "claim:5bf60b18ddf2d1c697b9ef13",
-      "target": "source:9d953b0bbdc80a4de4f271cf",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:9d953b0bbdc80a4de4f271cf"
       ]
     },
     {
@@ -3372,9 +3417,9 @@
       ]
     },
     {
-      "id": "91e75587d76571e5beb148bd",
+      "id": "75fedf167dfe72ea26ccca8a",
       "source": "page:3e7b41c644da4cb118490c7a",
-      "target": "claim:965ba018c77a5486a0069249",
+      "target": "claim:1b69be162c4482c65491f8bb",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3383,8 +3428,8 @@
       ]
     },
     {
-      "id": "f3b5897922209ec41113cae3",
-      "source": "claim:965ba018c77a5486a0069249",
+      "id": "ee606db3f4ec7d16d9f42c85",
+      "source": "claim:1b69be162c4482c65491f8bb",
       "target": "source:paper:2609.19242",
       "kind": "cites",
       "layer": "provenance",
@@ -3394,9 +3439,9 @@
       ]
     },
     {
-      "id": "eceadf32c9124c461beb20c0",
+      "id": "3a36d579c149672bcc65d6a4",
       "source": "page:3e7b41c644da4cb118490c7a",
-      "target": "claim:f17a607d4bc50cef924081dc",
+      "target": "claim:9aa0448ee80d4b479a621f4c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3405,8 +3450,8 @@
       ]
     },
     {
-      "id": "c701ba6ccb57cdef090b7411",
-      "source": "claim:f17a607d4bc50cef924081dc",
+      "id": "cda6be4b82ece2ce3820e900",
+      "source": "claim:9aa0448ee80d4b479a621f4c",
       "target": "source:paper:2609.19242",
       "kind": "cites",
       "layer": "provenance",
@@ -3427,9 +3472,9 @@
       ]
     },
     {
-      "id": "f36deb35b9d9372c04a3c1d2",
+      "id": "f072fcad11e31bd753f35d48",
       "source": "page:16ddcc70c777744bd4e89688",
-      "target": "claim:890007e6c15be23317d42a7a",
+      "target": "claim:6552c924c6a6f08469eb28d7",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3438,8 +3483,8 @@
       ]
     },
     {
-      "id": "185809d4cccadab945824cc1",
-      "source": "claim:890007e6c15be23317d42a7a",
+      "id": "5ff83fafe9729716899a0600",
+      "source": "claim:6552c924c6a6f08469eb28d7",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -3449,9 +3494,9 @@
       ]
     },
     {
-      "id": "49939a75cbe09bf0f305316e",
+      "id": "d0fafd91556d818f5ad666d3",
       "source": "page:16ddcc70c777744bd4e89688",
-      "target": "claim:f95793674a934d4d6487574c",
+      "target": "claim:27840119645a8a4b0f7fcc3d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3460,8 +3505,8 @@
       ]
     },
     {
-      "id": "3f17e92d65a210e5f294a901",
-      "source": "claim:f95793674a934d4d6487574c",
+      "id": "d0b47a973229ad4c205a7f4b",
+      "source": "claim:27840119645a8a4b0f7fcc3d",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -4353,9 +4398,9 @@
       ]
     },
     {
-      "id": "20e0417a1275f1fea7c91071",
+      "id": "ab5d770e925ffdc2f0c1dd75",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "claim:8b51f844ba1b11dc6be386a5",
+      "target": "claim:2e9d2fe7c88b871a986ce765",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4366,8 +4411,8 @@
       ]
     },
     {
-      "id": "5a3c63ed0a100ab5f99dde0b",
-      "source": "claim:8b51f844ba1b11dc6be386a5",
+      "id": "2057f9cf64abad7fc48011f4",
+      "source": "claim:2e9d2fe7c88b871a986ce765",
       "target": "source:paper:2609.19194",
       "kind": "cites",
       "layer": "provenance",
@@ -4377,8 +4422,8 @@
       ]
     },
     {
-      "id": "22726ae146c680410382cd37",
-      "source": "claim:8b51f844ba1b11dc6be386a5",
+      "id": "ff4f2fa7b69cfe1ad6674a0c",
+      "source": "claim:2e9d2fe7c88b871a986ce765",
       "target": "source:paper:2609.19200",
       "kind": "cites",
       "layer": "provenance",
@@ -4388,8 +4433,8 @@
       ]
     },
     {
-      "id": "088f2496202f86f97ff90678",
-      "source": "claim:8b51f844ba1b11dc6be386a5",
+      "id": "a5f59e040a8e595de4d83d15",
+      "source": "claim:2e9d2fe7c88b871a986ce765",
       "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
@@ -4399,9 +4444,9 @@
       ]
     },
     {
-      "id": "f252a1ba98da29061b0951af",
+      "id": "038810afddb720c2652398c9",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
-      "target": "claim:7c2c8c0a8079505e8675eb5d",
+      "target": "claim:157c7af02bced7f6466d120d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4412,8 +4457,8 @@
       ]
     },
     {
-      "id": "a3390514cabbc92874087085",
-      "source": "claim:7c2c8c0a8079505e8675eb5d",
+      "id": "441e457570f801920bfd9cea",
+      "source": "claim:157c7af02bced7f6466d120d",
       "target": "source:paper:2609.19194",
       "kind": "cites",
       "layer": "provenance",
@@ -4423,8 +4468,8 @@
       ]
     },
     {
-      "id": "845cfff0ffbb87bb121ab093",
-      "source": "claim:7c2c8c0a8079505e8675eb5d",
+      "id": "fe467891f6d955bde5718daa",
+      "source": "claim:157c7af02bced7f6466d120d",
       "target": "source:paper:2609.19200",
       "kind": "cites",
       "layer": "provenance",
@@ -4434,8 +4479,8 @@
       ]
     },
     {
-      "id": "3b3e28479b39d72290b210c5",
-      "source": "claim:7c2c8c0a8079505e8675eb5d",
+      "id": "be34868ed1c166e21ba79207",
+      "source": "claim:157c7af02bced7f6466d120d",
       "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
@@ -4456,9 +4501,9 @@
       ]
     },
     {
-      "id": "a2f78ae34b0eb580341f6be5",
+      "id": "89e9fb2a80a9b5ec813564cd",
       "source": "page:35dbd793846ebd8927212027",
-      "target": "claim:30601f1d527ec3dd62169982",
+      "target": "claim:bc313b267634a8fa1e22167b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4467,8 +4512,8 @@
       ]
     },
     {
-      "id": "7997127fd382f4b20f344b84",
-      "source": "claim:30601f1d527ec3dd62169982",
+      "id": "1a15e69f3a2d7a89acee4651",
+      "source": "claim:bc313b267634a8fa1e22167b",
       "target": "source:paper:2609.19194",
       "kind": "cites",
       "layer": "provenance",
@@ -4511,9 +4556,9 @@
       ]
     },
     {
-      "id": "590f4396ede99d0ac54ede5d",
+      "id": "b4f721f9df2fdfea3870b8a7",
       "source": "page:ebfef15f7701a6f007c7e8fd",
-      "target": "claim:597f2107c1c3f2a5a367e93c",
+      "target": "claim:31b9882328f144dcb30f9897",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4522,8 +4567,8 @@
       ]
     },
     {
-      "id": "dfd7d54c9bd82cd049582071",
-      "source": "claim:597f2107c1c3f2a5a367e93c",
+      "id": "40b02f0cdbcf6d41748327fd",
+      "source": "claim:31b9882328f144dcb30f9897",
       "target": "source:paper:2609.19200",
       "kind": "cites",
       "layer": "provenance",
@@ -4566,9 +4611,9 @@
       ]
     },
     {
-      "id": "19b7091e1e3dcd964abc43ce",
+      "id": "af6f6fd50d6a4c0dd216e407",
       "source": "page:3602c77d4a0bf4ed1a3a88ad",
-      "target": "claim:46ac3fab8591c6b63d81f989",
+      "target": "claim:5ecd13a67fdd54ecc02da585",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4577,8 +4622,8 @@
       ]
     },
     {
-      "id": "ad364205c8a257a50fc818ea",
-      "source": "claim:46ac3fab8591c6b63d81f989",
+      "id": "9748d4a4e73ac4b3bff92214",
+      "source": "claim:5ecd13a67fdd54ecc02da585",
       "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
@@ -4588,9 +4633,9 @@
       ]
     },
     {
-      "id": "712211169e524fb700bcbf0e",
+      "id": "be5c15de0e6f2651a210ff41",
       "source": "page:3602c77d4a0bf4ed1a3a88ad",
-      "target": "claim:da35fe8ba8c10d4cff5e7868",
+      "target": "claim:d6f77cebac10b14f47179e2d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4599,8 +4644,8 @@
       ]
     },
     {
-      "id": "ff698ec00e71a5966fbabfd5",
-      "source": "claim:da35fe8ba8c10d4cff5e7868",
+      "id": "ce60ef72d459c1c950e069f3",
+      "source": "claim:d6f77cebac10b14f47179e2d",
       "target": "source:paper:2609.19228",
       "kind": "cites",
       "layer": "provenance",
@@ -4643,9 +4688,9 @@
       ]
     },
     {
-      "id": "ddc4d2c62b52aac0cb52e35b",
+      "id": "63907f8b28ed2672513a1bf5",
       "source": "page:4b93b30d9007e205c19dd499",
-      "target": "claim:1420c17482bca68dc7348fac",
+      "target": "claim:586f310e1cf69a4b299f08b4",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4654,8 +4699,8 @@
       ]
     },
     {
-      "id": "acbc739820c855309da4ff2e",
-      "source": "claim:1420c17482bca68dc7348fac",
+      "id": "90e9dc30f513cccd47c66283",
+      "source": "claim:586f310e1cf69a4b299f08b4",
       "target": "source:0fbb2545a72a30b7553c8e7c",
       "kind": "cites",
       "layer": "provenance",
@@ -5858,47 +5903,47 @@
       ]
     },
     {
-      "id": "6076a66852677bbfdb6720c8",
+      "id": "2042a39ad17a96f3e41d0c84",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "page:496f722e3a061b8ca1a39ff6",
       "kind": "involves",
       "layer": "semantic",
-      "text": "화웨이 발표는 칩·KV 캐시·프로세서 연결망을 통한 컴퓨팅 확대를 다룬다.",
+      "text": "화웨이 관련 발췌는 칩·KV 캐시·프로세서 연결망을 통한 컴퓨팅 확장 구상을 다룬다.",
       "source_ids": [
         "source:34fa141b88be994d5c6f08ba",
         "source:ee2c12a40f492a13aa4ec9b8"
       ]
     },
     {
-      "id": "3391fe50d5ef5e2c73afb6d5",
+      "id": "20a863c54ee7f642a13f20cd",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "page:b4b6849ccb163ad60f4f21c8",
       "kind": "involves",
       "layer": "semantic",
-      "text": "보도는 AI 수요 압력과 신규 전력 공급 위험을 데이터센터 전력 확보 문제로 제시한다.",
+      "text": "보도는 AI 수요 압력과 신규 발전 공급 위험을 전력 확보 문제로 제시한다.",
       "source_ids": [
         "source:4379d4e7f64f8347134ecb12",
         "source:9d953b0bbdc80a4de4f271cf"
       ]
     },
     {
-      "id": "500aa6c76688cb478f26f846",
+      "id": "6fe18105658a8d4141c87b17",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "page:3e7b41c644da4cb118490c7a",
       "kind": "involves",
       "layer": "semantic",
-      "text": "연구는 분산 GPU 학습의 통신·메모리 부담을 줄이는 병렬화와 처리량을 평가한다.",
+      "text": "CSBP 연구는 분산 GPU 학습의 통신·메모리 부담을 줄이는 방법과 처리량을 평가한다.",
       "source_ids": [
         "source:paper:2609.19242"
       ]
     },
     {
-      "id": "8d2129076ea8a27c172d28f8",
+      "id": "9faa63866167336b8cb0b97f",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "page:16ddcc70c777744bd4e89688",
       "kind": "involves",
       "layer": "semantic",
-      "text": "연구는 입력 처리 계산량과 HBM·SSD의 KV 캐시 부담을 줄이는 모델·배포 설계를 제시한다.",
+      "text": "연구는 입력 처리 연산과 HBM·SSD의 캐시 부담을 줄이는 모델·배포 설계를 제시한다.",
       "source_ids": [
         "source:paper:2609.19969"
       ]
@@ -5994,12 +6039,12 @@
       ]
     },
     {
-      "id": "8aa2d8f459c5272440f5558e",
+      "id": "e5f0eeace90b332dc6d8f39c",
       "source": "page:d6bbe9193e8dfe2f58f0670a",
       "target": "page:ebfef15f7701a6f007c7e8fd",
       "kind": "involves",
       "layer": "semantic",
-      "text": "수중의 지각·물리 조건에서 양팔 정책을 학습하고 실행하는 실험 플랫폼을 포함한다.",
+      "text": "수중의 지각·물리 조건에서 양팔 정책을 학습하고 실행하는 플랫폼을 포함한다.",
       "source_ids": [
         "source:paper:2609.19200"
       ]
@@ -7115,7 +7160,7 @@
       "id": "compute",
       "title": "AI 인프라",
       "kind": "topic",
-      "revision": 48,
+      "revision": 52,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7126,7 +7171,14 @@
             "source:paper:2609.19969"
           ],
           "kind": "interpretation",
-          "text": "자료는 AI 인프라의 변화를 칩·연결망 확대, 데이터센터 전력 확보, 학습 통신과 추론 캐시의 절감으로 보여준다. 설비 규모에 관한 발표와 특정 조건에서 측정한 효율 개선은 구분해 판단해야 한다."
+          "text": "제공 자료는 AI 인프라를 칩·연결망 확장, 전력 확보, 학습·추론의 자원 절감이라는 서로 다른 층위에서 다룬다. 설비 규모 발표와 특정 실험 조건의 효율 수치는 구분해야 하며, 모델의 메모리 절감만으로 데이터센터 전력 문제가 해소됐다고 판단할 수 없다."
+        },
+        {
+          "evidence_ids": [
+            "source:paper:2609.19213"
+          ],
+          "kind": "reported",
+          "text": "모델 압축도 학습 자원을 줄이는 접근이다. 계층별 커리큘럼 학습 논문 초록은 모델을 층 구간으로 나누어 쉬운 최적화부터 지식을 전달하고 특징 캐싱을 활용한다고 설명한다. 저자들은 BERT·GPT-2에서 GPU 메모리와 학습 시간을 각각 50% 넘게 줄였다고 보고하지만, 초록에는 비교 구성의 세부 조건이 없다."
         }
       ]
     },
@@ -7134,7 +7186,7 @@
       "id": "compute:d7013420307ef36515b0",
       "title": "화웨이의 AI 컴퓨팅 전략",
       "kind": "entity",
-      "revision": 48,
+      "revision": 52,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7142,14 +7194,14 @@
             "source:34fa141b88be994d5c6f08ba"
           ],
           "kind": "reported",
-          "text": "InfoQ를 인용한 수집 발췌는 왕타오가 컴퓨팅을 AI 전략의 핵심으로 제시하며 Ascend 960의 조기 등장과 PB급 KV Cache를 언급했다고 전한다. 구체적인 출시 일정이나 캐시 구성·성능은 제시되지 않았다."
+          "text": "InfoQ를 인용한 수집 발췌는 왕타오가 AI 전략의 핵심으로 컴퓨팅을 제시하며 Ascend 960의 조기 등장과 PB급 KV 캐시를 언급했다고 전한다. 출시 일정과 캐시 구성·성능은 제시되지 않았다."
         },
         {
           "evidence_ids": [
             "source:ee2c12a40f492a13aa4ec9b8"
           ],
           "kind": "reported",
-          "text": "레이펑왕을 인용한 발췌는 화웨이가 Nested BSP 기반 Peerium과 백만 프로세서를 단일 컴퓨터로 통합한다는 인터커넥트 ‘영형(灵衢)’을 공개했다고 전한다. 해당 규모의 실제 가동을 입증하는 측정치는 제공되지 않았다."
+          "text": "레이펑왕을 인용한 발췌는 화웨이가 Nested BSP 기반 Peerium과 백만 프로세서를 단일 컴퓨터로 통합한다는 인터커넥트 ‘영형(灵衢)’을 공개했다고 전한다. 이 규모의 실제 가동을 입증하는 측정치는 제공되지 않았다."
         }
       ]
     },
@@ -7157,7 +7209,7 @@
       "id": "compute:e1d3711798bd99b5e519",
       "title": "데이터센터 전력 공급 제약",
       "kind": "issue",
-      "revision": 48,
+      "revision": 52,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7166,15 +7218,14 @@
             "source:4379d4e7f64f8347134ecb12"
           ],
           "kind": "reported",
-          "text": "7월 1일 Pandaily를 인용한 발췌는 AI 수요가 세계 전력망에 부담을 준다고 주장한다. 6월 29일 TechCrunch를 인용한 발췌는 미국 행정부 규제로 신규 전력 92GW가 위협받으며 AI 데이터센터 전력 수급에 악영향이 우려된다고 전한다."
+          "text": "7월 1일 Pandaily 인용 발췌는 AI 수요가 세계 전력망에 부담을 준다고 주장한다. 6월 29일 TechCrunch 인용 발췌는 미국 행정부 규제로 신규 전력 92GW가 위협받으며 AI 데이터센터 전력 수급에 악영향이 우려된다고 전한다. 각각 수요 압력과 공급 위험에 관한 보도다."
         },
         {
           "evidence_ids": [
-            "source:9d953b0bbdc80a4de4f271cf",
             "source:4379d4e7f64f8347134ecb12"
           ],
           "kind": "uncertain",
-          "text": "두 발췌는 각각 수요 압력과 공급 위험을 다룬다. 92GW는 확정 취소량이나 이미 발생한 AI 전용 전력 부족량으로 읽을 수 없다. 어느 지역·데이터센터의 공급 일정이 영향을 받는지는 제공 자료로 확인되지 않는다."
+          "text": "92GW가 실제로 얼마나 취소되거나 지연됐는지, 어느 데이터센터의 공급 일정에 영향을 주는지는 발췌로 확인되지 않는다. 이를 확정 취소량이나 이미 발생한 AI 전용 전력 부족량으로 읽을 근거는 없다."
         }
       ]
     },
@@ -7182,7 +7233,7 @@
       "id": "compute:e8201c43769557860f7f",
       "title": "CSBP 장문맥 확산 언어모델 학습",
       "kind": "concept",
-      "revision": 48,
+      "revision": 52,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7190,14 +7241,14 @@
             "source:paper:2609.19242"
           ],
           "kind": "reported",
-          "text": "논문 초록에서 저자들은 블록 확산 언어모델의 오염 블록 계산을 개별 GPU 프로세스에 배정하고, 공유하는 정상 문맥도 분할하는 CSBP를 제안한다. 오염 K/V와 기울기를 로컬에 유지하고 정상 접두부의 복제를 줄여 통신·메모리 부담을 낮춘다는 설명이다."
+          "text": "논문 초록에서 저자들은 블록 확산 언어모델의 오염 블록 계산을 개별 분산 프로세스에 배정하고 공유하는 정상 문맥도 분할하는 CSBP를 제안한다. 오염 K/V와 기울기를 로컬에 유지하고 정상 접두부 복제를 줄여 통신·메모리 부담을 낮춘다는 설명이다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19242"
           ],
           "kind": "reported",
-          "text": "저자들은 H200 16대·256K 문맥에서 최선의 기준선 대비 처리량이 지도 미세조정에서 1.18~1.45배, 자기회귀 모델의 블록 확산 모델 전환에서 1.27~1.33배였다고 보고한다. 최대 HBM 사용량은 같거나 낮았으며, 이는 초록에 제시된 학습 조건의 결과다."
+          "text": "저자들은 H200 GPU 16개·256K 문맥에서 최선 기준선 대비 처리량이 지도 미세조정에서 1.18~1.45배, 자기회귀 모델의 블록 확산 모델 전환에서 1.27~1.33배였다고 보고한다. 최대 HBM 사용량은 같거나 낮았다. 이는 초록에 제시된 학습 조건의 결과다."
         }
       ]
     },
@@ -7205,7 +7256,7 @@
       "id": "compute:b7f3810c60acd69141e8",
       "title": "DeepSeek-V4.1-Flash의 KV 캐시 압축",
       "kind": "entity",
-      "revision": 48,
+      "revision": 52,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7213,14 +7264,14 @@
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "논문 초록은 긴 입력 처리의 계산량과 KV 캐시의 저장·전송 부담을 배포 비용의 병목으로 제시한다. 저자들은 CED 구조로 토큰당 활성 파라미터를 디코드 시 16B, 입력 사전 처리 시 8B로 달리해 입력 처리 비용을 줄인다고 설명한다."
+          "text": "논문 초록은 DeepSeek-V4.1-Flash를 552B 규모의 멀티모달 MoE로 소개한다. 저자들은 입력 비중이 높은 에이전트 작업을 겨냥해 CED 구조의 토큰당 활성 파라미터를 입력 사전 처리(prefill)에서는 8B, 생성(decode)에서는 16B로 구성했다고 설명한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV 캐시를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. 별도의 SWA Bounded Replay는 SSD·호스트 메모리 상주 영속 캐시를 약 1/8로 줄인다는 주장이다. 두 수치는 서로 다른 저장 영역의 초록 보고치다."
+          "text": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV 캐시를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리 상주 영속 캐시를 약 1/8로 줄인다고 한다. 서로 다른 저장 영역의 초록 보고치이므로 두 비율을 전체 메모리 절감률로 합칠 수 없다."
         }
       ]
     },
@@ -7455,7 +7506,7 @@
       "id": "physical",
       "title": "Physical AI",
       "kind": "topic",
-      "revision": 43,
+      "revision": 51,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7465,7 +7516,7 @@
             "source:paper:2609.19228"
           ],
           "kind": "interpretation",
-          "text": "이번 연구들은 물리적 상호작용의 서로 다른 병목을 다룬다. AthenaZero는 팔의 관성을 줄이고, ULOHA는 수중 양팔 학습 과정을 통합하며, 거친 형상 기반 파지 연구는 닫힘 동작 자체가 물체 정보의 오차를 견디도록 설계한다."
+          "text": "세 연구는 물리적 상호작용의 서로 다른 병목을 다룬다. AthenaZero는 팔의 관성, ULOHA는 수중 양팔 학습 환경, 거친 형상 기반 파지는 부정확한 물체 정보에 대응하는 닫힘 동작을 설계 대상으로 삼는다."
         },
         {
           "evidence_ids": [
@@ -7474,7 +7525,7 @@
             "source:paper:2609.19228"
           ],
           "kind": "interpretation",
-          "text": "투구·포구 속도, 수중 협동 동작, 파지 오차 허용 범위는 평가 대상이 다르다. 세 초록은 설계 선택을 이해하는 근거이며, 수치를 합쳐 범용 로봇의 성능 순위를 만들 근거는 아니다."
+          "text": "투구·포구 속도, 수중 협동 동작, 파지 오차 허용 범위는 서로 다른 평가 대상이다. 제공된 초록은 설계와 시험 결과를 이해하는 근거이며, 수치를 합쳐 범용 로봇의 성능 순위를 판단할 근거는 아니다."
         }
       ]
     },
@@ -7482,7 +7533,7 @@
       "id": "physical:0d7cba79673851e7e353",
       "title": "AthenaZero",
       "kind": "entity",
-      "revision": 43,
+      "revision": 51,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7490,7 +7541,7 @@
             "source:paper:2609.19194"
           ],
           "kind": "reported",
-          "text": "연구진은 준직접 구동과 전달계 원격 배치로 말단 유효 질량을 사람과 비슷한 수준, 기존 로봇 팔보다 약 한 자릿수 규모 낮게 줄였다고 설명한다. 낮은 관성과 토크 투명성을 빠른 물체 상호작용에 활용하는 양팔 설계다."
+          "text": "연구진은 준직접 구동과 전달계 원격 배치로 말단 유효 질량을 사람과 비슷한 수준이자 기존 로봇 팔의 약 10분의 1로 낮췄다고 설명한다. 낮은 관성과 토크 투명성을 빠른 물체 상호작용에 활용하는 양팔 설계다."
         },
         {
           "evidence_ids": [
@@ -7505,7 +7556,7 @@
       "id": "physical:bccebcc73870bc64186b",
       "title": "ULOHA",
       "kind": "entity",
-      "revision": 43,
+      "revision": 51,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7513,7 +7564,7 @@
             "source:paper:2609.19200"
           ],
           "kind": "reported",
-          "text": "연구진은 리더–팔로어 하드웨어와 LeRobot 확장을 결합해 원격조작, 다중 시점 관측, 시연 수집, 정책 학습, 자율 실행을 연결했다. 초록은 실제 수중 양팔 로봇의 팔 사이 물체 전달, 공동 조작, 부력으로 움직이는 물체 포착을 보고한다."
+          "text": "연구진은 리더–팔로어 하드웨어와 LeRobot 확장으로 원격조작, 다중 시점 관측, 시연 수집, 정책 학습, 자율 실행을 연결했다. 초록은 실제 수중 양팔 로봇의 팔 사이 물체 전달, 공동 조작, 부력으로 움직이는 물체 포착을 보고한다."
         },
         {
           "evidence_ids": [
@@ -7528,7 +7579,7 @@
       "id": "physical:857ab6a0be6eae976af1",
       "title": "거친 물체 형상 기반 파지",
       "kind": "concept",
-      "revision": 43,
+      "revision": 51,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7536,14 +7587,14 @@
             "source:paper:2609.19228"
           ],
           "kind": "reported",
-          "text": "연구진은 대략적인 물체 템플릿, 인간의 파지 유형, 물체 중심 상호작용, 유연하게 미끄러지는 접촉을 결합한 운동 계획기를 제안했다. 정확한 접점을 미리 지정하기보다 닫힘 동작 자체에 오차 허용 능력을 넣는 접근이다."
+          "text": "연구진은 대략적인 물체 템플릿, 인간의 파지 유형, 물체 중심 상호작용, 유연하게 미끄러지는 접촉을 결합한 운동 계획기를 제안했다. 정확한 접점을 미리 지정하기보다 닫힘 동작 자체가 물체 정보의 오차를 견디도록 설계한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19228"
           ],
           "kind": "reported",
-          "text": "초록은 피드백 없이 약 1cm의 크기 오차와 수cm·수십 도의 자세 오차를 견디고, 27개 시험 조건 중 25개에서 비교 계획기보다 넓은 허용 범위를 보였다고 보고한다. 일상 물체 80개 중 82.5% 파지도 보고하지만, 제공 초록만으로 실기·시뮬레이션 평가 구분은 확인되지 않는다."
+          "text": "초록은 피드백 없이 약 1cm의 크기 오차와 수cm·수십 도의 자세 오차를 견디고, 27개 시험 조건 중 25개에서 비교 계획기보다 넓은 허용 범위를 보였다고 보고한다. 일상 물체 80개 중 82.5% 파지도 보고하나, 초록만으로 실기·시뮬레이션 평가 구분은 확인되지 않는다."
         }
       ]
     },
@@ -7551,7 +7602,7 @@
       "id": "physical:c710ca08923cd04ceda5",
       "title": "물리 월드 모델의 정보 공개",
       "kind": "issue",
-      "revision": 43,
+      "revision": 51,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7566,7 +7617,7 @@
             "source:0fbb2545a72a30b7553c8e7c"
           ],
           "kind": "uncertain",
-          "text": "어느 기업이 어떤 데이터·평가 항목을 비공개로 두었는지는 발췌에 없다. 기업별 성능 주장의 검증 가능성을 판단하려면 비공개 항목과 실제 공개 자료의 범위를 확인해야 한다."
+          "text": "어느 기업이 어떤 데이터·평가 항목을 비공개로 두었는지는 발췌에 없다. 기업별 성능 주장의 검증 가능성을 판단하려면 대상 기업과 실제 공개 자료의 범위를 확인해야 한다."
         }
       ]
     },
@@ -7902,12 +7953,12 @@
     }
   ],
   "issues": [],
-  "version": "4daf4eac7997c08250ae1d7cb9c11fafcfcc99ad9d5a41b7a106c57321fd5a53",
-  "exported_at": "2026-09-19T00:51:20.556800+00:00",
+  "version": "dc88371b1ec8ceae670730870519f4c79f02e5611d88f3e1bb2ae09a4e2a9695",
+  "exported_at": "2026-09-19T00:57:15.396644+00:00",
   "coverage": {
     "pages": 43,
-    "claims": 84,
-    "cited_sources": 46,
+    "claims": 85,
+    "cited_sources": 47,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",

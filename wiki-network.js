@@ -11,10 +11,12 @@
   const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
   const svgEl=(tag,attrs)=>{const n=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));return n;};
   const safeURL=value=>{try{const u=new URL(value);return ['http:','https:'].includes(u.protocol)?u.href:'';}catch{return '';}};
-  function select(id){selected=id;location.hash=new URLSearchParams({id}).toString();load();}
+  function saveURL(push=true){const p=new URLSearchParams();if(selected)p.set('id',selected);if($('search').value)p.set('q',$('search').value);if($('layer').value!=='all')p.set('layer',$('layer').value);if($('color').value!=='type')p.set('color',$('color').value);if(limit!==100)p.set('limit',String(limit));if(zoom!==1||panX||panY){p.set('zoom',zoom.toFixed(3));p.set('x',panX.toFixed(1));p.set('y',panY.toFixed(1));}const u=new URL(location.href);u.hash=p.toString();if(u.href!==location.href)history[push?'pushState':'replaceState'](null,'',u);}
+  function restoreURL(){const p=new URLSearchParams(location.hash.slice(1));selected=p.get('id')||'';$('search').value=p.get('q')||'';$('layer').value=['all','semantic','provenance','recommendation'].includes(p.get('layer'))?p.get('layer'):'all';$('color').value=p.get('color')==='community'?'community':'type';limit=Math.max(10,Math.min(500,Number(p.get('limit'))||100));zoom=Math.max(.3,Math.min(4,Number(p.get('zoom'))||1));panX=Math.max(-10000,Math.min(10000,Number(p.get('x'))||0));panY=Math.max(-10000,Math.min(10000,Number(p.get('y'))||0));load();}
+  function select(id){selected=id;saveURL();load();}
   function transform(){$('scene').setAttribute('transform',`translate(${panX} ${panY}) scale(${zoom})`);}
   function staticView(){
-    if(!selected){const hash=new URLSearchParams(location.hash.slice(1));if(hash.has('source_url')){const url=safeURL(hash.get('source_url'));selected=snapshot.nodes.find(n=>n.type==='source'&&n.url===url)?.id||'';}}
+    if(!selected){const hash=new URLSearchParams(location.hash.slice(1));if(hash.has('paper_id'))selected='source:paper:'+hash.get('paper_id');if(hash.has('source_url')){const url=safeURL(hash.get('source_url'));selected=snapshot.nodes.find(n=>n.type==='source'&&n.url===url)?.id||'missing-source';}}
     const layer=$('layer').value,q=$('search').value.trim().toLocaleLowerCase();
     const edges=snapshot.edges.filter(e=>layer==='all'||e.layer===layer);let nodes=snapshot.nodes;
     if(layer!=='all'){const connected=new Set(edges.flatMap(e=>[e.source,e.target]));if(selected)connected.add(selected);nodes=nodes.filter(n=>connected.has(n.id));}
@@ -22,7 +24,7 @@
     if(q)nodes=nodes.filter(n=>n.title.toLocaleLowerCase().includes(q));
     const total=nodes.length;nodes=[...nodes].sort((a,b)=>Number(b.id===selected)-Number(a.id===selected)).slice(0,limit);
     const ids=new Set(nodes.map(n=>n.id)),byId=new Map(snapshot.nodes.map(n=>[n.id,n]));const found=byId.get(selected);
-    const detail=found?{...found,connections:snapshot.edges.filter(e=>e.source===selected||e.target===selected).map(e=>({...e,other:byId.get(e.source===selected?e.target:e.source)}))}:null;
+    const detail=found?{...found,connections:snapshot.edges.filter(e=>e.source===selected||e.target===selected).map(e=>({...e,other:byId.get(e.source===selected?e.target:e.source)}))}:selected?{id:selected,type:'source',title:'현재 연결된 검토 지식 없음',scope:'이 링크의 대상은 현재 공개 스냅샷에 없습니다.',connections:[]}:null;
     return {...snapshot,nodes,edges:edges.filter(e=>ids.has(e.source)&&ids.has(e.target)),detail,total,shown:nodes.length};
   }
   async function load(){
@@ -77,11 +79,11 @@
   svg.addEventListener('pointermove',e=>{if(!drag)return;const p=point(e),dx=p.x-drag.last.x,dy=p.y-drag.last.y;drag.moved ||= Math.hypot(p.x-drag.start.x,p.y-drag.start.y)>4;
     if(drag.id){const pos=positions.get(drag.id);pos.x+=dx/zoom;pos.y+=dy/zoom;for(const g of $('nodes').children)if(g.dataset.id===drag.id)g.setAttribute('transform',`translate(${pos.x} ${pos.y})`);for(const line of $('edges').children){if(line.dataset.source===drag.id){line.setAttribute('x1',pos.x);line.setAttribute('y1',pos.y);}if(line.dataset.target===drag.id){line.setAttribute('x2',pos.x);line.setAttribute('y2',pos.y);}}}
     else{panX+=dx;panY+=dy;transform();}drag.last=p;});
-  function end(){if(drag){suppressClick=drag.moved;drag=null;setTimeout(()=>suppressClick=false,0);}}
+  function end(){if(drag){suppressClick=drag.moved;drag=null;saveURL(false);setTimeout(()=>suppressClick=false,0);}}
   svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
-  svg.addEventListener('wheel',e=>{e.preventDefault();const p=point(e),next=Math.max(.3,Math.min(4,zoom*Math.exp(-e.deltaY*.001)));panX=p.x-(p.x-panX)*next/zoom;panY=p.y-(p.y-panY)*next/zoom;zoom=next;transform();},{passive:false});
-  $('fit').addEventListener('click',()=>{zoom=1;panX=panY=0;transform();});$('reset').addEventListener('click',()=>{selected='';location.hash='';$('search').value='';load();});$('more').addEventListener('click',()=>{limit=Math.min(500,limit+100);load();});
-  let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{selected='';load();},180);});$('layer').addEventListener('change',load);$('color').addEventListener('change',()=>data&&draw());
-  addEventListener('hashchange',()=>{selected=new URLSearchParams(location.hash.slice(1)).get('id')||'';load();});
-  selected=new URLSearchParams(location.hash.slice(1)).get('id')||'';if(staticMode)$('live-nav').remove();load();
+  svg.addEventListener('wheel',e=>{e.preventDefault();const p=point(e),next=Math.max(.3,Math.min(4,zoom*Math.exp(-e.deltaY*.001)));panX=p.x-(p.x-panX)*next/zoom;panY=p.y-(p.y-panY)*next/zoom;zoom=next;transform();saveURL(false);},{passive:false});
+  $('fit').addEventListener('click',()=>{zoom=1;panX=panY=0;transform();saveURL();});$('reset').addEventListener('click',()=>{selected='';$('search').value='';saveURL();load();});$('more').addEventListener('click',()=>{limit=Math.min(500,limit+100);saveURL();load();});
+  let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{selected='';saveURL();load();},180);});$('layer').addEventListener('change',()=>{saveURL();load();});$('color').addEventListener('change',()=>{saveURL();if(data)draw();});
+  addEventListener('hashchange',restoreURL);addEventListener('popstate',restoreURL);
+  if(staticMode)$('live-nav').remove();restoreURL();
 })();
