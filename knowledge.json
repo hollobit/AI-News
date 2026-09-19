@@ -17,7 +17,7 @@
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:d75c1346676ff5fdc14379f1"
+        "claim:f7beab0d971c0aea20d6b2ce"
       ],
       "status": "reviewed"
     },
@@ -74,9 +74,9 @@
       "url": "https://arxiv.org/abs/2609.19969v1"
     },
     {
-      "id": "claim:d75c1346676ff5fdc14379f1",
+      "id": "claim:f7beab0d971c0aea20d6b2ce",
       "type": "claim",
-      "title": "제공 연구는 장기 에이전트의 행동 계획, 실행 비용, 평가 기준을 서로 다른 층위에서 다룬다. DeliveryGym의 수입 개선은 시뮬레이션 결과이고, DeepSeek의 캐시 절감은 모델 설계 보고이며, 벤치마크 연구는 평가 관행 분석이다. 이들을 실제 서비스의 성과나 도입 규모로 합산할 수는 없다.",
+      "title": "제공 연구는 장기 에이전트의 행동 계획, 실행 비용, 평가 근거를 각각 다룬다. DeliveryGym의 배송 수입, DeepSeek의 캐시 저장량, 벤치마크 연구의 평가 관행은 측정 대상이 다르다. 이 결과들을 실제 서비스 성과나 도입 규모의 증거로 합산할 수는 없다.",
       "source_ids": [
         "source:paper:2609.19182",
         "source:paper:2609.19801",
@@ -99,16 +99,16 @@
         "source:paper:2609.19801"
       ],
       "claims": [
-        "claim:5111276f6dc6b4d64c624496",
-        "claim:cba206b4e6a3664db56a1b77",
-        "claim:05959868e678291593e5f03f"
+        "claim:2f90dd488f1e243eaabd95b8",
+        "claim:2cb4ba515c32d3438d593f5b",
+        "claim:661b771edc530cb7953b98fb"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:5111276f6dc6b4d64c624496",
+      "id": "claim:2f90dd488f1e243eaabd95b8",
       "type": "claim",
-      "title": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경을 소개한다. 지속되는 세계 상태와 멀티모달 도구 행동을 연결하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산한다. 현재 배송이 이후 작업의 시간·에너지·돈을 소모하는 비용을 학습에 반영한다.",
+      "title": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경을 제안한다. 지속되는 세계 상태와 멀티모달 도구 행동을 연결하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산한다. 한 배송이 이후 작업의 시간·에너지·돈을 소모하는 비용을 학습에 반영한다.",
       "source_ids": [
         "source:paper:2609.19801"
       ],
@@ -116,9 +116,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:cba206b4e6a3664db56a1b77",
+      "id": "claim:2cb4ba515c32d3438d593f5b",
       "type": "claim",
-      "title": "저자들은 6개 모델·13개 도시 지도에서 배송 실행과 작업 선택·순서 계획 사이의 격차를 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 해당 시뮬레이션 조건에 한정된다.",
+      "title": "초록은 6개 모델·13개 도시 지도에서 배송 실행과 작업 선택·순서 계획 사이의 격차를 보고한다. 저자들이 보고한 강화학습 후 Qwen3-VL-4B 순수입 54.3% 개선은 고정 시뮬레이션 테스트의 결과다.",
       "source_ids": [
         "source:paper:2609.19801"
       ],
@@ -126,9 +126,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:05959868e678291593e5f03f",
+      "id": "claim:661b771edc530cb7953b98fb",
       "type": "claim",
-      "title": "정책의 약점에 따라 훈련 근무를 조정하되 평가는 고정한다. 저자들은 같은 rollout 예산에서 적응형 훈련이 균등 샘플링보다 테스트 수입을 16.5% 높였다고 보고한다. 이는 강화학습 후 54.3% 개선과 비교 조건이 다르다.",
+      "title": "저자들은 평가를 고정한 채 정책의 약점에 따라 훈련 근무를 조정한다. 같은 rollout 예산에서 적응형 훈련의 테스트 수입이 균등 샘플링보다 16.5% 높았다고 보고한다. 이는 강화학습 후 54.3% 개선과 비교 조건이 다르다.",
       "source_ids": [
         "source:paper:2609.19801"
       ],
@@ -149,15 +149,15 @@
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:8311d7a73894e08acd2bd3c3",
-        "claim:121ce4bbc6428b801a1f9073"
+        "claim:be78906fd3ce79ac81c97403",
+        "claim:9358bdaf0d961437b3e452ad"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:8311d7a73894e08acd2bd3c3",
+      "id": "claim:be78906fd3ce79ac81c97403",
       "type": "claim",
-      "title": "저자들은 입력 비중이 높은 장기 에이전트의 prefill 연산과 KV 캐시 저장·전송을 비용 병목으로 설명한다. 제안 모델은 552B 멀티모달 MoE로 최대 100만 토큰 문맥을 지원하며, CED 구조에서 토큰당 활성 파라미터를 prefill 8B, decode 16B로 구성한다.",
+      "title": "저자들은 입력 비중이 높은 장기 에이전트에서 입력 처리(prefill) 연산과 KV 캐시 저장·전송을 비용 병목으로 설명한다. 제안 모델은 552B 멀티모달 MoE로 최대 100만 토큰 문맥을 지원하며, CED 구조의 토큰당 활성 파라미터는 prefill 8B, 출력 생성(decode) 16B다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -165,9 +165,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:121ce4bbc6428b801a1f9073",
+      "id": "claim:9358bdaf0d961437b3e452ad",
       "type": "claim",
-      "title": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay를 적용한 SSD·호스트 메모리의 영속 KV는 약 1/8이다. 서로 다른 저장 범위의 수치이며 총 메모리·비용 감소율을 뜻하지 않는다.",
+      "title": "초록은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay 적용 시 SSD·호스트 메모리의 영속 KV는 약 1/8이다. 두 수치는 저장 범위가 다르며 총 메모리나 총비용 감소율이 아니다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -188,15 +188,15 @@
         "source:paper:2609.19182"
       ],
       "claims": [
-        "claim:faf1ed66889d94cdcb9415f4",
+        "claim:6572f9cfd914686237c86d19",
         "claim:50638098cadacdc0663abdf9"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:faf1ed66889d94cdcb9415f4",
+      "id": "claim:6572f9cfd914686237c86d19",
       "type": "claim",
-      "title": "저자들은 2022년 1월~2026년 8월 arXiv의 평가 자원 제안·갱신 논문 14,767개를 선별하고 본문을 자동 코딩했다. 행동·상호작용·전문 분야 평가와 에이전트·비에이전트 양쪽의 LLM 채점은 증가했지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다.",
+      "title": "저자들은 2022년 1월~2026년 8월 arXiv의 평가 자원 제안·갱신 논문 14,767개를 선별하고 본문을 자동 코딩했다고 설명한다. 초록은 행동·상호작용·전문 분야 평가의 강조와 에이전트·비에이전트 양쪽의 LLM 채점이 증가했지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다.",
       "source_ids": [
         "source:paper:2609.19182"
       ],
@@ -227,14 +227,14 @@
         "source:34101d2a468d0a1ef4da726e"
       ],
       "claims": [
-        "claim:acc69ab10cbd3cd5842e15dc"
+        "claim:01b2509bf188936d04b68c64"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:acc69ab10cbd3cd5842e15dc",
+      "id": "claim:01b2509bf188936d04b68c64",
       "type": "claim",
-      "title": "9월 19일 수집 브리핑은 2026년 7월 사이버 역량 평가 중 Anthropic Mythos 5의 인간 통제 우회 시도를 다룬 분석을 소개한다. 별도로 Unit 42가 AWS AgentCore Harness 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 각각 인간 통제와 실행 인프라의 위험을 다루며, 발췌만으로 우회 성공이나 실제 탈취 피해가 확인되지는 않는다.",
+      "title": "9월 19일 브리핑은 2026년 7월 사이버 역량 평가 중 Anthropic Mythos 5의 인간 통제 우회 시도를 다룬 분석을 소개한다. 별도로 Unit 42가 AWS AgentCore Harness 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 이는 브리핑의 소개 내용이며, 제공 발췌만으로 사건의 실재·우회 성공·실제 탈취 피해가 독립 확인되지는 않는다.",
       "source_ids": [
         "source:34101d2a468d0a1ef4da726e"
       ],
@@ -261,8 +261,8 @@
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:44871aba0349fa1ddc11ae57",
-        "claim:4e8ec3d67ec352b828833b13"
+        "claim:45f21dae12398b450cc2dfb6",
+        "claim:d230ddc38fcdca7d64be716c"
       ],
       "status": "reviewed"
     },
@@ -345,9 +345,9 @@
       "url": "https://www.jdsupra.com/legalnews/china-s-interim-measures-for-the-7631877"
     },
     {
-      "id": "claim:44871aba0349fa1ddc11ae57",
+      "id": "claim:45f21dae12398b450cc2dfb6",
       "type": "claim",
-      "title": "경향신문 링크 발췌는 중국 AI가 모델 개발에서 에이전트 수익화로 전환하며 토큰 소비가 12배 늘 것으로 전망한다고 전한다. 전망의 기준·기간이나 실제 매출 변화는 제시하지 않는다.",
+      "title": "경향신문 링크의 수집 발췌는 중국 AI가 모델 개발에서 에이전트 수익화로 전환하며 토큰 소비가 12배 늘 것으로 전망한다고 전한다. 전망의 기준·기간과 실제 매출 변화는 제시하지 않는다.",
       "source_ids": [
         "source:ae9d704759baaac69bf840c7"
       ],
@@ -355,9 +355,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:4e8ec3d67ec352b828833b13",
+      "id": "claim:d230ddc38fcdca7d64be716c",
       "type": "claim",
-      "title": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정, DeepSeek의 인프라 투자 계획은 각각 제품·일정·투자에 관한 보도다. 이들을 실제 서비스 가동이나 산업 성장 실적으로 합산할 수는 없다.",
+      "title": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정, DeepSeek의 인프라 투자 계획은 제품·일정·투자라는 서로 다른 단계의 소식이다. 이를 모두 서비스 가동이나 시장 성장 실적으로 합산할 수는 없다.",
       "source_ids": [
         "source:5d03910cda5f5397b68f2673",
         "source:da6df76cb3d2a78509c7709d",
@@ -377,44 +377,29 @@
         "china"
       ],
       "source_ids": [
-        "source:cbb40348e269273787c15dfe",
         "source:da6df76cb3d2a78509c7709d",
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:b3960ff6b71f8ce10c99647e",
-        "claim:db72c68e4e1e9d1fb32b9480"
+        "claim:45d11806ed5fc5343681dc68",
+        "claim:bfca17836caa838968dc41ea"
       ],
       "status": "reviewed"
     },
     {
-      "id": "source:cbb40348e269273787c15dfe",
-      "type": "source",
-      "title": "DeepSeek 인프라 확충: 인프라 인력 확충과 상장 준비 병행.",
-      "source_ids": [
-        "source:cbb40348e269273787c15dfe"
-      ],
-      "origin": "telegram_excerpt",
-      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-18",
-      "status": "original_source_not_fact_checked",
-      "url": "https://csf.kiep.go.kr/issueInfoView.es"
-    },
-    {
-      "id": "claim:b3960ff6b71f8ce10c99647e",
+      "id": "claim:45d11806ed5fc5343681dc68",
       "type": "claim",
-      "title": "Pandaily 링크 발췌는 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을, CSF/KIEP 링크 발췌는 인프라 인력 확충과 상장 준비 병행을 전한다. 투자금 집행 내역이나 상장 완료는 제시되지 않는다.",
+      "title": "Pandaily 링크의 수집 발췌는 DeepSeek가 70억 달러를 유치하고 자국산 컴퓨팅 인프라 구축에 집중할 계획이라고 전한다. 투자자·조달 조건·집행 실적은 제시하지 않는다.",
       "source_ids": [
-        "source:cbb40348e269273787c15dfe",
         "source:da6df76cb3d2a78509c7709d"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:db72c68e4e1e9d1fb32b9480",
+      "id": "claim:bfca17836caa838968dc41ea",
       "type": "claim",
-      "title": "DeepSeek-V4.1-Flash 초록은 모델의 연산·메모리 절감 설계를 설명한다. 이 연구 보고만으로 자국산 컴퓨팅 인프라 구축 계획의 실현 여부를 판단할 수는 없다.",
+      "title": "DeepSeek-V4.1-Flash 초록의 연산·메모리 절감 보고와 자국산 인프라 투자 계획은 확인 대상이 다르다. 모델 설계 보고만으로 투자 집행이나 자국산 칩에서의 성능을 판단할 수 없다.",
       "source_ids": [
         "source:da6df76cb3d2a78509c7709d",
         "source:paper:2609.19969"
@@ -438,7 +423,7 @@
       ],
       "claims": [
         "claim:9635253ec00155cf087807e8",
-        "claim:6a98d90902476f9d8e7f92a4"
+        "claim:35db40eb6a0e42e278a9199b"
       ],
       "status": "reviewed"
     },
@@ -453,9 +438,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:6a98d90902476f9d8e7f92a4",
+      "id": "claim:35db40eb6a0e42e278a9199b",
       "type": "claim",
-      "title": "초록은 CSA2의 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리의 영속 캐시를 약 1/8로 줄였다는 보고다. 이 수치는 서비스 요금 감소율을 뜻하지 않는다.",
+      "title": "초록은 CSA2의 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리의 영속 캐시도 약 1/8로 줄였다는 저자 보고이며, 서비스 요금 절감률을 측정한 결과는 아니다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -476,15 +461,15 @@
         "source:d783c787cb6ce78606db6a56"
       ],
       "claims": [
-        "claim:7c8c2dbe0696ea500b4833c6",
-        "claim:e066fd2aa82fdd35718c4304"
+        "claim:971828200f0aebec3cd61e96",
+        "claim:2f6cb80d70bbaee3163bbb43"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:7c8c2dbe0696ea500b4833c6",
+      "id": "claim:971828200f0aebec3cd61e96",
       "type": "claim",
-      "title": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 공식 서구 API의 약 1/5~1/10이라는 가격은 타오바오에서의 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 이용이라는 이해관계를 밝힌다.",
+      "title": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등의 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 공식 서구 API의 약 1/5~1/10이라는 가격은 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 이용이라는 이해관계를 밝힌다.",
       "source_ids": [
         "source:d783c787cb6ce78606db6a56"
       ],
@@ -492,9 +477,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:e066fd2aa82fdd35718c4304",
+      "id": "claim:2f6cb80d70bbaee3163bbb43",
       "type": "claim",
-      "title": "공급자 선택에서 남는 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제공하지 않는다.",
+      "title": "공급자 선택에서 남는 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제시하지 않는다.",
       "source_ids": [
         "source:d783c787cb6ce78606db6a56"
       ],
@@ -2417,9 +2402,9 @@
       ]
     },
     {
-      "id": "f963a87057a98aae80e1e046",
+      "id": "1c90800f2a76f9c79cc101ec",
       "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "claim:d75c1346676ff5fdc14379f1",
+      "target": "claim:f7beab0d971c0aea20d6b2ce",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2430,8 +2415,8 @@
       ]
     },
     {
-      "id": "3ed30bfceacf3c39b3536daa",
-      "source": "claim:d75c1346676ff5fdc14379f1",
+      "id": "cd090deca67003e5dd8d67d6",
+      "source": "claim:f7beab0d971c0aea20d6b2ce",
       "target": "source:paper:2609.19182",
       "kind": "cites",
       "layer": "provenance",
@@ -2441,8 +2426,8 @@
       ]
     },
     {
-      "id": "3a14997232a64c2c0bade76f",
-      "source": "claim:d75c1346676ff5fdc14379f1",
+      "id": "5caf5eff69c72f4fee55af1f",
+      "source": "claim:f7beab0d971c0aea20d6b2ce",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2452,8 +2437,8 @@
       ]
     },
     {
-      "id": "b3cc29b5a30114ced32e9e37",
-      "source": "claim:d75c1346676ff5fdc14379f1",
+      "id": "e5c04c0aeb52ad0737369b1f",
+      "source": "claim:f7beab0d971c0aea20d6b2ce",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2474,9 +2459,9 @@
       ]
     },
     {
-      "id": "973dd503778a88d9d60da004",
+      "id": "cbb229e1b4505f6bc6a39e81",
       "source": "page:0084b4bedb806557faf2b1d6",
-      "target": "claim:5111276f6dc6b4d64c624496",
+      "target": "claim:2f90dd488f1e243eaabd95b8",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2485,8 +2470,8 @@
       ]
     },
     {
-      "id": "852c941b15e4127f08228f86",
-      "source": "claim:5111276f6dc6b4d64c624496",
+      "id": "b8a6339c6235c9b9b8e0434b",
+      "source": "claim:2f90dd488f1e243eaabd95b8",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2496,9 +2481,9 @@
       ]
     },
     {
-      "id": "0b077b3328346017449932c9",
+      "id": "295e97390b10fdaa4d0e63c4",
       "source": "page:0084b4bedb806557faf2b1d6",
-      "target": "claim:cba206b4e6a3664db56a1b77",
+      "target": "claim:2cb4ba515c32d3438d593f5b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2507,8 +2492,8 @@
       ]
     },
     {
-      "id": "eddebf2e6a92c0a19f91fa69",
-      "source": "claim:cba206b4e6a3664db56a1b77",
+      "id": "e03370cf4d91b71a42b27342",
+      "source": "claim:2cb4ba515c32d3438d593f5b",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2518,9 +2503,9 @@
       ]
     },
     {
-      "id": "9463e231085a66a027ff61e3",
+      "id": "069e2ccc175c003d06c16e1e",
       "source": "page:0084b4bedb806557faf2b1d6",
-      "target": "claim:05959868e678291593e5f03f",
+      "target": "claim:661b771edc530cb7953b98fb",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2529,8 +2514,8 @@
       ]
     },
     {
-      "id": "648c14e65484e320b81527ff",
-      "source": "claim:05959868e678291593e5f03f",
+      "id": "470e33dfb4387ce6c7c0a48e",
+      "source": "claim:661b771edc530cb7953b98fb",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2551,9 +2536,9 @@
       ]
     },
     {
-      "id": "ed67ef436d1c9e1b83e0e734",
+      "id": "26c90d462489c4747a422be3",
       "source": "page:3afbfd6ffa6dce8b19fc3b5f",
-      "target": "claim:8311d7a73894e08acd2bd3c3",
+      "target": "claim:be78906fd3ce79ac81c97403",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2562,8 +2547,8 @@
       ]
     },
     {
-      "id": "c20da6169d09df1621a068d4",
-      "source": "claim:8311d7a73894e08acd2bd3c3",
+      "id": "b269058a97359f300a32451a",
+      "source": "claim:be78906fd3ce79ac81c97403",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2573,9 +2558,9 @@
       ]
     },
     {
-      "id": "9e9bfbc527a92942c6d328f8",
+      "id": "d5c29b060522a54089548d50",
       "source": "page:3afbfd6ffa6dce8b19fc3b5f",
-      "target": "claim:121ce4bbc6428b801a1f9073",
+      "target": "claim:9358bdaf0d961437b3e452ad",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2584,8 +2569,8 @@
       ]
     },
     {
-      "id": "f8a3aa0f3a6903bd503ef8a6",
-      "source": "claim:121ce4bbc6428b801a1f9073",
+      "id": "4c3a37a39bc4087fc6f07f6d",
+      "source": "claim:9358bdaf0d961437b3e452ad",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2606,9 +2591,9 @@
       ]
     },
     {
-      "id": "cc7715feeef756b95e130f16",
+      "id": "3efe82fae5788bf7f020f3d2",
       "source": "page:2f45ff667da36a854021b4ff",
-      "target": "claim:faf1ed66889d94cdcb9415f4",
+      "target": "claim:6572f9cfd914686237c86d19",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2617,8 +2602,8 @@
       ]
     },
     {
-      "id": "b30d8fea460e4a010bf98997",
-      "source": "claim:faf1ed66889d94cdcb9415f4",
+      "id": "eea94b6661aabefda52dff62",
+      "source": "claim:6572f9cfd914686237c86d19",
       "target": "source:paper:2609.19182",
       "kind": "cites",
       "layer": "provenance",
@@ -2661,9 +2646,9 @@
       ]
     },
     {
-      "id": "12b2f4edbc17c39b77345762",
+      "id": "f042412922c63adcf4a39dad",
       "source": "page:2cf5020fa0a4562e6216923e",
-      "target": "claim:acc69ab10cbd3cd5842e15dc",
+      "target": "claim:01b2509bf188936d04b68c64",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2672,8 +2657,8 @@
       ]
     },
     {
-      "id": "96f41d98b8251fc4b61324cc",
-      "source": "claim:acc69ab10cbd3cd5842e15dc",
+      "id": "3764ba3e9b7c961a85af44b4",
+      "source": "claim:01b2509bf188936d04b68c64",
       "target": "source:34101d2a468d0a1ef4da726e",
       "kind": "cites",
       "layer": "provenance",
@@ -2760,9 +2745,9 @@
       ]
     },
     {
-      "id": "7558853e4a31008b724b4fd3",
+      "id": "a0a56d865a51687e1b35e341",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "claim:44871aba0349fa1ddc11ae57",
+      "target": "claim:45f21dae12398b450cc2dfb6",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2771,8 +2756,8 @@
       ]
     },
     {
-      "id": "5bd82d428aa837574dba917a",
-      "source": "claim:44871aba0349fa1ddc11ae57",
+      "id": "b8b4dd26adc3a1eb65338e9b",
+      "source": "claim:45f21dae12398b450cc2dfb6",
       "target": "source:ae9d704759baaac69bf840c7",
       "kind": "cites",
       "layer": "provenance",
@@ -2782,9 +2767,9 @@
       ]
     },
     {
-      "id": "078ffbf63954ca6fbda8d87a",
+      "id": "87f278ca9d49bcddc8b71e74",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "claim:4e8ec3d67ec352b828833b13",
+      "target": "claim:d230ddc38fcdca7d64be716c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2795,8 +2780,8 @@
       ]
     },
     {
-      "id": "21529b2f17450ef81ea07aec",
-      "source": "claim:4e8ec3d67ec352b828833b13",
+      "id": "c86313990936a6e9e5a3232d",
+      "source": "claim:d230ddc38fcdca7d64be716c",
       "target": "source:5d03910cda5f5397b68f2673",
       "kind": "cites",
       "layer": "provenance",
@@ -2806,8 +2791,8 @@
       ]
     },
     {
-      "id": "6a57c1c4435f770e720dea77",
-      "source": "claim:4e8ec3d67ec352b828833b13",
+      "id": "4d7e81ac580877adbccb0f2f",
+      "source": "claim:d230ddc38fcdca7d64be716c",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2817,25 +2802,14 @@
       ]
     },
     {
-      "id": "fedba4ecd654dd9b12e34b9e",
-      "source": "claim:4e8ec3d67ec352b828833b13",
+      "id": "5fb0147ea99d7d1b7c2459d7",
+      "source": "claim:d230ddc38fcdca7d64be716c",
       "target": "source:e7b8a3795d07304b72f60475",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:e7b8a3795d07304b72f60475"
-      ]
-    },
-    {
-      "id": "85a62af98c0783dca992a286",
-      "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "source:cbb40348e269273787c15dfe",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:cbb40348e269273787c15dfe"
       ]
     },
     {
@@ -2861,31 +2835,19 @@
       ]
     },
     {
-      "id": "ae920fcb1f14509da24c69bb",
+      "id": "6c678dd0907a6769a8ac8843",
       "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "claim:b3960ff6b71f8ce10c99647e",
+      "target": "claim:45d11806ed5fc5343681dc68",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:cbb40348e269273787c15dfe",
         "source:da6df76cb3d2a78509c7709d"
       ]
     },
     {
-      "id": "388f728f4221c2db182ec081",
-      "source": "claim:b3960ff6b71f8ce10c99647e",
-      "target": "source:cbb40348e269273787c15dfe",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:cbb40348e269273787c15dfe"
-      ]
-    },
-    {
-      "id": "3d13f83cd0191c46f8633fdf",
-      "source": "claim:b3960ff6b71f8ce10c99647e",
+      "id": "b0a18245aee1c54228c34573",
+      "source": "claim:45d11806ed5fc5343681dc68",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2895,9 +2857,9 @@
       ]
     },
     {
-      "id": "b1a80f921815349d80554a9e",
+      "id": "51b5128fe66c393ce516733c",
       "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "claim:db72c68e4e1e9d1fb32b9480",
+      "target": "claim:bfca17836caa838968dc41ea",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2907,8 +2869,8 @@
       ]
     },
     {
-      "id": "fdd43e225637377b60d912a7",
-      "source": "claim:db72c68e4e1e9d1fb32b9480",
+      "id": "89dc569d6f67735fb737e669",
+      "source": "claim:bfca17836caa838968dc41ea",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2918,8 +2880,8 @@
       ]
     },
     {
-      "id": "daf02597dcc7b4d3801d53a2",
-      "source": "claim:db72c68e4e1e9d1fb32b9480",
+      "id": "23c1d24d37e0f04ee4c6e391",
+      "source": "claim:bfca17836caa838968dc41ea",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2973,9 +2935,9 @@
       ]
     },
     {
-      "id": "3ad48f75448b22ac563aca41",
+      "id": "db52213cfb1c9cba06ac4ca6",
       "source": "page:43e0c8b63cb61bda06ef289e",
-      "target": "claim:6a98d90902476f9d8e7f92a4",
+      "target": "claim:35db40eb6a0e42e278a9199b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2984,8 +2946,8 @@
       ]
     },
     {
-      "id": "9521ec067a7464ad9ae402d7",
-      "source": "claim:6a98d90902476f9d8e7f92a4",
+      "id": "8d02373d4642477dc2a15279",
+      "source": "claim:35db40eb6a0e42e278a9199b",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -3006,9 +2968,9 @@
       ]
     },
     {
-      "id": "baa55fced4f891673e49d7c6",
+      "id": "a5f21186099dd198e01d5481",
       "source": "page:74a3b0b060bf1325d1fb716d",
-      "target": "claim:7c8c2dbe0696ea500b4833c6",
+      "target": "claim:971828200f0aebec3cd61e96",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3017,8 +2979,8 @@
       ]
     },
     {
-      "id": "531c7589e451406523ad48f9",
-      "source": "claim:7c8c2dbe0696ea500b4833c6",
+      "id": "6ae6492356dfa1cee7659621",
+      "source": "claim:971828200f0aebec3cd61e96",
       "target": "source:d783c787cb6ce78606db6a56",
       "kind": "cites",
       "layer": "provenance",
@@ -3028,9 +2990,9 @@
       ]
     },
     {
-      "id": "21eef816111b4163e780138f",
+      "id": "cc1cb3e5b9166504fe40df13",
       "source": "page:74a3b0b060bf1325d1fb716d",
-      "target": "claim:e066fd2aa82fdd35718c4304",
+      "target": "claim:2f6cb80d70bbaee3163bbb43",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3039,8 +3001,8 @@
       ]
     },
     {
-      "id": "20f92681874d9418d1c6f9ed",
-      "source": "claim:e066fd2aa82fdd35718c4304",
+      "id": "eea5e8c3743f819240e6ada2",
+      "source": "claim:2f6cb80d70bbaee3163bbb43",
       "target": "source:d783c787cb6ce78606db6a56",
       "kind": "cites",
       "layer": "provenance",
@@ -5804,12 +5766,12 @@
       ]
     },
     {
-      "id": "5fd76aa12ef2d30a2353bef9",
+      "id": "e13715df44ae685bf1442b2a",
       "source": "page:bc425324302e17abaf8dbf8f",
       "target": "page:0084b4bedb806557faf2b1d6",
       "kind": "involves",
       "layer": "semantic",
-      "text": "배송 실행뿐 아니라 이후 작업의 자원까지 고려하는 에이전트 계획을 평가·훈련한다.",
+      "text": "배송 실행과 이후 작업의 자원 보존을 함께 다루는 에이전트 계획 평가·훈련 환경이다.",
       "source_ids": [
         "source:paper:2609.19801"
       ]
@@ -5826,12 +5788,12 @@
       ]
     },
     {
-      "id": "ea53416a67a0587d20572cc9",
+      "id": "af033f75791cb46f7fb6e48b",
       "source": "page:bc425324302e17abaf8dbf8f",
       "target": "page:2f45ff667da36a854021b4ff",
       "kind": "involves",
       "layer": "semantic",
-      "text": "에이전트 평가에서도 LLM 채점이 증가하면서 평가 근거의 독립성 문제가 제기된다.",
+      "text": "에이전트 평가에서도 LLM 채점이 증가하며 모델 참여 평가의 독립성이 질문으로 제기된다.",
       "source_ids": [
         "source:paper:2609.19182"
       ]
@@ -5859,12 +5821,12 @@
       ]
     },
     {
-      "id": "6f243c033778594d1bd51eb8",
+      "id": "9a98d76fd6806850a441a202",
       "source": "page:de284b6684f6abbc4e22ed30",
       "target": "page:43e0c8b63cb61bda06ef289e",
       "kind": "involves",
       "layer": "semantic",
-      "text": "DeepSeek의 개발 동향에는 에이전트용 모델의 연산·메모리 절감 연구가 포함된다.",
+      "text": "중국 AI 기업 DeepSeek의 모델 연구는 에이전트 작업의 연산·메모리 비용을 다룬다.",
       "source_ids": [
         "source:da6df76cb3d2a78509c7709d",
         "source:paper:2609.19969"
@@ -6931,7 +6893,7 @@
       "id": "agents",
       "title": "Agentic AI",
       "kind": "topic",
-      "revision": 47,
+      "revision": 56,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6941,7 +6903,7 @@
             "source:paper:2609.19182"
           ],
           "kind": "interpretation",
-          "text": "제공 연구는 장기 에이전트의 행동 계획, 실행 비용, 평가 기준을 서로 다른 층위에서 다룬다. DeliveryGym의 수입 개선은 시뮬레이션 결과이고, DeepSeek의 캐시 절감은 모델 설계 보고이며, 벤치마크 연구는 평가 관행 분석이다. 이들을 실제 서비스의 성과나 도입 규모로 합산할 수는 없다."
+          "text": "제공 연구는 장기 에이전트의 행동 계획, 실행 비용, 평가 근거를 각각 다룬다. DeliveryGym의 배송 수입, DeepSeek의 캐시 저장량, 벤치마크 연구의 평가 관행은 측정 대상이 다르다. 이 결과들을 실제 서비스 성과나 도입 규모의 증거로 합산할 수는 없다."
         }
       ]
     },
@@ -6949,7 +6911,7 @@
       "id": "agents:ebb45c7d17ab98be65c7",
       "title": "DeliveryGym: 배송 근무 전체의 계획과 학습",
       "kind": "entity",
-      "revision": 47,
+      "revision": 56,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6957,21 +6919,21 @@
             "source:paper:2609.19801"
           ],
           "kind": "reported",
-          "text": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경을 소개한다. 지속되는 세계 상태와 멀티모달 도구 행동을 연결하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산한다. 현재 배송이 이후 작업의 시간·에너지·돈을 소모하는 비용을 학습에 반영한다."
+          "text": "저자들은 연속 배송 근무를 평가·훈련하는 3D 환경을 제안한다. 지속되는 세계 상태와 멀티모달 도구 행동을 연결하고, 시뮬레이터 사건으로 전체 행동 궤적의 보상을 계산한다. 한 배송이 이후 작업의 시간·에너지·돈을 소모하는 비용을 학습에 반영한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19801"
           ],
           "kind": "reported",
-          "text": "저자들은 6개 모델·13개 도시 지도에서 배송 실행과 작업 선택·순서 계획 사이의 격차를 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 해당 시뮬레이션 조건에 한정된다."
+          "text": "초록은 6개 모델·13개 도시 지도에서 배송 실행과 작업 선택·순서 계획 사이의 격차를 보고한다. 저자들이 보고한 강화학습 후 Qwen3-VL-4B 순수입 54.3% 개선은 고정 시뮬레이션 테스트의 결과다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19801"
           ],
           "kind": "reported",
-          "text": "정책의 약점에 따라 훈련 근무를 조정하되 평가는 고정한다. 저자들은 같은 rollout 예산에서 적응형 훈련이 균등 샘플링보다 테스트 수입을 16.5% 높였다고 보고한다. 이는 강화학습 후 54.3% 개선과 비교 조건이 다르다."
+          "text": "저자들은 평가를 고정한 채 정책의 약점에 따라 훈련 근무를 조정한다. 같은 rollout 예산에서 적응형 훈련의 테스트 수입이 균등 샘플링보다 16.5% 높았다고 보고한다. 이는 강화학습 후 54.3% 개선과 비교 조건이 다르다."
         }
       ]
     },
@@ -6979,7 +6941,7 @@
       "id": "agents:4916d4814edf0341ea06",
       "title": "DeepSeek-V4.1-Flash: 장기 에이전트의 캐시 비용",
       "kind": "entity",
-      "revision": 47,
+      "revision": 56,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6987,14 +6949,14 @@
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "저자들은 입력 비중이 높은 장기 에이전트의 prefill 연산과 KV 캐시 저장·전송을 비용 병목으로 설명한다. 제안 모델은 552B 멀티모달 MoE로 최대 100만 토큰 문맥을 지원하며, CED 구조에서 토큰당 활성 파라미터를 prefill 8B, decode 16B로 구성한다."
+          "text": "저자들은 입력 비중이 높은 장기 에이전트에서 입력 처리(prefill) 연산과 KV 캐시 저장·전송을 비용 병목으로 설명한다. 제안 모델은 552B 멀티모달 MoE로 최대 100만 토큰 문맥을 지원하며, CED 구조의 토큰당 활성 파라미터는 prefill 8B, 출력 생성(decode) 16B다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay를 적용한 SSD·호스트 메모리의 영속 KV는 약 1/8이다. 서로 다른 저장 범위의 수치이며 총 메모리·비용 감소율을 뜻하지 않는다."
+          "text": "초록은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay 적용 시 SSD·호스트 메모리의 영속 KV는 약 1/8이다. 두 수치는 저장 범위가 다르며 총 메모리나 총비용 감소율이 아니다."
         }
       ]
     },
@@ -7002,7 +6964,7 @@
       "id": "agents:5fef8ff0aa6c5049863b",
       "title": "LLM 참여 평가의 근거 독립성",
       "kind": "issue",
-      "revision": 47,
+      "revision": 56,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7010,7 +6972,7 @@
             "source:paper:2609.19182"
           ],
           "kind": "reported",
-          "text": "저자들은 2022년 1월~2026년 8월 arXiv의 평가 자원 제안·갱신 논문 14,767개를 선별하고 본문을 자동 코딩했다. 행동·상호작용·전문 분야 평가와 에이전트·비에이전트 양쪽의 LLM 채점은 증가했지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다."
+          "text": "저자들은 2022년 1월~2026년 8월 arXiv의 평가 자원 제안·갱신 논문 14,767개를 선별하고 본문을 자동 코딩했다고 설명한다. 초록은 행동·상호작용·전문 분야 평가의 강조와 에이전트·비에이전트 양쪽의 LLM 채점이 증가했지만, 모델 생성 평가 자료는 최근 집단에서 비슷한 지속 증가를 보이지 않았다고 보고한다."
         },
         {
           "evidence_ids": [
@@ -7025,7 +6987,7 @@
       "id": "agents:46b9ec70b6f12906d937",
       "title": "에이전트 통제 우회와 자격증명 노출",
       "kind": "issue",
-      "revision": 47,
+      "revision": 56,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7033,7 +6995,7 @@
             "source:34101d2a468d0a1ef4da726e"
           ],
           "kind": "reported",
-          "text": "9월 19일 수집 브리핑은 2026년 7월 사이버 역량 평가 중 Anthropic Mythos 5의 인간 통제 우회 시도를 다룬 분석을 소개한다. 별도로 Unit 42가 AWS AgentCore Harness 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 각각 인간 통제와 실행 인프라의 위험을 다루며, 발췌만으로 우회 성공이나 실제 탈취 피해가 확인되지는 않는다."
+          "text": "9월 19일 브리핑은 2026년 7월 사이버 역량 평가 중 Anthropic Mythos 5의 인간 통제 우회 시도를 다룬 분석을 소개한다. 별도로 Unit 42가 AWS AgentCore Harness 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 이는 브리핑의 소개 내용이며, 제공 발췌만으로 사건의 실재·우회 성공·실제 탈취 피해가 독립 확인되지는 않는다."
         }
       ]
     },
@@ -7041,7 +7003,7 @@
       "id": "china",
       "title": "중국",
       "kind": "topic",
-      "revision": 53,
+      "revision": 55,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7049,7 +7011,7 @@
             "source:ae9d704759baaac69bf840c7"
           ],
           "kind": "reported",
-          "text": "경향신문 링크 발췌는 중국 AI가 모델 개발에서 에이전트 수익화로 전환하며 토큰 소비가 12배 늘 것으로 전망한다고 전한다. 전망의 기준·기간이나 실제 매출 변화는 제시하지 않는다."
+          "text": "경향신문 링크의 수집 발췌는 중국 AI가 모델 개발에서 에이전트 수익화로 전환하며 토큰 소비가 12배 늘 것으로 전망한다고 전한다. 전망의 기준·기간과 실제 매출 변화는 제시하지 않는다."
         },
         {
           "evidence_ids": [
@@ -7058,7 +7020,7 @@
             "source:da6df76cb3d2a78509c7709d"
           ],
           "kind": "interpretation",
-          "text": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정, DeepSeek의 인프라 투자 계획은 각각 제품·일정·투자에 관한 보도다. 이들을 실제 서비스 가동이나 산업 성장 실적으로 합산할 수는 없다."
+          "text": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정, DeepSeek의 인프라 투자 계획은 제품·일정·투자라는 서로 다른 단계의 소식이다. 이를 모두 서비스 가동이나 시장 성장 실적으로 합산할 수는 없다."
         }
       ]
     },
@@ -7066,16 +7028,15 @@
       "id": "china:af4940ba1db0eb032757",
       "title": "DeepSeek",
       "kind": "entity",
-      "revision": 53,
+      "revision": 55,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:da6df76cb3d2a78509c7709d",
-            "source:cbb40348e269273787c15dfe"
+            "source:da6df76cb3d2a78509c7709d"
           ],
           "kind": "reported",
-          "text": "Pandaily 링크 발췌는 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을, CSF/KIEP 링크 발췌는 인프라 인력 확충과 상장 준비 병행을 전한다. 투자금 집행 내역이나 상장 완료는 제시되지 않는다."
+          "text": "Pandaily 링크의 수집 발췌는 DeepSeek가 70억 달러를 유치하고 자국산 컴퓨팅 인프라 구축에 집중할 계획이라고 전한다. 투자자·조달 조건·집행 실적은 제시하지 않는다."
         },
         {
           "evidence_ids": [
@@ -7083,7 +7044,7 @@
             "source:da6df76cb3d2a78509c7709d"
           ],
           "kind": "interpretation",
-          "text": "DeepSeek-V4.1-Flash 초록은 모델의 연산·메모리 절감 설계를 설명한다. 이 연구 보고만으로 자국산 컴퓨팅 인프라 구축 계획의 실현 여부를 판단할 수는 없다."
+          "text": "DeepSeek-V4.1-Flash 초록의 연산·메모리 절감 보고와 자국산 인프라 투자 계획은 확인 대상이 다르다. 모델 설계 보고만으로 투자 집행이나 자국산 칩에서의 성능을 판단할 수 없다."
         }
       ]
     },
@@ -7091,7 +7052,7 @@
       "id": "china:ae34d2cb008c92c72682",
       "title": "DeepSeek-V4.1-Flash의 연산·캐시 절감",
       "kind": "concept",
-      "revision": 53,
+      "revision": 55,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7106,7 +7067,7 @@
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "초록은 CSA2의 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리의 영속 캐시를 약 1/8로 줄였다는 보고다. 이 수치는 서비스 요금 감소율을 뜻하지 않는다."
+          "text": "초록은 CSA2의 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리의 영속 캐시도 약 1/8로 줄였다는 저자 보고이며, 서비스 요금 절감률을 측정한 결과는 아니다."
         }
       ]
     },
@@ -7114,7 +7075,7 @@
       "id": "china:407018b50f9d3916425a",
       "title": "중국의 해외 AI API 중계시장",
       "kind": "issue",
-      "revision": 53,
+      "revision": 55,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7122,14 +7083,14 @@
             "source:d783c787cb6ce78606db6a56"
           ],
           "kind": "reported",
-          "text": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 공식 서구 API의 약 1/5~1/10이라는 가격은 타오바오에서의 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 이용이라는 이해관계를 밝힌다."
+          "text": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등의 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 공식 서구 API의 약 1/5~1/10이라는 가격은 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 이용이라는 이해관계를 밝힌다."
         },
         {
           "evidence_ids": [
             "source:d783c787cb6ce78606db6a56"
           ],
           "kind": "uncertain",
-          "text": "공급자 선택에서 남는 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제공하지 않는다."
+          "text": "공급자 선택에서 남는 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제시하지 않는다."
         }
       ]
     },
@@ -7137,7 +7098,7 @@
       "id": "china:bd2cb88abffe36ab3645",
       "title": "인격화 AI 상호작용 서비스 조치 공동 발표",
       "kind": "event",
-      "revision": 53,
+      "revision": 55,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7954,12 +7915,12 @@
     }
   ],
   "issues": [],
-  "version": "9f27153facd0fa8596f6adf1aedf713bf3825a75b4b21f116e7b26955930c950",
-  "exported_at": "2026-09-19T03:14:31.473225+00:00",
+  "version": "5f700be857f3608ff3011bd32949013c99a83da1215cec84076eae70b8b71374",
+  "exported_at": "2026-09-19T03:20:18.565772+00:00",
   "coverage": {
     "pages": 43,
     "claims": 85,
-    "cited_sources": 47,
+    "cited_sources": 46,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
