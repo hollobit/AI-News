@@ -17,7 +17,7 @@
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:5e715892a74b4fea06626ff3"
+        "claim:c49c74d30f0b48946c7df7e6"
       ],
       "status": "reviewed"
     },
@@ -74,9 +74,9 @@
       "url": "https://arxiv.org/abs/2609.19969v1"
     },
     {
-      "id": "claim:5e715892a74b4fea06626ff3",
+      "id": "claim:c49c74d30f0b48946c7df7e6",
       "type": "claim",
-      "title": "제공 연구는 장기 에이전트의 계획 학습, 실행 비용, 평가 근거를 각각 다룬다. 배송 근무의 수입 개선, 모델의 캐시 절감, 평가 관행의 변화는 서로 다른 측정 대상이므로 실제 서비스 성과나 도입 규모의 증거로 합산할 수 없다.",
+      "title": "제공 연구는 에이전트의 장기 계획 학습, 실행 비용, 평가 근거를 각각 다룬다. 배송 시뮬레이션의 수입 개선, 모델 캐시 절감, 평가 관행 변화는 측정 대상이 다르므로 실제 서비스 성과나 도입 규모의 증거로 합산할 수 없다.",
       "source_ids": [
         "source:paper:2609.19182",
         "source:paper:2609.19801",
@@ -100,7 +100,7 @@
       ],
       "claims": [
         "claim:97d68c20e76c4a37151f4926",
-        "claim:12a3bc0a03f3a28c43234517",
+        "claim:de8ffa02fa1f31597a29a748",
         "claim:436af8519f1330b7e130bc21"
       ],
       "status": "reviewed"
@@ -116,9 +116,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:12a3bc0a03f3a28c43234517",
+      "id": "claim:de8ffa02fa1f31597a29a748",
       "type": "claim",
-      "title": "초록은 6개 모델·13개 도시 지도에서 지정 배송의 실행 능력과 근무 전체의 작업 선택·순서 계획 사이에 격차가 있었다고 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 이 시뮬레이션 안의 성과다.",
+      "title": "초록은 6개 모델·13개 도시 지도에서 지정 배송 실행과 근무 전체의 작업 선택·순서 계획 사이에 격차가 있었다고 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 해당 시뮬레이션의 성과다.",
       "source_ids": [
         "source:paper:2609.19801"
       ],
@@ -150,8 +150,8 @@
       ],
       "claims": [
         "claim:922fe4bf3480a444661cb602",
-        "claim:634e3e262fafae9488796da8",
-        "claim:d1a56d5788f3828d26b33e15"
+        "claim:dbb7daff6fa012b976243ca2",
+        "claim:aab8a36146f96d0009c5fe5b"
       ],
       "status": "reviewed"
     },
@@ -166,9 +166,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:634e3e262fafae9488796da8",
+      "id": "claim:dbb7daff6fa012b976243ca2",
       "type": "claim",
-      "title": "초록은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리의 영속 KV는 약 1/8이 됐다고 한다.",
+      "title": "초록은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리에 저장하는 영속 KV는 약 1/8이 됐다고 한다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -176,9 +176,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:d1a56d5788f3828d26b33e15",
+      "id": "claim:aab8a36146f96d0009c5fe5b",
       "type": "claim",
-      "title": "전역 KV와 영속 KV의 감소율은 서로 다른 저장 범위를 가리킨다. 이를 총 모델 메모리나 서비스 운영비가 같은 비율로 줄었다는 뜻으로 읽을 수는 없다.",
+      "title": "전역 KV와 영속 KV의 감소율은 서로 다른 저장 범위를 가리킨다. 이를 총 모델 메모리나 서비스 운영비가 같은 비율로 줄었다는 뜻으로 해석할 수 없다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -200,7 +200,7 @@
       ],
       "claims": [
         "claim:0caeaee60f75658fe97b23fc",
-        "claim:a990c53aefecb3942a9a45de"
+        "claim:50638098cadacdc0663abdf9"
       ],
       "status": "reviewed"
     },
@@ -215,9 +215,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:a990c53aefecb3942a9a45de",
+      "id": "claim:50638098cadacdc0663abdf9",
       "type": "claim",
-      "title": "모델이 시험 제작·수행·채점에 참여할 때 평가 확대가 독립적인 근거를 늘리는지, 참여 모델의 선호와 맹점을 재생산하는지는 저자들이 제기한 미해결 질문이다. 제공 초록이 특정 평가의 편향을 입증한 것은 아니다.",
+      "title": "모델이 시험 제작·수행·채점에 참여할 때 평가 확대가 독립적인 근거를 늘리는지, 참여 모델의 선호와 맹점을 재생산하는지는 저자들이 제기한 미해결 질문이다. 제공 초록은 특정 평가의 편향을 입증하지 않는다.",
       "source_ids": [
         "source:paper:2609.19182"
       ],
@@ -225,11 +225,11 @@
       "status": "reviewed"
     },
     {
-      "id": "page:2cf5020fa0a4562e6216923e",
+      "id": "page:0e33e48165521bfb2df2a37e",
       "type": "issue",
-      "title": "에이전트 통제 우회와 자격증명 노출",
+      "title": "AWS AgentCore Harness의 자격증명 노출 가능성",
       "page_ids": [
-        "agents:46b9ec70b6f12906d937"
+        "agents:eee4b3cb1a0e6e5fc8c0"
       ],
       "topics": [
         "agents"
@@ -238,14 +238,14 @@
         "source:34101d2a468d0a1ef4da726e"
       ],
       "claims": [
-        "claim:02ac8006d09e95d7f5cd2d29"
+        "claim:d522af436b6500681af31de0"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:02ac8006d09e95d7f5cd2d29",
+      "id": "claim:d522af436b6500681af31de0",
       "type": "claim",
-      "title": "9월 19일 브리핑은 2026년 7월 평가 중 Anthropic Mythos 5의 인간 통제 우회 시도를 다룬 분석을 소개한다. 별도로 Unit 42가 AWS AgentCore Harness 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 제공 자료는 브리핑 발췌로, 해당 사건의 실재·우회 성공이나 실제 탈취 피해를 독립 확인한 근거는 아니다.",
+      "title": "9월 19일 브리핑은 Unit 42가 AWS AgentCore Harness 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 제공 발췌에는 재현 조건이나 실제 탈취 피해가 제시되지 않아, 취약 가능성 보도와 피해 발생을 구분해야 한다.",
       "source_ids": [
         "source:34101d2a468d0a1ef4da726e"
       ],
@@ -2317,9 +2317,9 @@
       ]
     },
     {
-      "id": "45c691e5a7c2cd09069d067c",
+      "id": "04195ea098b3ff7b985196d5",
       "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "claim:5e715892a74b4fea06626ff3",
+      "target": "claim:c49c74d30f0b48946c7df7e6",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2330,8 +2330,8 @@
       ]
     },
     {
-      "id": "6d576af212440b9c1068b7a3",
-      "source": "claim:5e715892a74b4fea06626ff3",
+      "id": "348180432f1fea07483e8f4f",
+      "source": "claim:c49c74d30f0b48946c7df7e6",
       "target": "source:paper:2609.19182",
       "kind": "cites",
       "layer": "provenance",
@@ -2341,8 +2341,8 @@
       ]
     },
     {
-      "id": "c6122988f6e4b4bff21f45c8",
-      "source": "claim:5e715892a74b4fea06626ff3",
+      "id": "d99eceb781f54ad431c06f54",
+      "source": "claim:c49c74d30f0b48946c7df7e6",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2352,8 +2352,8 @@
       ]
     },
     {
-      "id": "ca18e5f9dfbab72a4acce37a",
-      "source": "claim:5e715892a74b4fea06626ff3",
+      "id": "bb821ac8d185d61452b463d2",
+      "source": "claim:c49c74d30f0b48946c7df7e6",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2396,9 +2396,9 @@
       ]
     },
     {
-      "id": "c1092d62288ed37ef40a9e3e",
+      "id": "ea99ff8958410c77bf507aa1",
       "source": "page:0084b4bedb806557faf2b1d6",
-      "target": "claim:12a3bc0a03f3a28c43234517",
+      "target": "claim:de8ffa02fa1f31597a29a748",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2407,8 +2407,8 @@
       ]
     },
     {
-      "id": "5a1318686efa8e366ce510d0",
-      "source": "claim:12a3bc0a03f3a28c43234517",
+      "id": "670663e31a54e59d317e9a5c",
+      "source": "claim:de8ffa02fa1f31597a29a748",
       "target": "source:paper:2609.19801",
       "kind": "cites",
       "layer": "provenance",
@@ -2473,9 +2473,9 @@
       ]
     },
     {
-      "id": "606840d0a0b413b849f0b43b",
+      "id": "3859d0846ae68fed32bdc283",
       "source": "page:3afbfd6ffa6dce8b19fc3b5f",
-      "target": "claim:634e3e262fafae9488796da8",
+      "target": "claim:dbb7daff6fa012b976243ca2",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2484,8 +2484,8 @@
       ]
     },
     {
-      "id": "9fa10bcecbac2fa0bbbf193b",
-      "source": "claim:634e3e262fafae9488796da8",
+      "id": "839ab88a51b4e1c92f559311",
+      "source": "claim:dbb7daff6fa012b976243ca2",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2495,9 +2495,9 @@
       ]
     },
     {
-      "id": "e588624a33cef593f8641bd0",
+      "id": "6c92cfc5f85d43b83b25c955",
       "source": "page:3afbfd6ffa6dce8b19fc3b5f",
-      "target": "claim:d1a56d5788f3828d26b33e15",
+      "target": "claim:aab8a36146f96d0009c5fe5b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2506,8 +2506,8 @@
       ]
     },
     {
-      "id": "7a09174c8095ec0c4ae3fae4",
-      "source": "claim:d1a56d5788f3828d26b33e15",
+      "id": "24a574a30617e4c0b191654b",
+      "source": "claim:aab8a36146f96d0009c5fe5b",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2550,9 +2550,9 @@
       ]
     },
     {
-      "id": "7f8bc42a4e21a6c82e56c25c",
+      "id": "90587c5cd76c11fa20515866",
       "source": "page:2f45ff667da36a854021b4ff",
-      "target": "claim:a990c53aefecb3942a9a45de",
+      "target": "claim:50638098cadacdc0663abdf9",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2561,8 +2561,8 @@
       ]
     },
     {
-      "id": "e2130b2fbb5fb267205fd1c8",
-      "source": "claim:a990c53aefecb3942a9a45de",
+      "id": "7830e2f88b67ea564d6e4975",
+      "source": "claim:50638098cadacdc0663abdf9",
       "target": "source:paper:2609.19182",
       "kind": "cites",
       "layer": "provenance",
@@ -2572,8 +2572,8 @@
       ]
     },
     {
-      "id": "6e2ad9b2c6f9afa41b821586",
-      "source": "page:2cf5020fa0a4562e6216923e",
+      "id": "08fe6c654137af74f40bda18",
+      "source": "page:0e33e48165521bfb2df2a37e",
       "target": "source:34101d2a468d0a1ef4da726e",
       "kind": "cites",
       "layer": "provenance",
@@ -2583,9 +2583,9 @@
       ]
     },
     {
-      "id": "1eb6163afe27ea1b1559efa1",
-      "source": "page:2cf5020fa0a4562e6216923e",
-      "target": "claim:02ac8006d09e95d7f5cd2d29",
+      "id": "56ce29cc89a987147cde5352",
+      "source": "page:0e33e48165521bfb2df2a37e",
+      "target": "claim:d522af436b6500681af31de0",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2594,8 +2594,8 @@
       ]
     },
     {
-      "id": "e072f80a913cc2d8eef9c170",
-      "source": "claim:02ac8006d09e95d7f5cd2d29",
+      "id": "a2b5d31b58bb6fd7390b532b",
+      "source": "claim:d522af436b6500681af31de0",
       "target": "source:34101d2a468d0a1ef4da726e",
       "kind": "cites",
       "layer": "provenance",
@@ -5501,12 +5501,12 @@
       ]
     },
     {
-      "id": "e13715df44ae685bf1442b2a",
+      "id": "3650788aea355b10b3835540",
       "source": "page:bc425324302e17abaf8dbf8f",
       "target": "page:0084b4bedb806557faf2b1d6",
       "kind": "involves",
       "layer": "semantic",
-      "text": "배송 실행과 이후 작업의 자원 보존을 함께 다루는 에이전트 계획 평가·훈련 환경이다.",
+      "text": "현재 배송 실행과 이후 작업의 자원 보존을 함께 다루는 에이전트 평가·훈련 환경이다.",
       "source_ids": [
         "source:paper:2609.19801"
       ]
@@ -5523,23 +5523,23 @@
       ]
     },
     {
-      "id": "2386769370eb841f6640a34f",
+      "id": "af033f75791cb46f7fb6e48b",
       "source": "page:bc425324302e17abaf8dbf8f",
       "target": "page:2f45ff667da36a854021b4ff",
       "kind": "involves",
       "layer": "semantic",
-      "text": "에이전트 평가에서도 LLM 채점이 증가하며 모델 참여 평가의 독립성이 쟁점으로 제기된다.",
+      "text": "에이전트 평가에서도 LLM 채점이 증가하며 모델 참여 평가의 독립성이 질문으로 제기된다.",
       "source_ids": [
         "source:paper:2609.19182"
       ]
     },
     {
-      "id": "2ebda8dea0ed08486c46ab5b",
+      "id": "8609e58262813bba55f7ca17",
       "source": "page:bc425324302e17abaf8dbf8f",
-      "target": "page:2cf5020fa0a4562e6216923e",
+      "target": "page:0e33e48165521bfb2df2a37e",
       "kind": "involves",
       "layer": "semantic",
-      "text": "브리핑은 에이전트의 인간 통제 우회 시도와 실행 인프라의 자격증명 노출 가능성을 소개한다.",
+      "text": "브리핑은 에이전트 실행 인프라의 기본 설정에서 프롬프트 인젝션에 따른 자격증명 노출 가능성을 소개한다.",
       "source_ids": [
         "source:34101d2a468d0a1ef4da726e"
       ]
@@ -6045,6 +6045,17 @@
       ]
     },
     {
+      "id": "3fa830abb766c0cc4fc6a552",
+      "source": "page:0e33e48165521bfb2df2a37e",
+      "target": "page:bc425324302e17abaf8dbf8f",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:34101d2a468d0a1ef4da726e"
+      ]
+    },
+    {
       "id": "8a884bdfd4de1d0cb3def72b",
       "source": "page:16ddcc70c777744bd4e89688",
       "target": "page:3afbfd6ffa6dce8b19fc3b5f",
@@ -6130,17 +6141,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
-      "id": "29225f2871266f54fa2c55e3",
-      "source": "page:2cf5020fa0a4562e6216923e",
-      "target": "page:bc425324302e17abaf8dbf8f",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:34101d2a468d0a1ef4da726e"
       ]
     },
     {
@@ -6490,7 +6490,7 @@
       "id": "agents",
       "title": "Agentic AI",
       "kind": "topic",
-      "revision": 60,
+      "revision": 65,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6500,7 +6500,7 @@
             "source:paper:2609.19182"
           ],
           "kind": "interpretation",
-          "text": "제공 연구는 장기 에이전트의 계획 학습, 실행 비용, 평가 근거를 각각 다룬다. 배송 근무의 수입 개선, 모델의 캐시 절감, 평가 관행의 변화는 서로 다른 측정 대상이므로 실제 서비스 성과나 도입 규모의 증거로 합산할 수 없다."
+          "text": "제공 연구는 에이전트의 장기 계획 학습, 실행 비용, 평가 근거를 각각 다룬다. 배송 시뮬레이션의 수입 개선, 모델 캐시 절감, 평가 관행 변화는 측정 대상이 다르므로 실제 서비스 성과나 도입 규모의 증거로 합산할 수 없다."
         }
       ]
     },
@@ -6508,7 +6508,7 @@
       "id": "agents:ebb45c7d17ab98be65c7",
       "title": "DeliveryGym: 배송 근무 전체의 계획과 학습",
       "kind": "entity",
-      "revision": 60,
+      "revision": 65,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6523,7 +6523,7 @@
             "source:paper:2609.19801"
           ],
           "kind": "reported",
-          "text": "초록은 6개 모델·13개 도시 지도에서 지정 배송의 실행 능력과 근무 전체의 작업 선택·순서 계획 사이에 격차가 있었다고 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 이 시뮬레이션 안의 성과다."
+          "text": "초록은 6개 모델·13개 도시 지도에서 지정 배송 실행과 근무 전체의 작업 선택·순서 계획 사이에 격차가 있었다고 보고한다. 고정 테스트에서 강화학습 후 Qwen3-VL-4B의 순수입이 54.3% 개선됐다는 결과는 해당 시뮬레이션의 성과다."
         },
         {
           "evidence_ids": [
@@ -6538,7 +6538,7 @@
       "id": "agents:4916d4814edf0341ea06",
       "title": "DeepSeek-V4.1-Flash: 장기 에이전트의 캐시 비용",
       "kind": "entity",
-      "revision": 60,
+      "revision": 65,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6553,14 +6553,14 @@
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "초록은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리의 영속 KV는 약 1/8이 됐다고 한다."
+          "text": "초록은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 SSD·호스트 메모리에 저장하는 영속 KV는 약 1/8이 됐다고 한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19969"
           ],
           "kind": "interpretation",
-          "text": "전역 KV와 영속 KV의 감소율은 서로 다른 저장 범위를 가리킨다. 이를 총 모델 메모리나 서비스 운영비가 같은 비율로 줄었다는 뜻으로 읽을 수는 없다."
+          "text": "전역 KV와 영속 KV의 감소율은 서로 다른 저장 범위를 가리킨다. 이를 총 모델 메모리나 서비스 운영비가 같은 비율로 줄었다는 뜻으로 해석할 수 없다."
         }
       ]
     },
@@ -6568,7 +6568,7 @@
       "id": "agents:5fef8ff0aa6c5049863b",
       "title": "LLM 참여 평가의 근거 독립성",
       "kind": "issue",
-      "revision": 60,
+      "revision": 65,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6583,15 +6583,15 @@
             "source:paper:2609.19182"
           ],
           "kind": "uncertain",
-          "text": "모델이 시험 제작·수행·채점에 참여할 때 평가 확대가 독립적인 근거를 늘리는지, 참여 모델의 선호와 맹점을 재생산하는지는 저자들이 제기한 미해결 질문이다. 제공 초록이 특정 평가의 편향을 입증한 것은 아니다."
+          "text": "모델이 시험 제작·수행·채점에 참여할 때 평가 확대가 독립적인 근거를 늘리는지, 참여 모델의 선호와 맹점을 재생산하는지는 저자들이 제기한 미해결 질문이다. 제공 초록은 특정 평가의 편향을 입증하지 않는다."
         }
       ]
     },
     {
-      "id": "agents:46b9ec70b6f12906d937",
-      "title": "에이전트 통제 우회와 자격증명 노출",
+      "id": "agents:eee4b3cb1a0e6e5fc8c0",
+      "title": "AWS AgentCore Harness의 자격증명 노출 가능성",
       "kind": "issue",
-      "revision": 60,
+      "revision": 65,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6599,7 +6599,7 @@
             "source:34101d2a468d0a1ef4da726e"
           ],
           "kind": "reported",
-          "text": "9월 19일 브리핑은 2026년 7월 평가 중 Anthropic Mythos 5의 인간 통제 우회 시도를 다룬 분석을 소개한다. 별도로 Unit 42가 AWS AgentCore Harness 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 제공 자료는 브리핑 발췌로, 해당 사건의 실재·우회 성공이나 실제 탈취 피해를 독립 확인한 근거는 아니다."
+          "text": "9월 19일 브리핑은 Unit 42가 AWS AgentCore Harness 기본 설정에서 프롬프트 인젝션에 의한 자격증명 유출 가능성을 분석했다고 전한다. 제공 발췌에는 재현 조건이나 실제 탈취 피해가 제시되지 않아, 취약 가능성 보도와 피해 발생을 구분해야 한다."
         }
       ]
     },
@@ -7478,8 +7478,8 @@
     }
   ],
   "issues": [],
-  "version": "6a9204998977a141959e03163430429d1f2476860eeac23dc6b57a7c4105f4fa",
-  "exported_at": "2026-09-19T15:14:54.442327+00:00",
+  "version": "7bc3da00a22d884ba2a2c2e37e4337f0246c61a3c5610cd8acab50201633fd27",
+  "exported_at": "2026-09-19T15:21:05.450898+00:00",
   "coverage": {
     "pages": 42,
     "claims": 82,
