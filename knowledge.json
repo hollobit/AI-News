@@ -257,11 +257,12 @@
         "source:d783c787cb6ce78606db6a56",
         "source:da6df76cb3d2a78509c7709d",
         "source:e7b8a3795d07304b72f60475",
-        "source:fc356a3c94782703f13d69b3"
+        "source:fc356a3c94782703f13d69b3",
+        "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:47651b950766a810dc235f6a",
-        "claim:e57fe713f6efccd806a15cff"
+        "claim:ee3d5cdf48a2fc4f7f03ad78",
+        "claim:3588263499db7f6f33bb8aa2"
       ],
       "status": "reviewed"
     },
@@ -344,9 +345,22 @@
       "url": "https://www.jdsupra.com/legalnews/china-s-interim-measures-for-the-7631877"
     },
     {
-      "id": "claim:47651b950766a810dc235f6a",
+      "id": "source:paper:2609.19969",
+      "type": "source",
+      "title": "DeepSeek-V4.1-Flash: Pushing the Limits of KV Cache Compression",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ],
+      "origin": "arxiv_abstract",
+      "scope": "검토 논문의 제목·초록; 전문·제품 성능·임상 검증 아님",
+      "day": "2026-09-17",
+      "status": "original_source_not_fact_checked",
+      "url": "https://arxiv.org/abs/2609.19969v1"
+    },
+    {
+      "id": "claim:ee3d5cdf48a2fc4f7f03ad78",
       "type": "claim",
-      "title": "경향신문 링크의 수집 발췌는 중국 AI의 초점이 모델 개발에서 에이전트 수익화로 이동하며 토큰 소비가 12배 증가할 것으로 전망한다고 전한다. 전망의 기준·기간과 실제 매출 변화는 제시하지 않는다.",
+      "title": "경향신문 링크의 수집 발췌는 중국 AI가 모델 개발에서 에이전트 수익화로 전환하며 토큰 소비가 12배 늘 것으로 전망한다고 전한다. 전망의 기준·기간이나 실제 매출 변화는 제시하지 않는다.",
       "source_ids": [
         "source:ae9d704759baaac69bf840c7"
       ],
@@ -354,9 +368,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:e57fe713f6efccd806a15cff",
+      "id": "claim:3588263499db7f6f33bb8aa2",
       "type": "claim",
-      "title": "Qwen의 모델 출시, 화웨이 Ascend 950 클라우드의 상용화 일정 확정, DeepSeek의 인프라 투자 계획은 서로 다른 진행 단계다. 이를 모두 서비스 가동이나 중국 AI 산업의 성장 실적으로 합산할 수는 없다.",
+      "title": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정, DeepSeek의 인프라 투자 계획은 각각 제품·일정·투자에 관한 보도다. 이를 실제 서비스 가동이나 산업 성장 실적으로 합산하기는 어렵다.",
       "source_ids": [
         "source:5d03910cda5f5397b68f2673",
         "source:da6df76cb3d2a78509c7709d",
@@ -366,22 +380,23 @@
       "status": "reviewed"
     },
     {
-      "id": "page:67fb64c7b8e926285a3fd4e9",
+      "id": "page:9cd0bf59dbd0b917be7acd84",
       "type": "entity",
-      "title": "DeepSeek의 자금 조달과 인프라 확충",
+      "title": "DeepSeek",
       "page_ids": [
-        "china:0de2183429999f9c1885"
+        "china:af4940ba1db0eb032757"
       ],
       "topics": [
         "china"
       ],
       "source_ids": [
         "source:cbb40348e269273787c15dfe",
-        "source:da6df76cb3d2a78509c7709d"
+        "source:da6df76cb3d2a78509c7709d",
+        "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:3f941e3dc7510db53f799ca6",
-        "claim:a99afdc5216837a5a812087c"
+        "claim:c4edbe3ec4a5938aec128883",
+        "claim:cd6f3be6af331f623fddd58c"
       ],
       "status": "reviewed"
     },
@@ -399,9 +414,9 @@
       "url": "https://csf.kiep.go.kr/issueInfoView.es"
     },
     {
-      "id": "claim:3f941e3dc7510db53f799ca6",
+      "id": "claim:c4edbe3ec4a5938aec128883",
       "type": "claim",
-      "title": "7월 1일 수집된 Pandaily 링크 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을 전한다. 9월 18일 수집된 CSF/KIEP 링크 발췌는 인프라 인력 확충과 상장 준비의 병행을 전한다.",
+      "title": "Pandaily 링크 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을, CSF/KIEP 링크 발췌는 인프라 인력 확충과 상장 준비 병행을 전한다. 후자는 앞선 투자금의 집행이나 상장 완료를 확인하지 않는다.",
       "source_ids": [
         "source:cbb40348e269273787c15dfe",
         "source:da6df76cb3d2a78509c7709d"
@@ -410,14 +425,54 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:a99afdc5216837a5a812087c",
+      "id": "claim:cd6f3be6af331f623fddd58c",
       "type": "claim",
-      "title": "두 보도는 개발 기반 확충이라는 방향을 공유한다. 그러나 인력 확충이 앞선 투자금으로 집행됐다는 연결은 없으며, 뒤의 보도가 자금 집행이나 상장 완료를 확인하지도 않는다.",
+      "title": "DeepSeek-V4.1-Flash 초록의 연산·캐시 절감 보고는 모델 설계에 관한 근거다. 이를 자국산 컴퓨팅 인프라 구축 계획이 실현됐다는 근거로 볼 수는 없다.",
       "source_ids": [
-        "source:cbb40348e269273787c15dfe",
-        "source:da6df76cb3d2a78509c7709d"
+        "source:da6df76cb3d2a78509c7709d",
+        "source:paper:2609.19969"
       ],
       "claim_kind": "interpretation",
+      "status": "reviewed"
+    },
+    {
+      "id": "page:43e0c8b63cb61bda06ef289e",
+      "type": "concept",
+      "title": "DeepSeek-V4.1-Flash의 연산·캐시 절감",
+      "page_ids": [
+        "china:ae34d2cb008c92c72682"
+      ],
+      "topics": [
+        "china"
+      ],
+      "source_ids": [
+        "source:da6df76cb3d2a78509c7709d",
+        "source:paper:2609.19969"
+      ],
+      "claims": [
+        "claim:bed2fbc97f1b42cf7e4f6dd1",
+        "claim:06a1a39d589da90e5a1ac52c"
+      ],
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:bed2fbc97f1b42cf7e4f6dd1",
+      "type": "claim",
+      "title": "저자들은 입력 비중이 큰 에이전트 작업의 비용을 줄이기 위해 CED 구조를 도입했다고 설명한다. 토큰당 활성 파라미터는 입력 처리(prefill)에서 80억 개, 출력 생성(decode)에서 160억 개다.",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ],
+      "claim_kind": "reported",
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:06a1a39d589da90e5a1ac52c",
+      "type": "claim",
+      "title": "초록은 CSA2의 층간 KV 캐시 재사용과 FP4 저장으로 HBM의 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리의 영속 캐시를 약 1/8로 줄인다. 이는 저자 보고 메모리 수치이며 실제 서비스 요금 감소율은 아니다.",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ],
+      "claim_kind": "reported",
       "status": "reviewed"
     },
     {
@@ -434,15 +489,15 @@
         "source:d783c787cb6ce78606db6a56"
       ],
       "claims": [
-        "claim:9e85966a15db6b99af359c7a",
-        "claim:f464562c473084eca7e17694"
+        "claim:5723ad56c7cdb864193731cf",
+        "claim:e066fd2aa82fdd35718c4304"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:9e85966a15db6b99af359c7a",
+      "id": "claim:5723ad56c7cdb864193731cf",
       "type": "claim",
-      "title": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 타오바오 가격이 공식 서구 API의 약 1/5~1/10이라는 수치는 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 서비스 이용이라는 이해관계도 밝힌다.",
+      "title": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 공식 서구 API의 약 1/5~1/10이라는 타오바오 가격은 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 이용이라는 이해관계를 밝힌다.",
       "source_ids": [
         "source:d783c787cb6ce78606db6a56"
       ],
@@ -450,9 +505,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:f464562c473084eca7e17694",
+      "id": "claim:e066fd2aa82fdd35718c4304",
       "type": "claim",
-      "title": "공급자 선택의 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제시하지 않는다.",
+      "title": "공급자 선택에서 남는 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제공하지 않는다.",
       "source_ids": [
         "source:d783c787cb6ce78606db6a56"
       ],
@@ -474,7 +529,7 @@
       ],
       "claims": [
         "claim:3ffa4f94557f5151e0805fac",
-        "claim:b75164b1ea7bc580385713af"
+        "claim:93c4b91e70e2a4a260d89f1f"
       ],
       "status": "reviewed"
     },
@@ -489,41 +544,13 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:b75164b1ea7bc580385713af",
+      "id": "claim:93c4b91e70e2a4a260d89f1f",
       "type": "claim",
-      "title": "적용 대상·사업자 의무·시행일은 제공 발췌에 없다. 자료에 붙은 2026년 4월 10일을 발효일로 확정할 수 없으며, 서비스 설계에 적용할 의무를 판단하려면 조문과 시행 정보가 필요하다.",
+      "title": "적용 대상·사업자 의무·시행일은 제공 발췌에 없다. 자료에 붙은 2026년 4월 10일을 발효일로 확정할 수 없으며, 서비스 설계에 적용할 의무는 조문과 시행 정보가 있어야 판단할 수 있다.",
       "source_ids": [
         "source:fc356a3c94782703f13d69b3"
       ],
       "claim_kind": "uncertain",
-      "status": "reviewed"
-    },
-    {
-      "id": "page:3cb0e3cebd6633f679b0c4ed",
-      "type": "event",
-      "title": "Qwen3.8-Omni-Flash 출시",
-      "page_ids": [
-        "china:49efc0cd5d6a87376807"
-      ],
-      "topics": [
-        "china"
-      ],
-      "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
-      ],
-      "claims": [
-        "claim:0354e56f12445d91b957616e"
-      ],
-      "status": "reviewed"
-    },
-    {
-      "id": "claim:0354e56f12445d91b957616e",
-      "type": "claim",
-      "title": "TechNode 링크의 수집 발췌는 알리바바 Qwen이 100만 토큰 컨텍스트의 Qwen3.8-Omni-Flash를 출시했다고 전한다. 발췌가 제공하는 사양은 컨텍스트 규모이며, 긴 입력에서의 정확도·처리 속도·이용 가격은 제시하지 않는다.",
-      "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
-      ],
-      "claim_kind": "reported",
       "status": "reviewed"
     },
     {
@@ -2739,9 +2766,20 @@
       ]
     },
     {
-      "id": "78a19cf5477baf0f056f9b0f",
+      "id": "9469f1cc1c12a53bcce7e973",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "claim:47651b950766a810dc235f6a",
+      "target": "source:paper:2609.19969",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "8961eca6d343b0a60cf2e68b",
+      "source": "page:de284b6684f6abbc4e22ed30",
+      "target": "claim:ee3d5cdf48a2fc4f7f03ad78",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2750,8 +2788,8 @@
       ]
     },
     {
-      "id": "308e0e6e7d37f63a064c2faa",
-      "source": "claim:47651b950766a810dc235f6a",
+      "id": "968079ea45c81ecc61b4ee2c",
+      "source": "claim:ee3d5cdf48a2fc4f7f03ad78",
       "target": "source:ae9d704759baaac69bf840c7",
       "kind": "cites",
       "layer": "provenance",
@@ -2761,9 +2799,9 @@
       ]
     },
     {
-      "id": "b0aa18463571aefb693e9d57",
+      "id": "ef34ac45ba18d017d2938710",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "claim:e57fe713f6efccd806a15cff",
+      "target": "claim:3588263499db7f6f33bb8aa2",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2774,8 +2812,8 @@
       ]
     },
     {
-      "id": "94b488844a7da996b2025380",
-      "source": "claim:e57fe713f6efccd806a15cff",
+      "id": "ca4bc936edfd49f50fb1cca6",
+      "source": "claim:3588263499db7f6f33bb8aa2",
       "target": "source:5d03910cda5f5397b68f2673",
       "kind": "cites",
       "layer": "provenance",
@@ -2785,8 +2823,8 @@
       ]
     },
     {
-      "id": "4b53b57c728cc3ebcb7a8283",
-      "source": "claim:e57fe713f6efccd806a15cff",
+      "id": "138464789723247b456163f4",
+      "source": "claim:3588263499db7f6f33bb8aa2",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2796,8 +2834,8 @@
       ]
     },
     {
-      "id": "1225c179b461e5a31eabcc32",
-      "source": "claim:e57fe713f6efccd806a15cff",
+      "id": "09716b75c7c9ed0dcfb34d46",
+      "source": "claim:3588263499db7f6f33bb8aa2",
       "target": "source:e7b8a3795d07304b72f60475",
       "kind": "cites",
       "layer": "provenance",
@@ -2807,8 +2845,8 @@
       ]
     },
     {
-      "id": "7edcfa24a134a3959c4e6b4a",
-      "source": "page:67fb64c7b8e926285a3fd4e9",
+      "id": "85a62af98c0783dca992a286",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
       "target": "source:cbb40348e269273787c15dfe",
       "kind": "cites",
       "layer": "provenance",
@@ -2818,8 +2856,8 @@
       ]
     },
     {
-      "id": "67da2b7ce6b72f30795afe6b",
-      "source": "page:67fb64c7b8e926285a3fd4e9",
+      "id": "4611749e9a8ca93ada10a024",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2829,9 +2867,20 @@
       ]
     },
     {
-      "id": "d9d020ba7f7037374ced5785",
-      "source": "page:67fb64c7b8e926285a3fd4e9",
-      "target": "claim:3f941e3dc7510db53f799ca6",
+      "id": "cd74e7383af1ffbfc2e04328",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
+      "target": "source:paper:2609.19969",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "3c2dee18c56e48e4d058e34d",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
+      "target": "claim:c4edbe3ec4a5938aec128883",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2841,8 +2890,8 @@
       ]
     },
     {
-      "id": "3f50db66c95b2b1cc90e9df4",
-      "source": "claim:3f941e3dc7510db53f799ca6",
+      "id": "ce52b94a6b6a286aa90d7f53",
+      "source": "claim:c4edbe3ec4a5938aec128883",
       "target": "source:cbb40348e269273787c15dfe",
       "kind": "cites",
       "layer": "provenance",
@@ -2852,8 +2901,8 @@
       ]
     },
     {
-      "id": "899ba467e2795fc4f0476be9",
-      "source": "claim:3f941e3dc7510db53f799ca6",
+      "id": "9adbef893a5aa98afbf3565a",
+      "source": "claim:c4edbe3ec4a5938aec128883",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2863,37 +2912,103 @@
       ]
     },
     {
-      "id": "2aac154f29d974d405cca180",
-      "source": "page:67fb64c7b8e926285a3fd4e9",
-      "target": "claim:a99afdc5216837a5a812087c",
+      "id": "2ce29fc9b06d111def4a2fd1",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
+      "target": "claim:cd6f3be6af331f623fddd58c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:cbb40348e269273787c15dfe",
-        "source:da6df76cb3d2a78509c7709d"
+        "source:da6df76cb3d2a78509c7709d",
+        "source:paper:2609.19969"
       ]
     },
     {
-      "id": "c9b103f6081fd5f5ddcfd1d7",
-      "source": "claim:a99afdc5216837a5a812087c",
-      "target": "source:cbb40348e269273787c15dfe",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:cbb40348e269273787c15dfe"
-      ]
-    },
-    {
-      "id": "8fdfca0e680849ff18cc8879",
-      "source": "claim:a99afdc5216837a5a812087c",
+      "id": "3cd77a42ba64e66d44bac365",
+      "source": "claim:cd6f3be6af331f623fddd58c",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:da6df76cb3d2a78509c7709d"
+      ]
+    },
+    {
+      "id": "642d49e5affe5159611c6501",
+      "source": "claim:cd6f3be6af331f623fddd58c",
+      "target": "source:paper:2609.19969",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "3a97658043c9afe5a12c767a",
+      "source": "page:43e0c8b63cb61bda06ef289e",
+      "target": "source:da6df76cb3d2a78509c7709d",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:da6df76cb3d2a78509c7709d"
+      ]
+    },
+    {
+      "id": "f682307252b65d9f9d7e471a",
+      "source": "page:43e0c8b63cb61bda06ef289e",
+      "target": "source:paper:2609.19969",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "9c758365453ff9856a44bd4e",
+      "source": "page:43e0c8b63cb61bda06ef289e",
+      "target": "claim:bed2fbc97f1b42cf7e4f6dd1",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "4612b032f2b7858d1ace2438",
+      "source": "claim:bed2fbc97f1b42cf7e4f6dd1",
+      "target": "source:paper:2609.19969",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "66466b41c3d00bd8115058c7",
+      "source": "page:43e0c8b63cb61bda06ef289e",
+      "target": "claim:06a1a39d589da90e5a1ac52c",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "ca9d4f536b903c937fd98c3f",
+      "source": "claim:06a1a39d589da90e5a1ac52c",
+      "target": "source:paper:2609.19969",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
       ]
     },
     {
@@ -2908,9 +3023,9 @@
       ]
     },
     {
-      "id": "784682d17a809b1c1651368b",
+      "id": "7efb6a682d87300d4ab92b45",
       "source": "page:74a3b0b060bf1325d1fb716d",
-      "target": "claim:9e85966a15db6b99af359c7a",
+      "target": "claim:5723ad56c7cdb864193731cf",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2919,8 +3034,8 @@
       ]
     },
     {
-      "id": "4ca2d1845ce1388d1796ba74",
-      "source": "claim:9e85966a15db6b99af359c7a",
+      "id": "58e4fc5368015197779173b8",
+      "source": "claim:5723ad56c7cdb864193731cf",
       "target": "source:d783c787cb6ce78606db6a56",
       "kind": "cites",
       "layer": "provenance",
@@ -2930,9 +3045,9 @@
       ]
     },
     {
-      "id": "4685a91674945dc53b062407",
+      "id": "21eef816111b4163e780138f",
       "source": "page:74a3b0b060bf1325d1fb716d",
-      "target": "claim:f464562c473084eca7e17694",
+      "target": "claim:e066fd2aa82fdd35718c4304",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2941,8 +3056,8 @@
       ]
     },
     {
-      "id": "21c9d9404c4407b757c3ad15",
-      "source": "claim:f464562c473084eca7e17694",
+      "id": "20f92681874d9418d1c6f9ed",
+      "source": "claim:e066fd2aa82fdd35718c4304",
       "target": "source:d783c787cb6ce78606db6a56",
       "kind": "cites",
       "layer": "provenance",
@@ -2985,9 +3100,9 @@
       ]
     },
     {
-      "id": "75399cf0f76822040102d163",
+      "id": "e518b78aa86c663124f45f1a",
       "source": "page:cb2ece51fd8bf5f9ab98d74a",
-      "target": "claim:b75164b1ea7bc580385713af",
+      "target": "claim:93c4b91e70e2a4a260d89f1f",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2996,47 +3111,14 @@
       ]
     },
     {
-      "id": "781be3ffc3c6f4fc76f69faf",
-      "source": "claim:b75164b1ea7bc580385713af",
+      "id": "620c88ab29822106b0bf6cde",
+      "source": "claim:93c4b91e70e2a4a260d89f1f",
       "target": "source:fc356a3c94782703f13d69b3",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:fc356a3c94782703f13d69b3"
-      ]
-    },
-    {
-      "id": "e686da2b27006d84f634f16c",
-      "source": "page:3cb0e3cebd6633f679b0c4ed",
-      "target": "source:5d03910cda5f5397b68f2673",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
-      ]
-    },
-    {
-      "id": "9a9d5003bdeb55f37ff8e7de",
-      "source": "page:3cb0e3cebd6633f679b0c4ed",
-      "target": "claim:0354e56f12445d91b957616e",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
-      ]
-    },
-    {
-      "id": "414697e47529f6d5710c3dd9",
-      "source": "claim:0354e56f12445d91b957616e",
-      "target": "source:5d03910cda5f5397b68f2673",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
       ]
     },
     {
@@ -5784,14 +5866,26 @@
       ]
     },
     {
-      "id": "069fb548f1133c38785c8ed4",
+      "id": "96f6c51ca5f7020cd8724eb9",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "page:67fb64c7b8e926285a3fd4e9",
+      "target": "page:9cd0bf59dbd0b917be7acd84",
       "kind": "involves",
       "layer": "semantic",
-      "text": "중국 AI 기업의 자국산 컴퓨팅 기반 구축 계획을 다룬다.",
+      "text": "중국 AI 기업의 자금 조달과 자국산 컴퓨팅 구축 계획을 다룬다.",
       "source_ids": [
         "source:da6df76cb3d2a78509c7709d"
+      ]
+    },
+    {
+      "id": "5a112ad7a8a606bee34bb9b7",
+      "source": "page:de284b6684f6abbc4e22ed30",
+      "target": "page:43e0c8b63cb61bda06ef289e",
+      "kind": "involves",
+      "layer": "semantic",
+      "text": "중국 AI 기업 DeepSeek의 개발 동향에 에이전트용 모델의 연산·메모리 절감 연구를 포함한다.",
+      "source_ids": [
+        "source:da6df76cb3d2a78509c7709d",
+        "source:paper:2609.19969"
       ]
     },
     {
@@ -5817,14 +5911,14 @@
       ]
     },
     {
-      "id": "4bded1d4cf4cda9924b529ff",
-      "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "page:3cb0e3cebd6633f679b0c4ed",
+      "id": "7dda91f15e749a121592c4ee",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
+      "target": "page:43e0c8b63cb61bda06ef289e",
       "kind": "involves",
       "layer": "semantic",
-      "text": "알리바바 Qwen의 모델 출시와 컨텍스트 사양을 다룬다.",
+      "text": "해당 모델 초록은 CED와 KV 캐시 압축을 배포 비용 절감 설계로 설명한다.",
       "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
+        "source:paper:2609.19969"
       ]
     },
     {
@@ -6205,6 +6299,30 @@
       ]
     },
     {
+      "id": "aa66d8509958eed5595925cf",
+      "source": "page:43e0c8b63cb61bda06ef289e",
+      "target": "page:9cd0bf59dbd0b917be7acd84",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:da6df76cb3d2a78509c7709d",
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "f62e06c3f3aef5b318ca3a44",
+      "source": "page:43e0c8b63cb61bda06ef289e",
+      "target": "page:de284b6684f6abbc4e22ed30",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:da6df76cb3d2a78509c7709d",
+        "source:paper:2609.19969"
+      ]
+    },
+    {
       "id": "a09934519e5930d7ade3d16f",
       "source": "page:496f722e3a061b8ca1a39ff6",
       "target": "page:9b08b924963cb1769f63a232",
@@ -6262,6 +6380,18 @@
       "source_ids": [
         "source:4379d4e7f64f8347134ecb12",
         "source:9d953b0bbdc80a4de4f271cf"
+      ]
+    },
+    {
+      "id": "70ae76e2b04fd05936da1de1",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
+      "target": "page:de284b6684f6abbc4e22ed30",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:da6df76cb3d2a78509c7709d",
+        "source:paper:2609.19969"
       ]
     },
     {
@@ -6452,17 +6582,6 @@
       ]
     },
     {
-      "id": "7d4764cf18d12087b9f05d9e",
-      "source": "page:3cb0e3cebd6633f679b0c4ed",
-      "target": "page:de284b6684f6abbc4e22ed30",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
-      ]
-    },
-    {
       "id": "b762b96d9910576a0b2a98fa",
       "source": "page:3e7b41c644da4cb118490c7a",
       "target": "page:9b08b924963cb1769f63a232",
@@ -6482,17 +6601,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:0fbb2545a72a30b7553c8e7c"
-      ]
-    },
-    {
-      "id": "2c895ee72667cab48e646849",
-      "source": "page:67fb64c7b8e926285a3fd4e9",
-      "target": "page:de284b6684f6abbc4e22ed30",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d"
       ]
     },
     {
@@ -6776,7 +6884,7 @@
       "id": "china",
       "title": "중국",
       "kind": "topic",
-      "revision": 38,
+      "revision": 46,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6784,7 +6892,7 @@
             "source:ae9d704759baaac69bf840c7"
           ],
           "kind": "reported",
-          "text": "경향신문 링크의 수집 발췌는 중국 AI의 초점이 모델 개발에서 에이전트 수익화로 이동하며 토큰 소비가 12배 증가할 것으로 전망한다고 전한다. 전망의 기준·기간과 실제 매출 변화는 제시하지 않는다."
+          "text": "경향신문 링크의 수집 발췌는 중국 AI가 모델 개발에서 에이전트 수익화로 전환하며 토큰 소비가 12배 늘 것으로 전망한다고 전한다. 전망의 기준·기간이나 실제 매출 변화는 제시하지 않는다."
         },
         {
           "evidence_ids": [
@@ -6793,15 +6901,15 @@
             "source:da6df76cb3d2a78509c7709d"
           ],
           "kind": "interpretation",
-          "text": "Qwen의 모델 출시, 화웨이 Ascend 950 클라우드의 상용화 일정 확정, DeepSeek의 인프라 투자 계획은 서로 다른 진행 단계다. 이를 모두 서비스 가동이나 중국 AI 산업의 성장 실적으로 합산할 수는 없다."
+          "text": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정, DeepSeek의 인프라 투자 계획은 각각 제품·일정·투자에 관한 보도다. 이를 실제 서비스 가동이나 산업 성장 실적으로 합산하기는 어렵다."
         }
       ]
     },
     {
-      "id": "china:0de2183429999f9c1885",
-      "title": "DeepSeek의 자금 조달과 인프라 확충",
+      "id": "china:af4940ba1db0eb032757",
+      "title": "DeepSeek",
       "kind": "entity",
-      "revision": 38,
+      "revision": 46,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6810,15 +6918,38 @@
             "source:cbb40348e269273787c15dfe"
           ],
           "kind": "reported",
-          "text": "7월 1일 수집된 Pandaily 링크 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을 전한다. 9월 18일 수집된 CSF/KIEP 링크 발췌는 인프라 인력 확충과 상장 준비의 병행을 전한다."
+          "text": "Pandaily 링크 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을, CSF/KIEP 링크 발췌는 인프라 인력 확충과 상장 준비 병행을 전한다. 후자는 앞선 투자금의 집행이나 상장 완료를 확인하지 않는다."
         },
         {
           "evidence_ids": [
-            "source:da6df76cb3d2a78509c7709d",
-            "source:cbb40348e269273787c15dfe"
+            "source:paper:2609.19969",
+            "source:da6df76cb3d2a78509c7709d"
           ],
           "kind": "interpretation",
-          "text": "두 보도는 개발 기반 확충이라는 방향을 공유한다. 그러나 인력 확충이 앞선 투자금으로 집행됐다는 연결은 없으며, 뒤의 보도가 자금 집행이나 상장 완료를 확인하지도 않는다."
+          "text": "DeepSeek-V4.1-Flash 초록의 연산·캐시 절감 보고는 모델 설계에 관한 근거다. 이를 자국산 컴퓨팅 인프라 구축 계획이 실현됐다는 근거로 볼 수는 없다."
+        }
+      ]
+    },
+    {
+      "id": "china:ae34d2cb008c92c72682",
+      "title": "DeepSeek-V4.1-Flash의 연산·캐시 절감",
+      "kind": "concept",
+      "revision": 46,
+      "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
+      "claims": [
+        {
+          "evidence_ids": [
+            "source:paper:2609.19969"
+          ],
+          "kind": "reported",
+          "text": "저자들은 입력 비중이 큰 에이전트 작업의 비용을 줄이기 위해 CED 구조를 도입했다고 설명한다. 토큰당 활성 파라미터는 입력 처리(prefill)에서 80억 개, 출력 생성(decode)에서 160억 개다."
+        },
+        {
+          "evidence_ids": [
+            "source:paper:2609.19969"
+          ],
+          "kind": "reported",
+          "text": "초록은 CSA2의 층간 KV 캐시 재사용과 FP4 저장으로 HBM의 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리의 영속 캐시를 약 1/8로 줄인다. 이는 저자 보고 메모리 수치이며 실제 서비스 요금 감소율은 아니다."
         }
       ]
     },
@@ -6826,7 +6957,7 @@
       "id": "china:407018b50f9d3916425a",
       "title": "중국의 해외 AI API 중계시장",
       "kind": "issue",
-      "revision": 38,
+      "revision": 46,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6834,14 +6965,14 @@
             "source:d783c787cb6ce78606db6a56"
           ],
           "kind": "reported",
-          "text": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 타오바오 가격이 공식 서구 API의 약 1/5~1/10이라는 수치는 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 서비스 이용이라는 이해관계도 밝힌다."
+          "text": "LessWrong 필자 CMLKevin은 구독·클라우드 크레딧 등으로 확보한 저가 토큰을 중국 시장에 API로 재판매하는 서비스를 설명한다. 공식 서구 API의 약 1/5~1/10이라는 타오바오 가격은 개인 관찰이며, 필자는 정식 접근 제한에 대한 불만과 중계 이용이라는 이해관계를 밝힌다."
         },
         {
           "evidence_ids": [
             "source:d783c787cb6ce78606db6a56"
           ],
           "kind": "uncertain",
-          "text": "공급자 선택의 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제시하지 않는다."
+          "text": "공급자 선택에서 남는 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 데이터 피해를 검증한 결과는 제공하지 않는다."
         }
       ]
     },
@@ -6849,7 +6980,7 @@
       "id": "china:bd2cb88abffe36ab3645",
       "title": "인격화 AI 상호작용 서비스 조치 공동 발표",
       "kind": "event",
-      "revision": 38,
+      "revision": 46,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6864,23 +6995,7 @@
             "source:fc356a3c94782703f13d69b3"
           ],
           "kind": "uncertain",
-          "text": "적용 대상·사업자 의무·시행일은 제공 발췌에 없다. 자료에 붙은 2026년 4월 10일을 발효일로 확정할 수 없으며, 서비스 설계에 적용할 의무를 판단하려면 조문과 시행 정보가 필요하다."
-        }
-      ]
-    },
-    {
-      "id": "china:49efc0cd5d6a87376807",
-      "title": "Qwen3.8-Omni-Flash 출시",
-      "kind": "event",
-      "revision": 38,
-      "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
-      "claims": [
-        {
-          "evidence_ids": [
-            "source:5d03910cda5f5397b68f2673"
-          ],
-          "kind": "reported",
-          "text": "TechNode 링크의 수집 발췌는 알리바바 Qwen이 100만 토큰 컨텍스트의 Qwen3.8-Omni-Flash를 출시했다고 전한다. 발췌가 제공하는 사양은 컨텍스트 규모이며, 긴 입력에서의 정확도·처리 속도·이용 가격은 제시하지 않는다."
+          "text": "적용 대상·사업자 의무·시행일은 제공 발췌에 없다. 자료에 붙은 2026년 4월 10일을 발효일로 확정할 수 없으며, 서비스 설계에 적용할 의무는 조문과 시행 정보가 있어야 판단할 수 있다."
         }
       ]
     },
@@ -7676,12 +7791,12 @@
     }
   ],
   "issues": [],
-  "version": "4eade9f3116049ba36c1ff0519a7fe80a2b30fa344501be607a0baa66307a2d6",
-  "exported_at": "2026-09-19T00:15:39.762787+00:00",
+  "version": "05f8762ed1849f820cb62466d71caf3e140f06ffb74b85c7f6239aa2a3fd7913",
+  "exported_at": "2026-09-19T00:21:31.237219+00:00",
   "coverage": {
     "pages": 43,
-    "claims": 83,
-    "cited_sources": 48,
+    "claims": 84,
+    "cited_sources": 49,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
