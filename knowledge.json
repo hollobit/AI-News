@@ -1645,7 +1645,7 @@
         "source:fc674bb50b9225f597450b43"
       ],
       "claims": [
-        "claim:fd01996a65f266199df6e50b"
+        "claim:543e26d55317a3587d9714c0"
       ],
       "status": "reviewed"
     },
@@ -1713,9 +1713,9 @@
       "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE9hcWY3dHYyWEhmdnBmdTRKM3E0eGtiSVR3VVNYQ3FJMjIza0VDRUE0cTYtdERVMjJfM3RnRmpHMGFuYy1LaHJyNWVRczgtZG8"
     },
     {
-      "id": "claim:fd01996a65f266199df6e50b",
+      "id": "claim:543e26d55317a3587d9714c0",
       "type": "claim",
-      "title": "공공 AX 보도는 서비스 공급, 기관의 AI 활용 수준 진단, 현장 업무 적용을 함께 다룬다. 실행 단계 비율·현장 성과·향후 목표는 측정 대상과 달성 여부가 달라 구분해 읽어야 한다.",
+      "title": "공공 AX 자료는 서비스 공급, 기관의 AI 활용 수준 진단, 현장 업무 적용을 다룬다. 실행 단계 비율은 도입 현황 분석이고, 서비스 공개는 공급 소식이며, 현장 감소 실적과 확대 목표는 달성 여부가 다르므로 구분해 읽어야 한다.",
       "source_ids": [
         "source:60ff9f57f8546564f9e86bfb",
         "source:b8c2184e0cd368d30930e0eb",
@@ -1739,15 +1739,15 @@
         "source:b8c2184e0cd368d30930e0eb"
       ],
       "claims": [
-        "claim:0212f72bd3271a6488b84e81",
-        "claim:49e1fdac469a17eeb2fd767e"
+        "claim:ec5a6d0c49bd82c2da7eba64",
+        "claim:f340a810a18fc353dca39a73"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:0212f72bd3271a6488b84e81",
+      "id": "claim:ec5a6d0c49bd82c2da7eba64",
       "type": "claim",
-      "title": "KT 리포트를 소개한 보도는 금융의 59.5%, 공공의 30%가 AX 실행 단계라고 전했다. 별도 보도는 KT가 지자체 대상 공공 AX 서비스 10종을 공개했다고 전했다.",
+      "title": "KT 리포트를 소개한 발췌는 금융 59.5%·공공 30%가 AX ‘실행 단계’라고 전한다. 별도 발췌는 KT가 지자체 대상 공공 AX 서비스 10종을 공개했다고 보도한다.",
       "source_ids": [
         "source:60ff9f57f8546564f9e86bfb",
         "source:b8c2184e0cd368d30930e0eb"
@@ -1756,9 +1756,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:49e1fdac469a17eeb2fd767e",
+      "id": "claim:f340a810a18fc353dca39a73",
       "type": "claim",
-      "title": "실행 단계 비율은 도입 현황 분석이고 10종 공개는 공급 소식이다. 발췌에 조사 표본과 실행 단계 정의가 없어 30%를 전체 공공기관의 보급률로 일반화하기 어렵고, 서비스 공개도 실제 도입 실적을 뜻하지 않는다.",
+      "title": "조사 표본·분모·실행 단계 정의가 제시되지 않아 30%를 전체 공공기관의 보급률로 일반화하기 어렵다. 서비스 10종 공개 역시 실제 도입 기관 수나 업무 개선 효과를 보여주지는 않는다.",
       "source_ids": [
         "source:60ff9f57f8546564f9e86bfb",
         "source:b8c2184e0cd368d30930e0eb"
@@ -1767,42 +1767,28 @@
       "status": "reviewed"
     },
     {
-      "id": "page:390a76ec1fc509e494e11335",
-      "type": "entity",
+      "id": "page:4945318849eb1c503eb30e15",
+      "type": "concept",
       "title": "공공AI진단(NPAI)",
       "page_ids": [
-        "public_ax:3c6a7b69a0c57e9f3acd"
+        "public_ax:de54de4ac587c82f8c7a"
       ],
       "topics": [
         "public_ax"
       ],
       "source_ids": [
-        "source:43ab44bcdb8bb366d2da5d8e",
         "source:fc674bb50b9225f597450b43"
       ],
       "claims": [
-        "claim:3848b5241b68c24a4afcefc5",
-        "claim:aec7400391e644bfd3e078dd"
+        "claim:bb4dcf8ea920d17478acd095",
+        "claim:5e6e3884bebb90363daf9117"
       ],
       "status": "reviewed"
     },
     {
-      "id": "source:43ab44bcdb8bb366d2da5d8e",
-      "type": "source",
-      "title": "무보, 공공AI진단 참여…AI 기반 무역보험 신뢰성 제고",
-      "source_ids": [
-        "source:43ab44bcdb8bb366d2da5d8e"
-      ],
-      "origin": "telegram_excerpt",
-      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-17",
-      "status": "original_source_not_fact_checked",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE00MmxESWQtc2I0WDNPMGV0Z2hBblI5VnN2QVNXTl9WYThNTm1yS1YxRFU0VWxMNHE4VTBuYlVMMmxkR2k0aURHOTRacWEwZlk"
-    },
-    {
-      "id": "claim:3848b5241b68c24a4afcefc5",
+      "id": "claim:bb4dcf8ea920d17478acd095",
       "type": "claim",
-      "title": "MBN에 따르면 NPAI는 서울AI재단·한국생산성본부·MBN이 공동 개발한 공공부문 진단체계다. 거버넌스·인프라·서비스·정합성을 점검하고 기관 간 비교로 AI 활용 수준과 발전 방향을 살핀다.",
+      "title": "MBN에 따르면 NPAI는 서울AI재단·한국생산성본부·MBN이 공동 개발한 공공부문 AI 진단체계다. 거버넌스·인프라·서비스·정합성을 점검하고 기관 간 비교로 AI 활용 수준과 발전 방향을 살핀다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ],
@@ -1810,22 +1796,21 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:aec7400391e644bfd3e078dd",
+      "id": "claim:5e6e3884bebb90363daf9117",
       "type": "claim",
-      "title": "한국도로공사는 AI 활용 체계 보완과 추가 과제 발굴을 위해 참여한다고 밝혔다. 무보의 공공AI진단 참여도 AI 기반 무역보험 신뢰성 제고 취지로 보도됐다.",
+      "title": "한국도로공사는 진단을 통해 부족한 제도·정책·조직을 보완하고 추가 AI 활용 과제를 발굴할 계획이라고 밝혔다. 제공 기사에는 진단 결과나 점수가 제시되지 않았다.",
       "source_ids": [
-        "source:43ab44bcdb8bb366d2da5d8e",
         "source:fc674bb50b9225f597450b43"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "page:d32072f869e1e3032e5723a5",
-      "type": "entity",
-      "title": "한국도로공사의 AI 활용",
+      "id": "page:7f6e5e62d3fd03511b96bf71",
+      "type": "event",
+      "title": "한국도로공사의 NPAI 참여와 AI 확대 계획",
       "page_ids": [
-        "public_ax:93c64e577352632da213"
+        "public_ax:4a11785501d9f48c754a"
       ],
       "topics": [
         "public_ax"
@@ -1834,16 +1819,16 @@
         "source:fc674bb50b9225f597450b43"
       ],
       "claims": [
-        "claim:01fce15d2e2e3d368f5eeb49",
-        "claim:5c17d77b692442a67ebeaeac",
-        "claim:a51c6809120c882a79967861"
+        "claim:526540ad063db2834a25d4b7",
+        "claim:101d3ab014bf7d17b4a95503",
+        "claim:652c0046aa3f35170d51ccfb"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:01fce15d2e2e3d368f5eeb49",
+      "id": "claim:526540ad063db2834a25d4b7",
       "type": "claim",
-      "title": "MBN은 도로공사의 AI 시설물 진단·유지관리와 적재불량 탐지 성과로 도로파임 16.5%, 낙하물 16.1% 감소를 전했다.",
+      "title": "2026년 9월 11일 MBN 기사는 한국도로공사의 NPAI 참여 발표를 전하며, AI 시설물 진단·유지관리와 적재불량 탐지 성과로 도로파임 16.5%·낙하물 16.1% 감소를 보도했다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ],
@@ -1851,19 +1836,19 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:5c17d77b692442a67ebeaeac",
+      "id": "claim:101d3ab014bf7d17b4a95503",
       "type": "claim",
-      "title": "확보된 본문에는 감소율의 비교 기간과 효과 산정 방법이 없어, 해당 수치만으로 AI 도입의 독립적인 효과 크기를 판단하기 어렵다.",
+      "title": "감소율의 비교 기간·산정 방법과 다른 관리 조치의 영향은 무엇인가? 제공 본문에는 설명이 없어 AI의 독립적인 기여도는 확인되지 않는다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ],
-      "claim_kind": "interpretation",
+      "claim_kind": "uncertain",
       "status": "reviewed"
     },
     {
-      "id": "claim:a51c6809120c882a79967861",
+      "id": "claim:652c0046aa3f35170d51ccfb",
       "type": "claim",
-      "title": "도로공사는 2026년 말까지 고속도로 CCTV 약 9,500대 중 약 4,000대에 AI를 적용할 계획이라고 밝혔다. 돌발상황 검지 정확도 50%→96%는 목표이며, 인지·대응 시간 6분 31초→80초는 기대치다.",
+      "title": "도로공사는 2026년 말까지 고속도로 CCTV 약 9,500대 중 약 4,000대에 AI를 적용할 계획이라고 밝혔다. 돌발상황 검지 정확도 50%→96%는 목표이고, 인지부터 대응까지 6분 31초→80초는 기대치다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ],
@@ -1886,7 +1871,7 @@
       ],
       "claims": [
         "claim:c3a304fad5b26aea486bb03b",
-        "claim:36accb506b54252e7acfd06d"
+        "claim:2e8ae789a069a00c81534d27"
       ],
       "status": "reviewed"
     },
@@ -1902,9 +1887,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:36accb506b54252e7acfd06d",
+      "id": "claim:2e8ae789a069a00c81534d27",
       "type": "claim",
-      "title": "9월 16일 브리핑은 단축 대상을 ‘부정수급 적발’, 9월 18일 브리핑은 ‘검증’으로 표현한다. 같은 업무 단계를 뜻하는지 확인되지 않아 적발 전체 기간의 단축으로 단정할 수 없다. 브리핑 날짜 차이만으로 성과가 갱신됐다고 볼 수도 없다.",
+      "title": "9월 16일 브리핑은 단축 대상을 ‘부정수급 적발’, 9월 18일 브리핑은 ‘검증’으로 표현한다. 같은 업무 단계인지 확인되지 않아 적발 전체 기간이 단축됐다고 단정할 수 없다. 브리핑 날짜 차이만으로 성과의 후속 변경이라고 볼 수도 없다.",
       "source_ids": [
         "source:07917f5939f3ec5d21d05ff0",
         "source:3999b94431374f06e9cac006"
@@ -2162,7 +2147,7 @@
         "source:e89c1ac68cbd967098c96b45"
       ],
       "claims": [
-        "claim:5c4ad36dd90622a5fde19adb"
+        "claim:92fd9095554f245f879e85fd"
       ],
       "status": "reviewed"
     },
@@ -2219,9 +2204,9 @@
       "url": "https://www.tomsguide.com/home/smart-home/the-us-government-just-banned-almost-all-robot-vacuums-heres-why"
     },
     {
-      "id": "claim:5c4ad36dd90622a5fde19adb",
+      "id": "claim:92fd9095554f245f879e85fd",
       "type": "claim",
-      "title": "제공 자료의 미국 관련 의제는 미중 AI 규제·개발 속도 논쟁, 정부 기관용 AI 구축, 로봇청소기 금지 보도로 나뉜다. 정책 논평, 공급사 발표, 규제 보도는 근거의 성격이 달라 각각 정부 결정·실제 채택·법적 적용 범위를 구분해 읽어야 한다.",
+      "title": "제공 자료에서 미국 관련 핵심 의제는 미중 AI 규제·개발 속도 논쟁, 정부 기관용 AI 구축, 로봇청소기 규제 보도다. 각각 정책 논평, 공급사 발표, 금지 주장이라는 근거 성격을 구분해야 정부 결정·실제 도입·이용 제한을 혼동하지 않는다.",
       "source_ids": [
         "source:0630aadc72eaafc6450ce130",
         "source:bd80488d41bf1374e8f2a486",
@@ -2246,16 +2231,16 @@
         "source:bd80488d41bf1374e8f2a486"
       ],
       "claims": [
-        "claim:72db46295917e50be593c75b",
-        "claim:a703523c989349c081e5edd0",
-        "claim:4cd10bc2324d1f877320b93c"
+        "claim:6dc3e9d5c94b32550948faac",
+        "claim:5d36f768069cda7c68bcd3e4",
+        "claim:1569a0aadd585e84c4eb15b5"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:72db46295917e50be593c75b",
+      "id": "claim:6dc3e9d5c94b32550948faac",
       "type": "claim",
-      "title": "Asia Times 기사에 연결된 발췌는 에이전트 샌드박스 탈출·국가급 공격 사건을 언급하며 미중 AI 규제 합의가 요원하다고 전한다. 사건 경위나 협상에 미친 영향은 제시하지 않는다.",
+      "title": "Asia Times 기사에 연결된 발췌는 에이전트 샌드박스 탈출·국가급 공격 사건을 언급하며 미중 AI 규제 합의가 없다고 주장한다. 사건 경위와 협상에 미친 영향은 제시하지 않는다.",
       "source_ids": [
         "source:0630aadc72eaafc6450ce130"
       ],
@@ -2263,9 +2248,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:a703523c989349c081e5edd0",
+      "id": "claim:5d36f768069cda7c68bcd3e4",
       "type": "claim",
-      "title": "MSN 기사에 연결된 발췌는 중국이 AI 개발 속도 조절을 거부한다는 전제로 미국도 개발을 멈춰서는 안 된다는 주장을 소개한다. 주장 주체와 중국의 공식 결정 근거는 제시되지 않는다.",
+      "title": "MSN 기사에 연결된 발췌는 중국이 AI 개발 속도 조절을 거부한다는 전제로 미국도 개발을 멈춰서는 안 된다는 주장을 소개한다. 주장 주체와 중국의 공식 결정 근거는 발췌에 없다.",
       "source_ids": [
         "source:bd80488d41bf1374e8f2a486"
       ],
@@ -2273,9 +2258,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:4cd10bc2324d1f877320b93c",
+      "id": "claim:1569a0aadd585e84c4eb15b5",
       "type": "claim",
-      "title": "국제 규제 합의의 부재와 개발 지속을 요구하는 논평은 서로 다른 내용이다. 두 발췌만으로 미국의 개발 가속 정책이 확정됐거나 보안 사건 때문에 협상이 정체됐다고 판단할 수 없다.",
+      "title": "규제 합의의 부재에 관한 보도와 개발 지속을 요구하는 논평은 구분해야 한다. 두 발췌는 미국의 가속 정책 확정이나 보안 사건으로 인한 협상 정체를 입증하지 않는다.",
       "source_ids": [
         "source:0630aadc72eaafc6450ce130",
         "source:bd80488d41bf1374e8f2a486"
@@ -2297,15 +2282,15 @@
         "source:df803567b853098953fdf550"
       ],
       "claims": [
-        "claim:fae04c5afe15ac7139d0ed5a",
-        "claim:94fdfaeed86b3fef7a18803f"
+        "claim:075bbd35c1e8d0a88cf593f7",
+        "claim:8b4853c3116183a306878fc9"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:fae04c5afe15ac7139d0ed5a",
+      "id": "claim:075bbd35c1e8d0a88cf593f7",
       "type": "claim",
-      "title": "NVIDIA 블로그를 출처로 한 발췌는 Palantir가 NVIDIA Nemotron을 활용해 미국 정부 기관용 보안 AI 환경을 구축했다고 전한다. 정부 기관은 발표에서 명시한 제공 대상이다.",
+      "title": "NVIDIA 블로그를 출처로 한 발췌는 Palantir가 NVIDIA Nemotron으로 미국 정부 기관용 보안 AI 환경을 구축했다고 전한다. 정부 기관은 발표에 명시된 제공 대상이다.",
       "source_ids": [
         "source:df803567b853098953fdf550"
       ],
@@ -2313,9 +2298,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:94fdfaeed86b3fef7a18803f",
+      "id": "claim:8b4853c3116183a306878fc9",
       "type": "claim",
-      "title": "어느 기관이 실제 운영하며 보안 효과는 어떻게 검증됐는가? 발췌에는 도입 기관·운영 범위·검증 결과가 없어 구축 발표만으로 정부 채택이나 보안 효과를 확인할 수 없다.",
+      "title": "어느 기관이 실제 운영하며 보안 효과는 어떻게 검증됐는가? 발췌에는 도입 기관·운영 범위·검증 결과가 없어 구축 발표만으로 실제 채택이나 보안 효과를 확인할 수 없다.",
       "source_ids": [
         "source:df803567b853098953fdf550"
       ],
@@ -2336,15 +2321,15 @@
         "source:e89c1ac68cbd967098c96b45"
       ],
       "claims": [
-        "claim:f74cf18d1f7a07db7f10e589",
-        "claim:4d043c5d578140e5dc89f59f"
+        "claim:70c40238eead5214e3bbf228",
+        "claim:3834a3528e02ae3e341ceeb1"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:f74cf18d1f7a07db7f10e589",
+      "id": "claim:70c40238eead5214e3bbf228",
       "type": "claim",
-      "title": "Tom’s Guide 기사에 연결된 발췌는 중국산 로봇청소기의 보안·데이터 우려를 이유로 미국 정부가 대부분의 로봇청소기 판매·사용을 금지했다고 전한다.",
+      "title": "Tom’s Guide 기사에 연결된 발췌는 중국산 로봇청소기의 보안·데이터 우려로 미국 정부가 대부분의 로봇청소기 판매·사용을 금지했다고 주장한다.",
       "source_ids": [
         "source:e89c1ac68cbd967098c96b45"
       ],
@@ -2352,9 +2337,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:4d043c5d578140e5dc89f59f",
+      "id": "claim:3834a3528e02ae3e341ceeb1",
       "type": "claim",
-      "title": "금지의 법적 근거, 대상 제품, 판매와 사용 각각의 제한 범위, 시행 시점은 무엇인가? 제공 발췌에는 이 정보가 없어 기존 소유자의 사용까지 금지되는지 판단할 수 없다.",
+      "title": "금지의 법적 근거, 대상 제품, 판매와 사용 각각의 제한 범위, 시행일은 무엇인가? 발췌에는 이 정보가 없어 기존 소유자의 사용까지 금지되는지 판단할 수 없다.",
       "source_ids": [
         "source:e89c1ac68cbd967098c96b45"
       ],
@@ -4735,9 +4720,9 @@
       ]
     },
     {
-      "id": "bd1aa0cb86d6e594d90f47ea",
+      "id": "9c5271fdcddc5f6d0cf1d773",
       "source": "page:88a7d76c1e37f65910e69c84",
-      "target": "claim:fd01996a65f266199df6e50b",
+      "target": "claim:543e26d55317a3587d9714c0",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4748,8 +4733,8 @@
       ]
     },
     {
-      "id": "c51872166f2b7ac8c406adc3",
-      "source": "claim:fd01996a65f266199df6e50b",
+      "id": "43c5160abb1ae98f4974d5eb",
+      "source": "claim:543e26d55317a3587d9714c0",
       "target": "source:60ff9f57f8546564f9e86bfb",
       "kind": "cites",
       "layer": "provenance",
@@ -4759,8 +4744,8 @@
       ]
     },
     {
-      "id": "8ff8a4404c2651dc61951f2e",
-      "source": "claim:fd01996a65f266199df6e50b",
+      "id": "0419527deee0c0cade7ba617",
+      "source": "claim:543e26d55317a3587d9714c0",
       "target": "source:b8c2184e0cd368d30930e0eb",
       "kind": "cites",
       "layer": "provenance",
@@ -4770,8 +4755,8 @@
       ]
     },
     {
-      "id": "ef03da557c99c21036003b4a",
-      "source": "claim:fd01996a65f266199df6e50b",
+      "id": "25c9200f6aa346a51279fbb5",
+      "source": "claim:543e26d55317a3587d9714c0",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -4803,9 +4788,9 @@
       ]
     },
     {
-      "id": "bbc6abf7f43a55fd0889bd35",
+      "id": "45db89a70fedeca725733343",
       "source": "page:f11aacb4b405a2d876d32733",
-      "target": "claim:0212f72bd3271a6488b84e81",
+      "target": "claim:ec5a6d0c49bd82c2da7eba64",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4815,8 +4800,8 @@
       ]
     },
     {
-      "id": "da1ab6ccaaad742b3ea83f6e",
-      "source": "claim:0212f72bd3271a6488b84e81",
+      "id": "c2cb1e1f64ed421ebdeecd13",
+      "source": "claim:ec5a6d0c49bd82c2da7eba64",
       "target": "source:60ff9f57f8546564f9e86bfb",
       "kind": "cites",
       "layer": "provenance",
@@ -4826,8 +4811,8 @@
       ]
     },
     {
-      "id": "d46a7b976d0cf81248af8b49",
-      "source": "claim:0212f72bd3271a6488b84e81",
+      "id": "1a0fba3698fceb7cb1cbf2ca",
+      "source": "claim:ec5a6d0c49bd82c2da7eba64",
       "target": "source:b8c2184e0cd368d30930e0eb",
       "kind": "cites",
       "layer": "provenance",
@@ -4837,9 +4822,9 @@
       ]
     },
     {
-      "id": "70cd4278375e2a1818b464de",
+      "id": "60a5140046b9713aa3c1a818",
       "source": "page:f11aacb4b405a2d876d32733",
-      "target": "claim:49e1fdac469a17eeb2fd767e",
+      "target": "claim:f340a810a18fc353dca39a73",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4849,8 +4834,8 @@
       ]
     },
     {
-      "id": "bde9140642383d720a054c62",
-      "source": "claim:49e1fdac469a17eeb2fd767e",
+      "id": "553f4443af80e7820e828da3",
+      "source": "claim:f340a810a18fc353dca39a73",
       "target": "source:60ff9f57f8546564f9e86bfb",
       "kind": "cites",
       "layer": "provenance",
@@ -4860,8 +4845,8 @@
       ]
     },
     {
-      "id": "fc89af4517183bc25c8068b1",
-      "source": "claim:49e1fdac469a17eeb2fd767e",
+      "id": "b5a16955a124c9b5e4b471c3",
+      "source": "claim:f340a810a18fc353dca39a73",
       "target": "source:b8c2184e0cd368d30930e0eb",
       "kind": "cites",
       "layer": "provenance",
@@ -4871,19 +4856,8 @@
       ]
     },
     {
-      "id": "5f946d095963f96fb2c635da",
-      "source": "page:390a76ec1fc509e494e11335",
-      "target": "source:43ab44bcdb8bb366d2da5d8e",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:43ab44bcdb8bb366d2da5d8e"
-      ]
-    },
-    {
-      "id": "ad97c4a7f77b733e38bc29af",
-      "source": "page:390a76ec1fc509e494e11335",
+      "id": "3e09631d3772bd61db1325cc",
+      "source": "page:4945318849eb1c503eb30e15",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -4893,9 +4867,9 @@
       ]
     },
     {
-      "id": "2a13dd54743ca4fbc6e3f487",
-      "source": "page:390a76ec1fc509e494e11335",
-      "target": "claim:3848b5241b68c24a4afcefc5",
+      "id": "833df143cb27b2d4aa6483df",
+      "source": "page:4945318849eb1c503eb30e15",
+      "target": "claim:bb4dcf8ea920d17478acd095",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4904,8 +4878,8 @@
       ]
     },
     {
-      "id": "4d633bcb021dc3442de8209b",
-      "source": "claim:3848b5241b68c24a4afcefc5",
+      "id": "7b6ffa7260a37e1af875fe6d",
+      "source": "claim:bb4dcf8ea920d17478acd095",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -4915,54 +4889,9 @@
       ]
     },
     {
-      "id": "82e50ad5050c23dd31e395e5",
-      "source": "page:390a76ec1fc509e494e11335",
-      "target": "claim:aec7400391e644bfd3e078dd",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:43ab44bcdb8bb366d2da5d8e",
-        "source:fc674bb50b9225f597450b43"
-      ]
-    },
-    {
-      "id": "3493a6ea172691c5b3840cd2",
-      "source": "claim:aec7400391e644bfd3e078dd",
-      "target": "source:43ab44bcdb8bb366d2da5d8e",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:43ab44bcdb8bb366d2da5d8e"
-      ]
-    },
-    {
-      "id": "40511c92ec67e9236f3d3bdd",
-      "source": "claim:aec7400391e644bfd3e078dd",
-      "target": "source:fc674bb50b9225f597450b43",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:fc674bb50b9225f597450b43"
-      ]
-    },
-    {
-      "id": "087ab544611b5fe4f57efae0",
-      "source": "page:d32072f869e1e3032e5723a5",
-      "target": "source:fc674bb50b9225f597450b43",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:fc674bb50b9225f597450b43"
-      ]
-    },
-    {
-      "id": "36df6deb2db399435a426dd3",
-      "source": "page:d32072f869e1e3032e5723a5",
-      "target": "claim:01fce15d2e2e3d368f5eeb49",
+      "id": "1359721ce9ecf8701dbb4997",
+      "source": "page:4945318849eb1c503eb30e15",
+      "target": "claim:5e6e3884bebb90363daf9117",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4971,8 +4900,8 @@
       ]
     },
     {
-      "id": "c3592c2de81cb06dcf300556",
-      "source": "claim:01fce15d2e2e3d368f5eeb49",
+      "id": "8b3c50bb1e0979cfced54fb3",
+      "source": "claim:5e6e3884bebb90363daf9117",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -4982,19 +4911,8 @@
       ]
     },
     {
-      "id": "90ccffd3be3f969e6e87eed6",
-      "source": "page:d32072f869e1e3032e5723a5",
-      "target": "claim:5c17d77b692442a67ebeaeac",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:fc674bb50b9225f597450b43"
-      ]
-    },
-    {
-      "id": "9815874b56a37632f943441d",
-      "source": "claim:5c17d77b692442a67ebeaeac",
+      "id": "a52ae396d8684dbc35c657ff",
+      "source": "page:7f6e5e62d3fd03511b96bf71",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -5004,9 +4922,9 @@
       ]
     },
     {
-      "id": "cbc34cb23fe1b3e8f9b6e1fb",
-      "source": "page:d32072f869e1e3032e5723a5",
-      "target": "claim:a51c6809120c882a79967861",
+      "id": "99e074e5f132ab78283eb6f3",
+      "source": "page:7f6e5e62d3fd03511b96bf71",
+      "target": "claim:526540ad063db2834a25d4b7",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5015,8 +4933,52 @@
       ]
     },
     {
-      "id": "497983048535b8001ef62085",
-      "source": "claim:a51c6809120c882a79967861",
+      "id": "480984e93eca003603d36134",
+      "source": "claim:526540ad063db2834a25d4b7",
+      "target": "source:fc674bb50b9225f597450b43",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:fc674bb50b9225f597450b43"
+      ]
+    },
+    {
+      "id": "d72a4e66c21a52afcf8c3460",
+      "source": "page:7f6e5e62d3fd03511b96bf71",
+      "target": "claim:101d3ab014bf7d17b4a95503",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:fc674bb50b9225f597450b43"
+      ]
+    },
+    {
+      "id": "3a82e899e32faa86aa8e8b14",
+      "source": "claim:101d3ab014bf7d17b4a95503",
+      "target": "source:fc674bb50b9225f597450b43",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:fc674bb50b9225f597450b43"
+      ]
+    },
+    {
+      "id": "9dcbdee9bc16c5c790d6178a",
+      "source": "page:7f6e5e62d3fd03511b96bf71",
+      "target": "claim:652c0046aa3f35170d51ccfb",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:fc674bb50b9225f597450b43"
+      ]
+    },
+    {
+      "id": "d9bf75abfca3e522cd57c261",
+      "source": "claim:652c0046aa3f35170d51ccfb",
       "target": "source:fc674bb50b9225f597450b43",
       "kind": "cites",
       "layer": "provenance",
@@ -5082,9 +5044,9 @@
       ]
     },
     {
-      "id": "0e0d96fec07fcf6b741c8e80",
+      "id": "393f8e2826b09c0d87149bac",
       "source": "page:d01208b24e7ca273cb0406f3",
-      "target": "claim:36accb506b54252e7acfd06d",
+      "target": "claim:2e8ae789a069a00c81534d27",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5094,8 +5056,8 @@
       ]
     },
     {
-      "id": "f41c8b05be45d998326d5c5a",
-      "source": "claim:36accb506b54252e7acfd06d",
+      "id": "6bb9c38d0554633e906cd09c",
+      "source": "claim:2e8ae789a069a00c81534d27",
       "target": "source:07917f5939f3ec5d21d05ff0",
       "kind": "cites",
       "layer": "provenance",
@@ -5105,8 +5067,8 @@
       ]
     },
     {
-      "id": "6719d40cd2eb2d9da8ffe24e",
-      "source": "claim:36accb506b54252e7acfd06d",
+      "id": "674bfd48bcbe8162f4ae5a42",
+      "source": "claim:2e8ae789a069a00c81534d27",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5528,9 +5490,9 @@
       ]
     },
     {
-      "id": "d1f5963cba9564f2267368df",
+      "id": "d52622d6ccfda403b1657d94",
       "source": "page:07c3c9f013fa991e9daddcd3",
-      "target": "claim:5c4ad36dd90622a5fde19adb",
+      "target": "claim:92fd9095554f245f879e85fd",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5542,8 +5504,8 @@
       ]
     },
     {
-      "id": "6bcabc4cdf255eb8e4fedfab",
-      "source": "claim:5c4ad36dd90622a5fde19adb",
+      "id": "6a07120b6be866ebddae7f5f",
+      "source": "claim:92fd9095554f245f879e85fd",
       "target": "source:0630aadc72eaafc6450ce130",
       "kind": "cites",
       "layer": "provenance",
@@ -5553,8 +5515,8 @@
       ]
     },
     {
-      "id": "5af747742b3afa19a6e1bafa",
-      "source": "claim:5c4ad36dd90622a5fde19adb",
+      "id": "ef3d2d98fb62c23604c3bd47",
+      "source": "claim:92fd9095554f245f879e85fd",
       "target": "source:bd80488d41bf1374e8f2a486",
       "kind": "cites",
       "layer": "provenance",
@@ -5564,8 +5526,8 @@
       ]
     },
     {
-      "id": "04750f9dc399d36df9b5997e",
-      "source": "claim:5c4ad36dd90622a5fde19adb",
+      "id": "b558bfb86e23222f789f2ac7",
+      "source": "claim:92fd9095554f245f879e85fd",
       "target": "source:df803567b853098953fdf550",
       "kind": "cites",
       "layer": "provenance",
@@ -5575,8 +5537,8 @@
       ]
     },
     {
-      "id": "902c7f8fb187a1ffc0bd9f26",
-      "source": "claim:5c4ad36dd90622a5fde19adb",
+      "id": "d717539b1b6bf6fbfff21293",
+      "source": "claim:92fd9095554f245f879e85fd",
       "target": "source:e89c1ac68cbd967098c96b45",
       "kind": "cites",
       "layer": "provenance",
@@ -5608,9 +5570,9 @@
       ]
     },
     {
-      "id": "6f9d2c77d17b758f10617212",
+      "id": "cf7bfe4d0770502affda0be0",
       "source": "page:60999ea4902383df3523ec5d",
-      "target": "claim:72db46295917e50be593c75b",
+      "target": "claim:6dc3e9d5c94b32550948faac",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5619,8 +5581,8 @@
       ]
     },
     {
-      "id": "614193289cc6d5f84a357c7f",
-      "source": "claim:72db46295917e50be593c75b",
+      "id": "55178e0f4503b93d2ff1075a",
+      "source": "claim:6dc3e9d5c94b32550948faac",
       "target": "source:0630aadc72eaafc6450ce130",
       "kind": "cites",
       "layer": "provenance",
@@ -5630,9 +5592,9 @@
       ]
     },
     {
-      "id": "860bc60cddb4f4cd7fc0289a",
+      "id": "82a7bc9d98fba4ea9ba06c5c",
       "source": "page:60999ea4902383df3523ec5d",
-      "target": "claim:a703523c989349c081e5edd0",
+      "target": "claim:5d36f768069cda7c68bcd3e4",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5641,8 +5603,8 @@
       ]
     },
     {
-      "id": "7774464ebc42b89e45b970a6",
-      "source": "claim:a703523c989349c081e5edd0",
+      "id": "22c133e300c0c6c8ed4f0574",
+      "source": "claim:5d36f768069cda7c68bcd3e4",
       "target": "source:bd80488d41bf1374e8f2a486",
       "kind": "cites",
       "layer": "provenance",
@@ -5652,9 +5614,9 @@
       ]
     },
     {
-      "id": "99926a6b4eaef1d570163dfd",
+      "id": "56c01c7131670e47a40e19e4",
       "source": "page:60999ea4902383df3523ec5d",
-      "target": "claim:4cd10bc2324d1f877320b93c",
+      "target": "claim:1569a0aadd585e84c4eb15b5",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5664,8 +5626,8 @@
       ]
     },
     {
-      "id": "d3eb7cd974b62ee46fe3f169",
-      "source": "claim:4cd10bc2324d1f877320b93c",
+      "id": "2875395711643c5b77afd4aa",
+      "source": "claim:1569a0aadd585e84c4eb15b5",
       "target": "source:0630aadc72eaafc6450ce130",
       "kind": "cites",
       "layer": "provenance",
@@ -5675,8 +5637,8 @@
       ]
     },
     {
-      "id": "526cbe3b524e8a23bc2eb40a",
-      "source": "claim:4cd10bc2324d1f877320b93c",
+      "id": "a460b8c475c77268bb45cfb6",
+      "source": "claim:1569a0aadd585e84c4eb15b5",
       "target": "source:bd80488d41bf1374e8f2a486",
       "kind": "cites",
       "layer": "provenance",
@@ -5697,9 +5659,9 @@
       ]
     },
     {
-      "id": "e96ab30bc3b0057af5630068",
+      "id": "bfdae7494cadafc65bebd21e",
       "source": "page:76e72cc4ba9b7faba95b93b1",
-      "target": "claim:fae04c5afe15ac7139d0ed5a",
+      "target": "claim:075bbd35c1e8d0a88cf593f7",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5708,8 +5670,8 @@
       ]
     },
     {
-      "id": "da97d15068d457097dd1155e",
-      "source": "claim:fae04c5afe15ac7139d0ed5a",
+      "id": "467b0789cdeabd27cd3b5849",
+      "source": "claim:075bbd35c1e8d0a88cf593f7",
       "target": "source:df803567b853098953fdf550",
       "kind": "cites",
       "layer": "provenance",
@@ -5719,9 +5681,9 @@
       ]
     },
     {
-      "id": "23827e44cd5764e773afcf49",
+      "id": "5749d1fd169418f38b169563",
       "source": "page:76e72cc4ba9b7faba95b93b1",
-      "target": "claim:94fdfaeed86b3fef7a18803f",
+      "target": "claim:8b4853c3116183a306878fc9",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5730,8 +5692,8 @@
       ]
     },
     {
-      "id": "769ca61d35240b58359330e0",
-      "source": "claim:94fdfaeed86b3fef7a18803f",
+      "id": "f080265c66ca0737d0a0c2ea",
+      "source": "claim:8b4853c3116183a306878fc9",
       "target": "source:df803567b853098953fdf550",
       "kind": "cites",
       "layer": "provenance",
@@ -5752,9 +5714,9 @@
       ]
     },
     {
-      "id": "38e22adc193e41e480523977",
+      "id": "2a7d9f8ae4c45bf5671050cf",
       "source": "page:21b8ff7cfc90d628d726bbf6",
-      "target": "claim:f74cf18d1f7a07db7f10e589",
+      "target": "claim:70c40238eead5214e3bbf228",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5763,8 +5725,8 @@
       ]
     },
     {
-      "id": "f6c4bc53b9e8c926a1b8b83d",
-      "source": "claim:f74cf18d1f7a07db7f10e589",
+      "id": "fc8c3ebe16e63b42e0e3363a",
+      "source": "claim:70c40238eead5214e3bbf228",
       "target": "source:e89c1ac68cbd967098c96b45",
       "kind": "cites",
       "layer": "provenance",
@@ -5774,9 +5736,9 @@
       ]
     },
     {
-      "id": "b2be6a5810f04a18d6356bf7",
+      "id": "4bbd0b9acfb2daeca49ae05c",
       "source": "page:21b8ff7cfc90d628d726bbf6",
-      "target": "claim:4d043c5d578140e5dc89f59f",
+      "target": "claim:3834a3528e02ae3e341ceeb1",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5785,8 +5747,8 @@
       ]
     },
     {
-      "id": "06551adf307cf78471cb6f37",
-      "source": "claim:4d043c5d578140e5dc89f59f",
+      "id": "5ded044a7e0546b5f717991e",
+      "source": "claim:3834a3528e02ae3e341ceeb1",
       "target": "source:e89c1ac68cbd967098c96b45",
       "kind": "cites",
       "layer": "provenance",
@@ -6077,43 +6039,43 @@
       ]
     },
     {
-      "id": "aeb0bdf92583a4150145862b",
+      "id": "4f40aa62efc6b843e790ca21",
       "source": "page:88a7d76c1e37f65910e69c84",
-      "target": "page:390a76ec1fc509e494e11335",
+      "target": "page:4945318849eb1c503eb30e15",
       "kind": "involves",
       "layer": "semantic",
-      "text": "NPAI는 공공기관의 AI 활용 수준과 추진체계를 점검하는 진단 수단이다.",
+      "text": "NPAI는 공공기관의 AI 활용 수준과 추진체계를 점검하는 수단이다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ]
     },
     {
-      "id": "edae0567e35f23469ad5462d",
+      "id": "3d5a88f3c75d90e136e4b083",
       "source": "page:88a7d76c1e37f65910e69c84",
-      "target": "page:d32072f869e1e3032e5723a5",
+      "target": "page:7f6e5e62d3fd03511b96bf71",
       "kind": "involves",
       "layer": "semantic",
-      "text": "도로공사는 시설물 관리와 교통안전에 AI를 적용하는 현장 사례다.",
+      "text": "도로공사는 시설물 관리·교통안전에 AI를 적용하고 CCTV 적용 확대를 추진한다.",
       "source_ids": [
         "source:fc674bb50b9225f597450b43"
       ]
     },
     {
-      "id": "5bdc02b122c8bdbf108b3d0a",
+      "id": "d444b5156e09dc54748d088e",
       "source": "page:88a7d76c1e37f65910e69c84",
       "target": "page:d01208b24e7ca273cb0406f3",
       "kind": "involves",
       "layer": "semantic",
-      "text": "NPU 기반 공공 AX 성과 보도에서 기간 단축이 가리키는 업무 범위가 다르게 표현됐다.",
+      "text": "NPU 기반 공공 AX 성과 보도에서 단축된 업무 범위가 다르게 표현됐다.",
       "source_ids": [
         "source:07917f5939f3ec5d21d05ff0",
         "source:3999b94431374f06e9cac006"
       ]
     },
     {
-      "id": "8a933c879c89004791d99456",
-      "source": "page:d32072f869e1e3032e5723a5",
-      "target": "page:390a76ec1fc509e494e11335",
+      "id": "58db0b2db161a426a71002fe",
+      "source": "page:7f6e5e62d3fd03511b96bf71",
+      "target": "page:4945318849eb1c503eb30e15",
       "kind": "involves",
       "layer": "semantic",
       "text": "도로공사는 AI 활용 체계 보완과 추가 과제 발굴을 위해 NPAI에 참여한다고 밝혔다.",
@@ -6178,12 +6140,12 @@
       ]
     },
     {
-      "id": "270ce94d1afe272bcb245a99",
+      "id": "1376ad6419c07519f7149492",
       "source": "page:07c3c9f013fa991e9daddcd3",
       "target": "page:60999ea4902383df3523ec5d",
       "kind": "involves",
       "layer": "semantic",
-      "text": "발췌에서 미국은 규제 합의의 당사자이자 개발 지속을 요구하는 논평의 정책 대상이다.",
+      "text": "발췌는 미국을 미중 규제 합의의 당사자이자 개발 지속을 요구하는 논평의 정책 대상으로 다룬다.",
       "source_ids": [
         "source:0630aadc72eaafc6450ce130",
         "source:bd80488d41bf1374e8f2a486"
@@ -6578,28 +6540,6 @@
       ]
     },
     {
-      "id": "f5bbbb1d06944101a6dd4db3",
-      "source": "page:390a76ec1fc509e494e11335",
-      "target": "page:88a7d76c1e37f65910e69c84",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:fc674bb50b9225f597450b43"
-      ]
-    },
-    {
-      "id": "6bee966397ba3ced8510e8fb",
-      "source": "page:390a76ec1fc509e494e11335",
-      "target": "page:d32072f869e1e3032e5723a5",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:fc674bb50b9225f597450b43"
-      ]
-    },
-    {
       "id": "b6e83890248422b470314eca",
       "source": "page:396071fd89aa658edbaefebb",
       "target": "page:b41d81e22da55c3af6d162d9",
@@ -6699,6 +6639,28 @@
       ]
     },
     {
+      "id": "e5d0f9584b070514bb503b75",
+      "source": "page:4945318849eb1c503eb30e15",
+      "target": "page:7f6e5e62d3fd03511b96bf71",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:fc674bb50b9225f597450b43"
+      ]
+    },
+    {
+      "id": "6c81bcab19f1c0addaf8e492",
+      "source": "page:4945318849eb1c503eb30e15",
+      "target": "page:88a7d76c1e37f65910e69c84",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:fc674bb50b9225f597450b43"
+      ]
+    },
+    {
       "id": "8b5745bb0b9e9d996e66ab9d",
       "source": "page:4b93b30d9007e205c19dd499",
       "target": "page:d6bbe9193e8dfe2f58f0670a",
@@ -6765,6 +6727,17 @@
       ]
     },
     {
+      "id": "e977335d8cd4cc1f6ab7902b",
+      "source": "page:7f6e5e62d3fd03511b96bf71",
+      "target": "page:88a7d76c1e37f65910e69c84",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:fc674bb50b9225f597450b43"
+      ]
+    },
+    {
       "id": "4a6cf9269ddd50255a344f2b",
       "source": "page:88a7d76c1e37f65910e69c84",
       "target": "page:8e9347b11db4e118fbc420c6",
@@ -6773,17 +6746,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
-      "id": "808b754c6824064d0a692835",
-      "source": "page:88a7d76c1e37f65910e69c84",
-      "target": "page:d32072f869e1e3032e5723a5",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:fc674bb50b9225f597450b43"
       ]
     },
     {
@@ -7612,7 +7574,7 @@
       "id": "public_ax",
       "title": "공공 AX",
       "kind": "topic",
-      "revision": 9,
+      "revision": 49,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7622,7 +7584,7 @@
             "source:fc674bb50b9225f597450b43"
           ],
           "kind": "interpretation",
-          "text": "공공 AX 보도는 서비스 공급, 기관의 AI 활용 수준 진단, 현장 업무 적용을 함께 다룬다. 실행 단계 비율·현장 성과·향후 목표는 측정 대상과 달성 여부가 달라 구분해 읽어야 한다."
+          "text": "공공 AX 자료는 서비스 공급, 기관의 AI 활용 수준 진단, 현장 업무 적용을 다룬다. 실행 단계 비율은 도입 현황 분석이고, 서비스 공개는 공급 소식이며, 현장 감소 실적과 확대 목표는 달성 여부가 다르므로 구분해 읽어야 한다."
         }
       ]
     },
@@ -7630,7 +7592,7 @@
       "id": "public_ax:2a61a70733c8545542fc",
       "title": "KT의 금융·공공 AX",
       "kind": "entity",
-      "revision": 9,
+      "revision": 49,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7639,7 +7601,7 @@
             "source:b8c2184e0cd368d30930e0eb"
           ],
           "kind": "reported",
-          "text": "KT 리포트를 소개한 보도는 금융의 59.5%, 공공의 30%가 AX 실행 단계라고 전했다. 별도 보도는 KT가 지자체 대상 공공 AX 서비스 10종을 공개했다고 전했다."
+          "text": "KT 리포트를 소개한 발췌는 금융 59.5%·공공 30%가 AX ‘실행 단계’라고 전한다. 별도 발췌는 KT가 지자체 대상 공공 AX 서비스 10종을 공개했다고 보도한다."
         },
         {
           "evidence_ids": [
@@ -7647,15 +7609,15 @@
             "source:b8c2184e0cd368d30930e0eb"
           ],
           "kind": "interpretation",
-          "text": "실행 단계 비율은 도입 현황 분석이고 10종 공개는 공급 소식이다. 발췌에 조사 표본과 실행 단계 정의가 없어 30%를 전체 공공기관의 보급률로 일반화하기 어렵고, 서비스 공개도 실제 도입 실적을 뜻하지 않는다."
+          "text": "조사 표본·분모·실행 단계 정의가 제시되지 않아 30%를 전체 공공기관의 보급률로 일반화하기 어렵다. 서비스 10종 공개 역시 실제 도입 기관 수나 업무 개선 효과를 보여주지는 않는다."
         }
       ]
     },
     {
-      "id": "public_ax:3c6a7b69a0c57e9f3acd",
+      "id": "public_ax:de54de4ac587c82f8c7a",
       "title": "공공AI진단(NPAI)",
-      "kind": "entity",
-      "revision": 9,
+      "kind": "concept",
+      "revision": 49,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7663,23 +7625,22 @@
             "source:fc674bb50b9225f597450b43"
           ],
           "kind": "reported",
-          "text": "MBN에 따르면 NPAI는 서울AI재단·한국생산성본부·MBN이 공동 개발한 공공부문 진단체계다. 거버넌스·인프라·서비스·정합성을 점검하고 기관 간 비교로 AI 활용 수준과 발전 방향을 살핀다."
+          "text": "MBN에 따르면 NPAI는 서울AI재단·한국생산성본부·MBN이 공동 개발한 공공부문 AI 진단체계다. 거버넌스·인프라·서비스·정합성을 점검하고 기관 간 비교로 AI 활용 수준과 발전 방향을 살핀다."
         },
         {
           "evidence_ids": [
-            "source:fc674bb50b9225f597450b43",
-            "source:43ab44bcdb8bb366d2da5d8e"
+            "source:fc674bb50b9225f597450b43"
           ],
           "kind": "reported",
-          "text": "한국도로공사는 AI 활용 체계 보완과 추가 과제 발굴을 위해 참여한다고 밝혔다. 무보의 공공AI진단 참여도 AI 기반 무역보험 신뢰성 제고 취지로 보도됐다."
+          "text": "한국도로공사는 진단을 통해 부족한 제도·정책·조직을 보완하고 추가 AI 활용 과제를 발굴할 계획이라고 밝혔다. 제공 기사에는 진단 결과나 점수가 제시되지 않았다."
         }
       ]
     },
     {
-      "id": "public_ax:93c64e577352632da213",
-      "title": "한국도로공사의 AI 활용",
-      "kind": "entity",
-      "revision": 9,
+      "id": "public_ax:4a11785501d9f48c754a",
+      "title": "한국도로공사의 NPAI 참여와 AI 확대 계획",
+      "kind": "event",
+      "revision": 49,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7687,21 +7648,21 @@
             "source:fc674bb50b9225f597450b43"
           ],
           "kind": "reported",
-          "text": "MBN은 도로공사의 AI 시설물 진단·유지관리와 적재불량 탐지 성과로 도로파임 16.5%, 낙하물 16.1% 감소를 전했다."
+          "text": "2026년 9월 11일 MBN 기사는 한국도로공사의 NPAI 참여 발표를 전하며, AI 시설물 진단·유지관리와 적재불량 탐지 성과로 도로파임 16.5%·낙하물 16.1% 감소를 보도했다."
         },
         {
           "evidence_ids": [
             "source:fc674bb50b9225f597450b43"
           ],
-          "kind": "interpretation",
-          "text": "확보된 본문에는 감소율의 비교 기간과 효과 산정 방법이 없어, 해당 수치만으로 AI 도입의 독립적인 효과 크기를 판단하기 어렵다."
+          "kind": "uncertain",
+          "text": "감소율의 비교 기간·산정 방법과 다른 관리 조치의 영향은 무엇인가? 제공 본문에는 설명이 없어 AI의 독립적인 기여도는 확인되지 않는다."
         },
         {
           "evidence_ids": [
             "source:fc674bb50b9225f597450b43"
           ],
           "kind": "reported",
-          "text": "도로공사는 2026년 말까지 고속도로 CCTV 약 9,500대 중 약 4,000대에 AI를 적용할 계획이라고 밝혔다. 돌발상황 검지 정확도 50%→96%는 목표이며, 인지·대응 시간 6분 31초→80초는 기대치다."
+          "text": "도로공사는 2026년 말까지 고속도로 CCTV 약 9,500대 중 약 4,000대에 AI를 적용할 계획이라고 밝혔다. 돌발상황 검지 정확도 50%→96%는 목표이고, 인지부터 대응까지 6분 31초→80초는 기대치다."
         }
       ]
     },
@@ -7709,7 +7670,7 @@
       "id": "public_ax:dc48cb658f3e2f116885",
       "title": "엑스페릭스 공공 AX 기간 단축의 측정 대상",
       "kind": "issue",
-      "revision": 9,
+      "revision": 49,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7726,7 +7687,7 @@
             "source:07917f5939f3ec5d21d05ff0"
           ],
           "kind": "uncertain",
-          "text": "9월 16일 브리핑은 단축 대상을 ‘부정수급 적발’, 9월 18일 브리핑은 ‘검증’으로 표현한다. 같은 업무 단계를 뜻하는지 확인되지 않아 적발 전체 기간의 단축으로 단정할 수 없다. 브리핑 날짜 차이만으로 성과가 갱신됐다고 볼 수도 없다."
+          "text": "9월 16일 브리핑은 단축 대상을 ‘부정수급 적발’, 9월 18일 브리핑은 ‘검증’으로 표현한다. 같은 업무 단계인지 확인되지 않아 적발 전체 기간이 단축됐다고 단정할 수 없다. 브리핑 날짜 차이만으로 성과의 후속 변경이라고 볼 수도 없다."
         }
       ]
     },
@@ -7847,7 +7808,7 @@
       "id": "us",
       "title": "미국",
       "kind": "topic",
-      "revision": 44,
+      "revision": 50,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7858,7 +7819,7 @@
             "source:e89c1ac68cbd967098c96b45"
           ],
           "kind": "interpretation",
-          "text": "제공 자료의 미국 관련 의제는 미중 AI 규제·개발 속도 논쟁, 정부 기관용 AI 구축, 로봇청소기 금지 보도로 나뉜다. 정책 논평, 공급사 발표, 규제 보도는 근거의 성격이 달라 각각 정부 결정·실제 채택·법적 적용 범위를 구분해 읽어야 한다."
+          "text": "제공 자료에서 미국 관련 핵심 의제는 미중 AI 규제·개발 속도 논쟁, 정부 기관용 AI 구축, 로봇청소기 규제 보도다. 각각 정책 논평, 공급사 발표, 금지 주장이라는 근거 성격을 구분해야 정부 결정·실제 도입·이용 제한을 혼동하지 않는다."
         }
       ]
     },
@@ -7866,7 +7827,7 @@
       "id": "us:7305d2499694c950cdc9",
       "title": "미중 AI 규제와 개발 속도 논쟁",
       "kind": "issue",
-      "revision": 44,
+      "revision": 50,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7874,14 +7835,14 @@
             "source:0630aadc72eaafc6450ce130"
           ],
           "kind": "reported",
-          "text": "Asia Times 기사에 연결된 발췌는 에이전트 샌드박스 탈출·국가급 공격 사건을 언급하며 미중 AI 규제 합의가 요원하다고 전한다. 사건 경위나 협상에 미친 영향은 제시하지 않는다."
+          "text": "Asia Times 기사에 연결된 발췌는 에이전트 샌드박스 탈출·국가급 공격 사건을 언급하며 미중 AI 규제 합의가 없다고 주장한다. 사건 경위와 협상에 미친 영향은 제시하지 않는다."
         },
         {
           "evidence_ids": [
             "source:bd80488d41bf1374e8f2a486"
           ],
           "kind": "reported",
-          "text": "MSN 기사에 연결된 발췌는 중국이 AI 개발 속도 조절을 거부한다는 전제로 미국도 개발을 멈춰서는 안 된다는 주장을 소개한다. 주장 주체와 중국의 공식 결정 근거는 제시되지 않는다."
+          "text": "MSN 기사에 연결된 발췌는 중국이 AI 개발 속도 조절을 거부한다는 전제로 미국도 개발을 멈춰서는 안 된다는 주장을 소개한다. 주장 주체와 중국의 공식 결정 근거는 발췌에 없다."
         },
         {
           "evidence_ids": [
@@ -7889,7 +7850,7 @@
             "source:bd80488d41bf1374e8f2a486"
           ],
           "kind": "interpretation",
-          "text": "국제 규제 합의의 부재와 개발 지속을 요구하는 논평은 서로 다른 내용이다. 두 발췌만으로 미국의 개발 가속 정책이 확정됐거나 보안 사건 때문에 협상이 정체됐다고 판단할 수 없다."
+          "text": "규제 합의의 부재에 관한 보도와 개발 지속을 요구하는 논평은 구분해야 한다. 두 발췌는 미국의 가속 정책 확정이나 보안 사건으로 인한 협상 정체를 입증하지 않는다."
         }
       ]
     },
@@ -7897,7 +7858,7 @@
       "id": "us:38b856e98c2d99482f6c",
       "title": "Palantir의 미국 정부 기관용 AI 환경 구축",
       "kind": "event",
-      "revision": 44,
+      "revision": 50,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7905,14 +7866,14 @@
             "source:df803567b853098953fdf550"
           ],
           "kind": "reported",
-          "text": "NVIDIA 블로그를 출처로 한 발췌는 Palantir가 NVIDIA Nemotron을 활용해 미국 정부 기관용 보안 AI 환경을 구축했다고 전한다. 정부 기관은 발표에서 명시한 제공 대상이다."
+          "text": "NVIDIA 블로그를 출처로 한 발췌는 Palantir가 NVIDIA Nemotron으로 미국 정부 기관용 보안 AI 환경을 구축했다고 전한다. 정부 기관은 발표에 명시된 제공 대상이다."
         },
         {
           "evidence_ids": [
             "source:df803567b853098953fdf550"
           ],
           "kind": "uncertain",
-          "text": "어느 기관이 실제 운영하며 보안 효과는 어떻게 검증됐는가? 발췌에는 도입 기관·운영 범위·검증 결과가 없어 구축 발표만으로 정부 채택이나 보안 효과를 확인할 수 없다."
+          "text": "어느 기관이 실제 운영하며 보안 효과는 어떻게 검증됐는가? 발췌에는 도입 기관·운영 범위·검증 결과가 없어 구축 발표만으로 실제 채택이나 보안 효과를 확인할 수 없다."
         }
       ]
     },
@@ -7920,7 +7881,7 @@
       "id": "us:a7e68b6d2e6107f227bc",
       "title": "미국 로봇청소기 금지 보도의 적용 범위",
       "kind": "issue",
-      "revision": 44,
+      "revision": 50,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7928,25 +7889,25 @@
             "source:e89c1ac68cbd967098c96b45"
           ],
           "kind": "reported",
-          "text": "Tom’s Guide 기사에 연결된 발췌는 중국산 로봇청소기의 보안·데이터 우려를 이유로 미국 정부가 대부분의 로봇청소기 판매·사용을 금지했다고 전한다."
+          "text": "Tom’s Guide 기사에 연결된 발췌는 중국산 로봇청소기의 보안·데이터 우려로 미국 정부가 대부분의 로봇청소기 판매·사용을 금지했다고 주장한다."
         },
         {
           "evidence_ids": [
             "source:e89c1ac68cbd967098c96b45"
           ],
           "kind": "uncertain",
-          "text": "금지의 법적 근거, 대상 제품, 판매와 사용 각각의 제한 범위, 시행 시점은 무엇인가? 제공 발췌에는 이 정보가 없어 기존 소유자의 사용까지 금지되는지 판단할 수 없다."
+          "text": "금지의 법적 근거, 대상 제품, 판매와 사용 각각의 제한 범위, 시행일은 무엇인가? 발췌에는 이 정보가 없어 기존 소유자의 사용까지 금지되는지 판단할 수 없다."
         }
       ]
     }
   ],
   "issues": [],
-  "version": "15723ad44e1742dd5d91887cc9e89f873fdb108bdc7941da41dd1094e8d6fa0b",
-  "exported_at": "2026-09-19T00:44:46.750844+00:00",
+  "version": "4daf4eac7997c08250ae1d7cb9c11fafcfcc99ad9d5a41b7a106c57321fd5a53",
+  "exported_at": "2026-09-19T00:51:20.556800+00:00",
   "coverage": {
     "pages": 43,
     "claims": 84,
-    "cited_sources": 47,
+    "cited_sources": 46,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
