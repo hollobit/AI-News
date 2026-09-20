@@ -32,6 +32,10 @@
   async function addArticleContext(){
     const route=new URLSearchParams(location.hash.slice(1));
     const articleId=route.get('article_id')||(selected.startsWith('source:news:')?selected.slice(12):'');
+    if(snapshot.coverage.all_reviewed_documents_connected){
+      if(!selected&&articleId)selected=snapshot.nodes.find(n=>n.news_id===articleId)?.id||'';
+      if(selected)return;
+    }
     if(!articleId&&!route.has('source_url'))return;
     if(!articleData){const r=await fetch('./site.json');if(!r.ok)throw Error('뉴스 연결 자료를 읽을 수 없습니다.');articleData=await r.json();}
     const article=articleData.news.find(a=>articleId?a.id===articleId:a.url===safeURL(route.get('source_url')));
@@ -63,7 +67,8 @@
       else{const p=new URLSearchParams({id:selected,q:$('search').value,layer:$('layer').value,limit:String(limit)});const hash=new URLSearchParams(location.hash.slice(1));if(!selected)for(const k of ['source_url','paper_id'])if(hash.has(k))p.set(k,hash.get(k));const r=await fetch('/api/wiki/network?'+p);const result=await r.json();if(!r.ok)throw Error(result.error||'조회 실패');if(token!==request)return;data=result;}
       if(token!==request)return;
       $('status').textContent=(staticMode?'읽기 전용 공개 스냅샷 · '+snapshot.exported_at+' · ':'')+data.method;
-      $('counts').textContent=`${data.shown} / ${data.total}개 표시 · 검토 페이지 ${data.coverage.pages}개 · 연결 원자료 ${data.coverage.cited_sources}개`;
+      const c=data.coverage;
+      $('counts').textContent=`지도 노드 ${data.shown} / ${data.total}개 표시 · 종합 위키 ${c.pages}페이지 · 위키 인용 원자료 ${c.cited_sources}건`+(c.total_news!==undefined?` · 뉴스 ${c.total_news}건 중 검토 분석·연결 ${c.linked_news}건 · 연결 논문 ${c.linked_papers}건`:'');
       $('more').disabled=limit>=500||data.shown>=data.total;
       draw();renderDetail();renderIssues();
     }catch(e){if(token===request)$('status').textContent='조회 실패: '+e.message;}
