@@ -1866,7 +1866,7 @@
         "source:a617c0dcaf2f826c9303b840"
       ],
       "claims": [
-        "claim:2854dcfd943268a123975cc4"
+        "claim:da3508070ba034f3c18ed060"
       ],
       "status": "reviewed"
     },
@@ -1910,9 +1910,9 @@
       "url": "https://www.redhat.com/en/blog/datacenter-myth-why-sovereign-ai-demands-tenancy-model-not-just-geography"
     },
     {
-      "id": "claim:2854dcfd943268a123975cc4",
+      "id": "claim:da3508070ba034f3c18ed060",
       "type": "claim",
-      "title": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 요건으로 나누어 다룬다. 한국의 독파모 추진, 중국의 설계·HBM 공급망 구축 보도, Red Hat의 테넌시 주장은 평가 대상이 달라 어느 하나로 전체 자립 수준을 판단하기 어렵다.",
+      "title": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 조건으로 나누어 다룬다. 한국 독파모 사업, 중국의 설계·HBM 공급망 구축 보도, Red Hat의 테넌시 주장은 평가 대상이 달라 하나의 성과로 전체 자립 수준을 판단하기 어렵다.",
       "source_ids": [
         "source:26eea64ed635a308bcc1e552",
         "source:3999b94431374f06e9cac006",
@@ -1932,30 +1932,46 @@
         "sovereign"
       ],
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:3999b94431374f06e9cac006",
+        "source:805e58781691fe8db63f7db5",
+        "source:809f46c21477bbbf5049da92"
       ],
       "claims": [
-        "claim:5f3b93afc378befe269681a7",
-        "claim:a83fe76cdf875d2ad028c64a"
+        "claim:ccf745613078c3bfda9a6905",
+        "claim:d635d1750b324788f003979d"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:5f3b93afc378befe269681a7",
-      "type": "claim",
-      "title": "9월 16일 브리핑은 SKT·LG AI연구원·업스테이지가 독파모 3차 평가에 대비해 성능을 고도화하고, 과기정통부는 성과를 오픈소스 생태계로 확장할 방침이라고 전했다.",
+      "id": "source:805e58781691fe8db63f7db5",
+      "type": "source",
+      "title": "📰 공공AX/공공AI 브리핑 | 2026-09-20 (일)",
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:805e58781691fe8db63f7db5"
+      ],
+      "origin": "telegram_excerpt",
+      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
+      "day": "2026-09-20",
+      "status": "original_source_not_fact_checked",
+      "url": "https://www.nia.or.kr/site/nia_kor/ex/bbs/View.do"
+    },
+    {
+      "id": "claim:ccf745613078c3bfda9a6905",
+      "type": "claim",
+      "title": "9월 20일 브리핑은 17일 보도를 인용해 업스테이지·SKT·LG AI연구원이 2차 평가 후 남았고 최종평가는 내년 초라고 전했다. 12일 브리핑의 ‘최종평가 임박’보다 구체적인 일정이지만, 실제 일정 변경 여부는 발췌로 확인되지 않는다.",
+      "source_ids": [
+        "source:805e58781691fe8db63f7db5",
+        "source:809f46c21477bbbf5049da92"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:a83fe76cdf875d2ad028c64a",
+      "id": "claim:d635d1750b324788f003979d",
       "type": "claim",
-      "title": "같은 브리핑은 LG AI연구원의 제조·금융·과학 분야 전문가 AI 공개와 엑사원 외부 공급 계획, SKT의 A.X K2와 모두의 AI 통합 검토를 전했다. 외부 공급과 서비스 통합은 완료 실적으로 제시되지 않았다.",
+      "title": "9월 12일 브리핑은 배경훈 부총리가 독파모 보안 튜닝에 시간이 걸린다고 설명하며 보안특화 AI 별도 개발을 추진한다고 전했다. 범용 모델 평가와 보안 용도 개발이 별도 과제로 제시됐다.",
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:809f46c21477bbbf5049da92"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
@@ -1972,31 +1988,32 @@
       ],
       "source_ids": [
         "source:3999b94431374f06e9cac006",
+        "source:805e58781691fe8db63f7db5",
         "source:809f46c21477bbbf5049da92"
       ],
       "claims": [
-        "claim:de8548f56f87214cb8540693",
-        "claim:189295ad245dd35c05bcc3d6"
+        "claim:4a2ff513502c2f77dc26e4af",
+        "claim:60c3445b017532653747c9a7"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:de8548f56f87214cb8540693",
+      "id": "claim:4a2ff513502c2f77dc26e4af",
       "type": "claim",
-      "title": "9월 12일 브리핑은 정부의 모티프테크 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일 브리핑은 조선비즈의 심사 불투명성 비판과 사업 재설계 논의도 소개했다.",
+      "title": "9월 12일 브리핑은 모티프테크의 이의신청 기각·구체적 사유 설명 예고와 국가AI전략위 2기의 평가방식 개편 예고를 전했다. 20일 브리핑은 과기정통부가 18일 이의제기에 관해 설명했다고 전하며 ‘일단락’으로 요약했다.",
       "source_ids": [
-        "source:3999b94431374f06e9cac006",
+        "source:805e58781691fe8db63f7db5",
         "source:809f46c21477bbbf5049da92"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:189295ad245dd35c05bcc3d6",
+      "id": "claim:60c3445b017532653747c9a7",
       "type": "claim",
-      "title": "기각 사유의 구체적 설명은 추후 사항으로 보도됐으며 현재 자료에는 후속 설명이나 확정 개편안이 없다. 이의신청을 어떤 기준으로 판단했는지, 그 기준이 3차 평가에서 바뀌는지가 남은 확인 사항이다.",
+      "title": "후속 설명이 있었다는 보도는 추가됐지만 설명 내용과 확정 개편안은 제공되지 않았다. 기각의 구체적 판단 근거와 다음 평가의 기준 변경 여부, 당사자의 수용 여부는 여전히 확인되지 않는다.",
       "source_ids": [
-        "source:3999b94431374f06e9cac006",
+        "source:805e58781691fe8db63f7db5",
         "source:809f46c21477bbbf5049da92"
       ],
       "claim_kind": "uncertain",
@@ -2017,15 +2034,15 @@
         "source:809f46c21477bbbf5049da92"
       ],
       "claims": [
-        "claim:f249fd2660702c8aa0fe0677",
-        "claim:7180d0b524f2478277db8e10"
+        "claim:1aa15edfca2042253f953caa",
+        "claim:942a53dc1c8b384e054e56a5"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:f249fd2660702c8aa0fe0677",
+      "id": "claim:1aa15edfca2042253f953caa",
       "type": "claim",
-      "title": "9월 16일 브리핑은 정부가 SKT·카카오·KT 등 3개 컨소시엄을 통해 국민 무료 AI 서비스 ‘모두의 AI’를 연내 출시할 계획이라고 전했다. SKT는 전화·문자 접근과 식당 대기 인원 확인, 병원·택시 예약을 수행하는 실행형 에이전트를 예고했다.",
+      "title": "9월 16일 브리핑은 정부가 SKT·카카오·KT 등 3개 컨소시엄을 통해 국민 무료 AI 서비스를 연내 출시할 계획이라고 전했다. SKT는 전화·문자 접근, 병원·택시 예약을 수행하는 에이전트와 독파모 A.X K2 통합 검토를 제시했다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ],
@@ -2033,9 +2050,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:7180d0b524f2478277db8e10",
+      "id": "claim:942a53dc1c8b384e054e56a5",
       "type": "claim",
-      "title": "9월 12일 브리핑의 SKT 서비스 ‘12월 개시’와 16일의 ‘연내 출시’는 양립하는 일정 표현이다. 의료·돌봄·교육 등 특화서비스와 예약 기능은 계획 단계이며, 반복 보도가 운영 개시나 이용 성과를 확인해 주지는 않는다.",
+      "title": "12일 브리핑의 SKT 서비스 ‘12월 개시’와 16일의 ‘연내 출시’는 양립한다. 의료·돌봄·교육 특화서비스와 예약 기능은 이용자가 기대할 기능을 설명하지만, 출시·통합 완료나 의료 효과의 근거는 아니다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
@@ -2058,7 +2075,7 @@
       ],
       "claims": [
         "claim:97d9c8bda63ecd15c51f59ba",
-        "claim:09c97fb708d54594c85b8a3d"
+        "claim:69be3910f6b1760bc4350178"
       ],
       "status": "reviewed"
     },
@@ -2073,9 +2090,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:09c97fb708d54594c85b8a3d",
+      "id": "claim:69be3910f6b1760bc4350178",
       "type": "claim",
-      "title": "현재 발췌에는 테넌시의 정의와 주권 충족 기준이 없다. 어떤 운영 구조와 통제 권한을 요구하는지 확인하기 전에는 이 주장을 구체적인 인프라 선정 기준으로 적용하기 어렵다.",
+      "title": "제공 발췌에는 테넌시의 정의와 주권 충족 기준이 없다. 어떤 운영 구조와 통제 권한을 요구하는지 확인하기 전에는 구체적인 인프라 선정 기준으로 적용하기 어렵다.",
       "source_ids": [
         "source:a617c0dcaf2f826c9303b840"
       ],
@@ -4933,9 +4950,9 @@
       ]
     },
     {
-      "id": "d5eb7168216e3d307c860c5b",
+      "id": "7752deba456e3e1271fc1668",
       "source": "page:27c4109153e151f87093f92b",
-      "target": "claim:2854dcfd943268a123975cc4",
+      "target": "claim:da3508070ba034f3c18ed060",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4946,8 +4963,8 @@
       ]
     },
     {
-      "id": "ae7bd0e91a8da5d9a6161e79",
-      "source": "claim:2854dcfd943268a123975cc4",
+      "id": "b00971a0c0ad1aae552a275a",
+      "source": "claim:da3508070ba034f3c18ed060",
       "target": "source:26eea64ed635a308bcc1e552",
       "kind": "cites",
       "layer": "provenance",
@@ -4957,8 +4974,8 @@
       ]
     },
     {
-      "id": "da5f34d8f0c55d7d6b205537",
-      "source": "claim:2854dcfd943268a123975cc4",
+      "id": "8c572fb476ea1a00e73a93a9",
+      "source": "claim:da3508070ba034f3c18ed060",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -4968,8 +4985,8 @@
       ]
     },
     {
-      "id": "2f15ca31d4bb09f5dcb2df42",
-      "source": "claim:2854dcfd943268a123975cc4",
+      "id": "a0fd1489ab029b835d9d591b",
+      "source": "claim:da3508070ba034f3c18ed060",
       "target": "source:a617c0dcaf2f826c9303b840",
       "kind": "cites",
       "layer": "provenance",
@@ -4990,47 +5007,81 @@
       ]
     },
     {
-      "id": "4bc73af9ec7ce778c553b78f",
+      "id": "1dd50c7cbe943bbe82f4d7d5",
       "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "claim:5f3b93afc378befe269681a7",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
-      "id": "fa7c2f5c63d3132747b62a4a",
-      "source": "claim:5f3b93afc378befe269681a7",
-      "target": "source:3999b94431374f06e9cac006",
+      "target": "source:805e58781691fe8db63f7db5",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:805e58781691fe8db63f7db5"
       ]
     },
     {
-      "id": "6b527b8561b25c2aa321a11d",
+      "id": "90d25e513caac7f4703aa5bf",
       "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "claim:a83fe76cdf875d2ad028c64a",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
-      "id": "db2053b43b7de8dd34e3f3e4",
-      "source": "claim:a83fe76cdf875d2ad028c64a",
-      "target": "source:3999b94431374f06e9cac006",
+      "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:809f46c21477bbbf5049da92"
+      ]
+    },
+    {
+      "id": "ba4c8211d61c71ae5cc5dc8c",
+      "source": "page:6b0e772ad5828bad7fd33b63",
+      "target": "claim:ccf745613078c3bfda9a6905",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:805e58781691fe8db63f7db5",
+        "source:809f46c21477bbbf5049da92"
+      ]
+    },
+    {
+      "id": "7fd6a1471bbff1091639472d",
+      "source": "claim:ccf745613078c3bfda9a6905",
+      "target": "source:805e58781691fe8db63f7db5",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:805e58781691fe8db63f7db5"
+      ]
+    },
+    {
+      "id": "b151c057ee0bb4302e8d47f4",
+      "source": "claim:ccf745613078c3bfda9a6905",
+      "target": "source:809f46c21477bbbf5049da92",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:809f46c21477bbbf5049da92"
+      ]
+    },
+    {
+      "id": "e566634fd43a9f5bfe63483b",
+      "source": "page:6b0e772ad5828bad7fd33b63",
+      "target": "claim:d635d1750b324788f003979d",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:809f46c21477bbbf5049da92"
+      ]
+    },
+    {
+      "id": "86527db2c7ed415b7daee7cc",
+      "source": "claim:d635d1750b324788f003979d",
+      "target": "source:809f46c21477bbbf5049da92",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:809f46c21477bbbf5049da92"
       ]
     },
     {
@@ -5045,6 +5096,17 @@
       ]
     },
     {
+      "id": "555d92ebe197c5ea4c4e93be",
+      "source": "page:fbca10d9f0b1706a2d15f444",
+      "target": "source:805e58781691fe8db63f7db5",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:805e58781691fe8db63f7db5"
+      ]
+    },
+    {
       "id": "eeffb7ace8a58c26475b6de4",
       "source": "page:fbca10d9f0b1706a2d15f444",
       "target": "source:809f46c21477bbbf5049da92",
@@ -5056,31 +5118,31 @@
       ]
     },
     {
-      "id": "f7dd0c964e0a86580e0ab377",
+      "id": "6419bb6b9889bbfba7974adf",
       "source": "page:fbca10d9f0b1706a2d15f444",
-      "target": "claim:de8548f56f87214cb8540693",
+      "target": "claim:4a2ff513502c2f77dc26e4af",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:3999b94431374f06e9cac006",
+        "source:805e58781691fe8db63f7db5",
         "source:809f46c21477bbbf5049da92"
       ]
     },
     {
-      "id": "9a706addba8bd5ee317b3317",
-      "source": "claim:de8548f56f87214cb8540693",
-      "target": "source:3999b94431374f06e9cac006",
+      "id": "22f13ba94e2f68536707b1b1",
+      "source": "claim:4a2ff513502c2f77dc26e4af",
+      "target": "source:805e58781691fe8db63f7db5",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:805e58781691fe8db63f7db5"
       ]
     },
     {
-      "id": "30138f3d624ad86353ed349a",
-      "source": "claim:de8548f56f87214cb8540693",
+      "id": "7e875bcf7003e42d18cf1182",
+      "source": "claim:4a2ff513502c2f77dc26e4af",
       "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
@@ -5090,31 +5152,31 @@
       ]
     },
     {
-      "id": "6b4ee752605af70dda293bc5",
+      "id": "6db03b7d7891a479d21dc5f7",
       "source": "page:fbca10d9f0b1706a2d15f444",
-      "target": "claim:189295ad245dd35c05bcc3d6",
+      "target": "claim:60c3445b017532653747c9a7",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:3999b94431374f06e9cac006",
+        "source:805e58781691fe8db63f7db5",
         "source:809f46c21477bbbf5049da92"
       ]
     },
     {
-      "id": "5da52a4751234a84f4626290",
-      "source": "claim:189295ad245dd35c05bcc3d6",
-      "target": "source:3999b94431374f06e9cac006",
+      "id": "64832000470cfa63d5b88a91",
+      "source": "claim:60c3445b017532653747c9a7",
+      "target": "source:805e58781691fe8db63f7db5",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:3999b94431374f06e9cac006"
+        "source:805e58781691fe8db63f7db5"
       ]
     },
     {
-      "id": "c17e62408883de11a5d31e92",
-      "source": "claim:189295ad245dd35c05bcc3d6",
+      "id": "fed1e02c13203737f547f11b",
+      "source": "claim:60c3445b017532653747c9a7",
       "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
@@ -5146,9 +5208,9 @@
       ]
     },
     {
-      "id": "a7d2e54e6299c2eccaa39afe",
+      "id": "88e673ded70696dee8bbe79e",
       "source": "page:8e9347b11db4e118fbc420c6",
-      "target": "claim:f249fd2660702c8aa0fe0677",
+      "target": "claim:1aa15edfca2042253f953caa",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5157,8 +5219,8 @@
       ]
     },
     {
-      "id": "729bc73d9f4500e54092d09e",
-      "source": "claim:f249fd2660702c8aa0fe0677",
+      "id": "8c9976583e50b9089eaf7ae8",
+      "source": "claim:1aa15edfca2042253f953caa",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5168,9 +5230,9 @@
       ]
     },
     {
-      "id": "42c41bb27e4a1c2693e18154",
+      "id": "2dd162c237f85f154e25093b",
       "source": "page:8e9347b11db4e118fbc420c6",
-      "target": "claim:7180d0b524f2478277db8e10",
+      "target": "claim:942a53dc1c8b384e054e56a5",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5180,8 +5242,8 @@
       ]
     },
     {
-      "id": "997159ce5eab1017d7a20d5c",
-      "source": "claim:7180d0b524f2478277db8e10",
+      "id": "c598fc85bcf8de93de15b436",
+      "source": "claim:942a53dc1c8b384e054e56a5",
       "target": "source:3999b94431374f06e9cac006",
       "kind": "cites",
       "layer": "provenance",
@@ -5191,8 +5253,8 @@
       ]
     },
     {
-      "id": "dbf6c757aab5ae1b964994ac",
-      "source": "claim:7180d0b524f2478277db8e10",
+      "id": "c30fce85293a439fbc30c602",
+      "source": "claim:942a53dc1c8b384e054e56a5",
       "target": "source:809f46c21477bbbf5049da92",
       "kind": "cites",
       "layer": "provenance",
@@ -5235,9 +5297,9 @@
       ]
     },
     {
-      "id": "cb777294b27030bf4efc7c03",
+      "id": "9861c08efa86d388d0bf139d",
       "source": "page:8b0e41c347c6c9234bd957b8",
-      "target": "claim:09c97fb708d54594c85b8a3d",
+      "target": "claim:69be3910f6b1760bc4350178",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -5246,8 +5308,8 @@
       ]
     },
     {
-      "id": "e0b83e38226fda5a6af36e7d",
-      "source": "claim:09c97fb708d54594c85b8a3d",
+      "id": "3836749c6b5072c9ed882edf",
+      "source": "claim:69be3910f6b1760bc4350178",
       "target": "source:a617c0dcaf2f826c9303b840",
       "kind": "cites",
       "layer": "provenance",
@@ -5815,24 +5877,24 @@
       ]
     },
     {
-      "id": "39ea3c352f9d82947a983b9c",
+      "id": "ec941c83bb817164427d5962",
       "source": "page:27c4109153e151f87093f92b",
       "target": "page:fbca10d9f0b1706a2d15f444",
       "kind": "involves",
       "layer": "semantic",
-      "text": "소버린 AI 추진에 연결된 독파모 사업의 평가 기준과 재설계가 쟁점으로 보도됐다.",
+      "text": "소버린 AI 추진 수단인 독파모의 평가 기준과 사업 재설계가 쟁점으로 제시됐다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
       ]
     },
     {
-      "id": "627dae250279d51807feafc4",
+      "id": "a4d7ddb2b1e3fc02cbf091db",
       "source": "page:27c4109153e151f87093f92b",
       "target": "page:8e9347b11db4e118fbc420c6",
       "kind": "involves",
       "layer": "semantic",
-      "text": "SKT의 독파모 A.X K2 통합 검토가 독자 모델을 국민 서비스에 연결하는 접점이다.",
+      "text": "SKT의 독파모 통합 검토는 독자 모델을 국민 서비스에 연결하려는 계획이다.",
       "source_ids": [
         "source:3999b94431374f06e9cac006"
       ]
@@ -5893,6 +5955,31 @@
       ]
     },
     {
+      "id": "5bffefd2b888ea5bfea7dc98",
+      "source": "page:6b0e772ad5828bad7fd33b63",
+      "target": "page:fbca10d9f0b1706a2d15f444",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006",
+        "source:805e58781691fe8db63f7db5",
+        "source:809f46c21477bbbf5049da92"
+      ]
+    },
+    {
+      "id": "28d9b2954864f0b719e945b4",
+      "source": "page:27c4109153e151f87093f92b",
+      "target": "page:6b0e772ad5828bad7fd33b63",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006",
+        "source:809f46c21477bbbf5049da92"
+      ]
+    },
+    {
       "id": "3dec0fadb97f2b9b276b3c7b",
       "source": "page:27c4109153e151f87093f92b",
       "target": "page:8e9347b11db4e118fbc420c6",
@@ -5938,6 +6025,18 @@
       "source_ids": [
         "source:34fa141b88be994d5c6f08ba",
         "source:ee2c12a40f492a13aa4ec9b8"
+      ]
+    },
+    {
+      "id": "bee08ad26d2f3498ab35df8a",
+      "source": "page:6b0e772ad5828bad7fd33b63",
+      "target": "page:8e9347b11db4e118fbc420c6",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:3999b94431374f06e9cac006",
+        "source:809f46c21477bbbf5049da92"
       ]
     },
     {
@@ -6097,17 +6196,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:paper:2609.19969"
-      ]
-    },
-    {
-      "id": "28d9b2954864f0b719e945b4",
-      "source": "page:27c4109153e151f87093f92b",
-      "target": "page:6b0e772ad5828bad7fd33b63",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
       ]
     },
     {
@@ -6287,31 +6375,9 @@
       ]
     },
     {
-      "id": "bee08ad26d2f3498ab35df8a",
-      "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "page:8e9347b11db4e118fbc420c6",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
       "id": "83ee66a5c5599a98b826a0c8",
       "source": "page:6b0e772ad5828bad7fd33b63",
       "target": "page:d01208b24e7ca273cb0406f3",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:3999b94431374f06e9cac006"
-      ]
-    },
-    {
-      "id": "5bffefd2b888ea5bfea7dc98",
-      "source": "page:6b0e772ad5828bad7fd33b63",
-      "target": "page:fbca10d9f0b1706a2d15f444",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -7280,7 +7346,7 @@
       "id": "sovereign",
       "title": "소버린 AI",
       "kind": "topic",
-      "revision": 42,
+      "revision": 66,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7290,7 +7356,7 @@
             "source:a617c0dcaf2f826c9303b840"
           ],
           "kind": "interpretation",
-          "text": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 요건으로 나누어 다룬다. 한국의 독파모 추진, 중국의 설계·HBM 공급망 구축 보도, Red Hat의 테넌시 주장은 평가 대상이 달라 어느 하나로 전체 자립 수준을 판단하기 어렵다."
+          "text": "제공 자료는 AI 자립을 독자 모델 개발, 반도체 공급체계, 인프라 운영 조건으로 나누어 다룬다. 한국 독파모 사업, 중국의 설계·HBM 공급망 구축 보도, Red Hat의 테넌시 주장은 평가 대상이 달라 하나의 성과로 전체 자립 수준을 판단하기 어렵다."
         }
       ]
     },
@@ -7298,22 +7364,23 @@
       "id": "sovereign:f28856625d6794d23c8f",
       "title": "독자 AI 파운데이션 모델 사업",
       "kind": "entity",
-      "revision": 42,
+      "revision": 66,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:3999b94431374f06e9cac006"
+            "source:805e58781691fe8db63f7db5",
+            "source:809f46c21477bbbf5049da92"
           ],
           "kind": "reported",
-          "text": "9월 16일 브리핑은 SKT·LG AI연구원·업스테이지가 독파모 3차 평가에 대비해 성능을 고도화하고, 과기정통부는 성과를 오픈소스 생태계로 확장할 방침이라고 전했다."
+          "text": "9월 20일 브리핑은 17일 보도를 인용해 업스테이지·SKT·LG AI연구원이 2차 평가 후 남았고 최종평가는 내년 초라고 전했다. 12일 브리핑의 ‘최종평가 임박’보다 구체적인 일정이지만, 실제 일정 변경 여부는 발췌로 확인되지 않는다."
         },
         {
           "evidence_ids": [
-            "source:3999b94431374f06e9cac006"
+            "source:809f46c21477bbbf5049da92"
           ],
           "kind": "reported",
-          "text": "같은 브리핑은 LG AI연구원의 제조·금융·과학 분야 전문가 AI 공개와 엑사원 외부 공급 계획, SKT의 A.X K2와 모두의 AI 통합 검토를 전했다. 외부 공급과 서비스 통합은 완료 실적으로 제시되지 않았다."
+          "text": "9월 12일 브리핑은 배경훈 부총리가 독파모 보안 튜닝에 시간이 걸린다고 설명하며 보안특화 AI 별도 개발을 추진한다고 전했다. 범용 모델 평가와 보안 용도 개발이 별도 과제로 제시됐다."
         }
       ]
     },
@@ -7321,24 +7388,24 @@
       "id": "sovereign:700fe97a1bf0ab14f02c",
       "title": "독파모 평가와 사업 설계 논쟁",
       "kind": "issue",
-      "revision": 42,
+      "revision": 66,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
             "source:809f46c21477bbbf5049da92",
-            "source:3999b94431374f06e9cac006"
+            "source:805e58781691fe8db63f7db5"
           ],
           "kind": "reported",
-          "text": "9월 12일 브리핑은 정부의 모티프테크 2차 평가 이의신청 기각과 국가AI전략위 2기의 정량 벤치마크 한계 지적·평가방식 개편 예고를 전했다. 16일 브리핑은 조선비즈의 심사 불투명성 비판과 사업 재설계 논의도 소개했다."
+          "text": "9월 12일 브리핑은 모티프테크의 이의신청 기각·구체적 사유 설명 예고와 국가AI전략위 2기의 평가방식 개편 예고를 전했다. 20일 브리핑은 과기정통부가 18일 이의제기에 관해 설명했다고 전하며 ‘일단락’으로 요약했다."
         },
         {
           "evidence_ids": [
             "source:809f46c21477bbbf5049da92",
-            "source:3999b94431374f06e9cac006"
+            "source:805e58781691fe8db63f7db5"
           ],
           "kind": "uncertain",
-          "text": "기각 사유의 구체적 설명은 추후 사항으로 보도됐으며 현재 자료에는 후속 설명이나 확정 개편안이 없다. 이의신청을 어떤 기준으로 판단했는지, 그 기준이 3차 평가에서 바뀌는지가 남은 확인 사항이다."
+          "text": "후속 설명이 있었다는 보도는 추가됐지만 설명 내용과 확정 개편안은 제공되지 않았다. 기각의 구체적 판단 근거와 다음 평가의 기준 변경 여부, 당사자의 수용 여부는 여전히 확인되지 않는다."
         }
       ]
     },
@@ -7346,7 +7413,7 @@
       "id": "sovereign:5ff7f7b76b79705343b0",
       "title": "모두의 AI 출시 계획",
       "kind": "event",
-      "revision": 42,
+      "revision": 66,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7354,7 +7421,7 @@
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "reported",
-          "text": "9월 16일 브리핑은 정부가 SKT·카카오·KT 등 3개 컨소시엄을 통해 국민 무료 AI 서비스 ‘모두의 AI’를 연내 출시할 계획이라고 전했다. SKT는 전화·문자 접근과 식당 대기 인원 확인, 병원·택시 예약을 수행하는 실행형 에이전트를 예고했다."
+          "text": "9월 16일 브리핑은 정부가 SKT·카카오·KT 등 3개 컨소시엄을 통해 국민 무료 AI 서비스를 연내 출시할 계획이라고 전했다. SKT는 전화·문자 접근, 병원·택시 예약을 수행하는 에이전트와 독파모 A.X K2 통합 검토를 제시했다."
         },
         {
           "evidence_ids": [
@@ -7362,7 +7429,7 @@
             "source:3999b94431374f06e9cac006"
           ],
           "kind": "interpretation",
-          "text": "9월 12일 브리핑의 SKT 서비스 ‘12월 개시’와 16일의 ‘연내 출시’는 양립하는 일정 표현이다. 의료·돌봄·교육 등 특화서비스와 예약 기능은 계획 단계이며, 반복 보도가 운영 개시나 이용 성과를 확인해 주지는 않는다."
+          "text": "12일 브리핑의 SKT 서비스 ‘12월 개시’와 16일의 ‘연내 출시’는 양립한다. 의료·돌봄·교육 특화서비스와 예약 기능은 이용자가 기대할 기능을 설명하지만, 출시·통합 완료나 의료 효과의 근거는 아니다."
         }
       ]
     },
@@ -7370,7 +7437,7 @@
       "id": "sovereign:2f94c926dc85e43e1b3a",
       "title": "소버린 AI의 지리와 테넌시 조건",
       "kind": "issue",
-      "revision": 42,
+      "revision": 66,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7385,7 +7452,7 @@
             "source:a617c0dcaf2f826c9303b840"
           ],
           "kind": "uncertain",
-          "text": "현재 발췌에는 테넌시의 정의와 주권 충족 기준이 없다. 어떤 운영 구조와 통제 권한을 요구하는지 확인하기 전에는 이 주장을 구체적인 인프라 선정 기준으로 적용하기 어렵다."
+          "text": "제공 발췌에는 테넌시의 정의와 주권 충족 기준이 없다. 어떤 운영 구조와 통제 권한을 요구하는지 확인하기 전에는 구체적인 인프라 선정 기준으로 적용하기 어렵다."
         }
       ]
     },
@@ -7478,12 +7545,12 @@
     }
   ],
   "issues": [],
-  "version": "7bc3da00a22d884ba2a2c2e37e4337f0246c61a3c5610cd8acab50201633fd27",
-  "exported_at": "2026-09-20T03:51:31.949915+00:00",
+  "version": "4a1cca25dd9abdfb5784e52d8fe66aebdcf68428cea0d4e2bc999ef92f6cd19a",
+  "exported_at": "2026-09-20T04:10:33.188545+00:00",
   "coverage": {
     "pages": 42,
     "claims": 82,
-    "cited_sources": 44,
+    "cited_sources": 45,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
