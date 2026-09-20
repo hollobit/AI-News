@@ -1126,44 +1126,45 @@
         "open"
       ],
       "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78",
         "source:33f0fb52169f6644acf69dc3",
-        "source:a857088cc9d190a4d7690c60",
         "source:a867037ee2edc08dee063315",
+        "source:d58729c60e923b2b7b0fafbe",
         "source:paper:2609.20370"
       ],
       "claims": [
-        "claim:26c75273504c6101838de677",
-        "claim:d32681d117e1d4f9d25fc6fd"
+        "claim:e2a0e03cf27cefee4d393402",
+        "claim:fece3c04941e949322d8ab91"
       ],
       "status": "reviewed"
     },
     {
+      "id": "source:1aa04f261ee2e30ebfe97b78",
+      "type": "source",
+      "title": "ZGCM-1-7B",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ],
+      "origin": "telegram_excerpt",
+      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
+      "day": "2026-09-20",
+      "status": "original_source_not_fact_checked",
+      "url": "https://pandaily.com/zgcm-1-7b-open-math-agentic-search",
+      "news_id": "4c72e2fd3d4f1026d11df68b"
+    },
+    {
       "id": "source:33f0fb52169f6644acf69dc3",
       "type": "source",
-      "title": "문샷/Kimi K3: 세계 최대 오픈웨이트 모델 출시",
+      "title": "Kimi K3: 문샷, 미중 격차 축소",
       "source_ids": [
         "source:33f0fb52169f6644acf69dc3"
       ],
       "origin": "telegram_excerpt",
       "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-18",
+      "day": "2026-09-20",
       "status": "original_source_not_fact_checked",
       "url": "https://cnbc.com/2026/07/17/moonshot-ai-kimi-k3-model-openai-anthropic-china.html",
       "news_id": "fbb7d0cf91498e30c3e06b72"
-    },
-    {
-      "id": "source:a857088cc9d190a4d7690c60",
-      "type": "source",
-      "title": "Kimi K3: 세계 최대 오픈웨이트 모델",
-      "source_ids": [
-        "source:a857088cc9d190a4d7690c60"
-      ],
-      "origin": "telegram_excerpt",
-      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-18",
-      "status": "original_source_not_fact_checked",
-      "url": "https://siliconangle.com/2026/07/16/chinas-moonshot-throws-gauntlet-kimi-k3-worlds-largest-open-weights-model",
-      "news_id": "d03ca805acebc8dad4705aea"
     },
     {
       "id": "source:a867037ee2edc08dee063315",
@@ -1180,6 +1181,20 @@
       "news_id": "a4b0e3dcc8068b3e0625c463"
     },
     {
+      "id": "source:d58729c60e923b2b7b0fafbe",
+      "type": "source",
+      "title": "Alibaba, 암 포함 ~150개 질환 탐지 AI 모델 오픈소스 공개",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ],
+      "origin": "telegram_excerpt",
+      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
+      "day": "2026-09-20",
+      "status": "original_source_not_fact_checked",
+      "url": "https://news.hada.io/topic",
+      "news_id": "719bf0f66792c0f781497fcd"
+    },
+    {
       "id": "source:paper:2609.20370",
       "type": "source",
       "title": "The More It Says, the More You Pay: A Black-Box Audit of Provider-Side Token Inflation in LLM Services",
@@ -1194,25 +1209,104 @@
       "news_id": "6df035309a105b713ab50ba2"
     },
     {
-      "id": "claim:26c75273504c6101838de677",
+      "id": "claim:e2a0e03cf27cefee4d393402",
       "type": "claim",
-      "title": "자료의 공개 대상은 서로 다르다. Kimi K3는 가중치 공개 모델로, Shipwright는 Claude Code용 CI/CD 자동화 도구로 소개된다. 도구의 오픈소스 공개가 기반 모델의 가중치 공개를 뜻하지는 않는다.",
+      "title": "공개 대상의 범위를 구분해야 한다. 발췌는 Kimi K3를 오픈웨이트 전략으로, ZGCM-1-7B를 가중치·데이터·코드 공개로 소개한다. Shipwright의 공개 대상은 Claude Code용 자동화 도구이므로 기반 모델의 가중치 공개까지 뜻하지 않는다.",
       "source_ids": [
-        "source:a857088cc9d190a4d7690c60",
+        "source:1aa04f261ee2e30ebfe97b78",
+        "source:33f0fb52169f6644acf69dc3",
         "source:a867037ee2edc08dee063315"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
     },
     {
-      "id": "claim:d32681d117e1d4f9d25fc6fd",
+      "id": "claim:fece3c04941e949322d8ab91",
       "type": "claim",
-      "title": "오픈웨이트 모델은 성능 경쟁의 대상이자 서비스 감사의 실험 수단으로 등장한다. Kimi K3의 경쟁 모델 근접 성능 보도와 PTIA 연구의 탐지율은 평가 목적이 달라 하나의 성능 순위로 합칠 수 없다.",
+      "title": "의료 모델 공개 보도와 오픈웨이트 모델을 이용한 API 감사 연구는 판단 대상이 다르다. 전자는 질환 탐지 성능을 확인해야 하고, 후자는 토큰 부풀리기 탐지 실험이므로 의료 효용의 근거로 옮겨 쓸 수 없다.",
       "source_ids": [
-        "source:a857088cc9d190a4d7690c60",
+        "source:d58729c60e923b2b7b0fafbe",
         "source:paper:2609.20370"
       ],
       "claim_kind": "interpretation",
+      "status": "reviewed"
+    },
+    {
+      "id": "page:584931e56b6856c928facbd1",
+      "type": "entity",
+      "title": "ZGCM-1-7B",
+      "page_ids": [
+        "open:396f68d080ebdbd7f625"
+      ],
+      "topics": [
+        "open"
+      ],
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ],
+      "claims": [
+        "claim:5db54466f1a925d261b95c4b",
+        "claim:8c9e2b5a052a0f59cd497576"
+      ],
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:5db54466f1a925d261b95c4b",
+      "type": "claim",
+      "title": "Pandaily를 인용한 수집 발췌는 ZGCM-1-7B를 수학·에이전트 검색 특화 소형모델로 소개하며 전체 가중치·데이터·코드를 오픈소스로 공개했다고 전한다.",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ],
+      "claim_kind": "reported",
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:8c9e2b5a052a0f59cd497576",
+      "type": "claim",
+      "title": "실제 공개 파일과 라이선스 조건, 수학·검색 평가 결과는 발췌에 없다. 재현이나 재사용을 판단하려면 공개 범위와 이용 허용 조건을 확인해야 한다.",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ],
+      "claim_kind": "uncertain",
+      "status": "reviewed"
+    },
+    {
+      "id": "page:45cd0531f323d91383999a51",
+      "type": "event",
+      "title": "알리바바 질환 탐지 AI 모델 공개",
+      "page_ids": [
+        "open:8bf17879b807540a7f20"
+      ],
+      "topics": [
+        "open"
+      ],
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ],
+      "claims": [
+        "claim:2ed008453902fd1eeada1090",
+        "claim:11ce68ac9e9999a633db0a64"
+      ],
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:2ed008453902fd1eeada1090",
+      "type": "claim",
+      "title": "GeekNews를 연결한 수집 발췌는 알리바바가 암을 포함한 약 150개 질환을 탐지하는 AI 모델을 오픈소스로 공개했다고 전한다.",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ],
+      "claim_kind": "reported",
+      "status": "reviewed"
+    },
+    {
+      "id": "claim:11ce68ac9e9999a633db0a64",
+      "type": "claim",
+      "title": "제목 수준의 자료에는 입력 검사 종류, 질환별 정확도, 외부 환자군 검증이 없다. 약 150개라는 탐지 대상 수만으로 임상 유용성이나 진료 도입 가능성을 판단할 수 없다.",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ],
+      "claim_kind": "uncertain",
       "status": "reviewed"
     },
     {
@@ -1226,35 +1320,21 @@
         "open"
       ],
       "source_ids": [
-        "source:33f0fb52169f6644acf69dc3",
-        "source:a857088cc9d190a4d7690c60"
+        "source:33f0fb52169f6644acf69dc3"
       ],
       "claims": [
-        "claim:1af792aa49cbdfd380466cd3",
-        "claim:7bbc1ae7aae93e50cfb388f8"
+        "claim:8ddd07a531f20cc909f24a9f"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:1af792aa49cbdfd380466cd3",
+      "id": "claim:8ddd07a531f20cc909f24a9f",
       "type": "claim",
-      "title": "CNBC·SiliconAngle을 인용한 수집 발췌는 문샷의 Kimi K3를 ‘세계 최대 오픈웨이트 모델’로 소개하고 Claude Fable 5·GPT 5.6 Sol에 근접한 성능이라고 전한다. 두 발췌에는 SiliconAngle 보도가 겹친다.",
+      "title": "CNBC를 인용한 현재 수집 발췌는 문샷의 Kimi K3가 미중 모델 격차를 줄이고 오픈웨이트 전략으로 주목받는다고 전한다. 구체적인 규모나 경쟁 모델별 성능 수치는 제시하지 않는다.",
       "source_ids": [
-        "source:33f0fb52169f6644acf69dc3",
-        "source:a857088cc9d190a4d7690c60"
+        "source:33f0fb52169f6644acf69dc3"
       ],
       "claim_kind": "reported",
-      "status": "reviewed"
-    },
-    {
-      "id": "claim:7bbc1ae7aae93e50cfb388f8",
-      "type": "claim",
-      "title": "‘세계 최대’의 규모 기준, 경쟁 모델과의 평가 과제·조건, 가중치 이용 허용 범위는 발췌에 없다. 특정 업무의 우위나 자유로운 재사용 가능성은 이 자료로 확정할 수 없다.",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3",
-        "source:a857088cc9d190a4d7690c60"
-      ],
-      "claim_kind": "uncertain",
       "status": "reviewed"
     },
     {
@@ -1272,8 +1352,8 @@
       ],
       "claims": [
         "claim:c1cc180a2ccdb0f353fc2f45",
-        "claim:f41d40b15cb781b356670d05",
-        "claim:fac41f202b4ba7992aedc57e"
+        "claim:c82ce8cbb95b68a95cd5c6cb",
+        "claim:c3711421e5377901ec102f3e"
       ],
       "status": "reviewed"
     },
@@ -1288,9 +1368,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:f41d40b15cb781b356670d05",
+      "id": "claim:c82ce8cbb95b68a95cd5c6cb",
       "type": "claim",
-      "title": "연구진의 감사법은 원래 요청과 길이를 늘리도록 개입한 요청을 따로 보내 추가 토큰 증가량을 비교한다. 이미 부풀려진 출력은 추가 개입 효과가 작다는 포화를 활용하며, 신뢰할 로컬 기준 모델이나 과거 정상 응답을 요구하지 않는다. 초록은 4개 오픈웨이트 모델에서 평균 탐지율 85.1%, 오탐률 2% 미만을 보고한다.",
+      "title": "연구진의 감사법은 원래 요청과 길이 확장 개입을 한 요청을 따로 보내 추가 토큰 증가량을 비교한다. 이미 부풀려진 출력은 추가 개입 효과가 작다는 포화를 활용한다. 초록은 4개 오픈웨이트 모델에서 평균 탐지율 85.1%, 오탐률 2% 미만을 보고한다.",
       "source_ids": [
         "source:paper:2609.20370"
       ],
@@ -1298,9 +1378,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:fac41f202b4ba7992aedc57e",
+      "id": "claim:c3711421e5377901ec102f3e",
       "type": "claim",
-      "title": "초록은 실제 API 서비스 15개 중 7개에서 PTIA와 일치하는 행동을 표시했다고 보고하지만, 해당 공급자의 고의적 조작이나 부당 청구가 확인됐는지는 남아 있다. 탐지 신호만으로 조작 사실을 확정할 수 없다.",
+      "title": "초록은 실제 API 서비스 15개 중 7개에서 PTIA와 일치하는 행동을 표시했다고 보고한다. 이 신호만으로 해당 공급자의 고의적 조작이나 부당 청구를 확정할 수는 없다.",
       "source_ids": [
         "source:paper:2609.20370"
       ],
@@ -3973,6 +4053,17 @@
       ]
     },
     {
+      "id": "1b3731e137fc0e1390ebc22c",
+      "source": "page:35ff74aeea25311f4fe759a6",
+      "target": "source:1aa04f261ee2e30ebfe97b78",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ]
+    },
+    {
       "id": "cc8808c2619e7d581c1a7524",
       "source": "page:35ff74aeea25311f4fe759a6",
       "target": "source:33f0fb52169f6644acf69dc3",
@@ -3981,17 +4072,6 @@
       "text": "",
       "source_ids": [
         "source:33f0fb52169f6644acf69dc3"
-      ]
-    },
-    {
-      "id": "263c83266bee436a4f6d0007",
-      "source": "page:35ff74aeea25311f4fe759a6",
-      "target": "source:a857088cc9d190a4d7690c60",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:a857088cc9d190a4d7690c60"
       ]
     },
     {
@@ -4006,6 +4086,17 @@
       ]
     },
     {
+      "id": "24d868894a21d4b8c6cac58b",
+      "source": "page:35ff74aeea25311f4fe759a6",
+      "target": "source:d58729c60e923b2b7b0fafbe",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ]
+    },
+    {
       "id": "fcff1ea32bdb399e1e38f498",
       "source": "page:35ff74aeea25311f4fe759a6",
       "target": "source:paper:2609.20370",
@@ -4017,31 +4108,43 @@
       ]
     },
     {
-      "id": "9187f37429bd8d14ae607bbe",
+      "id": "cc6b372120f0d27754798a80",
       "source": "page:35ff74aeea25311f4fe759a6",
-      "target": "claim:26c75273504c6101838de677",
+      "target": "claim:e2a0e03cf27cefee4d393402",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:a857088cc9d190a4d7690c60",
+        "source:1aa04f261ee2e30ebfe97b78",
+        "source:33f0fb52169f6644acf69dc3",
         "source:a867037ee2edc08dee063315"
       ]
     },
     {
-      "id": "594d50b8b0ffd5be7daee90f",
-      "source": "claim:26c75273504c6101838de677",
-      "target": "source:a857088cc9d190a4d7690c60",
+      "id": "6493f3ca0e13adff654c6926",
+      "source": "claim:e2a0e03cf27cefee4d393402",
+      "target": "source:1aa04f261ee2e30ebfe97b78",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:a857088cc9d190a4d7690c60"
+        "source:1aa04f261ee2e30ebfe97b78"
       ]
     },
     {
-      "id": "bd911f13cb3926dba8a6dca0",
-      "source": "claim:26c75273504c6101838de677",
+      "id": "1ad9cfa37d802c8a2cd87b39",
+      "source": "claim:e2a0e03cf27cefee4d393402",
+      "target": "source:33f0fb52169f6644acf69dc3",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:33f0fb52169f6644acf69dc3"
+      ]
+    },
+    {
+      "id": "7024c6e96440390f1190cc88",
+      "source": "claim:e2a0e03cf27cefee4d393402",
       "target": "source:a867037ee2edc08dee063315",
       "kind": "cites",
       "layer": "provenance",
@@ -4051,37 +4154,147 @@
       ]
     },
     {
-      "id": "bcaf481d51b4534eb4a67c2d",
+      "id": "058c9b1ec4b60960b633ee57",
       "source": "page:35ff74aeea25311f4fe759a6",
-      "target": "claim:d32681d117e1d4f9d25fc6fd",
+      "target": "claim:fece3c04941e949322d8ab91",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:a857088cc9d190a4d7690c60",
+        "source:d58729c60e923b2b7b0fafbe",
         "source:paper:2609.20370"
       ]
     },
     {
-      "id": "1617f0031f47c993bdcd27f6",
-      "source": "claim:d32681d117e1d4f9d25fc6fd",
-      "target": "source:a857088cc9d190a4d7690c60",
+      "id": "b1b31c05f72bf03f148f529e",
+      "source": "claim:fece3c04941e949322d8ab91",
+      "target": "source:d58729c60e923b2b7b0fafbe",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:a857088cc9d190a4d7690c60"
+        "source:d58729c60e923b2b7b0fafbe"
       ]
     },
     {
-      "id": "56ee888727d5cccf4637e508",
-      "source": "claim:d32681d117e1d4f9d25fc6fd",
+      "id": "6002ab16346a62899c37a122",
+      "source": "claim:fece3c04941e949322d8ab91",
       "target": "source:paper:2609.20370",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:paper:2609.20370"
+      ]
+    },
+    {
+      "id": "b64679cd34d0a6a8bb5407ad",
+      "source": "page:584931e56b6856c928facbd1",
+      "target": "source:1aa04f261ee2e30ebfe97b78",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ]
+    },
+    {
+      "id": "6a428878b134cf4e399da4c5",
+      "source": "page:584931e56b6856c928facbd1",
+      "target": "claim:5db54466f1a925d261b95c4b",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ]
+    },
+    {
+      "id": "a81e6f296a2895367ba7cccf",
+      "source": "claim:5db54466f1a925d261b95c4b",
+      "target": "source:1aa04f261ee2e30ebfe97b78",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ]
+    },
+    {
+      "id": "3dd023b9a99ae465886c3a46",
+      "source": "page:584931e56b6856c928facbd1",
+      "target": "claim:8c9e2b5a052a0f59cd497576",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ]
+    },
+    {
+      "id": "ad029f1565415aad5c96d0f9",
+      "source": "claim:8c9e2b5a052a0f59cd497576",
+      "target": "source:1aa04f261ee2e30ebfe97b78",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ]
+    },
+    {
+      "id": "e17f11966b93289c93958078",
+      "source": "page:45cd0531f323d91383999a51",
+      "target": "source:d58729c60e923b2b7b0fafbe",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ]
+    },
+    {
+      "id": "f816766ddcdc4ee531e0c2c6",
+      "source": "page:45cd0531f323d91383999a51",
+      "target": "claim:2ed008453902fd1eeada1090",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ]
+    },
+    {
+      "id": "9b2fb34dcdfbf673d2b94fdb",
+      "source": "claim:2ed008453902fd1eeada1090",
+      "target": "source:d58729c60e923b2b7b0fafbe",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ]
+    },
+    {
+      "id": "1bdea8ece56a78e6adef1188",
+      "source": "page:45cd0531f323d91383999a51",
+      "target": "claim:11ce68ac9e9999a633db0a64",
+      "kind": "states",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ]
+    },
+    {
+      "id": "98daace0a4c23828e8784ab0",
+      "source": "claim:11ce68ac9e9999a633db0a64",
+      "target": "source:d58729c60e923b2b7b0fafbe",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
       ]
     },
     {
@@ -4096,33 +4309,10 @@
       ]
     },
     {
-      "id": "33cae5d85283f6a07035c0d6",
+      "id": "a47bc6a5de94de2e115e6c9f",
       "source": "page:92637321c93f04364bb7f3e2",
-      "target": "source:a857088cc9d190a4d7690c60",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:a857088cc9d190a4d7690c60"
-      ]
-    },
-    {
-      "id": "cbae2083c8591a80acc8d0da",
-      "source": "page:92637321c93f04364bb7f3e2",
-      "target": "claim:1af792aa49cbdfd380466cd3",
+      "target": "claim:8ddd07a531f20cc909f24a9f",
       "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3",
-        "source:a857088cc9d190a4d7690c60"
-      ]
-    },
-    {
-      "id": "c22d030cb0d2375b8df8134f",
-      "source": "claim:1af792aa49cbdfd380466cd3",
-      "target": "source:33f0fb52169f6644acf69dc3",
-      "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
@@ -4130,48 +4320,14 @@
       ]
     },
     {
-      "id": "951fe3ba71f82a2750d3c6bb",
-      "source": "claim:1af792aa49cbdfd380466cd3",
-      "target": "source:a857088cc9d190a4d7690c60",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:a857088cc9d190a4d7690c60"
-      ]
-    },
-    {
-      "id": "6a50b5ca34313d36a7538a90",
-      "source": "page:92637321c93f04364bb7f3e2",
-      "target": "claim:7bbc1ae7aae93e50cfb388f8",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3",
-        "source:a857088cc9d190a4d7690c60"
-      ]
-    },
-    {
-      "id": "a5e45abfb3c0dace2d71314d",
-      "source": "claim:7bbc1ae7aae93e50cfb388f8",
+      "id": "8c3e1547f35c78078b688511",
+      "source": "claim:8ddd07a531f20cc909f24a9f",
       "target": "source:33f0fb52169f6644acf69dc3",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:33f0fb52169f6644acf69dc3"
-      ]
-    },
-    {
-      "id": "201541118941801b83348182",
-      "source": "claim:7bbc1ae7aae93e50cfb388f8",
-      "target": "source:a857088cc9d190a4d7690c60",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:a857088cc9d190a4d7690c60"
       ]
     },
     {
@@ -4208,9 +4364,9 @@
       ]
     },
     {
-      "id": "df71182af9da87a9a81744ea",
+      "id": "fe2c1e27b695a4a70133e808",
       "source": "page:f5f419167d3ffcfccc183b5e",
-      "target": "claim:f41d40b15cb781b356670d05",
+      "target": "claim:c82ce8cbb95b68a95cd5c6cb",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4219,8 +4375,8 @@
       ]
     },
     {
-      "id": "ed48d991186b4524656039a1",
-      "source": "claim:f41d40b15cb781b356670d05",
+      "id": "0e370f1091270112d3f5d8dc",
+      "source": "claim:c82ce8cbb95b68a95cd5c6cb",
       "target": "source:paper:2609.20370",
       "kind": "cites",
       "layer": "provenance",
@@ -4230,9 +4386,9 @@
       ]
     },
     {
-      "id": "66a39e342143626a7266efb9",
+      "id": "c2a40060dcc169e53ef7e676",
       "source": "page:f5f419167d3ffcfccc183b5e",
-      "target": "claim:fac41f202b4ba7992aedc57e",
+      "target": "claim:c3711421e5377901ec102f3e",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4241,8 +4397,8 @@
       ]
     },
     {
-      "id": "6f899bc8113af73ea9880e22",
-      "source": "claim:fac41f202b4ba7992aedc57e",
+      "id": "e69ca805c64538f1080886aa",
+      "source": "claim:c3711421e5377901ec102f3e",
       "target": "source:paper:2609.20370",
       "kind": "cites",
       "layer": "provenance",
@@ -6061,24 +6217,45 @@
       ]
     },
     {
-      "id": "5f4991559f94d4d33a46fe5f",
+      "id": "8de8d7d4d36deec93629cfe5",
+      "source": "page:35ff74aeea25311f4fe759a6",
+      "target": "page:584931e56b6856c928facbd1",
+      "kind": "involves",
+      "layer": "semantic",
+      "text": "가중치뿐 아니라 데이터·코드까지 공개했다고 소개된 모델 사례다.",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ]
+    },
+    {
+      "id": "1675394c42d9213804facb34",
+      "source": "page:35ff74aeea25311f4fe759a6",
+      "target": "page:45cd0531f323d91383999a51",
+      "kind": "involves",
+      "layer": "semantic",
+      "text": "질환 탐지용 모델의 오픈소스 공개 보도를 포함한다.",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ]
+    },
+    {
+      "id": "dc51af541ddfcd6564cc01ed",
       "source": "page:35ff74aeea25311f4fe759a6",
       "target": "page:92637321c93f04364bb7f3e2",
       "kind": "involves",
       "layer": "semantic",
-      "text": "수집 발췌가 오픈웨이트 모델의 규모·성능 경쟁 사례로 소개한다.",
+      "text": "수집 발췌가 오픈웨이트 전략을 채택한 모델로 소개한다.",
       "source_ids": [
-        "source:33f0fb52169f6644acf69dc3",
-        "source:a857088cc9d190a4d7690c60"
+        "source:33f0fb52169f6644acf69dc3"
       ]
     },
     {
-      "id": "cc545972d724d7477ce6b73f",
+      "id": "301cc8a823262ea36b3e2e04",
       "source": "page:35ff74aeea25311f4fe759a6",
       "target": "page:f5f419167d3ffcfccc183b5e",
       "kind": "involves",
       "layer": "semantic",
-      "text": "연구진이 4개 오픈웨이트 모델로 토큰 부풀리기 감사법의 탐지율과 오탐률을 평가했다.",
+      "text": "연구진이 4개 오픈웨이트 모델을 감사법의 탐지율·오탐률 평가에 사용했다.",
       "source_ids": [
         "source:paper:2609.20370"
       ]
@@ -6344,18 +6521,6 @@
       "source_ids": [
         "source:3999b94431374f06e9cac006",
         "source:809f46c21477bbbf5049da92"
-      ]
-    },
-    {
-      "id": "d321e4f0b941662fba208309",
-      "source": "page:35ff74aeea25311f4fe759a6",
-      "target": "page:92637321c93f04364bb7f3e2",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3",
-        "source:a857088cc9d190a4d7690c60"
       ]
     },
     {
@@ -6652,6 +6817,39 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:paper:2609.19194"
+      ]
+    },
+    {
+      "id": "09745c233aab62535414b2b5",
+      "source": "page:35ff74aeea25311f4fe759a6",
+      "target": "page:45cd0531f323d91383999a51",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:d58729c60e923b2b7b0fafbe"
+      ]
+    },
+    {
+      "id": "26f7ca0a0f1e91a07394105e",
+      "source": "page:35ff74aeea25311f4fe759a6",
+      "target": "page:584931e56b6856c928facbd1",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:1aa04f261ee2e30ebfe97b78"
+      ]
+    },
+    {
+      "id": "d321e4f0b941662fba208309",
+      "source": "page:35ff74aeea25311f4fe759a6",
+      "target": "page:92637321c93f04364bb7f3e2",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:33f0fb52169f6644acf69dc3"
       ]
     },
     {
@@ -7488,24 +7686,71 @@
       "id": "open",
       "title": "오픈 모델",
       "kind": "topic",
-      "revision": 61,
+      "revision": 74,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:a857088cc9d190a4d7690c60",
+            "source:33f0fb52169f6644acf69dc3",
+            "source:1aa04f261ee2e30ebfe97b78",
             "source:a867037ee2edc08dee063315"
           ],
           "kind": "interpretation",
-          "text": "자료의 공개 대상은 서로 다르다. Kimi K3는 가중치 공개 모델로, Shipwright는 Claude Code용 CI/CD 자동화 도구로 소개된다. 도구의 오픈소스 공개가 기반 모델의 가중치 공개를 뜻하지는 않는다."
+          "text": "공개 대상의 범위를 구분해야 한다. 발췌는 Kimi K3를 오픈웨이트 전략으로, ZGCM-1-7B를 가중치·데이터·코드 공개로 소개한다. Shipwright의 공개 대상은 Claude Code용 자동화 도구이므로 기반 모델의 가중치 공개까지 뜻하지 않는다."
         },
         {
           "evidence_ids": [
-            "source:a857088cc9d190a4d7690c60",
+            "source:d58729c60e923b2b7b0fafbe",
             "source:paper:2609.20370"
           ],
           "kind": "interpretation",
-          "text": "오픈웨이트 모델은 성능 경쟁의 대상이자 서비스 감사의 실험 수단으로 등장한다. Kimi K3의 경쟁 모델 근접 성능 보도와 PTIA 연구의 탐지율은 평가 목적이 달라 하나의 성능 순위로 합칠 수 없다."
+          "text": "의료 모델 공개 보도와 오픈웨이트 모델을 이용한 API 감사 연구는 판단 대상이 다르다. 전자는 질환 탐지 성능을 확인해야 하고, 후자는 토큰 부풀리기 탐지 실험이므로 의료 효용의 근거로 옮겨 쓸 수 없다."
+        }
+      ]
+    },
+    {
+      "id": "open:396f68d080ebdbd7f625",
+      "title": "ZGCM-1-7B",
+      "kind": "entity",
+      "revision": 74,
+      "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
+      "claims": [
+        {
+          "evidence_ids": [
+            "source:1aa04f261ee2e30ebfe97b78"
+          ],
+          "kind": "reported",
+          "text": "Pandaily를 인용한 수집 발췌는 ZGCM-1-7B를 수학·에이전트 검색 특화 소형모델로 소개하며 전체 가중치·데이터·코드를 오픈소스로 공개했다고 전한다."
+        },
+        {
+          "evidence_ids": [
+            "source:1aa04f261ee2e30ebfe97b78"
+          ],
+          "kind": "uncertain",
+          "text": "실제 공개 파일과 라이선스 조건, 수학·검색 평가 결과는 발췌에 없다. 재현이나 재사용을 판단하려면 공개 범위와 이용 허용 조건을 확인해야 한다."
+        }
+      ]
+    },
+    {
+      "id": "open:8bf17879b807540a7f20",
+      "title": "알리바바 질환 탐지 AI 모델 공개",
+      "kind": "event",
+      "revision": 74,
+      "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
+      "claims": [
+        {
+          "evidence_ids": [
+            "source:d58729c60e923b2b7b0fafbe"
+          ],
+          "kind": "reported",
+          "text": "GeekNews를 연결한 수집 발췌는 알리바바가 암을 포함한 약 150개 질환을 탐지하는 AI 모델을 오픈소스로 공개했다고 전한다."
+        },
+        {
+          "evidence_ids": [
+            "source:d58729c60e923b2b7b0fafbe"
+          ],
+          "kind": "uncertain",
+          "text": "제목 수준의 자료에는 입력 검사 종류, 질환별 정확도, 외부 환자군 검증이 없다. 약 150개라는 탐지 대상 수만으로 임상 유용성이나 진료 도입 가능성을 판단할 수 없다."
         }
       ]
     },
@@ -7513,24 +7758,15 @@
       "id": "open:7b6eacb9f4cec119bb36",
       "title": "Kimi K3",
       "kind": "entity",
-      "revision": 61,
+      "revision": 74,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:33f0fb52169f6644acf69dc3",
-            "source:a857088cc9d190a4d7690c60"
+            "source:33f0fb52169f6644acf69dc3"
           ],
           "kind": "reported",
-          "text": "CNBC·SiliconAngle을 인용한 수집 발췌는 문샷의 Kimi K3를 ‘세계 최대 오픈웨이트 모델’로 소개하고 Claude Fable 5·GPT 5.6 Sol에 근접한 성능이라고 전한다. 두 발췌에는 SiliconAngle 보도가 겹친다."
-        },
-        {
-          "evidence_ids": [
-            "source:33f0fb52169f6644acf69dc3",
-            "source:a857088cc9d190a4d7690c60"
-          ],
-          "kind": "uncertain",
-          "text": "‘세계 최대’의 규모 기준, 경쟁 모델과의 평가 과제·조건, 가중치 이용 허용 범위는 발췌에 없다. 특정 업무의 우위나 자유로운 재사용 가능성은 이 자료로 확정할 수 없다."
+          "text": "CNBC를 인용한 현재 수집 발췌는 문샷의 Kimi K3가 미중 모델 격차를 줄이고 오픈웨이트 전략으로 주목받는다고 전한다. 구체적인 규모나 경쟁 모델별 성능 수치는 제시하지 않는다."
         }
       ]
     },
@@ -7538,7 +7774,7 @@
       "id": "open:d91f7bc8638479fa2208",
       "title": "공급자 측 토큰 부풀리기와 API 감사",
       "kind": "issue",
-      "revision": 61,
+      "revision": 74,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7553,14 +7789,14 @@
             "source:paper:2609.20370"
           ],
           "kind": "reported",
-          "text": "연구진의 감사법은 원래 요청과 길이를 늘리도록 개입한 요청을 따로 보내 추가 토큰 증가량을 비교한다. 이미 부풀려진 출력은 추가 개입 효과가 작다는 포화를 활용하며, 신뢰할 로컬 기준 모델이나 과거 정상 응답을 요구하지 않는다. 초록은 4개 오픈웨이트 모델에서 평균 탐지율 85.1%, 오탐률 2% 미만을 보고한다."
+          "text": "연구진의 감사법은 원래 요청과 길이 확장 개입을 한 요청을 따로 보내 추가 토큰 증가량을 비교한다. 이미 부풀려진 출력은 추가 개입 효과가 작다는 포화를 활용한다. 초록은 4개 오픈웨이트 모델에서 평균 탐지율 85.1%, 오탐률 2% 미만을 보고한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.20370"
           ],
           "kind": "uncertain",
-          "text": "초록은 실제 API 서비스 15개 중 7개에서 PTIA와 일치하는 행동을 표시했다고 보고하지만, 해당 공급자의 고의적 조작이나 부당 청구가 확인됐는지는 남아 있다. 탐지 신호만으로 조작 사실을 확정할 수 없다."
+          "text": "초록은 실제 API 서비스 15개 중 7개에서 PTIA와 일치하는 행동을 표시했다고 보고한다. 이 신호만으로 해당 공급자의 고의적 조작이나 부당 청구를 확정할 수는 없다."
         }
       ]
     },
@@ -8036,12 +8272,12 @@
     }
   ],
   "issues": [],
-  "version": "a2d36f8c7e59a2b920d109d43e83693e97a001d7402ed5785d569195e4d4ef99",
-  "exported_at": "2026-09-20T04:51:03.964277+00:00",
+  "version": "cb5599a84441a00c126eb73572ac9f1bd85a0ecfa23bae9396bec6b719bc14a9",
+  "exported_at": "2026-09-20T04:56:50.746364+00:00",
   "coverage": {
-    "pages": 43,
-    "claims": 85,
-    "cited_sources": 46,
+    "pages": 45,
+    "claims": 88,
+    "cited_sources": 47,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
