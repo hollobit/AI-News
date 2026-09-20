@@ -1,6 +1,6 @@
 (() => {'use strict';
 const $=id=>document.getElementById(id), el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
-const names={strategy:'전략 대시보드',news:'뉴스',archive:'날짜별 아카이브',observatory:'관측 지도',research:'뉴스 분석',risks:'위험·조건부 시나리오',papers:'논문',wiki:'지식 위키',graph:'관계 탐색',sources:'출처 목록',services:'서비스 안내'};
+const names={strategy:'전략 대시보드',news:'뉴스',archive:'날짜별 아카이브',observatory:'관측 지도',research:'뉴스 분석',risks:'위험·조건부 시나리오',papers:'논문',wiki:'지식 위키',graph:'관계 탐색',sources:'출처 목록',simulation:'MiroFish 분석',services:'서비스 안내'};
 let view=new URLSearchParams(location.search).get('view')||'strategy',site,wiki,obs,limit=40;
 let restoreFilters=true;
 function restoreURL(){const p=new URLSearchParams(location.search);$('search').value=p.get('q')||'';for(const k of ['day','topic']){const value=p.get(k)||'';if(value&&![...$(k).options].some(o=>o.value===value))$(k).add(new Option(value,value));$(k).value=value;}$('reviewed').checked=p.get('reviewed')==='1';limit=Math.max(40,Math.min(10000,Number(p.get('limit'))||40));}
@@ -14,7 +14,7 @@ $('title').textContent=names[view];document.title=names[view]+' · AI 뉴스';
 function safe(value){try{const u=new URL(value);return ['http:','https:'].includes(u.protocol)?u.href:'';}catch{return '';}}
 function external(text,value){const u=safe(value);if(!u)return el('span','공개 출처 링크 없음');const a=link(text,u);a.target='_blank';a.rel='noopener noreferrer';return a;}
 function card(title,meta){const n=el('article',undefined,'card');n.append(el('small',meta,'tag'),el('h2',title));return n;}
-function article(a){const n=card(a.title,`${a.day} · ${a.topic} · ${a.analyses.length?'현재 입력·독립 검토 확인':'제목·출처만 공개'}`);for(const r of a.analyses){const d=el('details');d.append(el('summary',r.kind+(r.title?' · '+r.title:'')),el('p',r.text));if(r.uncertainty)d.append(el('p','불확실성: '+r.uncertainty));n.append(d);}const links=el('div',undefined,'links');links.append(external('원출처',a.url),link('지식 연결','knowledge.html#source_url='+encodeURIComponent(a.url)));n.append(links);return n;}
+function article(a){const n=card(a.title,`${a.day} · ${a.topic} · ${a.analyses.length?'현재 입력·독립 검토 확인':'제목·출처만 공개'}`);for(const r of a.analyses){const d=el('details');d.append(el('summary',r.kind+(r.title?' · '+r.title:'')),el('p',r.text));if(r.uncertainty)d.append(el('p','불확실성: '+r.uncertainty));n.append(d);}const links=el('div',undefined,'links');links.append(external('원출처',a.url),link('지식 연결','knowledge.html#'+new URLSearchParams({article_id:a.id,source_url:a.url})));n.append(links);return n;}
 function paper(p){const n=card(p.title,`${p.id} · ${p.day} · ${p.status} · ${p.provider}`);if(p.summary)n.append(el('p',p.summary));for(const c of p.claims){const d=el('details');d.append(el('summary',c.title),el('p',c.detail),el('p','불확실성: '+c.uncertainty));n.append(d);}n.append(external('논문 원출처',p.url),document.createTextNode(' · '),link('지식 연결','knowledge.html#id='+encodeURIComponent('source:paper:'+p.id)));return n;}
 function wikiPage(p){const n=card(p.title,p.kind+' · 검토 판 '+p.revision);for(const c of p.claims){n.append(el('p',c.text));for(const id of c.evidence_ids){const source=wiki.nodes.find(n=>n.id===id);if(source?.url)n.append(external('인용 출처 · '+source.title,source.url));}}const node=wiki.nodes.find(n=>(n.page_ids||[]).includes(p.id));if(node)n.append(link('관계 탐색','knowledge.html#id='+encodeURIComponent(node.id)));return n;}
 function searchText(item){return [item.title,item.topic,item.url,item.summary,item.current_basis,item.scenario,item.uncertainty,...(item.assumptions||[]),...(item.mitigations||[]),...(item.analyses||[]).flatMap(a=>[a.title,a.text,a.uncertainty]),...(item.claims||[]).flatMap(c=>[c.title,c.text,c.detail,c.uncertainty])].filter(Boolean).join(' ').toLocaleLowerCase();}
@@ -28,6 +28,14 @@ function dashboardTopics(){const q=$('search').value.trim().toLocaleLowerCase(),
  const neighbors=(obs.edges||[]).filter(e=>e.source===n.id||e.target===n.id).map(e=>labels.get(e.source===n.id?e.target:e.source));
  return !q||[n.label,...neighbors,...evidence.map(e=>e.title)].filter(Boolean).join(' ').toLocaleLowerCase().includes(q);});}
 function render(){if(restoreFilters){restoreURL();restoreFilters=false;}const box=$('content');box.replaceChildren();let items=[],draw=article;
+ if(view==='simulation'){
+ const intro=card('MiroFish 전략 시뮬레이션','가정 기반 탐색 · 실제 예측이나 검증된 사실과 구분');
+ intro.append(el('p','공개 GitHub Pages에서는 엔진을 실행하지 않습니다. 아래에서 분석에 사용할 뉴스를 확인한 뒤, 이 컴퓨터의 로컬 실행 화면에서 자료 구성 → 실행을 진행하세요.'),el('p','로컬 엔진에는 LLM 설정과 ZEP_API_KEY가 필요합니다. 비밀 키는 웹페이지나 채팅에 입력하지 말고 로컬 .env.mirofish에 설정하세요. 실행 화면이 열리지 않으면 로컬 서버가 실행 중인지 확인하세요.'));
+ const params=new URLSearchParams({q:$('search').value,...($('day').value?{date:$('day').value}:{}),...($('topic').value?{topic:$('topic').value}:{})});
+ const launch=link('로컬 MiroFish 실행 화면 열기','http://127.0.0.1:8001/simulation?'+params);launch.id='mirofish-local';launch.target='_blank';launch.rel='noopener noreferrer';intro.append(launch);
+ intro.append(el('p','이 링크는 방문자 자신의 컴퓨터를 엽니다. 공개 사이트에서 로컬 서버로 자동 요청하거나 실행 명령을 보내지 않습니다. 실행 초안·미검토 보고서는 공개 사실로 게시하지 않습니다.','muted'));
+ box.append(intro,el('h2','분석에 사용할 뉴스 검색'));items=site.news;
+ }
  if(view==='services'){box.append(card('공개 웹에서 가능한 기능','조회·검색·필터·내려받기'),el('p','뉴스와 검토된 기본·심층 분석, 날짜별 아카이브, 14·30·90일 관측 곡선·관계 지도·히트맵·확장·날짜 재생, 검토 논문, 위키와 인용 관계 탐색을 제공합니다.'),card('로컬 서버가 필요한 기능','공개본에서는 실행하지 않음'),el('p','뉴스 수집·원문 확보·LLM 질문 생성·재분석·주제 설정 변경·사건 병합·결정 편집·시뮬레이션 실행·내부 운영 로그는 공개 사이트에 연결하지 않습니다. 질문 대신 공개 검토 자료를 검색할 수 있습니다. 시뮬레이션 초안과 미검토 해석은 공개 사실로 게시하지 않습니다.'));$('result-count').textContent='';$('more').hidden=true;return;}
  if(view==='strategy'){
  const selectedTopics=dashboardTopics(),grid=el('div',undefined,'grid');grid.id='dashboard-topics';
@@ -40,7 +48,7 @@ function render(){if(restoreFilters){restoreURL();restoreFilters=false;}const bo
  else if(view==='papers'){items=site.papers;draw=paper;}
  else if(view==='wiki'){items=wiki.pages;draw=wikiPage;}
  else if(view==='sources'){const map=new Map(site.news.filter(a=>a.url).map(a=>[a.url,a]));items=[...map.values()];draw=a=>{const n=card(a.title,a.day);n.append(external(a.url,a.url));return n;};}
- else items=site.news.filter(a=>view!=='research'||a.analyses.length);
+ else if(view!=='simulation')items=site.news.filter(a=>view!=='research'||a.analyses.length);
  items=items.filter(matching).filter(a=>!$('reviewed').checked||['wiki','risks'].includes(view)||a.analyses?.length||a.status==='검토 완료');
  if(view==='risks')items=items.map(i=>({...i,id:i.article_id+':'+i.title}));
  const requested=new URLSearchParams(location.search).get('id');if(requested)items=items.filter(i=>i.id===requested);

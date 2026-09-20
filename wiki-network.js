@@ -11,7 +11,7 @@
   const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
   const svgEl=(tag,attrs)=>{const n=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));return n;};
   const safeURL=value=>{try{const u=new URL(value);return ['http:','https:'].includes(u.protocol)?u.href:'';}catch{return '';}};
-  function saveURL(push=true){const p=new URLSearchParams();if(selected)p.set('id',selected);if($('search').value)p.set('q',$('search').value);if($('layer').value!=='all')p.set('layer',$('layer').value);if($('color').value!=='type')p.set('color',$('color').value);if(limit!==100)p.set('limit',String(limit));if(zoom!==1||panX||panY){p.set('zoom',zoom.toFixed(3));p.set('x',panX.toFixed(1));p.set('y',panY.toFixed(1));}const u=new URL(location.href);u.hash=p.toString();if(u.href!==location.href)history[push?'pushState':'replaceState'](null,'',u);}
+  function saveURL(push=true){const p=new URLSearchParams();if(selected){p.set('id',selected);const prior=new URLSearchParams(location.hash.slice(1));for(const k of ['article_id','source_url'])if(prior.has(k))p.set(k,prior.get(k));}if($('search').value)p.set('q',$('search').value);if($('layer').value!=='all')p.set('layer',$('layer').value);if($('color').value!=='type')p.set('color',$('color').value);if(limit!==100)p.set('limit',String(limit));if(zoom!==1||panX||panY){p.set('zoom',zoom.toFixed(3));p.set('x',panX.toFixed(1));p.set('y',panY.toFixed(1));}const u=new URL(location.href);u.hash=p.toString();if(u.href!==location.href)history[push?'pushState':'replaceState'](null,'',u);}
   function restoreURL(){const p=new URLSearchParams(location.hash.slice(1));selected=p.get('id')||'';$('search').value=p.get('q')||'';$('layer').value=['all','semantic','provenance','recommendation'].includes(p.get('layer'))?p.get('layer'):'all';$('color').value=p.get('color')==='community'?'community':'type';limit=Math.max(10,Math.min(500,Number(p.get('limit'))||100));zoom=Math.max(.3,Math.min(4,Number(p.get('zoom'))||1));panX=Math.max(-10000,Math.min(10000,Number(p.get('x'))||0));panY=Math.max(-10000,Math.min(10000,Number(p.get('y'))||0));load();}
   function select(id){selected=id;saveURL();load();}
   function transform(){$('scene').setAttribute('transform',`translate(${panX} ${panY}) scale(${zoom})`);}
@@ -21,16 +21,45 @@
     const edges=snapshot.edges.filter(e=>layer==='all'||e.layer===layer);let nodes=snapshot.nodes;
     if(layer!=='all'){const connected=new Set(edges.flatMap(e=>[e.source,e.target]));if(selected)connected.add(selected);nodes=nodes.filter(n=>connected.has(n.id));}
     if(selected){const ids=new Set([selected]);for(const e of edges)if(e.source===selected||e.target===selected){ids.add(e.source);ids.add(e.target);}nodes=nodes.filter(n=>ids.has(n.id));}
-    if(q)nodes=nodes.filter(n=>n.title.toLocaleLowerCase().includes(q));
+    // A deep link's selected neighborhood takes precedence over inherited search.
+    if(q&&!selected)nodes=nodes.filter(n=>n.title.toLocaleLowerCase().includes(q));
     const total=nodes.length;nodes=[...nodes].sort((a,b)=>Number(b.id===selected)-Number(a.id===selected)).slice(0,limit);
     const ids=new Set(nodes.map(n=>n.id)),byId=new Map(snapshot.nodes.map(n=>[n.id,n]));const found=byId.get(selected);
     const detail=found?{...found,connections:snapshot.edges.filter(e=>e.source===selected||e.target===selected).map(e=>({...e,other:byId.get(e.source===selected?e.target:e.source)}))}:selected?{id:selected,type:'source',title:'현재 연결된 검토 지식 없음',scope:'이 링크의 대상은 현재 공개 스냅샷에 없습니다.',connections:[]}:null;
     return {...snapshot,nodes,edges:edges.filter(e=>ids.has(e.source)&&ids.has(e.target)),detail,total,shown:nodes.length};
   }
+  let articleData=null,articleObservations=null;
+  async function addArticleContext(){
+    const route=new URLSearchParams(location.hash.slice(1));
+    const articleId=route.get('article_id')||(selected.startsWith('source:news:')?selected.slice(12):'');
+    if(!articleId&&!route.has('source_url'))return;
+    if(!articleData){const r=await fetch('./site.json');if(!r.ok)throw Error('뉴스 연결 자료를 읽을 수 없습니다.');articleData=await r.json();}
+    const article=articleData.news.find(a=>articleId?a.id===articleId:a.url===safeURL(route.get('source_url')));
+    if(!article)return;
+    if(!articleObservations){const r=await fetch('./observatory-90-expanded.json');if(!r.ok)throw Error('관측 연결 자료를 읽을 수 없습니다.');articleObservations=await r.json();}
+    const source=snapshot.nodes.find(n=>n.type==='source'&&article.url&&n.url===article.url);
+    const sid=source?.id||'source:news:'+article.id;
+    const addNode=n=>{if(!snapshot.nodes.some(old=>old.id===n.id))snapshot.nodes.push(n);};
+    const addEdge=(id,target,layer,text)=>{if(!snapshot.edges.some(e=>e.id===id))snapshot.edges.push({id,source:sid,target,layer,kind:layer==='provenance'?'reviewed_analysis':'observed_in_document',text,source_ids:[sid]});};
+    addNode({id:sid,type:'source',title:article.title,url:article.url,day:article.day,scope:'이 뉴스의 검토 분석·위키 인용·90일 관측 연결입니다. 공동 관측은 의미 관계나 인과관계가 아닙니다.',status:'news_source'});
+    for(const [i,a] of (article.analyses||[]).entries()){
+      const id='news-analysis:'+article.id+':'+i;
+      addNode({id,type:'claim',title:a.title||a.text,scope:a.kind+' · 현재 입력·독립 검토 확인',analysis_text:a.text,uncertainty:a.uncertainty,source_ids:[sid]});
+      addEdge('news-link:'+article.id+':'+i,id,'provenance','이 뉴스의 '+a.kind+' · 원출처에 연결된 검토 결과');
+    }
+    const docs=new Set(Object.entries(articleObservations.documents||{}).filter(([,d])=>article.url&&d.url===article.url).map(([id])=>id));
+    for(const n of articleObservations.nodes||[]){
+      if(!(n.document_ids_by_day||[]).some(ids=>ids.some(id=>docs.has(id))))continue;
+      const id='news-observed:'+n.id;
+      addNode({id,type:n.kind==='topic'?'topic':'concept',title:n.label,scope:'같은 뉴스에서 관측된 표현 · 의미·인과 관계 검증 아님',source_ids:[sid]});
+      addEdge('news-observed-link:'+article.id+':'+n.id,id,'recommendation','90일 관측 지도에서 이 문서에 함께 관측됨 · 검토된 의미 관계 아님');
+    }
+    if(!selected||selected==='missing-source')selected=sid;
+  }
   async function load(){
     const token=++request;
     try{
-      if(staticMode){if(!snapshot){const r=await fetch('./knowledge.json');if(!r.ok)throw Error('공개 스냅샷을 읽을 수 없습니다.');snapshot=await r.json();}data=staticView();}
+      if(staticMode){if(!snapshot){const r=await fetch('./knowledge.json');if(!r.ok)throw Error('공개 스냅샷을 읽을 수 없습니다.');snapshot=await r.json();}await addArticleContext();if(token!==request)return;data=staticView();}
       else{const p=new URLSearchParams({id:selected,q:$('search').value,layer:$('layer').value,limit:String(limit)});const hash=new URLSearchParams(location.hash.slice(1));if(!selected)for(const k of ['source_url','paper_id'])if(hash.has(k))p.set(k,hash.get(k));const r=await fetch('/api/wiki/network?'+p);const result=await r.json();if(!r.ok)throw Error(result.error||'조회 실패');if(token!==request)return;data=result;}
       if(token!==request)return;
       $('status').textContent=(staticMode?'읽기 전용 공개 스냅샷 · '+snapshot.exported_at+' · ':'')+data.method;
@@ -67,6 +96,8 @@
   function highlight(id){const related=new Set([id]);for(const e of data.edges)if(e.source===id||e.target===id){related.add(e.source);related.add(e.target);}for(const n of $('nodes').children)n.style.opacity=!id||related.has(n.dataset.id)?'1':'.18';}
   function renderDetail(){const box=$('detail');box.replaceChildren();const n=data.detail;if(!n){box.append(el('h2','노드를 선택하세요'),el('p','위키·주장·원자료를 양방향으로 탐색합니다.'));return;}box.append(el('span',labels[n.type]||n.type,'badge'),el('h2',n.title),el('p',n.scope||'현재 입력과 독립 검토가 일치하는 위키 연결입니다.'));
     if(n.url&&safeURL(n.url)){const a=el('a','원출처 열기');a.href=safeURL(n.url);a.target='_blank';a.rel='noopener noreferrer';box.append(a);}
+    if(n.analysis_text)box.append(el('p',n.analysis_text));
+    if(n.uncertainty)box.append(el('p','불확실성: '+n.uncertainty));
     if(!staticMode&&n.href){const a=el('a',' 연결된 원래 화면 열기');a.href=n.href;box.append(a);}
     const summaries=staticMode?(snapshot.pages||[]).filter(p=>(n.page_ids||[]).includes(p.id)):[];
     for(const p of summaries){box.append(el('h3',p.title));for(const c of p.claims){box.append(el('p',c.text));for(const ref of c.evidence_ids){const b=el('button','인용 원자료');b.addEventListener('click',()=>select(ref));box.append(b);}}}
