@@ -96,7 +96,7 @@
         if (shared.length >= 2 && score >= .08) semanticLinks.push({ source: left.id, target: right.id, kind: 'semantic-news', relation: '의미적 유사성', score, shared });
         const leftCausal = /때문에|따라서|결과적으로|영향을|초래|원인|방아쇠|because|due to|therefore|lead to|result in/i.test(causalText(left.item));
         const rightCausal = /때문에|따라서|결과적으로|영향을|초래|원인|방아쇠|because|due to|therefore|lead to|result in/i.test(causalText(right.item));
-        if (shared.length >= 2 && score >= .12 && (leftCausal || rightCausal)) {
+        if (shared.length >= 1 && score >= .03 && left.topic === right.topic && (leftCausal || rightCausal)) {
           const source = leftCausal ? left : right;
           const target = leftCausal ? right : left;
           causalLinks.push({ source: source.id, target: target.id, kind: 'causal-candidate', relation: '인과 단서 후보', score, shared });
