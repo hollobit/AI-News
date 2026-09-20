@@ -263,43 +263,29 @@
         "china"
       ],
       "source_ids": [
-        "source:5d03910cda5f5397b68f2673",
-        "source:d4f017e69ec741e39a77ddb1",
+        "source:a7aa20a2bcf5aac3f7a49288",
         "source:d783c787cb6ce78606db6a56",
         "source:da6df76cb3d2a78509c7709d",
-        "source:e7b8a3795d07304b72f60475",
-        "source:fc356a3c94782703f13d69b3"
+        "source:fc356a3c94782703f13d69b3",
+        "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:0181f466a0dc07b738276ac9"
+        "claim:d088efbdb708886354a8b4d1"
       ],
       "status": "reviewed"
     },
     {
-      "id": "source:5d03910cda5f5397b68f2673",
+      "id": "source:a7aa20a2bcf5aac3f7a49288",
       "type": "source",
-      "title": "알리바바 Qwen, 100만 토큰 컨텍스트 Qwen3.8-Omni-Flash 출시",
+      "title": "NMPA: 중국, 세계 최초 AI 기반 뇌-컴퓨터 인터페이스(BCI) 의료기기 표준 발표",
       "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ],
       "origin": "telegram_excerpt",
       "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-19",
+      "day": "2026-09-20",
       "status": "original_source_not_fact_checked",
-      "url": "https://technode.com/2026/09/18/alibabas-qwen-releases-qwen3-8-omni-flash-with-1m-token-context"
-    },
-    {
-      "id": "source:d4f017e69ec741e39a77ddb1",
-      "type": "source",
-      "title": "Radar",
-      "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
-      ],
-      "origin": "telegram_excerpt",
-      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-19",
-      "status": "original_source_not_fact_checked",
-      "url": "https://github.com/alibaba-damo-academy/damo-radar"
+      "url": "https://www.globaltimes.cn/page/202609/1370493.shtml"
     },
     {
       "id": "source:d783c787cb6ce78606db6a56",
@@ -328,19 +314,6 @@
       "url": "https://pandaily.com/deepseek-record-funding-domestic-compute-agi-jul2026"
     },
     {
-      "id": "source:e7b8a3795d07304b72f60475",
-      "type": "source",
-      "title": "화웨이, Ascend 950 AI 클러스터 클라우드 서비스 상용화 일정 확정",
-      "source_ids": [
-        "source:e7b8a3795d07304b72f60475"
-      ],
-      "origin": "telegram_excerpt",
-      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-19",
-      "status": "original_source_not_fact_checked",
-      "url": "https://technode.com/2026/09/18/huawei-sets-commercial-launch-dates-for-ascend-950-ai-cluster-cloud-service"
-    },
-    {
       "id": "source:fc356a3c94782703f13d69b3",
       "type": "source",
       "title": "「인격화 AI 상호작용 서비스 관리 잠시 조치」",
@@ -354,13 +327,14 @@
       "url": "https://www.jdsupra.com/legalnews/china-s-interim-measures-for-the-7631877"
     },
     {
-      "id": "claim:0181f466a0dc07b738276ac9",
+      "id": "claim:d088efbdb708886354a8b4d1",
       "type": "claim",
-      "title": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정 확정, DeepSeek의 자국산 인프라 투자 계획은 각각 제품·일정·투자에 관한 소식이다. 이 발췌들을 서비스 가동이나 시장 성장 실적으로 합산할 수는 없다.",
+      "title": "중국 AI 자료에서는 모델의 연산·저장 비용 절감, 해외 모델의 중계 접근, 서비스 규제와 의료기기 표준이 서로 다른 판단 대상이다. 설계 수치·개인 관찰·제도 발표를 도입 실적이나 시장 성장의 증거로 합산할 수 없다.",
       "source_ids": [
-        "source:5d03910cda5f5397b68f2673",
-        "source:da6df76cb3d2a78509c7709d",
-        "source:e7b8a3795d07304b72f60475"
+        "source:a7aa20a2bcf5aac3f7a49288",
+        "source:d783c787cb6ce78606db6a56",
+        "source:fc356a3c94782703f13d69b3",
+        "source:paper:2609.19969"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
@@ -376,20 +350,34 @@
         "china"
       ],
       "source_ids": [
+        "source:1eb6db3c66dcaf68819c0280",
         "source:da6df76cb3d2a78509c7709d",
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:45d11806ed5fc5343681dc68",
-        "claim:a2dfd2b930d07c923adf5124",
-        "claim:0c24a4822f03a69f8bba620b"
+        "claim:d9483de93acf29b13ef1e6e9",
+        "claim:d611c4d8910f9f9b2fa09b77",
+        "claim:1927274a8b3d63f66bbdaecc"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:45d11806ed5fc5343681dc68",
+      "id": "source:1eb6db3c66dcaf68819c0280",
+      "type": "source",
+      "title": "DeepSeek-V4.1-Flash 출시",
+      "source_ids": [
+        "source:1eb6db3c66dcaf68819c0280"
+      ],
+      "origin": "telegram_excerpt",
+      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
+      "day": "2026-09-20",
+      "status": "original_source_not_fact_checked",
+      "url": "https://pandaily.com/deepseek-v4-1-flash-causal-encoder-decoder-1m-kv"
+    },
+    {
+      "id": "claim:d9483de93acf29b13ef1e6e9",
       "type": "claim",
-      "title": "Pandaily 링크의 수집 발췌는 DeepSeek가 70억 달러를 유치하고 자국산 컴퓨팅 인프라 구축에 집중할 계획이라고 전한다. 투자자·조달 조건·집행 실적은 제시하지 않는다.",
+      "title": "Pandaily 연결 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을 전한다. 제공 자료에는 투자자·조달 조건·집행 실적이 없어 투자 실행 여부는 확인되지 않는다.",
       "source_ids": [
         "source:da6df76cb3d2a78509c7709d"
       ],
@@ -397,19 +385,20 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:a2dfd2b930d07c923adf5124",
+      "id": "claim:d611c4d8910f9f9b2fa09b77",
       "type": "claim",
-      "title": "DeepSeek-V4.1-Flash 논문 초록은 입력 비중이 큰 에이전트 작업의 비용 절감을 목표로 CED 구조를 소개한다. 저자들이 보고한 토큰당 활성 파라미터는 입력 처리(prefill) 80억 개, 출력 생성(decode) 160억 개다.",
+      "title": "출시 보도와 논문 초록은 V4.1-Flash의 100만 토큰 문맥과 CED 구조를 소개한다. 초록에 따르면 입력 처리(prefill)는 토큰당 80억, 출력 생성(decode)은 160억 파라미터를 활성화해 입력 비중이 큰 에이전트 작업의 비용 절감을 겨냥한다.",
       "source_ids": [
+        "source:1eb6db3c66dcaf68819c0280",
         "source:paper:2609.19969"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:0c24a4822f03a69f8bba620b",
+      "id": "claim:1927274a8b3d63f66bbdaecc",
       "type": "claim",
-      "title": "저자들은 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 영속 캐시도 약 1/8로 줄였다는 초록의 설명이며, 실제 요금이나 자국산 칩에서의 성능 검증은 아니다.",
+      "title": "저자들은 층간 KV 재사용·FP4 캐싱으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay의 영속 캐시 약 1/8은 SSD·호스트 메모리 기준이다. 두 비율은 총 메모리·요금 감소율이나 자국산 칩 성능 검증을 뜻하지 않는다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -431,7 +420,7 @@
       ],
       "claims": [
         "claim:971828200f0aebec3cd61e96",
-        "claim:f8b7d283f6ef8f04a2a82bb5"
+        "claim:0b6095558fae83f47375d2fa"
       ],
       "status": "reviewed"
     },
@@ -446,9 +435,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:f8b7d283f6ef8f04a2a82bb5",
+      "id": "claim:0b6095558fae83f47375d2fa",
       "type": "claim",
-      "title": "공급자 선택에서 남는 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 피해를 검증한 결과는 제시하지 않는다.",
+      "title": "공급자 선택의 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 피해를 검증한 결과는 제공하지 않는다.",
       "source_ids": [
         "source:d783c787cb6ce78606db6a56"
       ],
@@ -469,15 +458,15 @@
         "source:fc356a3c94782703f13d69b3"
       ],
       "claims": [
-        "claim:3ffa4f94557f5151e0805fac",
-        "claim:8ef0673168c8bcd6a66c9331"
+        "claim:a27d7438b0a98c7453198fe8",
+        "claim:31585292e9d76e3cb7afe810"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:3ffa4f94557f5151e0805fac",
+      "id": "claim:a27d7438b0a98c7453198fe8",
       "type": "claim",
-      "title": "JD Supra 링크의 수집 발췌는 CAC·NDRC·MIIT·공안부가 「인격화 AI 상호작용 서비스 관리 잠시 조치」를 공동 발표했다고 전한다.",
+      "title": "JD Supra 연결 발췌는 CAC·NDRC·MIIT·공안부가 「인격화 AI 상호작용 서비스 관리 잠시 조치」를 공동 발표했다고 전한다.",
       "source_ids": [
         "source:fc356a3c94782703f13d69b3"
       ],
@@ -485,9 +474,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:8ef0673168c8bcd6a66c9331",
+      "id": "claim:31585292e9d76e3cb7afe810",
       "type": "claim",
-      "title": "적용 대상·사업자 의무·시행일은 제공 발췌에 없다. 자료에 붙은 2026년 4월 10일을 발효일로 확정할 수 없으며, 서비스 설계에 적용할 의무는 조문과 시행 정보 확인이 필요하다.",
+      "title": "적용 대상·사업자 의무·시행일은 발췌에 없다. 자료에 붙은 2026년 4월 10일을 발효일로 확정할 수 없으며, 서비스 설계에 적용할 의무는 조문과 시행 정보 확인이 필요하다.",
       "source_ids": [
         "source:fc356a3c94782703f13d69b3"
       ],
@@ -495,40 +484,40 @@
       "status": "reviewed"
     },
     {
-      "id": "page:bdee6937fed9d9687fc151a2",
-      "type": "entity",
-      "title": "Radar 복부 CT AI",
+      "id": "page:560a9b0191f774d21f3fcb31",
+      "type": "event",
+      "title": "AI 기반 BCI 의료기기 표준 발표",
       "page_ids": [
-        "china:1094601cee94dbb8d46e"
+        "china:f6f8bccfe5e3416cfadc"
       ],
       "topics": [
         "china"
       ],
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ],
       "claims": [
-        "claim:aa4eb9f6b5090c6d40cfef1d",
-        "claim:f5e9309653e485471d5fbcfe"
+        "claim:41b8cd246a5b448a87c24137",
+        "claim:4740180d6c35f83fda9ead93"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:aa4eb9f6b5090c6d40cfef1d",
+      "id": "claim:41b8cd246a5b448a87c24137",
       "type": "claim",
-      "title": "알리바바 다모연구원 GitHub 저장소를 연결한 수집 발췌는 Radar를 복부 CT 진단용 ‘전문가급 범용 AI’로 소개한다.",
+      "title": "Global Times 등을 연결한 수집 발췌는 중국 NMPA가 뇌파 데이터 처리에 AI를 사용하는 뇌-컴퓨터 인터페이스(BCI) 의료기기 제품 표준을 승인했다고 전하며, 이를 ‘세계 최초’라고 소개한다.",
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:f5e9309653e485471d5fbcfe",
+      "id": "claim:4740180d6c35f83fda9ead93",
       "type": "claim",
-      "title": "‘전문가급’의 비교 대상, 평가 데이터와 지표, 임상 검증 여부는 발췌에서 확인되지 않는다. 의료 도입 판단에 필요한 질문은 어떤 질환·환자군에서 전문가와 비교했고 외부 의료기관에서도 성능을 확인했는지다.",
+      "title": "어떤 기기와 AI 처리 단계에 적용되는지, ‘세계 최초’의 비교 범위가 무엇인지는 표준 원문 없이 확인되지 않는다. 표준 승인 보도만으로 개별 제품의 허가나 임상 효과가 입증되었다고 판단할 수 없다.",
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ],
       "claim_kind": "uncertain",
       "status": "reviewed"
@@ -865,19 +854,6 @@
       "day": "2026-09-16",
       "status": "original_source_not_fact_checked",
       "url": "https://nature.com/articles/s41746-026-03192-2"
-    },
-    {
-      "id": "source:a7aa20a2bcf5aac3f7a49288",
-      "type": "source",
-      "title": "NMPA: 중국, 세계 최초 AI 기반 뇌-컴퓨터 인터페이스(BCI) 의료기기 표준 발표",
-      "source_ids": [
-        "source:a7aa20a2bcf5aac3f7a49288"
-      ],
-      "origin": "telegram_excerpt",
-      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-09-20",
-      "status": "original_source_not_fact_checked",
-      "url": "https://www.globaltimes.cn/page/202609/1370493.shtml"
     },
     {
       "id": "source:paper:2609.13238",
@@ -2417,25 +2393,14 @@
       ]
     },
     {
-      "id": "bf0d9b1a20f9fe856254660f",
+      "id": "1335611c73e6ec5dea26326a",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "source:5d03910cda5f5397b68f2673",
+      "target": "source:a7aa20a2bcf5aac3f7a49288",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
-      ]
-    },
-    {
-      "id": "a2a520aa6cdf7b8b9d9d78f3",
-      "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "source:d4f017e69ec741e39a77ddb1",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ]
     },
     {
@@ -2461,17 +2426,6 @@
       ]
     },
     {
-      "id": "91c2930f7b829b4753890258",
-      "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "source:e7b8a3795d07304b72f60475",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:e7b8a3795d07304b72f60475"
-      ]
-    },
-    {
       "id": "7aa6c557395e56c5777bf430",
       "source": "page:de284b6684f6abbc4e22ed30",
       "target": "source:fc356a3c94782703f13d69b3",
@@ -2483,49 +2437,83 @@
       ]
     },
     {
-      "id": "06c98eb111e7bd2dc80d92ef",
+      "id": "9469f1cc1c12a53bcce7e973",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "claim:0181f466a0dc07b738276ac9",
+      "target": "source:paper:2609.19969",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "0d4ec9c141771a99988a604a",
+      "source": "page:de284b6684f6abbc4e22ed30",
+      "target": "claim:d088efbdb708886354a8b4d1",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:5d03910cda5f5397b68f2673",
-        "source:da6df76cb3d2a78509c7709d",
-        "source:e7b8a3795d07304b72f60475"
+        "source:a7aa20a2bcf5aac3f7a49288",
+        "source:d783c787cb6ce78606db6a56",
+        "source:fc356a3c94782703f13d69b3",
+        "source:paper:2609.19969"
       ]
     },
     {
-      "id": "aff97f74b8048f81e4e03bbf",
-      "source": "claim:0181f466a0dc07b738276ac9",
-      "target": "source:5d03910cda5f5397b68f2673",
+      "id": "e4625801c153d06ace4fb575",
+      "source": "claim:d088efbdb708886354a8b4d1",
+      "target": "source:a7aa20a2bcf5aac3f7a49288",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:5d03910cda5f5397b68f2673"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ]
     },
     {
-      "id": "9f3ca69df2f51ce5ef6d8b34",
-      "source": "claim:0181f466a0dc07b738276ac9",
-      "target": "source:da6df76cb3d2a78509c7709d",
+      "id": "117b88ea1139d5f8b7019c9b",
+      "source": "claim:d088efbdb708886354a8b4d1",
+      "target": "source:d783c787cb6ce78606db6a56",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:da6df76cb3d2a78509c7709d"
+        "source:d783c787cb6ce78606db6a56"
       ]
     },
     {
-      "id": "f951b61afcf7235ab95d0c9d",
-      "source": "claim:0181f466a0dc07b738276ac9",
-      "target": "source:e7b8a3795d07304b72f60475",
+      "id": "6ec3b4971533878467f4f8bf",
+      "source": "claim:d088efbdb708886354a8b4d1",
+      "target": "source:fc356a3c94782703f13d69b3",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:e7b8a3795d07304b72f60475"
+        "source:fc356a3c94782703f13d69b3"
+      ]
+    },
+    {
+      "id": "6cee410ad2fa6c20199b6bd0",
+      "source": "claim:d088efbdb708886354a8b4d1",
+      "target": "source:paper:2609.19969",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "3aa30b0b61935b80041c141a",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
+      "target": "source:1eb6db3c66dcaf68819c0280",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:1eb6db3c66dcaf68819c0280"
       ]
     },
     {
@@ -2551,9 +2539,9 @@
       ]
     },
     {
-      "id": "6c678dd0907a6769a8ac8843",
+      "id": "2fd6459f4fd66673c7c21ef0",
       "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "claim:45d11806ed5fc5343681dc68",
+      "target": "claim:d9483de93acf29b13ef1e6e9",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2562,8 +2550,8 @@
       ]
     },
     {
-      "id": "b0a18245aee1c54228c34573",
-      "source": "claim:45d11806ed5fc5343681dc68",
+      "id": "e61d0fb94a6811bc78f85fb9",
+      "source": "claim:d9483de93acf29b13ef1e6e9",
       "target": "source:da6df76cb3d2a78509c7709d",
       "kind": "cites",
       "layer": "provenance",
@@ -2573,19 +2561,31 @@
       ]
     },
     {
-      "id": "feae422e80cd37bdef4096e3",
+      "id": "ec8bd5e4bb177d00995d2b71",
       "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "claim:a2dfd2b930d07c923adf5124",
+      "target": "claim:d611c4d8910f9f9b2fa09b77",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
+        "source:1eb6db3c66dcaf68819c0280",
         "source:paper:2609.19969"
       ]
     },
     {
-      "id": "a19468dced785aac9c74ad5c",
-      "source": "claim:a2dfd2b930d07c923adf5124",
+      "id": "8fa69a5da0a7809135cf1cb0",
+      "source": "claim:d611c4d8910f9f9b2fa09b77",
+      "target": "source:1eb6db3c66dcaf68819c0280",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:1eb6db3c66dcaf68819c0280"
+      ]
+    },
+    {
+      "id": "19688817b715a4dd229ff79e",
+      "source": "claim:d611c4d8910f9f9b2fa09b77",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2595,9 +2595,9 @@
       ]
     },
     {
-      "id": "ed6b628bbcdd7b8cbeaa920e",
+      "id": "9c5ff12cfa38daf8ff7bead3",
       "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "claim:0c24a4822f03a69f8bba620b",
+      "target": "claim:1927274a8b3d63f66bbdaecc",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2606,8 +2606,8 @@
       ]
     },
     {
-      "id": "faa18ce0385502d96de7cb8d",
-      "source": "claim:0c24a4822f03a69f8bba620b",
+      "id": "acc85e1da79f89b0debb466d",
+      "source": "claim:1927274a8b3d63f66bbdaecc",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -2650,9 +2650,9 @@
       ]
     },
     {
-      "id": "a9d7d5af21bafb6a466db6d4",
+      "id": "235a32e75baba570ce1e47fe",
       "source": "page:74a3b0b060bf1325d1fb716d",
-      "target": "claim:f8b7d283f6ef8f04a2a82bb5",
+      "target": "claim:0b6095558fae83f47375d2fa",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2661,8 +2661,8 @@
       ]
     },
     {
-      "id": "6934d012d571f275a6d21f08",
-      "source": "claim:f8b7d283f6ef8f04a2a82bb5",
+      "id": "969e20ed6419b148b027ded2",
+      "source": "claim:0b6095558fae83f47375d2fa",
       "target": "source:d783c787cb6ce78606db6a56",
       "kind": "cites",
       "layer": "provenance",
@@ -2683,9 +2683,9 @@
       ]
     },
     {
-      "id": "f37abd70242fd4a8ac241504",
+      "id": "80d2522338a19ebe9abcc2fd",
       "source": "page:cb2ece51fd8bf5f9ab98d74a",
-      "target": "claim:3ffa4f94557f5151e0805fac",
+      "target": "claim:a27d7438b0a98c7453198fe8",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2694,8 +2694,8 @@
       ]
     },
     {
-      "id": "aa656aa67718fc90ec7fb8e0",
-      "source": "claim:3ffa4f94557f5151e0805fac",
+      "id": "42ec8d56f7dc0e7015946865",
+      "source": "claim:a27d7438b0a98c7453198fe8",
       "target": "source:fc356a3c94782703f13d69b3",
       "kind": "cites",
       "layer": "provenance",
@@ -2705,9 +2705,9 @@
       ]
     },
     {
-      "id": "1b56632b8b9e6ab1050a39d9",
+      "id": "d8fa5a1da605d9556fd5fdb7",
       "source": "page:cb2ece51fd8bf5f9ab98d74a",
-      "target": "claim:8ef0673168c8bcd6a66c9331",
+      "target": "claim:31585292e9d76e3cb7afe810",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -2716,8 +2716,8 @@
       ]
     },
     {
-      "id": "e0f89a2d62ee6b296381c623",
-      "source": "claim:8ef0673168c8bcd6a66c9331",
+      "id": "1936646fab8a4d2862d145e0",
+      "source": "claim:31585292e9d76e3cb7afe810",
       "target": "source:fc356a3c94782703f13d69b3",
       "kind": "cites",
       "layer": "provenance",
@@ -2727,58 +2727,58 @@
       ]
     },
     {
-      "id": "0b8eb9709b1d00c3f031da89",
-      "source": "page:bdee6937fed9d9687fc151a2",
-      "target": "source:d4f017e69ec741e39a77ddb1",
+      "id": "46cde98afd4fea669ece6e1c",
+      "source": "page:560a9b0191f774d21f3fcb31",
+      "target": "source:a7aa20a2bcf5aac3f7a49288",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ]
     },
     {
-      "id": "e2b7bf71857b51a62fa429a5",
-      "source": "page:bdee6937fed9d9687fc151a2",
-      "target": "claim:aa4eb9f6b5090c6d40cfef1d",
+      "id": "bcbc5ea206d6dd6e2c54ac7f",
+      "source": "page:560a9b0191f774d21f3fcb31",
+      "target": "claim:41b8cd246a5b448a87c24137",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ]
     },
     {
-      "id": "564e3ea22b17e0923297677f",
-      "source": "claim:aa4eb9f6b5090c6d40cfef1d",
-      "target": "source:d4f017e69ec741e39a77ddb1",
+      "id": "2c1b316512c5495ea1c27649",
+      "source": "claim:41b8cd246a5b448a87c24137",
+      "target": "source:a7aa20a2bcf5aac3f7a49288",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ]
     },
     {
-      "id": "d3a21f4901f648d4cda52312",
-      "source": "page:bdee6937fed9d9687fc151a2",
-      "target": "claim:f5e9309653e485471d5fbcfe",
+      "id": "55d98c866fa7deb940a5de29",
+      "source": "page:560a9b0191f774d21f3fcb31",
+      "target": "claim:4740180d6c35f83fda9ead93",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ]
     },
     {
-      "id": "5047007c01a8c8869972a648",
-      "source": "claim:f5e9309653e485471d5fbcfe",
-      "target": "source:d4f017e69ec741e39a77ddb1",
+      "id": "4ab9bd68654a9833845e4d09",
+      "source": "claim:4740180d6c35f83fda9ead93",
+      "target": "source:a7aa20a2bcf5aac3f7a49288",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ]
     },
     {
@@ -5144,14 +5144,14 @@
       ]
     },
     {
-      "id": "9b5ce231d39108b50238a8bb",
+      "id": "b35b38f1d3975c6122aef00c",
       "source": "page:de284b6684f6abbc4e22ed30",
-      "target": "page:bdee6937fed9d9687fc151a2",
+      "target": "page:560a9b0191f774d21f3fcb31",
       "kind": "involves",
       "layer": "semantic",
-      "text": "알리바바 다모연구원의 의료 AI 사례로 복부 CT 진단 모델이 소개됐다.",
+      "text": "중국 NMPA의 AI 뇌파 처리 BCI 의료기기 표준 승인을 전한다.",
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
       ]
     },
     {
@@ -5559,6 +5559,18 @@
       ]
     },
     {
+      "id": "70ae76e2b04fd05936da1de1",
+      "source": "page:9cd0bf59dbd0b917be7acd84",
+      "target": "page:de284b6684f6abbc4e22ed30",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:da6df76cb3d2a78509c7709d",
+        "source:paper:2609.19969"
+      ]
+    },
+    {
       "id": "cc13a2c7bf195ed11f8b9c33",
       "source": "page:a8f61a13e520664ce08089ee",
       "target": "page:b41d81e22da55c3af6d162d9",
@@ -5629,6 +5641,17 @@
       "id": "9dbebec71af4a1c5b016dfe8",
       "source": "page:16ddcc70c777744bd4e89688",
       "target": "page:bc425324302e17abaf8dbf8f",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "084883c67818e8d7d3784f13",
+      "source": "page:16ddcc70c777744bd4e89688",
+      "target": "page:de284b6684f6abbc4e22ed30",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -5714,9 +5737,31 @@
       ]
     },
     {
+      "id": "64a5c9f81a54b3395be0cf2d",
+      "source": "page:396071fd89aa658edbaefebb",
+      "target": "page:560a9b0191f774d21f3fcb31",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:a7aa20a2bcf5aac3f7a49288"
+      ]
+    },
+    {
       "id": "b6e83890248422b470314eca",
       "source": "page:396071fd89aa658edbaefebb",
       "target": "page:b41d81e22da55c3af6d162d9",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:a7aa20a2bcf5aac3f7a49288"
+      ]
+    },
+    {
+      "id": "0646b3a18ddc0de8c3acbad4",
+      "source": "page:396071fd89aa658edbaefebb",
+      "target": "page:de284b6684f6abbc4e22ed30",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -5750,6 +5795,17 @@
       "id": "1ea36c61fcaf13b9bc370293",
       "source": "page:3afbfd6ffa6dce8b19fc3b5f",
       "target": "page:bc425324302e17abaf8dbf8f",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
+      "id": "c9751dfffdf8e30c7c4436e3",
+      "source": "page:3afbfd6ffa6dce8b19fc3b5f",
+      "target": "page:de284b6684f6abbc4e22ed30",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
@@ -5799,6 +5855,28 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:0fbb2545a72a30b7553c8e7c"
+      ]
+    },
+    {
+      "id": "1b5667619370c64541bb59e3",
+      "source": "page:560a9b0191f774d21f3fcb31",
+      "target": "page:b41d81e22da55c3af6d162d9",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:a7aa20a2bcf5aac3f7a49288"
+      ]
+    },
+    {
+      "id": "fd1e82d02c94cb83e83dec09",
+      "source": "page:560a9b0191f774d21f3fcb31",
+      "target": "page:de284b6684f6abbc4e22ed30",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:a7aa20a2bcf5aac3f7a49288"
       ]
     },
     {
@@ -5901,6 +5979,17 @@
       ]
     },
     {
+      "id": "2e41e050b6fc997a96195317",
+      "source": "page:9b08b924963cb1769f63a232",
+      "target": "page:de284b6684f6abbc4e22ed30",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19969"
+      ]
+    },
+    {
       "id": "a2ea4e0f1bf83d06beb0a634",
       "source": "page:9baa053aacade6bdb59dbcc5",
       "target": "page:b41d81e22da55c3af6d162d9",
@@ -5923,17 +6012,6 @@
       ]
     },
     {
-      "id": "70ae76e2b04fd05936da1de1",
-      "source": "page:9cd0bf59dbd0b917be7acd84",
-      "target": "page:de284b6684f6abbc4e22ed30",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:da6df76cb3d2a78509c7709d"
-      ]
-    },
-    {
       "id": "581c17a0c48f946f8a052d62",
       "source": "page:a302d20ff83b1c4c1f4dcd4c",
       "target": "page:b41d81e22da55c3af6d162d9",
@@ -5945,14 +6023,25 @@
       ]
     },
     {
-      "id": "1a7ff9d92737381823e4bea5",
-      "source": "page:bdee6937fed9d9687fc151a2",
+      "id": "5c9db338524768a826d206b8",
+      "source": "page:b41d81e22da55c3af6d162d9",
       "target": "page:de284b6684f6abbc4e22ed30",
       "kind": "shared_source",
       "layer": "recommendation",
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
-        "source:d4f017e69ec741e39a77ddb1"
+        "source:a7aa20a2bcf5aac3f7a49288"
+      ]
+    },
+    {
+      "id": "3ff2f2c70367ea0fec9c6ab7",
+      "source": "page:bc425324302e17abaf8dbf8f",
+      "target": "page:de284b6684f6abbc4e22ed30",
+      "kind": "shared_source",
+      "layer": "recommendation",
+      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
+      "source_ids": [
+        "source:paper:2609.19969"
       ]
     },
     {
@@ -6111,17 +6200,18 @@
       "id": "china",
       "title": "중국",
       "kind": "topic",
-      "revision": 63,
+      "revision": 68,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:5d03910cda5f5397b68f2673",
-            "source:e7b8a3795d07304b72f60475",
-            "source:da6df76cb3d2a78509c7709d"
+            "source:paper:2609.19969",
+            "source:d783c787cb6ce78606db6a56",
+            "source:fc356a3c94782703f13d69b3",
+            "source:a7aa20a2bcf5aac3f7a49288"
           ],
           "kind": "interpretation",
-          "text": "Qwen의 100만 토큰 모델 출시, 화웨이 Ascend 950 클라우드 상용화 일정 확정, DeepSeek의 자국산 인프라 투자 계획은 각각 제품·일정·투자에 관한 소식이다. 이 발췌들을 서비스 가동이나 시장 성장 실적으로 합산할 수는 없다."
+          "text": "중국 AI 자료에서는 모델의 연산·저장 비용 절감, 해외 모델의 중계 접근, 서비스 규제와 의료기기 표준이 서로 다른 판단 대상이다. 설계 수치·개인 관찰·제도 발표를 도입 실적이나 시장 성장의 증거로 합산할 수 없다."
         }
       ]
     },
@@ -6129,7 +6219,7 @@
       "id": "china:af4940ba1db0eb032757",
       "title": "DeepSeek",
       "kind": "entity",
-      "revision": 63,
+      "revision": 68,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6137,21 +6227,22 @@
             "source:da6df76cb3d2a78509c7709d"
           ],
           "kind": "reported",
-          "text": "Pandaily 링크의 수집 발췌는 DeepSeek가 70억 달러를 유치하고 자국산 컴퓨팅 인프라 구축에 집중할 계획이라고 전한다. 투자자·조달 조건·집행 실적은 제시하지 않는다."
+          "text": "Pandaily 연결 발췌는 DeepSeek의 70억 달러 유치와 자국산 컴퓨팅 인프라 구축 계획을 전한다. 제공 자료에는 투자자·조달 조건·집행 실적이 없어 투자 실행 여부는 확인되지 않는다."
+        },
+        {
+          "evidence_ids": [
+            "source:1eb6db3c66dcaf68819c0280",
+            "source:paper:2609.19969"
+          ],
+          "kind": "reported",
+          "text": "출시 보도와 논문 초록은 V4.1-Flash의 100만 토큰 문맥과 CED 구조를 소개한다. 초록에 따르면 입력 처리(prefill)는 토큰당 80억, 출력 생성(decode)은 160억 파라미터를 활성화해 입력 비중이 큰 에이전트 작업의 비용 절감을 겨냥한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "DeepSeek-V4.1-Flash 논문 초록은 입력 비중이 큰 에이전트 작업의 비용 절감을 목표로 CED 구조를 소개한다. 저자들이 보고한 토큰당 활성 파라미터는 입력 처리(prefill) 80억 개, 출력 생성(decode) 160억 개다."
-        },
-        {
-          "evidence_ids": [
-            "source:paper:2609.19969"
-          ],
-          "kind": "reported",
-          "text": "저자들은 층간 KV 캐시 재사용과 FP4 저장으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay로 영속 캐시도 약 1/8로 줄였다는 초록의 설명이며, 실제 요금이나 자국산 칩에서의 성능 검증은 아니다."
+          "text": "저자들은 층간 KV 재사용·FP4 캐싱으로 HBM 전역 캐시를 토큰당 890바이트, V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay의 영속 캐시 약 1/8은 SSD·호스트 메모리 기준이다. 두 비율은 총 메모리·요금 감소율이나 자국산 칩 성능 검증을 뜻하지 않는다."
         }
       ]
     },
@@ -6159,7 +6250,7 @@
       "id": "china:407018b50f9d3916425a",
       "title": "중국의 해외 AI API 중계시장",
       "kind": "issue",
-      "revision": 63,
+      "revision": 68,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6174,7 +6265,7 @@
             "source:d783c787cb6ce78606db6a56"
           ],
           "kind": "uncertain",
-          "text": "공급자 선택에서 남는 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 피해를 검증한 결과는 제시하지 않는다."
+          "text": "공급자 선택의 쟁점은 표시된 모델의 진위와 입력 데이터 처리 조건이다. 필자는 저가 모델 위장 가능성과 무료 중계의 데이터 수집을 서술하지만, 개별 업체의 모델 진위나 실제 피해를 검증한 결과는 제공하지 않는다."
         }
       ]
     },
@@ -6182,7 +6273,7 @@
       "id": "china:bd2cb88abffe36ab3645",
       "title": "인격화 AI 상호작용 서비스 조치 공동 발표",
       "kind": "event",
-      "revision": 63,
+      "revision": 68,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -6190,37 +6281,37 @@
             "source:fc356a3c94782703f13d69b3"
           ],
           "kind": "reported",
-          "text": "JD Supra 링크의 수집 발췌는 CAC·NDRC·MIIT·공안부가 「인격화 AI 상호작용 서비스 관리 잠시 조치」를 공동 발표했다고 전한다."
+          "text": "JD Supra 연결 발췌는 CAC·NDRC·MIIT·공안부가 「인격화 AI 상호작용 서비스 관리 잠시 조치」를 공동 발표했다고 전한다."
         },
         {
           "evidence_ids": [
             "source:fc356a3c94782703f13d69b3"
           ],
           "kind": "uncertain",
-          "text": "적용 대상·사업자 의무·시행일은 제공 발췌에 없다. 자료에 붙은 2026년 4월 10일을 발효일로 확정할 수 없으며, 서비스 설계에 적용할 의무는 조문과 시행 정보 확인이 필요하다."
+          "text": "적용 대상·사업자 의무·시행일은 발췌에 없다. 자료에 붙은 2026년 4월 10일을 발효일로 확정할 수 없으며, 서비스 설계에 적용할 의무는 조문과 시행 정보 확인이 필요하다."
         }
       ]
     },
     {
-      "id": "china:1094601cee94dbb8d46e",
-      "title": "Radar 복부 CT AI",
-      "kind": "entity",
-      "revision": 63,
+      "id": "china:f6f8bccfe5e3416cfadc",
+      "title": "AI 기반 BCI 의료기기 표준 발표",
+      "kind": "event",
+      "revision": 68,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:d4f017e69ec741e39a77ddb1"
+            "source:a7aa20a2bcf5aac3f7a49288"
           ],
           "kind": "reported",
-          "text": "알리바바 다모연구원 GitHub 저장소를 연결한 수집 발췌는 Radar를 복부 CT 진단용 ‘전문가급 범용 AI’로 소개한다."
+          "text": "Global Times 등을 연결한 수집 발췌는 중국 NMPA가 뇌파 데이터 처리에 AI를 사용하는 뇌-컴퓨터 인터페이스(BCI) 의료기기 제품 표준을 승인했다고 전하며, 이를 ‘세계 최초’라고 소개한다."
         },
         {
           "evidence_ids": [
-            "source:d4f017e69ec741e39a77ddb1"
+            "source:a7aa20a2bcf5aac3f7a49288"
           ],
           "kind": "uncertain",
-          "text": "‘전문가급’의 비교 대상, 평가 데이터와 지표, 임상 검증 여부는 발췌에서 확인되지 않는다. 의료 도입 판단에 필요한 질문은 어떤 질환·환자군에서 전문가와 비교했고 외부 의료기관에서도 성능을 확인했는지다."
+          "text": "어떤 기기와 AI 처리 단계에 적용되는지, ‘세계 최초’의 비교 범위가 무엇인지는 표준 원문 없이 확인되지 않는다. 표준 승인 보도만으로 개별 제품의 허가나 임상 효과가 입증되었다고 판단할 수 없다."
         }
       ]
     },
@@ -6893,12 +6984,12 @@
     }
   ],
   "issues": [],
-  "version": "2e69a56b5176f3cc0217039c87882a20c204d4b8fa7c0c02c543206a10d62ae3",
-  "exported_at": "2026-09-20T04:16:17.853736+00:00",
+  "version": "77d9cffd8d5d6ea19aa626d6283eea68de203d95d20c4e4559362511df30d523",
+  "exported_at": "2026-09-20T04:22:04.604109+00:00",
   "coverage": {
     "pages": 38,
     "claims": 75,
-    "cited_sources": 41,
+    "cited_sources": 39,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
