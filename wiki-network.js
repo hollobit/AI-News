@@ -37,7 +37,7 @@
     const article=articleData.news.find(a=>articleId?a.id===articleId:a.url===safeURL(route.get('source_url')));
     if(!article)return;
     if(!articleObservations){const r=await fetch('./observatory-90-expanded.json');if(!r.ok)throw Error('관측 연결 자료를 읽을 수 없습니다.');articleObservations=await r.json();}
-    const source=snapshot.nodes.find(n=>n.type==='source'&&article.url&&n.url===article.url);
+    const source=snapshot.nodes.find(n=>n.type==='source'&&(n.news_id?n.news_id===article.id:article.url&&n.url===article.url&&n.title===article.title));
     const sid=source?.id||'source:news:'+article.id;
     const addNode=n=>{if(!snapshot.nodes.some(old=>old.id===n.id))snapshot.nodes.push(n);};
     const addEdge=(id,target,layer,text)=>{if(!snapshot.edges.some(e=>e.id===id))snapshot.edges.push({id,source:sid,target,layer,kind:layer==='provenance'?'reviewed_analysis':'observed_in_document',text,source_ids:[sid]});};
@@ -47,7 +47,7 @@
       addNode({id,type:'claim',title:a.title||a.text,scope:a.kind+' · 현재 입력·독립 검토 확인',analysis_text:a.text,uncertainty:a.uncertainty,source_ids:[sid]});
       addEdge('news-link:'+article.id+':'+i,id,'provenance','이 뉴스의 '+a.kind+' · 원출처에 연결된 검토 결과');
     }
-    const docs=new Set(Object.entries(articleObservations.documents||{}).filter(([,d])=>article.url&&d.url===article.url).map(([id])=>id));
+    const docs=new Set(Object.entries(articleObservations.documents||{}).filter(([,d])=>article.observation_document_id?d.document_id===article.observation_document_id:article.url&&d.url===article.url&&d.title===article.title).map(([id])=>id));
     for(const n of articleObservations.nodes||[]){
       if(!(n.document_ids_by_day||[]).some(ids=>ids.some(id=>docs.has(id))))continue;
       const id='news-observed:'+n.id;
