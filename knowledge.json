@@ -586,8 +586,8 @@
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:e3aadaae8171f099092eb0df",
-        "claim:8c7fc9b6390b449002629576"
+        "claim:3981fc2ba27f7780b4cbddc2",
+        "claim:818571363261118f49d93c5e"
       ],
       "status": "reviewed"
     },
@@ -662,9 +662,9 @@
       "news_id": "4d44685b5044853958b68c76"
     },
     {
-      "id": "claim:e3aadaae8171f099092eb0df",
+      "id": "claim:3981fc2ba27f7780b4cbddc2",
       "type": "claim",
-      "title": "제공 자료는 AI 인프라를 칩·연결망 확장, 전력 확보, 학습·추론 자원 절감으로 나누어 보여준다. 설비 확장 구상과 특정 조건의 효율 실험은 구분해야 한다. 모델 메모리 절감이 데이터센터 전력 제약의 해소를 입증하지는 않는다.",
+      "title": "제공 자료는 AI 인프라의 과제를 칩·연결망 확장, 전력 확보, 학습·추론 자원 절감으로 보여준다. 기업의 확장 구상과 특정 조건에서 측정한 연구 성과는 구분해야 하며, 메모리 절감만으로 전력 공급 문제가 해결됐다고 판단할 수는 없다.",
       "source_ids": [
         "source:4379d4e7f64f8347134ecb12",
         "source:ee2c12a40f492a13aa4ec9b8",
@@ -675,9 +675,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:8c7fc9b6390b449002629576",
+      "id": "claim:818571363261118f49d93c5e",
       "type": "claim",
-      "title": "층별 커리큘럼 압축 논문의 저자들은 모델을 층 구간으로 나누고 쉬운 최적화부터 지식을 전달하며 특징 캐싱을 활용한다고 설명한다. 초록은 BERT·GPT-2의 GPU 메모리와 학습 시간을 각각 50% 넘게 줄였다고 보고하지만, 비교 구성의 세부 조건은 제시하지 않는다.",
+      "title": "층별 커리큘럼 압축 논문은 모델을 층 구간으로 나누어 쉬운 최적화부터 지식을 전달하고 특징 캐싱을 활용한다. 저자들은 초록에서 BERT·GPT-2의 GPU 메모리와 학습 시간을 각각 50% 넘게 줄였다고 보고하지만, 비교 구성의 세부 조건은 제시하지 않는다.",
       "source_ids": [
         "source:paper:2609.19213"
       ],
@@ -695,29 +695,45 @@
         "compute"
       ],
       "source_ids": [
+        "source:112f7fd60bf465f0c3d9bfb8",
         "source:34fa141b88be994d5c6f08ba",
         "source:ee2c12a40f492a13aa4ec9b8"
       ],
       "claims": [
-        "claim:67aec8992744878b0f5f1299",
-        "claim:eee7bc19f0f37aa26794bf5d"
+        "claim:43d772b555c4930bd54451f7",
+        "claim:8b7fba489583e5d54c7fc424"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:67aec8992744878b0f5f1299",
-      "type": "claim",
-      "title": "InfoQ 인용 발췌는 왕타오가 AI 전략의 핵심으로 컴퓨팅을 제시하며 Ascend 960 조기 등장과 PB급 KV 캐시를 언급했다고 전한다. 현재 발췌에는 구체적인 출시 일정이나 캐시 구성·성능이 없다.",
+      "id": "source:112f7fd60bf465f0c3d9bfb8",
+      "type": "source",
+      "title": "화웨이 Ascend 생태계 \"인플렉션 통과\", 5차원 에이전트 컴퓨팅 선언",
       "source_ids": [
+        "source:112f7fd60bf465f0c3d9bfb8"
+      ],
+      "origin": "telegram_excerpt",
+      "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
+      "day": "2026-09-20",
+      "status": "original_source_not_fact_checked",
+      "url": "https://pandaily.com/huawei-zhu-zhaosheng-ascend-agentic-thinkpro-pto",
+      "news_id": "d9e6df1591adb114e201a456"
+    },
+    {
+      "id": "claim:43d772b555c4930bd54451f7",
+      "type": "claim",
+      "title": "InfoQ 인용 발췌는 왕타오가 Ascend 960 조기 등장과 PB급 KV 캐시를 언급했다고 전한다. 9월 20일 Pandaily 인용 발췌는 Ascend 생태계가 ‘인플렉션을 통과’했다는 화웨이의 선언을 소개하지만, 이를 판단할 도입·성능 지표는 제공하지 않는다.",
+      "source_ids": [
+        "source:112f7fd60bf465f0c3d9bfb8",
         "source:34fa141b88be994d5c6f08ba"
       ],
       "claim_kind": "reported",
       "status": "reviewed"
     },
     {
-      "id": "claim:eee7bc19f0f37aa26794bf5d",
+      "id": "claim:8b7fba489583e5d54c7fc424",
       "type": "claim",
-      "title": "레이펑왕 인용 발췌는 화웨이가 커넥트 2026에서 Nested BSP 기반 Peerium을 공개했다고 전한다. 백만 프로세서를 한 컴퓨터처럼 동작시키는 구조와 핵심 상호연결 기술 ‘링취(灵衢)’를 소개하지만, 해당 규모의 실제 가동 측정치는 제공하지 않는다.",
+      "title": "레이펑왕 인용 발췌는 화웨이가 커넥트 2026에서 Nested BSP 기반 Peerium을 공개했다고 전한다. 백만 프로세서를 한 컴퓨터처럼 동작시키는 구조와 상호연결 기술 ‘링취(灵衢)’를 소개하지만, 해당 규모의 실제 가동 측정치는 없다.",
       "source_ids": [
         "source:ee2c12a40f492a13aa4ec9b8"
       ],
@@ -739,15 +755,15 @@
         "source:9d953b0bbdc80a4de4f271cf"
       ],
       "claims": [
-        "claim:cf327c2d6ede12fd29d18122",
-        "claim:255f85907e0d06bd976797e4"
+        "claim:1ceeb5a73876fec71c8a538d",
+        "claim:35c308b1bb2ebb2d93f0e411"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:cf327c2d6ede12fd29d18122",
+      "id": "claim:1ceeb5a73876fec71c8a538d",
       "type": "claim",
-      "title": "7월 1일 Pandaily 인용 발췌는 AI 수요가 세계 전력망을 압박한다고 주장한다. 6월 29일 TechCrunch 인용 발췌는 미국 행정부 규제로 신규 전력 92GW가 위협받아 AI 데이터센터 전력 수급에 악영향이 우려된다고 전한다. 각각 수요 압력과 공급 위험을 다룬다.",
+      "title": "7월 1일 Pandaily 인용 발췌는 AI 수요가 세계 전력망을 압박한다고 주장한다. 6월 29일 TechCrunch 인용 발췌는 미국 행정부 규제로 신규 전력 92GW가 위협받아 AI 데이터센터 전력 수급에 악영향이 우려된다고 전한다. 각각 수요 압력과 공급 위험에 관한 보도다.",
       "source_ids": [
         "source:4379d4e7f64f8347134ecb12",
         "source:9d953b0bbdc80a4de4f271cf"
@@ -756,9 +772,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:255f85907e0d06bd976797e4",
+      "id": "claim:35c308b1bb2ebb2d93f0e411",
       "type": "claim",
-      "title": "92GW 중 실제 취소·지연된 규모와 영향을 받는 데이터센터는 발췌로 확인되지 않는다. 92GW를 확정 취소량이나 이미 발생한 AI 전용 전력 부족량으로 볼 근거는 없다.",
+      "title": "92GW 중 실제 취소·지연된 규모와 영향을 받는 데이터센터는 현재 발췌로 확인되지 않는다. 92GW를 확정 취소량이나 이미 발생한 AI 전용 전력 부족량으로 볼 근거는 없다.",
       "source_ids": [
         "source:4379d4e7f64f8347134ecb12"
       ],
@@ -779,15 +795,15 @@
         "source:paper:2609.19242"
       ],
       "claims": [
-        "claim:6f54474574f3628bceac247f",
-        "claim:9aa0448ee80d4b479a621f4c"
+        "claim:f876991e2644bb756fd25163",
+        "claim:8382e842507abc2e40610ef6"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:6f54474574f3628bceac247f",
+      "id": "claim:f876991e2644bb756fd25163",
       "type": "claim",
-      "title": "논문 초록에서 저자들은 블록 확산 언어모델의 오염 블록 계산을 개별 분산 프로세스에 배정하고 공유 정상 문맥도 분할하는 CSBP를 제안한다. 오염 K/V와 기울기를 로컬에 유지하고 정상 접두부 복제를 줄여 통신·메모리 부담을 낮춘다는 설명이다.",
+      "title": "논문 저자들은 블록 확산 언어모델의 오염 블록 계산을 개별 분산 프로세스에 배정하고 공유 정상 문맥도 분할하는 CSBP를 제안한다. 오염 K/V와 기울기를 로컬에 유지하고 정상 접두부 복제를 줄여 통신·메모리 부담을 낮춘다는 설명이다.",
       "source_ids": [
         "source:paper:2609.19242"
       ],
@@ -795,9 +811,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:9aa0448ee80d4b479a621f4c",
+      "id": "claim:8382e842507abc2e40610ef6",
       "type": "claim",
-      "title": "저자들은 H200 GPU 16개·256K 문맥에서 최선 기준선 대비 처리량이 지도 미세조정에서 1.18~1.45배, 자기회귀 모델의 블록 확산 모델 전환에서 1.27~1.33배였다고 보고한다. 최대 HBM 사용량은 같거나 낮았다. 이는 초록에 제시된 학습 조건의 결과다.",
+      "title": "초록은 H200 GPU 16개·256K 문맥에서 최선 기준선 대비 처리량이 지도 미세조정에서 1.18~1.45배, 자기회귀 모델의 블록 확산 모델 전환에서 1.27~1.33배였다고 보고한다. 최대 HBM 사용량은 같거나 낮았다. 이는 해당 학습 조건의 저자 보고치다.",
       "source_ids": [
         "source:paper:2609.19242"
       ],
@@ -818,15 +834,15 @@
         "source:paper:2609.19969"
       ],
       "claims": [
-        "claim:90da4936a0bd49359b8ffaad",
-        "claim:53dc59186dcdf5f870d0130e"
+        "claim:7a8328e01e63726f417013fd",
+        "claim:cdda2be6d7b60a1c383c2478"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:90da4936a0bd49359b8ffaad",
+      "id": "claim:7a8328e01e63726f417013fd",
       "type": "claim",
-      "title": "논문 초록은 입력 비중이 높은 에이전트 작업에서 입력 사전 처리(prefill) 연산과 KV 캐시 용량·전송 대역폭을 비용 병목으로 지목한다. 저자들은 CED 구조로 토큰당 활성 파라미터를 prefill에서 8B, 생성(decode)에서 16B로 구성했다고 설명한다.",
+      "title": "논문 초록은 입력 비중이 높은 에이전트 작업의 비용 병목으로 입력 사전 처리(prefill) 연산과 KV 캐시 용량·전송 대역폭을 지목한다. 저자들은 CED 구조의 토큰당 활성 파라미터가 prefill에서 80억 개, 생성(decode)에서 160억 개라고 설명한다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -834,9 +850,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:53dc59186dcdf5f870d0130e",
+      "id": "claim:cdda2be6d7b60a1c383c2478",
       "type": "claim",
-      "title": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV 캐시를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리의 영속 캐시를 약 1/8로 줄인다고 한다. 두 수치는 서로 다른 저장 영역의 초록 보고치다.",
+      "title": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 캐시를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리의 영속 캐시를 약 1/8로 줄인다고 한다. 서로 다른 저장 영역의 초록 보고치이며 전체 서비스 비용 절감률은 아니다.",
       "source_ids": [
         "source:paper:2609.19969"
       ],
@@ -1163,13 +1179,12 @@
       "source_ids": [
         "source:1aa04f261ee2e30ebfe97b78",
         "source:33f0fb52169f6644acf69dc3",
-        "source:a867037ee2edc08dee063315",
+        "source:482861cd948ee1330fd9e650",
         "source:d58729c60e923b2b7b0fafbe",
         "source:paper:2609.20370"
       ],
       "claims": [
-        "claim:e2a0e03cf27cefee4d393402",
-        "claim:fece3c04941e949322d8ab91"
+        "claim:869f156280da84cc1412c55b"
       ],
       "status": "reviewed"
     },
@@ -1202,18 +1217,18 @@
       "news_id": "fbb7d0cf91498e30c3e06b72"
     },
     {
-      "id": "source:a867037ee2edc08dee063315",
+      "id": "source:482861cd948ee1330fd9e650",
       "type": "source",
-      "title": "Shipwright Harness",
+      "title": "China Mobile, Open-RAIL 미들웨어 오픈소스",
       "source_ids": [
-        "source:a867037ee2edc08dee063315"
+        "source:482861cd948ee1330fd9e650"
       ],
       "origin": "telegram_excerpt",
       "scope": "수집 뉴스 발췌; 발행자의 사실성 독립 확인 아님",
-      "day": "2026-06-30",
+      "day": "2026-09-20",
       "status": "original_source_not_fact_checked",
-      "url": "https://github.com/app-vitals/shipwright",
-      "news_id": "a4b0e3dcc8068b3e0625c463"
+      "url": "https://pandaily.com/china-mobile-open-rail-vla-wam-middleware",
+      "news_id": "4c4ad507c30b00ecc540840f"
     },
     {
       "id": "source:d58729c60e923b2b7b0fafbe",
@@ -1244,24 +1259,13 @@
       "news_id": "6df035309a105b713ab50ba2"
     },
     {
-      "id": "claim:e2a0e03cf27cefee4d393402",
+      "id": "claim:869f156280da84cc1412c55b",
       "type": "claim",
-      "title": "공개 대상의 범위를 구분해야 한다. 발췌는 Kimi K3를 오픈웨이트 전략으로, ZGCM-1-7B를 가중치·데이터·코드 공개로 소개한다. Shipwright의 공개 대상은 Claude Code용 자동화 도구이므로 기반 모델의 가중치 공개까지 뜻하지 않는다.",
+      "title": "‘공개’의 범위가 다르다. 수집 발췌는 Kimi K3를 오픈웨이트 전략으로, ZGCM-1-7B를 가중치·데이터·코드 공개로 소개한다. Open-RAIL은 모델과 로봇 하드웨어를 연결하는 미들웨어 공개 사례다. 재사용할 때는 공개된 대상부터 구분해야 한다.",
       "source_ids": [
         "source:1aa04f261ee2e30ebfe97b78",
         "source:33f0fb52169f6644acf69dc3",
-        "source:a867037ee2edc08dee063315"
-      ],
-      "claim_kind": "interpretation",
-      "status": "reviewed"
-    },
-    {
-      "id": "claim:fece3c04941e949322d8ab91",
-      "type": "claim",
-      "title": "의료 모델 공개 보도와 오픈웨이트 모델을 이용한 API 감사 연구는 판단 대상이 다르다. 전자는 질환 탐지 성능을 확인해야 하고, 후자는 토큰 부풀리기 탐지 실험이므로 의료 효용의 근거로 옮겨 쓸 수 없다.",
-      "source_ids": [
-        "source:d58729c60e923b2b7b0fafbe",
-        "source:paper:2609.20370"
+        "source:482861cd948ee1330fd9e650"
       ],
       "claim_kind": "interpretation",
       "status": "reviewed"
@@ -1280,15 +1284,15 @@
         "source:1aa04f261ee2e30ebfe97b78"
       ],
       "claims": [
-        "claim:5db54466f1a925d261b95c4b",
-        "claim:8c9e2b5a052a0f59cd497576"
+        "claim:4813d8238c163a7714500078",
+        "claim:202018e7eb720c97d3f6a9d2"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:5db54466f1a925d261b95c4b",
+      "id": "claim:4813d8238c163a7714500078",
       "type": "claim",
-      "title": "Pandaily를 인용한 수집 발췌는 ZGCM-1-7B를 수학·에이전트 검색 특화 소형모델로 소개하며 전체 가중치·데이터·코드를 오픈소스로 공개했다고 전한다.",
+      "title": "Pandaily를 연결한 수집 발췌는 ZGCM-1-7B를 수학·에이전트 검색 특화 소형모델로 소개하며 전체 가중치·데이터·코드를 오픈소스로 공개했다고 전한다.",
       "source_ids": [
         "source:1aa04f261ee2e30ebfe97b78"
       ],
@@ -1296,9 +1300,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:8c9e2b5a052a0f59cd497576",
+      "id": "claim:202018e7eb720c97d3f6a9d2",
       "type": "claim",
-      "title": "실제 공개 파일과 라이선스 조건, 수학·검색 평가 결과는 발췌에 없다. 재현이나 재사용을 판단하려면 공개 범위와 이용 허용 조건을 확인해야 한다.",
+      "title": "발췌에는 실제 공개 파일, 라이선스 조건, 수학·검색 평가 결과가 없다. 공개 자료로 학습을 재현할 수 있는지, 어떤 용도로 재사용할 수 있는지는 확인되지 않는다.",
       "source_ids": [
         "source:1aa04f261ee2e30ebfe97b78"
       ],
@@ -1319,15 +1323,15 @@
         "source:d58729c60e923b2b7b0fafbe"
       ],
       "claims": [
-        "claim:2ed008453902fd1eeada1090",
+        "claim:706c413859f285c6ceb3db70",
         "claim:11ce68ac9e9999a633db0a64"
       ],
       "status": "reviewed"
     },
     {
-      "id": "claim:2ed008453902fd1eeada1090",
+      "id": "claim:706c413859f285c6ceb3db70",
       "type": "claim",
-      "title": "GeekNews를 연결한 수집 발췌는 알리바바가 암을 포함한 약 150개 질환을 탐지하는 AI 모델을 오픈소스로 공개했다고 전한다.",
+      "title": "GeekNews를 연결한 수집 발췌는 알리바바가 암을 포함한 약 150개 질환 탐지 AI 모델을 오픈소스로 공개했다고 전한다.",
       "source_ids": [
         "source:d58729c60e923b2b7b0fafbe"
       ],
@@ -1345,34 +1349,6 @@
       "status": "reviewed"
     },
     {
-      "id": "page:92637321c93f04364bb7f3e2",
-      "type": "entity",
-      "title": "Kimi K3",
-      "page_ids": [
-        "open:7b6eacb9f4cec119bb36"
-      ],
-      "topics": [
-        "open"
-      ],
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3"
-      ],
-      "claims": [
-        "claim:8ddd07a531f20cc909f24a9f"
-      ],
-      "status": "reviewed"
-    },
-    {
-      "id": "claim:8ddd07a531f20cc909f24a9f",
-      "type": "claim",
-      "title": "CNBC를 인용한 현재 수집 발췌는 문샷의 Kimi K3가 미중 모델 격차를 줄이고 오픈웨이트 전략으로 주목받는다고 전한다. 구체적인 규모나 경쟁 모델별 성능 수치는 제시하지 않는다.",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3"
-      ],
-      "claim_kind": "reported",
-      "status": "reviewed"
-    },
-    {
       "id": "page:f5f419167d3ffcfccc183b5e",
       "type": "issue",
       "title": "공급자 측 토큰 부풀리기와 API 감사",
@@ -1387,8 +1363,8 @@
       ],
       "claims": [
         "claim:c1cc180a2ccdb0f353fc2f45",
-        "claim:c82ce8cbb95b68a95cd5c6cb",
-        "claim:c3711421e5377901ec102f3e"
+        "claim:d4e8d9b1d21c01982c2acb9c",
+        "claim:81664f1e38c5809205147b36"
       ],
       "status": "reviewed"
     },
@@ -1403,9 +1379,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:c82ce8cbb95b68a95cd5c6cb",
+      "id": "claim:d4e8d9b1d21c01982c2acb9c",
       "type": "claim",
-      "title": "연구진의 감사법은 원래 요청과 길이 확장 개입을 한 요청을 따로 보내 추가 토큰 증가량을 비교한다. 이미 부풀려진 출력은 추가 개입 효과가 작다는 포화를 활용한다. 초록은 4개 오픈웨이트 모델에서 평균 탐지율 85.1%, 오탐률 2% 미만을 보고한다.",
+      "title": "연구진의 감사법은 원래 요청과 길이 확장 개입을 한 요청을 따로 보내 추가 토큰 증가량을 비교한다. 이미 부풀려진 출력에서는 추가 개입 효과가 작아지는 포화를 이용하며, 신뢰할 로컬 참조 모델이나 과거 정상 응답을 요구하지 않는다. 초록은 4개 오픈웨이트 모델에서 평균 탐지율 85.1%, 오탐률 2% 미만을 보고한다.",
       "source_ids": [
         "source:paper:2609.20370"
       ],
@@ -1413,9 +1389,9 @@
       "status": "reviewed"
     },
     {
-      "id": "claim:c3711421e5377901ec102f3e",
+      "id": "claim:81664f1e38c5809205147b36",
       "type": "claim",
-      "title": "초록은 실제 API 서비스 15개 중 7개에서 PTIA와 일치하는 행동을 표시했다고 보고한다. 이 신호만으로 해당 공급자의 고의적 조작이나 부당 청구를 확정할 수는 없다.",
+      "title": "연구진은 실제 API 서비스 15개 중 7개에서 PTIA와 일치하는 행동을 표시했다고 보고한다. 초록의 탐지 결과만으로 해당 공급자의 고의적 조작이나 부당 청구를 확정할 수는 없다.",
       "source_ids": [
         "source:paper:2609.20370"
       ],
@@ -3345,9 +3321,9 @@
       ]
     },
     {
-      "id": "d06c80b2d0bb37d0ddd3354a",
+      "id": "b60d8423ce4ef76b7e60b2fa",
       "source": "page:9b08b924963cb1769f63a232",
-      "target": "claim:e3aadaae8171f099092eb0df",
+      "target": "claim:3981fc2ba27f7780b4cbddc2",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3359,8 +3335,8 @@
       ]
     },
     {
-      "id": "666f72dbb075f71deb49edc9",
-      "source": "claim:e3aadaae8171f099092eb0df",
+      "id": "75098c463eb659af5b9a6b4c",
+      "source": "claim:3981fc2ba27f7780b4cbddc2",
       "target": "source:4379d4e7f64f8347134ecb12",
       "kind": "cites",
       "layer": "provenance",
@@ -3370,8 +3346,8 @@
       ]
     },
     {
-      "id": "68fb5da7c0502fa95a01dc7c",
-      "source": "claim:e3aadaae8171f099092eb0df",
+      "id": "6f09d5afe7d4069e426cfbf9",
+      "source": "claim:3981fc2ba27f7780b4cbddc2",
       "target": "source:ee2c12a40f492a13aa4ec9b8",
       "kind": "cites",
       "layer": "provenance",
@@ -3381,8 +3357,8 @@
       ]
     },
     {
-      "id": "d13779df7c4114797ac8de10",
-      "source": "claim:e3aadaae8171f099092eb0df",
+      "id": "099da907622fad1e283a24c3",
+      "source": "claim:3981fc2ba27f7780b4cbddc2",
       "target": "source:paper:2609.19242",
       "kind": "cites",
       "layer": "provenance",
@@ -3392,8 +3368,8 @@
       ]
     },
     {
-      "id": "b5e47509944d27b7eff75309",
-      "source": "claim:e3aadaae8171f099092eb0df",
+      "id": "452a7028cc9fe5ba5663a2e9",
+      "source": "claim:3981fc2ba27f7780b4cbddc2",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -3403,9 +3379,9 @@
       ]
     },
     {
-      "id": "7f1c2ea5c028251c36a9def1",
+      "id": "86b6d4528b7e06279989069e",
       "source": "page:9b08b924963cb1769f63a232",
-      "target": "claim:8c7fc9b6390b449002629576",
+      "target": "claim:818571363261118f49d93c5e",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3414,14 +3390,25 @@
       ]
     },
     {
-      "id": "626e9d6ea6dc49eee8980e33",
-      "source": "claim:8c7fc9b6390b449002629576",
+      "id": "a694d0abd37cdd86b05c28d8",
+      "source": "claim:818571363261118f49d93c5e",
       "target": "source:paper:2609.19213",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:paper:2609.19213"
+      ]
+    },
+    {
+      "id": "33d348080133223a6f38e28b",
+      "source": "page:496f722e3a061b8ca1a39ff6",
+      "target": "source:112f7fd60bf465f0c3d9bfb8",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:112f7fd60bf465f0c3d9bfb8"
       ]
     },
     {
@@ -3447,19 +3434,31 @@
       ]
     },
     {
-      "id": "e79e808bd43299ce8aa31757",
+      "id": "489b0007f2eba3fbcdf79c63",
       "source": "page:496f722e3a061b8ca1a39ff6",
-      "target": "claim:67aec8992744878b0f5f1299",
+      "target": "claim:43d772b555c4930bd54451f7",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
+        "source:112f7fd60bf465f0c3d9bfb8",
         "source:34fa141b88be994d5c6f08ba"
       ]
     },
     {
-      "id": "9ca943b5c99ed08f12882ec6",
-      "source": "claim:67aec8992744878b0f5f1299",
+      "id": "f4c631ff03e3c093abf92e91",
+      "source": "claim:43d772b555c4930bd54451f7",
+      "target": "source:112f7fd60bf465f0c3d9bfb8",
+      "kind": "cites",
+      "layer": "provenance",
+      "text": "",
+      "source_ids": [
+        "source:112f7fd60bf465f0c3d9bfb8"
+      ]
+    },
+    {
+      "id": "26ad55840e0a3ddd83bc149b",
+      "source": "claim:43d772b555c4930bd54451f7",
       "target": "source:34fa141b88be994d5c6f08ba",
       "kind": "cites",
       "layer": "provenance",
@@ -3469,9 +3468,9 @@
       ]
     },
     {
-      "id": "997b0dbc0ea149b3c818729d",
+      "id": "09e8d4a0d7a81e48966ba7fd",
       "source": "page:496f722e3a061b8ca1a39ff6",
-      "target": "claim:eee7bc19f0f37aa26794bf5d",
+      "target": "claim:8b7fba489583e5d54c7fc424",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3480,8 +3479,8 @@
       ]
     },
     {
-      "id": "fd89a55c426d2409d5104382",
-      "source": "claim:eee7bc19f0f37aa26794bf5d",
+      "id": "d2070d6e260ecab1a7830ce4",
+      "source": "claim:8b7fba489583e5d54c7fc424",
       "target": "source:ee2c12a40f492a13aa4ec9b8",
       "kind": "cites",
       "layer": "provenance",
@@ -3513,9 +3512,9 @@
       ]
     },
     {
-      "id": "5fe4bace2f97897dcff91fb0",
+      "id": "39479d9f4253b452ea29bd75",
       "source": "page:b4b6849ccb163ad60f4f21c8",
-      "target": "claim:cf327c2d6ede12fd29d18122",
+      "target": "claim:1ceeb5a73876fec71c8a538d",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3525,8 +3524,8 @@
       ]
     },
     {
-      "id": "9727da129843f1ce49427b22",
-      "source": "claim:cf327c2d6ede12fd29d18122",
+      "id": "6bcea129eac5f2626e80e595",
+      "source": "claim:1ceeb5a73876fec71c8a538d",
       "target": "source:4379d4e7f64f8347134ecb12",
       "kind": "cites",
       "layer": "provenance",
@@ -3536,8 +3535,8 @@
       ]
     },
     {
-      "id": "25c5bf7b8d1e8382eeb91b06",
-      "source": "claim:cf327c2d6ede12fd29d18122",
+      "id": "813eb059d66bd85e32632ec1",
+      "source": "claim:1ceeb5a73876fec71c8a538d",
       "target": "source:9d953b0bbdc80a4de4f271cf",
       "kind": "cites",
       "layer": "provenance",
@@ -3547,9 +3546,9 @@
       ]
     },
     {
-      "id": "b68702106a68667436598c39",
+      "id": "aa809bfcecb199bc3cb5f587",
       "source": "page:b4b6849ccb163ad60f4f21c8",
-      "target": "claim:255f85907e0d06bd976797e4",
+      "target": "claim:35c308b1bb2ebb2d93f0e411",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3558,8 +3557,8 @@
       ]
     },
     {
-      "id": "907f9e3bf12f751226031a82",
-      "source": "claim:255f85907e0d06bd976797e4",
+      "id": "f3eaa9b8efa6a6cdfa837898",
+      "source": "claim:35c308b1bb2ebb2d93f0e411",
       "target": "source:4379d4e7f64f8347134ecb12",
       "kind": "cites",
       "layer": "provenance",
@@ -3580,9 +3579,9 @@
       ]
     },
     {
-      "id": "c7c6081846f0e1e877cbc1ec",
+      "id": "f922b4e18c805607ca7474da",
       "source": "page:3e7b41c644da4cb118490c7a",
-      "target": "claim:6f54474574f3628bceac247f",
+      "target": "claim:f876991e2644bb756fd25163",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3591,8 +3590,8 @@
       ]
     },
     {
-      "id": "2046d423b997513b97703110",
-      "source": "claim:6f54474574f3628bceac247f",
+      "id": "1e04d41b81104bb9605eab3e",
+      "source": "claim:f876991e2644bb756fd25163",
       "target": "source:paper:2609.19242",
       "kind": "cites",
       "layer": "provenance",
@@ -3602,9 +3601,9 @@
       ]
     },
     {
-      "id": "3a36d579c149672bcc65d6a4",
+      "id": "016fbd8b4cd0728db5856c1b",
       "source": "page:3e7b41c644da4cb118490c7a",
-      "target": "claim:9aa0448ee80d4b479a621f4c",
+      "target": "claim:8382e842507abc2e40610ef6",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3613,8 +3612,8 @@
       ]
     },
     {
-      "id": "cda6be4b82ece2ce3820e900",
-      "source": "claim:9aa0448ee80d4b479a621f4c",
+      "id": "0452a218c70708bef5f4d760",
+      "source": "claim:8382e842507abc2e40610ef6",
       "target": "source:paper:2609.19242",
       "kind": "cites",
       "layer": "provenance",
@@ -3635,9 +3634,9 @@
       ]
     },
     {
-      "id": "fc17e7ca771707eaff844365",
+      "id": "7e2dea1d3ca37524e1f1485d",
       "source": "page:16ddcc70c777744bd4e89688",
-      "target": "claim:90da4936a0bd49359b8ffaad",
+      "target": "claim:7a8328e01e63726f417013fd",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3646,8 +3645,8 @@
       ]
     },
     {
-      "id": "b64cdfa4a35d88ae1f73839d",
-      "source": "claim:90da4936a0bd49359b8ffaad",
+      "id": "2723cdaff546ed79f95d028c",
+      "source": "claim:7a8328e01e63726f417013fd",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -3657,9 +3656,9 @@
       ]
     },
     {
-      "id": "fb995e8bc4f617492f457f3a",
+      "id": "cda04a1b8e73e928ee5297b5",
       "source": "page:16ddcc70c777744bd4e89688",
-      "target": "claim:53dc59186dcdf5f870d0130e",
+      "target": "claim:cdda2be6d7b60a1c383c2478",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -3668,8 +3667,8 @@
       ]
     },
     {
-      "id": "5c31aeb5b385e28f71287f0f",
-      "source": "claim:53dc59186dcdf5f870d0130e",
+      "id": "e63f6989ff8fd1927feded8b",
+      "source": "claim:cdda2be6d7b60a1c383c2478",
       "target": "source:paper:2609.19969",
       "kind": "cites",
       "layer": "provenance",
@@ -4136,14 +4135,14 @@
       ]
     },
     {
-      "id": "9b2c5d81386de739a6c85099",
+      "id": "416f6a3fa30b3f0df8901646",
       "source": "page:35ff74aeea25311f4fe759a6",
-      "target": "source:a867037ee2edc08dee063315",
+      "target": "source:482861cd948ee1330fd9e650",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:a867037ee2edc08dee063315"
+        "source:482861cd948ee1330fd9e650"
       ]
     },
     {
@@ -4169,21 +4168,21 @@
       ]
     },
     {
-      "id": "cc6b372120f0d27754798a80",
+      "id": "b91bde99ec3862985dec486c",
       "source": "page:35ff74aeea25311f4fe759a6",
-      "target": "claim:e2a0e03cf27cefee4d393402",
+      "target": "claim:869f156280da84cc1412c55b",
       "kind": "states",
       "layer": "provenance",
       "text": "",
       "source_ids": [
         "source:1aa04f261ee2e30ebfe97b78",
         "source:33f0fb52169f6644acf69dc3",
-        "source:a867037ee2edc08dee063315"
+        "source:482861cd948ee1330fd9e650"
       ]
     },
     {
-      "id": "6493f3ca0e13adff654c6926",
-      "source": "claim:e2a0e03cf27cefee4d393402",
+      "id": "02aa2229a14b7d865654dabe",
+      "source": "claim:869f156280da84cc1412c55b",
       "target": "source:1aa04f261ee2e30ebfe97b78",
       "kind": "cites",
       "layer": "provenance",
@@ -4193,8 +4192,8 @@
       ]
     },
     {
-      "id": "1ad9cfa37d802c8a2cd87b39",
-      "source": "claim:e2a0e03cf27cefee4d393402",
+      "id": "83fcc69fbd296bdd696abf54",
+      "source": "claim:869f156280da84cc1412c55b",
       "target": "source:33f0fb52169f6644acf69dc3",
       "kind": "cites",
       "layer": "provenance",
@@ -4204,48 +4203,14 @@
       ]
     },
     {
-      "id": "7024c6e96440390f1190cc88",
-      "source": "claim:e2a0e03cf27cefee4d393402",
-      "target": "source:a867037ee2edc08dee063315",
+      "id": "715373f2b5819c5b9bd4f3bc",
+      "source": "claim:869f156280da84cc1412c55b",
+      "target": "source:482861cd948ee1330fd9e650",
       "kind": "cites",
       "layer": "provenance",
       "text": "",
       "source_ids": [
-        "source:a867037ee2edc08dee063315"
-      ]
-    },
-    {
-      "id": "058c9b1ec4b60960b633ee57",
-      "source": "page:35ff74aeea25311f4fe759a6",
-      "target": "claim:fece3c04941e949322d8ab91",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:d58729c60e923b2b7b0fafbe",
-        "source:paper:2609.20370"
-      ]
-    },
-    {
-      "id": "b1b31c05f72bf03f148f529e",
-      "source": "claim:fece3c04941e949322d8ab91",
-      "target": "source:d58729c60e923b2b7b0fafbe",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:d58729c60e923b2b7b0fafbe"
-      ]
-    },
-    {
-      "id": "6002ab16346a62899c37a122",
-      "source": "claim:fece3c04941e949322d8ab91",
-      "target": "source:paper:2609.20370",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:paper:2609.20370"
+        "source:482861cd948ee1330fd9e650"
       ]
     },
     {
@@ -4260,9 +4225,9 @@
       ]
     },
     {
-      "id": "6a428878b134cf4e399da4c5",
+      "id": "0078f0cd66063dcbf8295978",
       "source": "page:584931e56b6856c928facbd1",
-      "target": "claim:5db54466f1a925d261b95c4b",
+      "target": "claim:4813d8238c163a7714500078",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4271,8 +4236,8 @@
       ]
     },
     {
-      "id": "a81e6f296a2895367ba7cccf",
-      "source": "claim:5db54466f1a925d261b95c4b",
+      "id": "d41303c39eb597fc2f046d8f",
+      "source": "claim:4813d8238c163a7714500078",
       "target": "source:1aa04f261ee2e30ebfe97b78",
       "kind": "cites",
       "layer": "provenance",
@@ -4282,9 +4247,9 @@
       ]
     },
     {
-      "id": "3dd023b9a99ae465886c3a46",
+      "id": "959d73e36b3ba76f440642be",
       "source": "page:584931e56b6856c928facbd1",
-      "target": "claim:8c9e2b5a052a0f59cd497576",
+      "target": "claim:202018e7eb720c97d3f6a9d2",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4293,8 +4258,8 @@
       ]
     },
     {
-      "id": "ad029f1565415aad5c96d0f9",
-      "source": "claim:8c9e2b5a052a0f59cd497576",
+      "id": "69a84a4fbdba60b1378136cd",
+      "source": "claim:202018e7eb720c97d3f6a9d2",
       "target": "source:1aa04f261ee2e30ebfe97b78",
       "kind": "cites",
       "layer": "provenance",
@@ -4315,9 +4280,9 @@
       ]
     },
     {
-      "id": "f816766ddcdc4ee531e0c2c6",
+      "id": "9b366fc0e19e2c36e35504db",
       "source": "page:45cd0531f323d91383999a51",
-      "target": "claim:2ed008453902fd1eeada1090",
+      "target": "claim:706c413859f285c6ceb3db70",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4326,8 +4291,8 @@
       ]
     },
     {
-      "id": "9b2fb34dcdfbf673d2b94fdb",
-      "source": "claim:2ed008453902fd1eeada1090",
+      "id": "70c4c5521d5fffc51297e4f1",
+      "source": "claim:706c413859f285c6ceb3db70",
       "target": "source:d58729c60e923b2b7b0fafbe",
       "kind": "cites",
       "layer": "provenance",
@@ -4356,39 +4321,6 @@
       "text": "",
       "source_ids": [
         "source:d58729c60e923b2b7b0fafbe"
-      ]
-    },
-    {
-      "id": "8ee88617e865aabd6208ae13",
-      "source": "page:92637321c93f04364bb7f3e2",
-      "target": "source:33f0fb52169f6644acf69dc3",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3"
-      ]
-    },
-    {
-      "id": "a47bc6a5de94de2e115e6c9f",
-      "source": "page:92637321c93f04364bb7f3e2",
-      "target": "claim:8ddd07a531f20cc909f24a9f",
-      "kind": "states",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3"
-      ]
-    },
-    {
-      "id": "8c3e1547f35c78078b688511",
-      "source": "claim:8ddd07a531f20cc909f24a9f",
-      "target": "source:33f0fb52169f6644acf69dc3",
-      "kind": "cites",
-      "layer": "provenance",
-      "text": "",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3"
       ]
     },
     {
@@ -4425,9 +4357,9 @@
       ]
     },
     {
-      "id": "fe2c1e27b695a4a70133e808",
+      "id": "9211e2833fe65d44426d283e",
       "source": "page:f5f419167d3ffcfccc183b5e",
-      "target": "claim:c82ce8cbb95b68a95cd5c6cb",
+      "target": "claim:d4e8d9b1d21c01982c2acb9c",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4436,8 +4368,8 @@
       ]
     },
     {
-      "id": "0e370f1091270112d3f5d8dc",
-      "source": "claim:c82ce8cbb95b68a95cd5c6cb",
+      "id": "6c9b2daee20eacfb3ca42036",
+      "source": "claim:d4e8d9b1d21c01982c2acb9c",
       "target": "source:paper:2609.20370",
       "kind": "cites",
       "layer": "provenance",
@@ -4447,9 +4379,9 @@
       ]
     },
     {
-      "id": "c2a40060dcc169e53ef7e676",
+      "id": "babef5971c374429d2d502b6",
       "source": "page:f5f419167d3ffcfccc183b5e",
-      "target": "claim:c3711421e5377901ec102f3e",
+      "target": "claim:81664f1e38c5809205147b36",
       "kind": "states",
       "layer": "provenance",
       "text": "",
@@ -4458,8 +4390,8 @@
       ]
     },
     {
-      "id": "e69ca805c64538f1080886aa",
-      "source": "claim:c3711421e5377901ec102f3e",
+      "id": "5b5f990efb44451e43e66ab8",
+      "source": "claim:81664f1e38c5809205147b36",
       "target": "source:paper:2609.20370",
       "kind": "cites",
       "layer": "provenance",
@@ -6123,47 +6055,47 @@
       ]
     },
     {
-      "id": "a8466f8b02578356ce454461",
+      "id": "f2c499ff434bcf5b3ae8d821",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "page:496f722e3a061b8ca1a39ff6",
       "kind": "involves",
       "layer": "semantic",
-      "text": "화웨이 발췌는 칩·KV 캐시·프로세서 연결망을 통한 컴퓨팅 확장 구상을 제시한다.",
+      "text": "화웨이는 칩·KV 캐시·프로세서 연결망을 통한 컴퓨팅 확장 구상을 제시한다.",
       "source_ids": [
         "source:34fa141b88be994d5c6f08ba",
         "source:ee2c12a40f492a13aa4ec9b8"
       ]
     },
     {
-      "id": "3e510d7c3c9bd93e819c0e4d",
+      "id": "a0f56993e179d6f8714110ee",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "page:b4b6849ccb163ad60f4f21c8",
       "kind": "involves",
       "layer": "semantic",
-      "text": "전력 관련 보도는 AI 수요 압력과 신규 발전 공급 위험을 데이터센터 전력 확보 문제로 다룬다.",
+      "text": "보도는 AI 수요 압력과 신규 발전 공급 위험을 데이터센터 전력 확보 문제로 다룬다.",
       "source_ids": [
         "source:4379d4e7f64f8347134ecb12",
         "source:9d953b0bbdc80a4de4f271cf"
       ]
     },
     {
-      "id": "6fe18105658a8d4141c87b17",
+      "id": "09738da873c88329d1337837",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "page:3e7b41c644da4cb118490c7a",
       "kind": "involves",
       "layer": "semantic",
-      "text": "CSBP 연구는 분산 GPU 학습의 통신·메모리 부담을 줄이는 방법과 처리량을 평가한다.",
+      "text": "CSBP 연구는 분산 GPU 학습의 통신·메모리 부담을 줄이고 처리량을 평가한다.",
       "source_ids": [
         "source:paper:2609.19242"
       ]
     },
     {
-      "id": "9faa63866167336b8cb0b97f",
+      "id": "d6e0c51ae664586496fd43fe",
       "source": "page:9b08b924963cb1769f63a232",
       "target": "page:16ddcc70c777744bd4e89688",
       "kind": "involves",
       "layer": "semantic",
-      "text": "연구는 입력 처리 연산과 HBM·SSD의 캐시 부담을 줄이는 모델·배포 설계를 제시한다.",
+      "text": "연구는 입력 처리 연산과 HBM·SSD 캐시 부담을 줄이는 모델·배포 설계를 제시한다.",
       "source_ids": [
         "source:paper:2609.19969"
       ]
@@ -6214,12 +6146,12 @@
       ]
     },
     {
-      "id": "8de8d7d4d36deec93629cfe5",
+      "id": "857849baedd78c4ff903a5df",
       "source": "page:35ff74aeea25311f4fe759a6",
       "target": "page:584931e56b6856c928facbd1",
       "kind": "involves",
       "layer": "semantic",
-      "text": "가중치뿐 아니라 데이터·코드까지 공개했다고 소개된 모델 사례다.",
+      "text": "가중치·데이터·코드를 함께 공개했다고 소개된 모델 사례다.",
       "source_ids": [
         "source:1aa04f261ee2e30ebfe97b78"
       ]
@@ -6236,23 +6168,12 @@
       ]
     },
     {
-      "id": "dc51af541ddfcd6564cc01ed",
-      "source": "page:35ff74aeea25311f4fe759a6",
-      "target": "page:92637321c93f04364bb7f3e2",
-      "kind": "involves",
-      "layer": "semantic",
-      "text": "수집 발췌가 오픈웨이트 전략을 채택한 모델로 소개한다.",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3"
-      ]
-    },
-    {
-      "id": "301cc8a823262ea36b3e2e04",
+      "id": "dcc2a9c155c41867f2b94d64",
       "source": "page:35ff74aeea25311f4fe759a6",
       "target": "page:f5f419167d3ffcfccc183b5e",
       "kind": "involves",
       "layer": "semantic",
-      "text": "연구진이 4개 오픈웨이트 모델을 감사법의 탐지율·오탐률 평가에 사용했다.",
+      "text": "연구진이 4개 오픈웨이트 모델을 API 감사법의 탐지율·오탐률 평가에 사용했다.",
       "source_ids": [
         "source:paper:2609.20370"
       ]
@@ -6828,17 +6749,6 @@
       "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
       "source_ids": [
         "source:1aa04f261ee2e30ebfe97b78"
-      ]
-    },
-    {
-      "id": "d321e4f0b941662fba208309",
-      "source": "page:35ff74aeea25311f4fe759a6",
-      "target": "page:92637321c93f04364bb7f3e2",
-      "kind": "shared_source",
-      "layer": "recommendation",
-      "text": "같은 원자료를 인용한 페이지 · 의미 관계 검증 아님",
-      "source_ids": [
-        "source:33f0fb52169f6644acf69dc3"
       ]
     },
     {
@@ -7438,7 +7348,7 @@
       "id": "compute",
       "title": "AI 인프라",
       "kind": "topic",
-      "revision": 73,
+      "revision": 78,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7449,14 +7359,14 @@
             "source:paper:2609.19969"
           ],
           "kind": "interpretation",
-          "text": "제공 자료는 AI 인프라를 칩·연결망 확장, 전력 확보, 학습·추론 자원 절감으로 나누어 보여준다. 설비 확장 구상과 특정 조건의 효율 실험은 구분해야 한다. 모델 메모리 절감이 데이터센터 전력 제약의 해소를 입증하지는 않는다."
+          "text": "제공 자료는 AI 인프라의 과제를 칩·연결망 확장, 전력 확보, 학습·추론 자원 절감으로 보여준다. 기업의 확장 구상과 특정 조건에서 측정한 연구 성과는 구분해야 하며, 메모리 절감만으로 전력 공급 문제가 해결됐다고 판단할 수는 없다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19213"
           ],
           "kind": "reported",
-          "text": "층별 커리큘럼 압축 논문의 저자들은 모델을 층 구간으로 나누고 쉬운 최적화부터 지식을 전달하며 특징 캐싱을 활용한다고 설명한다. 초록은 BERT·GPT-2의 GPU 메모리와 학습 시간을 각각 50% 넘게 줄였다고 보고하지만, 비교 구성의 세부 조건은 제시하지 않는다."
+          "text": "층별 커리큘럼 압축 논문은 모델을 층 구간으로 나누어 쉬운 최적화부터 지식을 전달하고 특징 캐싱을 활용한다. 저자들은 초록에서 BERT·GPT-2의 GPU 메모리와 학습 시간을 각각 50% 넘게 줄였다고 보고하지만, 비교 구성의 세부 조건은 제시하지 않는다."
         }
       ]
     },
@@ -7464,22 +7374,23 @@
       "id": "compute:d7013420307ef36515b0",
       "title": "화웨이의 AI 컴퓨팅 전략",
       "kind": "entity",
-      "revision": 73,
+      "revision": 78,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
-            "source:34fa141b88be994d5c6f08ba"
+            "source:34fa141b88be994d5c6f08ba",
+            "source:112f7fd60bf465f0c3d9bfb8"
           ],
           "kind": "reported",
-          "text": "InfoQ 인용 발췌는 왕타오가 AI 전략의 핵심으로 컴퓨팅을 제시하며 Ascend 960 조기 등장과 PB급 KV 캐시를 언급했다고 전한다. 현재 발췌에는 구체적인 출시 일정이나 캐시 구성·성능이 없다."
+          "text": "InfoQ 인용 발췌는 왕타오가 Ascend 960 조기 등장과 PB급 KV 캐시를 언급했다고 전한다. 9월 20일 Pandaily 인용 발췌는 Ascend 생태계가 ‘인플렉션을 통과’했다는 화웨이의 선언을 소개하지만, 이를 판단할 도입·성능 지표는 제공하지 않는다."
         },
         {
           "evidence_ids": [
             "source:ee2c12a40f492a13aa4ec9b8"
           ],
           "kind": "reported",
-          "text": "레이펑왕 인용 발췌는 화웨이가 커넥트 2026에서 Nested BSP 기반 Peerium을 공개했다고 전한다. 백만 프로세서를 한 컴퓨터처럼 동작시키는 구조와 핵심 상호연결 기술 ‘링취(灵衢)’를 소개하지만, 해당 규모의 실제 가동 측정치는 제공하지 않는다."
+          "text": "레이펑왕 인용 발췌는 화웨이가 커넥트 2026에서 Nested BSP 기반 Peerium을 공개했다고 전한다. 백만 프로세서를 한 컴퓨터처럼 동작시키는 구조와 상호연결 기술 ‘링취(灵衢)’를 소개하지만, 해당 규모의 실제 가동 측정치는 없다."
         }
       ]
     },
@@ -7487,7 +7398,7 @@
       "id": "compute:e1d3711798bd99b5e519",
       "title": "데이터센터 전력 공급 제약",
       "kind": "issue",
-      "revision": 73,
+      "revision": 78,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7496,14 +7407,14 @@
             "source:4379d4e7f64f8347134ecb12"
           ],
           "kind": "reported",
-          "text": "7월 1일 Pandaily 인용 발췌는 AI 수요가 세계 전력망을 압박한다고 주장한다. 6월 29일 TechCrunch 인용 발췌는 미국 행정부 규제로 신규 전력 92GW가 위협받아 AI 데이터센터 전력 수급에 악영향이 우려된다고 전한다. 각각 수요 압력과 공급 위험을 다룬다."
+          "text": "7월 1일 Pandaily 인용 발췌는 AI 수요가 세계 전력망을 압박한다고 주장한다. 6월 29일 TechCrunch 인용 발췌는 미국 행정부 규제로 신규 전력 92GW가 위협받아 AI 데이터센터 전력 수급에 악영향이 우려된다고 전한다. 각각 수요 압력과 공급 위험에 관한 보도다."
         },
         {
           "evidence_ids": [
             "source:4379d4e7f64f8347134ecb12"
           ],
           "kind": "uncertain",
-          "text": "92GW 중 실제 취소·지연된 규모와 영향을 받는 데이터센터는 발췌로 확인되지 않는다. 92GW를 확정 취소량이나 이미 발생한 AI 전용 전력 부족량으로 볼 근거는 없다."
+          "text": "92GW 중 실제 취소·지연된 규모와 영향을 받는 데이터센터는 현재 발췌로 확인되지 않는다. 92GW를 확정 취소량이나 이미 발생한 AI 전용 전력 부족량으로 볼 근거는 없다."
         }
       ]
     },
@@ -7511,7 +7422,7 @@
       "id": "compute:e8201c43769557860f7f",
       "title": "CSBP 장문맥 확산 언어모델 학습",
       "kind": "concept",
-      "revision": 73,
+      "revision": 78,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7519,14 +7430,14 @@
             "source:paper:2609.19242"
           ],
           "kind": "reported",
-          "text": "논문 초록에서 저자들은 블록 확산 언어모델의 오염 블록 계산을 개별 분산 프로세스에 배정하고 공유 정상 문맥도 분할하는 CSBP를 제안한다. 오염 K/V와 기울기를 로컬에 유지하고 정상 접두부 복제를 줄여 통신·메모리 부담을 낮춘다는 설명이다."
+          "text": "논문 저자들은 블록 확산 언어모델의 오염 블록 계산을 개별 분산 프로세스에 배정하고 공유 정상 문맥도 분할하는 CSBP를 제안한다. 오염 K/V와 기울기를 로컬에 유지하고 정상 접두부 복제를 줄여 통신·메모리 부담을 낮춘다는 설명이다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19242"
           ],
           "kind": "reported",
-          "text": "저자들은 H200 GPU 16개·256K 문맥에서 최선 기준선 대비 처리량이 지도 미세조정에서 1.18~1.45배, 자기회귀 모델의 블록 확산 모델 전환에서 1.27~1.33배였다고 보고한다. 최대 HBM 사용량은 같거나 낮았다. 이는 초록에 제시된 학습 조건의 결과다."
+          "text": "초록은 H200 GPU 16개·256K 문맥에서 최선 기준선 대비 처리량이 지도 미세조정에서 1.18~1.45배, 자기회귀 모델의 블록 확산 모델 전환에서 1.27~1.33배였다고 보고한다. 최대 HBM 사용량은 같거나 낮았다. 이는 해당 학습 조건의 저자 보고치다."
         }
       ]
     },
@@ -7534,7 +7445,7 @@
       "id": "compute:b7f3810c60acd69141e8",
       "title": "DeepSeek-V4.1-Flash의 KV 캐시 압축",
       "kind": "entity",
-      "revision": 73,
+      "revision": 78,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7542,14 +7453,14 @@
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "논문 초록은 입력 비중이 높은 에이전트 작업에서 입력 사전 처리(prefill) 연산과 KV 캐시 용량·전송 대역폭을 비용 병목으로 지목한다. 저자들은 CED 구조로 토큰당 활성 파라미터를 prefill에서 8B, 생성(decode)에서 16B로 구성했다고 설명한다."
+          "text": "논문 초록은 입력 비중이 높은 에이전트 작업의 비용 병목으로 입력 사전 처리(prefill) 연산과 KV 캐시 용량·전송 대역폭을 지목한다. 저자들은 CED 구조의 토큰당 활성 파라미터가 prefill에서 80억 개, 생성(decode)에서 160억 개라고 설명한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.19969"
           ],
           "kind": "reported",
-          "text": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 KV 캐시를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리의 영속 캐시를 약 1/8로 줄인다고 한다. 두 수치는 서로 다른 저장 영역의 초록 보고치다."
+          "text": "저자들은 CSA2의 층간 KV 재사용과 FP4 캐싱으로 HBM 상주 전역 캐시를 토큰당 890바이트, DeepSeek-V4-Flash의 약 1/4로 줄였다고 보고한다. SWA Bounded Replay는 SSD·호스트 메모리의 영속 캐시를 약 1/8로 줄인다고 한다. 서로 다른 저장 영역의 초록 보고치이며 전체 서비스 비용 절감률은 아니다."
         }
       ]
     },
@@ -7678,25 +7589,17 @@
       "id": "open",
       "title": "오픈 모델",
       "kind": "topic",
-      "revision": 74,
+      "revision": 79,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
           "evidence_ids": [
             "source:33f0fb52169f6644acf69dc3",
             "source:1aa04f261ee2e30ebfe97b78",
-            "source:a867037ee2edc08dee063315"
+            "source:482861cd948ee1330fd9e650"
           ],
           "kind": "interpretation",
-          "text": "공개 대상의 범위를 구분해야 한다. 발췌는 Kimi K3를 오픈웨이트 전략으로, ZGCM-1-7B를 가중치·데이터·코드 공개로 소개한다. Shipwright의 공개 대상은 Claude Code용 자동화 도구이므로 기반 모델의 가중치 공개까지 뜻하지 않는다."
-        },
-        {
-          "evidence_ids": [
-            "source:d58729c60e923b2b7b0fafbe",
-            "source:paper:2609.20370"
-          ],
-          "kind": "interpretation",
-          "text": "의료 모델 공개 보도와 오픈웨이트 모델을 이용한 API 감사 연구는 판단 대상이 다르다. 전자는 질환 탐지 성능을 확인해야 하고, 후자는 토큰 부풀리기 탐지 실험이므로 의료 효용의 근거로 옮겨 쓸 수 없다."
+          "text": "‘공개’의 범위가 다르다. 수집 발췌는 Kimi K3를 오픈웨이트 전략으로, ZGCM-1-7B를 가중치·데이터·코드 공개로 소개한다. Open-RAIL은 모델과 로봇 하드웨어를 연결하는 미들웨어 공개 사례다. 재사용할 때는 공개된 대상부터 구분해야 한다."
         }
       ]
     },
@@ -7704,7 +7607,7 @@
       "id": "open:396f68d080ebdbd7f625",
       "title": "ZGCM-1-7B",
       "kind": "entity",
-      "revision": 74,
+      "revision": 79,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7712,14 +7615,14 @@
             "source:1aa04f261ee2e30ebfe97b78"
           ],
           "kind": "reported",
-          "text": "Pandaily를 인용한 수집 발췌는 ZGCM-1-7B를 수학·에이전트 검색 특화 소형모델로 소개하며 전체 가중치·데이터·코드를 오픈소스로 공개했다고 전한다."
+          "text": "Pandaily를 연결한 수집 발췌는 ZGCM-1-7B를 수학·에이전트 검색 특화 소형모델로 소개하며 전체 가중치·데이터·코드를 오픈소스로 공개했다고 전한다."
         },
         {
           "evidence_ids": [
             "source:1aa04f261ee2e30ebfe97b78"
           ],
           "kind": "uncertain",
-          "text": "실제 공개 파일과 라이선스 조건, 수학·검색 평가 결과는 발췌에 없다. 재현이나 재사용을 판단하려면 공개 범위와 이용 허용 조건을 확인해야 한다."
+          "text": "발췌에는 실제 공개 파일, 라이선스 조건, 수학·검색 평가 결과가 없다. 공개 자료로 학습을 재현할 수 있는지, 어떤 용도로 재사용할 수 있는지는 확인되지 않는다."
         }
       ]
     },
@@ -7727,7 +7630,7 @@
       "id": "open:8bf17879b807540a7f20",
       "title": "알리바바 질환 탐지 AI 모델 공개",
       "kind": "event",
-      "revision": 74,
+      "revision": 79,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7735,7 +7638,7 @@
             "source:d58729c60e923b2b7b0fafbe"
           ],
           "kind": "reported",
-          "text": "GeekNews를 연결한 수집 발췌는 알리바바가 암을 포함한 약 150개 질환을 탐지하는 AI 모델을 오픈소스로 공개했다고 전한다."
+          "text": "GeekNews를 연결한 수집 발췌는 알리바바가 암을 포함한 약 150개 질환 탐지 AI 모델을 오픈소스로 공개했다고 전한다."
         },
         {
           "evidence_ids": [
@@ -7747,26 +7650,10 @@
       ]
     },
     {
-      "id": "open:7b6eacb9f4cec119bb36",
-      "title": "Kimi K3",
-      "kind": "entity",
-      "revision": 74,
-      "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
-      "claims": [
-        {
-          "evidence_ids": [
-            "source:33f0fb52169f6644acf69dc3"
-          ],
-          "kind": "reported",
-          "text": "CNBC를 인용한 현재 수집 발췌는 문샷의 Kimi K3가 미중 모델 격차를 줄이고 오픈웨이트 전략으로 주목받는다고 전한다. 구체적인 규모나 경쟁 모델별 성능 수치는 제시하지 않는다."
-        }
-      ]
-    },
-    {
       "id": "open:d91f7bc8638479fa2208",
       "title": "공급자 측 토큰 부풀리기와 API 감사",
       "kind": "issue",
-      "revision": 74,
+      "revision": 79,
       "scope": "최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개·과거 일치 뉴스 최대 8개와 이전 근거를 합쳐 최대 24개. 전체 뉴스의 종합이나 사실성 보증이 아닙니다.",
       "claims": [
         {
@@ -7781,14 +7668,14 @@
             "source:paper:2609.20370"
           ],
           "kind": "reported",
-          "text": "연구진의 감사법은 원래 요청과 길이 확장 개입을 한 요청을 따로 보내 추가 토큰 증가량을 비교한다. 이미 부풀려진 출력은 추가 개입 효과가 작다는 포화를 활용한다. 초록은 4개 오픈웨이트 모델에서 평균 탐지율 85.1%, 오탐률 2% 미만을 보고한다."
+          "text": "연구진의 감사법은 원래 요청과 길이 확장 개입을 한 요청을 따로 보내 추가 토큰 증가량을 비교한다. 이미 부풀려진 출력에서는 추가 개입 효과가 작아지는 포화를 이용하며, 신뢰할 로컬 참조 모델이나 과거 정상 응답을 요구하지 않는다. 초록은 4개 오픈웨이트 모델에서 평균 탐지율 85.1%, 오탐률 2% 미만을 보고한다."
         },
         {
           "evidence_ids": [
             "source:paper:2609.20370"
           ],
           "kind": "uncertain",
-          "text": "초록은 실제 API 서비스 15개 중 7개에서 PTIA와 일치하는 행동을 표시했다고 보고한다. 이 신호만으로 해당 공급자의 고의적 조작이나 부당 청구를 확정할 수는 없다."
+          "text": "연구진은 실제 API 서비스 15개 중 7개에서 PTIA와 일치하는 행동을 표시했다고 보고한다. 초록의 탐지 결과만으로 해당 공급자의 고의적 조작이나 부당 청구를 확정할 수는 없다."
         }
       ]
     },
@@ -8241,12 +8128,12 @@
     }
   ],
   "issues": [],
-  "version": "8dfc61055bd0cfb45516786ba82606cc2490a25ee5fa8ab03b57ec60cac1caef",
-  "exported_at": "2026-09-20T09:12:12.432676+00:00",
+  "version": "fe890bf3d9cebcf6722d667a0f69bfd69bf2ebdecd87d07029b195155e8a630a",
+  "exported_at": "2026-09-20T09:17:58.187026+00:00",
   "coverage": {
-    "pages": 44,
-    "claims": 86,
-    "cited_sources": 48,
+    "pages": 43,
+    "claims": 84,
+    "cited_sources": 49,
     "all_sources_compiled": false
   },
   "method": "생성 시점에 입력과 독립 검토가 일치한 요약·관계·출처 링크입니다. 전체 자료의 분석 완료나 사실성 보증이 아닙니다.",
