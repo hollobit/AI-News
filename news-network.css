@@ -19,6 +19,8 @@
 .news-only-label{display:none}
 .news-network-detail{min-height:34px;padding:8px 10px;border-left:3px solid #d8a744;background:color-mix(in srgb,var(--muted,#eef4ef) 72%,transparent);color:var(--foreground,#294b42);font-size:12px;line-height:1.55}
 .news-network-empty{padding:22px 0;color:var(--muted,#66756d)}
+.news-network-links path[data-relation="의미적 유사성"]{stroke:#5f86a5}
+.news-network-links path[data-relation="인과 단서 후보"]{stroke:#b55d4c;stroke-width:2.2;stroke-dasharray:6 3}
 @media (max-width:600px){
   .news-network-intro{display:block}
   .news-network-shell svg{min-height:330px}

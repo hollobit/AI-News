@@ -10,6 +10,8 @@
     line: '#a7bbb2',
     active: '#243f38',
     muted: '#708178'
+    ,semantic: '#5f86a5',
+    causal: '#b55d4c'
   };
 
   const svgEl = (tag, attrs = {}) => {
@@ -35,6 +37,15 @@
 
   function topicFor(item) {
     return text(item?.topic_title || item?.topic || item?.content_type_title, '기타');
+  }
+
+  const stopwords = new Set('그리고 그러나 또는 대한 위한 관련 통해 있는 없는 뉴스 기사 분석 현재 자료 내용 중국 한국 미국 AI 인공 지능'.split(' '));
+  function tokens(item) {
+    const source = [item?.title, ...(item?.analyses || []).flatMap(a => [a.title, a.text, a.uncertainty])].filter(Boolean).join(' ');
+    return new Set((source.match(/[A-Za-z][A-Za-z0-9_-]{2,}|[가-힣]{2,}/g) || []).map(value => value.toLocaleLowerCase()).filter(value => !stopwords.has(value)));
+  }
+  function causalText(item) {
+    return [item?.title, ...(item?.analyses || []).flatMap(a => [a.title, a.text])].filter(Boolean).join(' ');
   }
 
   function create(container, items, options = {}) {
@@ -73,6 +84,28 @@
       links.push({ source: 'center', target: topic.id, kind: 'center-topic' });
       newsNodes.filter(news => news.topic === topic.name).forEach(news => links.push({ source: topic.id, target: news.id, kind: 'topic-news' }));
     });
+    const semanticLinks = [];
+    const causalLinks = [];
+    for (let i = 0; i < newsNodes.length; i += 1) {
+      for (let j = i + 1; j < newsNodes.length; j += 1) {
+        const left = newsNodes[i], right = newsNodes[j];
+        const leftTokens = tokens(left.item), rightTokens = tokens(right.item);
+        const shared = [...leftTokens].filter(token => rightTokens.has(token));
+        const union = new Set([...leftTokens, ...rightTokens]);
+        const score = union.size ? shared.length / union.size : 0;
+        if (shared.length >= 2 && score >= .08) semanticLinks.push({ source: left.id, target: right.id, kind: 'semantic-news', relation: '의미적 유사성', score, shared });
+        const leftCausal = /때문에|따라서|결과적으로|영향을|초래|원인|방아쇠|because|due to|therefore|lead to|result in/i.test(causalText(left.item));
+        const rightCausal = /때문에|따라서|결과적으로|영향을|초래|원인|방아쇠|because|due to|therefore|lead to|result in/i.test(causalText(right.item));
+        if (shared.length >= 2 && score >= .12 && (leftCausal || rightCausal)) {
+          const source = leftCausal ? left : right;
+          const target = leftCausal ? right : left;
+          causalLinks.push({ source: source.id, target: target.id, kind: 'causal-candidate', relation: '인과 단서 후보', score, shared });
+        }
+      }
+    }
+    semanticLinks.sort((a, b) => b.score - a.score);
+    causalLinks.sort((a, b) => b.score - a.score);
+    links.push(...semanticLinks.slice(0, 72), ...causalLinks.slice(0, 36));
 
     const shell = document.createElement('div');
     shell.className = 'news-network-shell';
@@ -80,11 +113,11 @@
     header.className = 'news-network-header';
     const count = document.createElement('span');
     count.className = 'news-network-count';
-    count.textContent = `${data.length}개 뉴스 연결 · 주제 ${topics.length}개${data.length < (items || []).length ? ` · 상위 ${data.length}개 표시` : ''}`;
+    count.textContent = `${data.length}개 뉴스 연결 · 주제 ${topics.length}개 · 의미 ${semanticLinks.length}개 · 인과 단서 후보 ${causalLinks.length}개${data.length < (items || []).length ? ` · 상위 ${data.length}개 표시` : ''}`;
     header.append(count);
     const legend = document.createElement('span');
     legend.className = 'news-network-legend';
-    legend.textContent = '● 주제  ·  ● 뉴스  ·  ◎ 검토 완료';
+    legend.textContent = '● 주제  ·  ● 뉴스  ·  ◎ 검토 완료  ·  ━ 의미  ·  ➜ 인과 단서 후보';
     header.append(legend);
     shell.append(header);
 
@@ -93,12 +126,14 @@
     title.textContent = `${centerLabel} 뉴스 연결망`;
     svg.append(title);
     const description = svgEl('desc');
-    description.textContent = '중앙 날짜에서 주제로 이어지고, 주제에서 날짜별 뉴스로 이어지는 연결망입니다. 선은 분류·공동 범위를 보여주며 인과관계를 뜻하지 않습니다.';
+    description.textContent = '실선은 주제·공동 문서·제목과 분석 표현의 의미적 연결입니다. 화살표는 원인·결과 표현과 공통 표현이 함께 있는 인과 단서 후보이며, 검토된 인과관계의 확정이 아닙니다.';
     svg.append(description);
     const defs = svgEl('defs');
     const gradient = svgEl('linearGradient', { id: `news-network-gradient-${Math.random().toString(36).slice(2)}`, x1: '0%', y1: '0%', x2: '100%', y2: '100%' });
     gradient.append(svgEl('stop', { offset: '0%', 'stop-color': palette.topic }), svgEl('stop', { offset: '100%', 'stop-color': palette.news }));
-    defs.append(gradient);
+    const causalMarker = svgEl('marker', { id: `news-network-causal-${Math.random().toString(36).slice(2)}`, viewBox: '0 0 10 10', refX: '8', refY: '5', markerWidth: '5', markerHeight: '5', orient: 'auto-start-reverse' });
+    causalMarker.append(svgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: palette.causal }));
+    defs.append(gradient, causalMarker);
     svg.append(defs);
     const lines = svgEl('g', { class: 'news-network-links' });
     const nodes = svgEl('g', { class: 'news-network-nodes' });
@@ -115,7 +150,8 @@
       const source = link.source === 'center' ? center : byId.get(link.source);
       const target = byId.get(link.target);
       if (!source || !target) return;
-      const path = svgEl('path', { d: pathFor(source, target, link.kind), fill: 'none', stroke: link.kind === 'center-topic' ? palette.line : `url(#${gradient.id})`, 'stroke-width': link.kind === 'center-topic' ? 1.2 : 1.5, opacity: .55, 'data-source': source.id, 'data-target': target.id });
+      const path = svgEl('path', { d: pathFor(source, target, link.kind), fill: 'none', stroke: link.kind === 'center-topic' ? palette.line : link.kind === 'semantic-news' ? palette.semantic : link.kind === 'causal-candidate' ? palette.causal : `url(#${gradient.id})`, 'stroke-width': link.kind === 'causal-candidate' ? 2.2 : link.kind === 'semantic-news' ? 1.8 : link.kind === 'center-topic' ? 1.2 : 1.5, opacity: .55, 'data-relation': link.relation || '', 'data-source': source.id, 'data-target': target.id });
+      if (link.kind === 'causal-candidate') path.setAttribute('marker-end', `url(#${causalMarker.id})`);
       lines.append(path);
       link.path = path;
     });
@@ -133,7 +169,8 @@
     const showDetail = (node) => {
       setActive(node.id);
       if (node.item) {
-        detail.textContent = `${node.name} · ${node.item.day || '날짜 미상'} · ${node.reviewed ? '검토 완료' : '기본 기록'}`;
+        const connected = links.filter(link => link.source === node.id || link.target === node.id).map(link => link.relation).filter(Boolean);
+        detail.textContent = `${node.name} · ${node.item.day || '날짜 미상'} · ${node.reviewed ? '검토 완료' : '기본 기록'} · ${connected.length ? [...new Set(connected)].join(', ') : '추가 관계 없음'}`;
         detail.dataset.url = node.item.source_url || node.item.url || '';
       } else if (node.id !== 'center') {
         detail.textContent = `${node.name} · 연결 뉴스 ${node.count}건`;
