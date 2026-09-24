@@ -6,7 +6,7 @@
   const colors=Object.fromEntries(Object.keys(labels).map((k,i)=>[k,palette[i]]));
   const layerNames={semantic:'검토된 의미 관계',provenance:'원자료·주장 연결',recommendation:'탐색 추천'};
   const staticMode=document.documentElement.dataset.mode==='static';
-  let data=null,snapshot=null,selected='',limit=100,request=0,zoom=1,panX=0,panY=0,drag=null,suppressClick=false,viewMode='3d',cameraPose={},atlas3dUnavailable=false;
+  let data=null,snapshot=null,selected='',limit=100,request=0,zoom=1,panX=0,panY=0,drag=null,suppressClick=false,viewMode='3d',cameraPose={},atlas3dUnavailable=false,atlas3dFailureMessage='';
   const positions=new Map();
   const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
   const svgEl=(tag,attrs)=>{const n=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));return n;};
@@ -67,7 +67,7 @@
       if(staticMode){if(!snapshot){const r=await fetch('./knowledge.json');if(!r.ok)throw Error('공개 스냅샷을 읽을 수 없습니다.');snapshot=await r.json();}await addArticleContext();if(token!==request)return;data=staticView();}
       else{const p=new URLSearchParams({id:selected,q:$('search').value,layer:$('layer').value,limit:String(limit)});const hash=new URLSearchParams(location.hash.slice(1));if(!selected)for(const k of ['source_url','paper_id'])if(hash.has(k))p.set(k,hash.get(k));const r=await fetch('/api/wiki/network?'+p);const result=await r.json();if(!r.ok)throw Error(result.error||'조회 실패');if(token!==request)return;data=result;}
       if(token!==request)return;
-      $('status').textContent=(staticMode?'읽기 전용 공개 스냅샷 · '+snapshot.exported_at+' · ':'')+data.method;
+      $('status').textContent=(staticMode?'읽기 전용 공개 스냅샷 · '+snapshot.exported_at+' · ':'')+data.method+(atlas3dFailureMessage?' · '+atlas3dFailureMessage:'');
       const c=data.coverage;
       $('counts').textContent=`지도 노드 ${data.shown} / ${data.total}개 표시 · 종합 위키 ${c.pages}페이지 · 위키 인용 원자료 ${c.cited_sources}건`+(c.total_news!==undefined?` · 뉴스 ${c.total_news}건 중 검토 분석·연결 ${c.linked_news}건 · 연결 논문 ${c.linked_papers}건`:'');
       $('more').disabled=limit>=500||data.shown>=data.total;
@@ -123,7 +123,7 @@
   let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{selected='';saveURL();load();},180);});$('layer').addEventListener('change',()=>{saveURL();load();});$('color').addEventListener('change',()=>{saveURL();if(data)draw();});
   addEventListener('hashchange',restoreURL);addEventListener('popstate',restoreURL);
   window.atlas3DReady=()=>{setMode(viewMode);if(viewMode==='3d'){window.atlas3D.restore(cameraPose);if(data)window.atlas3D.render(data,selected,$('color').value);}};
-  window.atlas3DFailed=message=>{atlas3dUnavailable=true;$('mode3d').disabled=true;setMode('2d');$('status').textContent=message;saveURL(false);};
+  window.atlas3DFailed=message=>{atlas3dUnavailable=true;atlas3dFailureMessage=message;$('mode3d').disabled=true;setMode('2d');$('status').textContent=message;saveURL(false);};
   window.atlas3DSelect=select;window.atlas3DPoseChanged=()=>{if(viewMode==='3d')saveURL(false);};
   addEventListener('load',()=>{if(!window.atlas3D)window.atlas3DFailed('3D 지도 파일을 읽지 못해 2D 지도로 전환했습니다.');});
   if(staticMode)$('live-nav').remove();restoreURL();if(window.atlas3D)window.atlas3DReady();
