@@ -1,4 +1,4 @@
-import * as THREE from './three.module.js';
+import * as THREE from './three.module.js?v=20260924b';
 
 // A bounded 3D projection of the same reviewed graph used by the 2D view.
 const host = document.getElementById('atlas3d');
