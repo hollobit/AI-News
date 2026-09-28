@@ -1,10 +1,13 @@
 /* Shared request and lifecycle primitives; POST requests are never retried. */
 (() => {
   'use strict';
-  async function request(url, { body, signal, timeout = 90000, cache } = {}) {
+  async function request(url, { body, signal, timeout, cache } = {}) {
     const cached = body === undefined ? cache?.get(url) : null;
     const headers = body === undefined ? {} : { 'Content-Type': 'application/json' };
     if (cached?.etag) headers['If-None-Match'] = cached.etag;
+    // Status reads have a bound; durable job submissions keep the server's
+    // preparation deadline unless the caller explicitly requests a timeout.
+    if (timeout === undefined && body === undefined) timeout = 90000;
     if (timeout)
       signal = signal
         ? AbortSignal.any([signal, AbortSignal.timeout(timeout)])
