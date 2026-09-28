@@ -1,73 +1,1478 @@
 (() => {
-'use strict';
-const $=s=>document.querySelector(s),el=(tag,cls='',text='')=>{const n=document.createElement(tag);n.className=cls;n.textContent=text;return n;};
-const views={risk_history:['위험 시간축','원문 변화·평가 변경·기준 변경을 구분해 검토합니다.'],overview:['오늘의 전략 변화','중요한 변화에서 근거를 확인하고 결정과 연결합니다.'],events:['사건과 출처','같은 사건의 기사와 독립 확인 근거를 구분합니다.'],topics:['전략 주제 종합','문서별 검토 결과를 묶어 변화와 이견을 비교합니다.'],decisions:['전략 선택과 결정','선택지·비용·반대 근거와 재검토 조건을 함께 기록합니다.'],scenarios:['가설과 시나리오','가정과 관측 조건을 비교합니다. 시뮬레이션은 사실 예측이 아닙니다.'],research:['연구에서 도입까지','논문 발표와 재현·실증·도입 근거를 구분합니다.'],operations:['보완 작업과 실험','검토 사유와 처리 이력을 확인하고 개선 규칙을 검증합니다.'],concepts:['전략 개념 사전','용어의 별칭·언어·근거를 확인하고 잘못 묶인 개념을 분리합니다.'],experiments:['개선 실험','같은 사례에서 기존 규칙과 후보 규칙을 비교한 후 승격합니다.'],profiles:['판단 기준','중요도·위험·근거·기회의 가중치를 별도로 저장합니다.']};
-const leaf=location.pathname.split('/').filter(Boolean)[1]||'overview';let view=views[leaf]?leaf:'overview',selectedProfile='',page=1,totalPages=1,listAbort,loadId=0,currentItem=null,formAction=null,returnFocus=null;
-const labels={countries:'국가별 범위',languages:'언어별 범위',source_failures:'원문 수집 실패',failed_sources:'원문 수집 실패',country:'국가',language_counts:'언어별 건수',original_sources:'원출처',urls:'고유 URL',events:'사건',day:'날짜',status:'상태',summary:'요약',description:'설명',importance:'중요도',risk:'위험',evidence:'근거 확인 수준',opportunity:'기회',event_count:'사건 수',document_count:'문서 수',source_count:'원출처 수',independent_sources:'독립 출처',independent_confirmation:'독립 확인',independent_confirmation_count:'독립 확인 수',updated_at:'최근 갱신',review_at:'다음 검토',reason:'사유',question:'전략 질문',rationale:'선택 이유',hypothesis:'가설',options:'대응 선택지',benefits:'기대 효과',costs:'비용',prerequisites:'선행 조건',counter_evidence:'반대 근거',uncertainties:'불확실성',support_conditions:'지지 조건',refutation_conditions:'반박 조건',owner:'담당',assumptions:'가정',conditions:'관측 조건',momentum:'기간별 변화',disagreements:'이견',coverage:'분석 범위',stages:'처리 단계',history:'변경 이력',milestones:'실증·도입 근거',claims:'근거에 따른 주장',aliases:'별칭',language:'언어',rules:'개선 규칙',metrics:'관측 지표',result:'결과',results:'결과',verification:'검증',limitations:'해석 한계',state:'관측 상태',basis:'근거',name:'이름',value:'값',label:'이름',title:'제목',note:'기록',stage:'단계',next_review_at:'다음 확인',source_url:'원문',url:'링크',total:'전체',complete:'완료',pending:'대기',running:'진행',failed:'실패',needs_review:'검토 필요',source_lineage:'출처 계보',review_reasons:'검토 사유',documents:'근거 문서',original_source_url:'최초 원출처',independence:'출처 독립성',score_details:'검토 지수 산정 근거',selected_option_id:'선택한 대응',active_rules:'적용 중인 규칙',case_count:'비교 사례 수',candidate_id:'후보',topic_id:'연결 주제',decision_id:'연결 결정',evidence_ids:'근거 참조',created_at:'생성 시각',completed_at:'완료 시각',opportunities:'기회 근거',policy_observations:'정책 관측',source_count_unknown:'원출처 미확인 문서',grouping:'사건 묶음 기준',risk_count:'위험 항목',topic_count:'전략 주제',source_review_required:'원문 재검토',verified_documents:'검토 통과 문서',pending_documents:'검토 대기 문서',sources:'출처',confidence:'근거 신뢰',verification_status:'검토 상태'};
-const states={proposed:'제안',active:'진행',revised:'수정',withdrawn:'철회',complete:'완료',completed:'완료',running:'진행',queued:'대기',pending:'대기',needs_review:'검토 필요',failed:'실패',unknown:'미상',observed:'관측',not_observed:'미관측',contradicted:'반박 근거',supported:'지지 근거',excluded:'제외',rule_checked:'규칙 검토',accepted:'검토 통과',replication:'재현',benchmark:'성능 검증',implementation:'구현',pilot:'실증',deployment:'도입',procurement:'조달',standard:'표준',hypothetical:'가정',enforced:'시행 확인',suspended:'중단',negated:'부정 근거',refuted:'반박 근거',derived:'전재·파생',independent:'독립 확인',promoted:'적용',rolled_back:'적용 취소',candidate:'후보',matched_current:'현재 근거 일치'};
-const txt=v=>v==null?'미확인':v===''?'미상':typeof v==='boolean'?(v?'예':'아니오'):typeof v==='object'?JSON.stringify(v):states[v]||String(v);
-function link(text,url){try{const u=new URL(url,location.origin);if(!['http:','https:'].includes(u.protocol))return el('span','',text);const a=el('a','',text);a.href=u.href;if(u.origin!==location.origin){a.target='_blank';a.rel='noopener noreferrer';}return a;}catch(_){return el('span','',text);}}
-function notify(text){$('#notice').hidden=!text;$('#notice').textContent=text;}
-const api=(url,body,signal)=>Workspace.request(url,{body:body??undefined,signal});
-function button(label,fn){const b=el('button','',label);b.type='button';b.addEventListener('click',fn);return b;}
-function title(item){return item.title||item.label||item.name||item.question||item.paper_id||'제목 미제공';}
-function scores(item){const n=el('div','scores');for(const k of ['importance','risk','evidence','opportunity']){const value=(item.scores||{})[k];n.append(el('div','score',`${labels[k]} · ${value==null?'미평가':typeof value==='object'?value.label||(value.score??'미평가'):value}`));}return n;}
-function card(item){const c=el('article','card');c.append(el('span','badge',txt(item.status||item.verification_status||'unknown')));const h=el('h2');h.append(button(title(item),()=>detail(item)));h.firstChild.className='title-button';c.append(h);if(item.summary||item.description)c.append(el('p','',item.summary||item.description));if(item.scores)c.append(scores(item));const facts=[];for(const key of ['event_count','document_count','source_count','independent_confirmation_count'])if(item[key]!=null)facts.push(`${labels[key]} ${txt(item[key])}`);if(view==='events'&&item.independent_confirmation_count==null)facts.push('독립 확인 수 미확인');if(facts.length)c.append(el('p','muted',facts.join(' · ')));if(item.updated_at)c.append(el('p','muted','갱신 '+item.updated_at));if(item.momentum)momentumView(c,item.momentum);return c;}
-function momentumView(parent,value){const section=el('section','detail-section');section.append(el('h3','','기간별 변화'));if(!value.windows){const pieces=[value.days?`${value.days}일 비교`:'선택 기간',`현재 ${value.current??'미상'}`,`이전 ${value.previous??'미상'}`];if(value.share_change_pp!=null)pieces.push(`비중 변화 ${value.share_change_pp}pp`);section.append(el('p','',pieces.join(' · ')));if(value.low_sample)section.append(el('p','muted','표본이 적어 변화 해석에 주의가 필요합니다.'));if(value.coverage_changed)section.append(el('p','muted','수집 범위가 달라져 직접 비교에 한계가 있습니다.'));parent.append(section);return;}
-const wrap=el('div','table-wrap'),table=el('table'),head=el('tr');['기간','고유 URL · 현재/이전','사건 · 현재/이전','원출처 · 현재/이전','해석 조건'].forEach(t=>head.append(el('th','',t)));table.append(head);value.windows.forEach(w=>{const row=el('tr');row.append(el('td','',`${w.days??w.window_days}일`));['urls','events','original_sources'].forEach(k=>row.append(el('td','',`${w.current?.[k]??'미상'} / ${w.previous?.[k]??'미상'}`)));row.append(el('td','',[w.low_sample?'소표본':'',w.coverage_changed?'수집 범위 변경':''].filter(Boolean).join(' · ')||'비교 조건 확인'));table.append(row);});wrap.append(table);section.append(wrap);
-const series=value.series||[];if(series.length){const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 600 160');svg.setAttribute('role','img');svg.setAttribute('aria-label','최근 90일 고유 URL과 사건 수 추이');svg.style.width='100%';const max=Math.max(1,...series.flatMap(v=>[Number(v.urls)||0,Number(v.events)||0]));for(const [key,color]of [['urls','#24674b'],['events','#ba7927']]){const line=document.createElementNS(ns,'polyline');line.setAttribute('fill','none');line.setAttribute('stroke',color);line.setAttribute('stroke-width','2');line.setAttribute('points',series.map((v,i)=>`${20+i*560/Math.max(1,series.length-1)},${135-(Number(v[key])||0)*110/max}`).join(' '));svg.append(line);}section.append(svg,el('p','muted',`초록: 고유 URL · 주황: 사건 · 일별 최대 ${max}개 · ${series[0].day||''} ~ ${series.at(-1).day||''}`));const details=el('details');details.append(el('summary','',`일별 원자료 ${series.length}일 펼치기`));const rows=el('div');details.append(rows);details.addEventListener('toggle',()=>{if(details.open&&!rows.childNodes.length)renderObject(rows,'일별 집계',series);});section.append(details);}if(value.active_days_90!=null)section.append(el('p','muted',`최근 90일 중 관측된 날짜 ${value.active_days_90}일`));parent.append(section);}
-function renderObject(parent,label,value,depth=0){if(value==null)return;if(label==='기간별 변화'&&typeof value==='object'){momentumView(parent,value);return;}const section=el('section','detail-section');if(label)section.append(el(depth?'h4':'h3','',label));if(Array.isArray(value)){if(!value.length)section.append(el('p','muted','아직 기록이 없습니다.'));let visible=0;const content=el('div');section.append(content);function appendBatch(){value.slice(visible,visible+8).forEach(v=>{if(v&&typeof v==='object')renderObject(content,title(v)==='제목 미제공'?'':title(v),v,depth+1);else content.append(el('p','',txt(v)));});visible+=8;}appendBatch();if(value.length>8){const more=button(`더 보기 · 총 ${value.length}개`,()=>{appendBatch();more.hidden=visible>=value.length;});section.append(more);}}else if(typeof value==='object'){const dl=el('dl');for(const [k,v]of Object.entries(value)){if(['id','payload_json','snapshot_json','input_hash','report_hash','evidence_hash','snapshot','fingerprint','hash','version'].includes(k)||v==null)continue;if(typeof v==='object'){renderObject(section,labels[k]||k,v,depth+1);continue;}dl.append(el('dt','',labels[k]||k));const dd=el('dd');if(k==='url'||k==='source_url')dd.append(link('원문 확인',v));else dd.textContent=txt(v);dl.append(dd);}section.append(dl);}else section.append(el('p','',txt(value)));parent.append(section);}
-function evidence(parent,items){if(!items?.length)return;const wrap=el('details');wrap.append(el('summary','',`근거 ${items.length}개 펼치기`));const content=el('div');let visible=0;const more=button('근거 더 보기',()=>append());function append(){items.slice(visible,visible+8).forEach(e=>{const box=el('div','evidence');box.append(link(title(e),e.source_url||e.url||'#'));if(e.quote||e.text)box.append(el('p','',e.quote||e.text));if(e.document_id||e.id)box.append(el('p','muted','근거 식별자: '+(e.document_id||e.id)));content.append(box);});visible+=8;more.hidden=visible>=items.length;}wrap.append(content,more);wrap.addEventListener('toggle',()=>{if(wrap.open&&!visible)append();});parent.append(wrap);}
+  'use strict';
+  const $ = (s) => document.querySelector(s),
+    el = (tag, cls = '', text = '') => {
+      const n = document.createElement(tag);
+      n.className = cls;
+      n.textContent = text;
+      return n;
+    };
+  const views = {
+    risk_history: ['위험 시간축', '원문 변화·평가 변경·기준 변경을 구분해 검토합니다.'],
+    overview: ['오늘의 전략 변화', '중요한 변화에서 근거를 확인하고 결정과 연결합니다.'],
+    events: ['사건과 출처', '같은 사건의 기사와 독립 확인 근거를 구분합니다.'],
+    topics: ['전략 주제 종합', '문서별 검토 결과를 묶어 변화와 이견을 비교합니다.'],
+    decisions: ['전략 선택과 결정', '선택지·비용·반대 근거와 재검토 조건을 함께 기록합니다.'],
+    scenarios: [
+      '가설과 시나리오',
+      '가정과 관측 조건을 비교합니다. 시뮬레이션은 사실 예측이 아닙니다.',
+    ],
+    research: ['연구에서 도입까지', '논문 발표와 재현·실증·도입 근거를 구분합니다.'],
+    operations: ['보완 작업과 실험', '검토 사유와 처리 이력을 확인하고 개선 규칙을 검증합니다.'],
+    concepts: ['전략 개념 사전', '용어의 별칭·언어·근거를 확인하고 잘못 묶인 개념을 분리합니다.'],
+    experiments: ['개선 실험', '같은 사례에서 기존 규칙과 후보 규칙을 비교한 후 승격합니다.'],
+    profiles: ['판단 기준', '중요도·위험·근거·기회의 가중치를 별도로 저장합니다.'],
+  };
+  const leaf = location.pathname.split('/').filter(Boolean)[1] || 'overview';
+  let view = views[leaf] ? leaf : 'overview',
+    selectedProfile = '',
+    page = 1,
+    totalPages = 1,
+    listAbort,
+    loadId = 0,
+    currentItem = null,
+    formAction = null,
+    returnFocus = null;
+  const labels = {
+    countries: '국가별 범위',
+    languages: '언어별 범위',
+    source_failures: '원문 수집 실패',
+    failed_sources: '원문 수집 실패',
+    country: '국가',
+    language_counts: '언어별 건수',
+    original_sources: '원출처',
+    urls: '고유 URL',
+    events: '사건',
+    day: '날짜',
+    status: '상태',
+    summary: '요약',
+    description: '설명',
+    importance: '중요도',
+    risk: '위험',
+    evidence: '근거 확인 수준',
+    opportunity: '기회',
+    event_count: '사건 수',
+    document_count: '문서 수',
+    source_count: '원출처 수',
+    independent_sources: '독립 출처',
+    independent_confirmation: '독립 확인',
+    independent_confirmation_count: '독립 확인 수',
+    updated_at: '최근 갱신',
+    review_at: '다음 검토',
+    reason: '사유',
+    question: '전략 질문',
+    rationale: '선택 이유',
+    hypothesis: '가설',
+    options: '대응 선택지',
+    benefits: '기대 효과',
+    costs: '비용',
+    prerequisites: '선행 조건',
+    counter_evidence: '반대 근거',
+    uncertainties: '불확실성',
+    support_conditions: '지지 조건',
+    refutation_conditions: '반박 조건',
+    owner: '담당',
+    assumptions: '가정',
+    conditions: '관측 조건',
+    momentum: '기간별 변화',
+    disagreements: '이견',
+    coverage: '분석 범위',
+    stages: '처리 단계',
+    history: '변경 이력',
+    milestones: '실증·도입 근거',
+    claims: '근거에 따른 주장',
+    aliases: '별칭',
+    language: '언어',
+    rules: '개선 규칙',
+    metrics: '관측 지표',
+    result: '결과',
+    results: '결과',
+    verification: '검증',
+    limitations: '해석 한계',
+    state: '관측 상태',
+    basis: '근거',
+    name: '이름',
+    value: '값',
+    label: '이름',
+    title: '제목',
+    note: '기록',
+    stage: '단계',
+    next_review_at: '다음 확인',
+    source_url: '원문',
+    url: '링크',
+    total: '전체',
+    complete: '완료',
+    pending: '대기',
+    running: '진행',
+    failed: '실패',
+    needs_review: '검토 필요',
+    source_lineage: '출처 계보',
+    review_reasons: '검토 사유',
+    documents: '근거 문서',
+    original_source_url: '최초 원출처',
+    independence: '출처 독립성',
+    score_details: '검토 지수 산정 근거',
+    selected_option_id: '선택한 대응',
+    active_rules: '적용 중인 규칙',
+    case_count: '비교 사례 수',
+    candidate_id: '후보',
+    topic_id: '연결 주제',
+    decision_id: '연결 결정',
+    evidence_ids: '근거 참조',
+    created_at: '생성 시각',
+    completed_at: '완료 시각',
+    opportunities: '기회 근거',
+    policy_observations: '정책 관측',
+    source_count_unknown: '원출처 미확인 문서',
+    grouping: '사건 묶음 기준',
+    risk_count: '위험 항목',
+    topic_count: '전략 주제',
+    source_review_required: '원문 재검토',
+    verified_documents: '검토 통과 문서',
+    pending_documents: '검토 대기 문서',
+    sources: '출처',
+    confidence: '근거 신뢰',
+    verification_status: '검토 상태',
+  };
+  const states = {
+    proposed: '제안',
+    active: '진행',
+    revised: '수정',
+    withdrawn: '철회',
+    complete: '완료',
+    completed: '완료',
+    running: '진행',
+    queued: '대기',
+    pending: '대기',
+    needs_review: '검토 필요',
+    failed: '실패',
+    unknown: '미상',
+    observed: '관측',
+    not_observed: '미관측',
+    contradicted: '반박 근거',
+    supported: '지지 근거',
+    excluded: '제외',
+    rule_checked: '규칙 검토',
+    accepted: '검토 통과',
+    replication: '재현',
+    benchmark: '성능 검증',
+    implementation: '구현',
+    pilot: '실증',
+    deployment: '도입',
+    procurement: '조달',
+    standard: '표준',
+    hypothetical: '가정',
+    enforced: '시행 확인',
+    suspended: '중단',
+    negated: '부정 근거',
+    refuted: '반박 근거',
+    derived: '전재·파생',
+    independent: '독립 확인',
+    promoted: '적용',
+    rolled_back: '적용 취소',
+    candidate: '후보',
+    matched_current: '현재 근거 일치',
+  };
+  const txt = (v) =>
+    v == null
+      ? '미확인'
+      : v === ''
+        ? '미상'
+        : typeof v === 'boolean'
+          ? v
+            ? '예'
+            : '아니오'
+          : typeof v === 'object'
+            ? JSON.stringify(v)
+            : states[v] || String(v);
+  function link(text, url) {
+    try {
+      const u = new URL(url, location.origin);
+      if (!['http:', 'https:'].includes(u.protocol)) return el('span', '', text);
+      const a = el('a', '', text);
+      a.href = u.href;
+      if (u.origin !== location.origin) {
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      }
+      return a;
+    } catch (_) {
+      return el('span', '', text);
+    }
+  }
+  function notify(text) {
+    $('#notice').hidden = !text;
+    $('#notice').textContent = text;
+  }
+  const api = (url, body, signal) => Workspace.request(url, { body: body ?? undefined, signal });
+  function button(label, fn) {
+    const b = el('button', '', label);
+    b.type = 'button';
+    b.addEventListener('click', fn);
+    return b;
+  }
+  function title(item) {
+    return item.title || item.label || item.name || item.question || item.paper_id || '제목 미제공';
+  }
+  function scores(item) {
+    const n = el('div', 'scores');
+    for (const k of ['importance', 'risk', 'evidence', 'opportunity']) {
+      const value = (item.scores || {})[k];
+      n.append(
+        el(
+          'div',
+          'score',
+          `${labels[k]} · ${value == null ? '미평가' : typeof value === 'object' ? value.label || (value.score ?? '미평가') : value}`
+        )
+      );
+    }
+    return n;
+  }
+  function card(item) {
+    const c = el('article', 'card');
+    c.append(el('span', 'badge', txt(item.status || item.verification_status || 'unknown')));
+    const h = el('h2');
+    h.append(button(title(item), () => detail(item)));
+    h.firstChild.className = 'title-button';
+    c.append(h);
+    if (item.summary || item.description) c.append(el('p', '', item.summary || item.description));
+    if (item.scores) c.append(scores(item));
+    const facts = [];
+    for (const key of [
+      'event_count',
+      'document_count',
+      'source_count',
+      'independent_confirmation_count',
+    ])
+      if (item[key] != null) facts.push(`${labels[key]} ${txt(item[key])}`);
+    if (view === 'events' && item.independent_confirmation_count == null)
+      facts.push('독립 확인 수 미확인');
+    if (facts.length) c.append(el('p', 'muted', facts.join(' · ')));
+    if (item.updated_at) c.append(el('p', 'muted', '갱신 ' + item.updated_at));
+    if (item.momentum) momentumView(c, item.momentum);
+    return c;
+  }
+  function momentumView(parent, value) {
+    const section = el('section', 'detail-section');
+    section.append(el('h3', '', '기간별 변화'));
+    if (!value.windows) {
+      const pieces = [
+        value.days ? `${value.days}일 비교` : '선택 기간',
+        `현재 ${value.current ?? '미상'}`,
+        `이전 ${value.previous ?? '미상'}`,
+      ];
+      if (value.share_change_pp != null) pieces.push(`비중 변화 ${value.share_change_pp}pp`);
+      section.append(el('p', '', pieces.join(' · ')));
+      if (value.low_sample)
+        section.append(el('p', 'muted', '표본이 적어 변화 해석에 주의가 필요합니다.'));
+      if (value.coverage_changed)
+        section.append(el('p', 'muted', '수집 범위가 달라져 직접 비교에 한계가 있습니다.'));
+      parent.append(section);
+      return;
+    }
+    const wrap = el('div', 'table-wrap'),
+      table = el('table'),
+      head = el('tr');
+    ['기간', '고유 URL · 현재/이전', '사건 · 현재/이전', '원출처 · 현재/이전', '해석 조건'].forEach(
+      (t) => head.append(el('th', '', t))
+    );
+    table.append(head);
+    value.windows.forEach((w) => {
+      const row = el('tr');
+      row.append(el('td', '', `${w.days ?? w.window_days}일`));
+      ['urls', 'events', 'original_sources'].forEach((k) =>
+        row.append(el('td', '', `${w.current?.[k] ?? '미상'} / ${w.previous?.[k] ?? '미상'}`))
+      );
+      row.append(
+        el(
+          'td',
+          '',
+          [w.low_sample ? '소표본' : '', w.coverage_changed ? '수집 범위 변경' : '']
+            .filter(Boolean)
+            .join(' · ') || '비교 조건 확인'
+        )
+      );
+      table.append(row);
+    });
+    wrap.append(table);
+    section.append(wrap);
+    const series = value.series || [];
+    if (series.length) {
+      const ns = 'http://www.w3.org/2000/svg',
+        svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 600 160');
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-label', '최근 90일 고유 URL과 사건 수 추이');
+      svg.style.width = '100%';
+      const max = Math.max(
+        1,
+        ...series.flatMap((v) => [Number(v.urls) || 0, Number(v.events) || 0])
+      );
+      for (const [key, color] of [
+        ['urls', '#24674b'],
+        ['events', '#ba7927'],
+      ]) {
+        const line = document.createElementNS(ns, 'polyline');
+        line.setAttribute('fill', 'none');
+        line.setAttribute('stroke', color);
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute(
+          'points',
+          series
+            .map(
+              (v, i) =>
+                `${20 + (i * 560) / Math.max(1, series.length - 1)},${135 - ((Number(v[key]) || 0) * 110) / max}`
+            )
+            .join(' ')
+        );
+        svg.append(line);
+      }
+      section.append(
+        svg,
+        el(
+          'p',
+          'muted',
+          `초록: 고유 URL · 주황: 사건 · 일별 최대 ${max}개 · ${series[0].day || ''} ~ ${series.at(-1).day || ''}`
+        )
+      );
+      const details = el('details');
+      details.append(el('summary', '', `일별 원자료 ${series.length}일 펼치기`));
+      const rows = el('div');
+      details.append(rows);
+      details.addEventListener('toggle', () => {
+        if (details.open && !rows.childNodes.length) renderObject(rows, '일별 집계', series);
+      });
+      section.append(details);
+    }
+    if (value.active_days_90 != null)
+      section.append(el('p', 'muted', `최근 90일 중 관측된 날짜 ${value.active_days_90}일`));
+    parent.append(section);
+  }
+  function renderObject(parent, label, value, depth = 0) {
+    if (value == null) return;
+    if (label === '기간별 변화' && typeof value === 'object') {
+      momentumView(parent, value);
+      return;
+    }
+    const section = el('section', 'detail-section');
+    if (label) section.append(el(depth ? 'h4' : 'h3', '', label));
+    if (Array.isArray(value)) {
+      if (!value.length) section.append(el('p', 'muted', '아직 기록이 없습니다.'));
+      let visible = 0;
+      const content = el('div');
+      section.append(content);
+      function appendBatch() {
+        value.slice(visible, visible + 8).forEach((v) => {
+          if (v && typeof v === 'object')
+            renderObject(content, title(v) === '제목 미제공' ? '' : title(v), v, depth + 1);
+          else content.append(el('p', '', txt(v)));
+        });
+        visible += 8;
+      }
+      appendBatch();
+      if (value.length > 8) {
+        const more = button(`더 보기 · 총 ${value.length}개`, () => {
+          appendBatch();
+          more.hidden = visible >= value.length;
+        });
+        section.append(more);
+      }
+    } else if (typeof value === 'object') {
+      const dl = el('dl');
+      for (const [k, v] of Object.entries(value)) {
+        if (
+          [
+            'id',
+            'payload_json',
+            'snapshot_json',
+            'input_hash',
+            'report_hash',
+            'evidence_hash',
+            'snapshot',
+            'fingerprint',
+            'hash',
+            'version',
+          ].includes(k) ||
+          v == null
+        )
+          continue;
+        if (typeof v === 'object') {
+          renderObject(section, labels[k] || k, v, depth + 1);
+          continue;
+        }
+        dl.append(el('dt', '', labels[k] || k));
+        const dd = el('dd');
+        if (k === 'url' || k === 'source_url') dd.append(link('원문 확인', v));
+        else dd.textContent = txt(v);
+        dl.append(dd);
+      }
+      section.append(dl);
+    } else section.append(el('p', '', txt(value)));
+    parent.append(section);
+  }
+  function evidence(parent, items) {
+    if (!items?.length) return;
+    const wrap = el('details');
+    wrap.append(el('summary', '', `근거 ${items.length}개 펼치기`));
+    const content = el('div');
+    let visible = 0;
+    const more = button('근거 더 보기', () => append());
+    function append() {
+      items.slice(visible, visible + 8).forEach((e) => {
+        const box = el('div', 'evidence');
+        box.append(link(title(e), e.source_url || e.url || '#'));
+        if (e.quote || e.text) box.append(el('p', '', e.quote || e.text));
+        if (e.document_id || e.id)
+          box.append(el('p', 'muted', '근거 식별자: ' + (e.document_id || e.id)));
+        content.append(box);
+      });
+      visible += 8;
+      more.hidden = visible >= items.length;
+    }
+    wrap.append(content, more);
+    wrap.addEventListener('toggle', () => {
+      if (wrap.open && !visible) append();
+    });
+    parent.append(wrap);
+  }
 
-function render(data){const items=view==='overview'?(data.changes||data.items||[]):data.items||[];$('#items').replaceChildren(...items.map(card));if(!items.length)$('#items').append(el('p','empty','표시할 항목이 없습니다. 아직 평가하지 않은 상태를 변화 없음으로 해석하지 마세요.'));const c=data.metrics||data.coverage||{};$('#coverage').replaceChildren();$('#coverage-details')?.remove();if(data.coverage&&Object.values(data.coverage).some(v=>v&&typeof v==='object')){const d=el('details');d.id='coverage-details';d.append(el('summary','','수집 범위 · 국가·언어·실패 내역'));const body=el('div');d.append(body);d.addEventListener('toggle',()=>{if(d.open&&!body.childNodes.length)renderObject(body,'수집 범위',data.coverage);});$('#coverage').after(d);}Object.entries(c).filter(([,v])=>v==null||typeof v!=='object').slice(0,8).forEach(([k,v])=>{const n=el('div','metric');n.append(el('span','',labels[k]||k),el('strong','',txt(v)));$('#coverage').append(n);});page=data.page||data.pagination?.page||page;totalPages=data.total_pages||data.pagination?.total_pages||Math.max(1,Math.ceil((data.total||items.length)/12));$('#result-count').textContent=`${data.total??items.length}개 · ${view==='overview'?'우선 확인할 변화 최대 8개':'페이지당 최대 12개'}`;$('#page-label').textContent=`${page} / ${totalPages}`;$('#previous').disabled=page<=1;$('#next').disabled=page>=totalPages;if(view==='experiments'&&data.candidates?.length){const extra=el('details');extra.append(el('summary','',`후보 규칙 ${data.candidates.length}개`));data.candidates.forEach(c=>{const box=card(c);box.append(button('이 후보로 검증 실험',()=>openForm('experiment_start',c)));extra.append(box);});$('#items').append(extra);}if(data.active_rules)renderObject($('#items'),'현재 적용 규칙',data.active_rules);}
-async function load(){const seq=++loadId;listAbort?.abort();listAbort=new AbortController();notify('');const q=new URLSearchParams({view,page:String(page),page_size:'12',q:$('#search').value,window_days:$('#window').value});if(selectedProfile)q.set('profile_id',selectedProfile);if(view==='concepts'&&$('#include-excluded')?.checked)q.set('include_excluded','1');try{const d=await api('/api/intelligence?'+q,null,listAbort.signal);if(seq===loadId)render(d);}catch(e){if(e.name!=='AbortError')notify(e.message);}}
-const detailViews={events:'event',topics:'topic',decisions:'decision',scenarios:'scenario'};
-async function detail(item){if(view==='overview'&&item.href){try{const target=new URL(item.href,location.origin);if(target.origin===location.origin&&target.pathname.startsWith('/intelligence')){location.href=target.href;return;}}catch(_){}}currentItem=item;returnFocus=document.activeElement;$('#detail-title').textContent=title(item);$('#detail-body').replaceChildren(el('p','','상세를 불러오는 중입니다.'));$('#detail-dialog').showModal();try{const data=await api('/api/intelligence?'+new URLSearchParams({view:detailViews[view]||view,id:item.id||item.paper_id||'',page_size:'12',...(selectedProfile?{profile_id:selectedProfile}:{})}));currentItem=data.item||item;$('#detail-title').textContent=title(currentItem);const body=$('#detail-body');body.replaceChildren();const actions=el('div','actions');itemActions(currentItem).forEach(([label,key])=>actions.append(button(label,()=>openForm(key,currentItem))));body.append(actions);if(currentItem.scores)body.append(scores(currentItem));const advanced={};for(const [k,v]of Object.entries(currentItem)){if(['id','title','name','label','scores','evidence'].includes(k))continue;if(/hash|snapshot|fingerprint|version|owner|_id$|_ids$/.test(k)){advanced[k]=v;continue;}if(['claims','disagreements','score_details','opportunities','policy_observations','history','results'].includes(k)){const fold=el('details');fold.append(el('summary','',(labels[k]||k)+(Array.isArray(v)?` · ${v.length}개`:'')));const inner=el('div');fold.append(inner);fold.addEventListener('toggle',()=>{if(fold.open&&!inner.childNodes.length)renderObject(inner,labels[k]||k,v);});body.append(fold);}else renderObject(body,labels[k]||k,v);}if(Object.keys(advanced).length){const more=el('details');more.append(el('summary','','고급 기록 · 식별자와 관리 정보'));renderObject(more,'기록',advanced);body.append(more);}if(data.evidence_total>(data.evidence||[]).length)body.append(el('p','muted',`연결 근거 ${data.evidence_total}개 중 상세에서 ${(data.evidence||[]).length}개 제공. 나머지는 사건·문서 검색에서 확인하세요.`));evidence(body,data.evidence||currentItem.evidence);if(data.history)renderObject(body,view==='risk_history'?'위험 변화 이력':'변경 이력',data.history);if(['event','topic'].includes(detailViews[view])){const riskIds=currentItem.risk_ids||currentItem.risk_thread_ids||[];body.append(link('위험 시간축 확인','/intelligence/risk_history'+(riskIds.length?'?id='+encodeURIComponent(riskIds[0]):'')));}if(data.runs)renderObject(body,'비교 실행 결과',data.runs);}catch(e){$('#detail-body').replaceChildren(el('p','',e.message));}}
-const field=(name,label,type='text',required=false,extra={})=>({name,label,type,required,...extra});
-const commonReason=field('reason','근거와 사유','textarea',true);
-const defs={
-merge:{title:'사건 병합',resource:'events',action:'merge',fields:[field('ids','병합할 사건 ID · 한 줄에 하나','lines',true),commonReason]},
-source:{title:'출처 계보 검토',resource:'events',action:'source',note:'독립성은 사용자가 근거를 확인해 기록하는 값입니다. 자동으로 독립 확인을 확정하지 않습니다.',fields:[field('document_id','근거 문서 ID','text',true),field('original_source_url','최초 원출처 URL','url',true),field('independence','출처 관계','select',false,{choices:[['unknown','미확인'],['independent','독립 확인'],['derived','전재·파생']]}),commonReason]},
-split_event:{title:'사건에서 문서 분리',resource:'events',action:'split',fields:[field('id','사건 ID','text',true),field('document_ids','분리할 근거 문서','documents',true),commonReason]},
-decision_create:{title:'전략 결정 기록',resource:'decisions',action:'create',fields:[field('title','결정 제목','text',true),field('question','해결할 전략 질문','textarea',true),field('topic_id','연결할 주제 ID'),field('options','대응 선택지','options'),field('selected_option_id','선택할 대응 방안'),field('rationale','선택 이유','textarea'),field('hypothesis','검증할 가설','textarea'),field('support_conditions','가설을 지지하는 조건 · 한 줄에 하나','lines'),field('refutation_conditions','가설을 반박하는 조건 · 한 줄에 하나','lines'),field('owner','담당자'),field('review_at','다음 검토일','date'),field('evidence_ids','근거 문서','documents'),field('status','상태','select',false,{choices:['proposed','active','revised','withdrawn']})]},
-decision_review:{title:'새 근거로 결정 재검토',resource:'decisions',action:'review',fields:[field('id','결정 ID','text',true)]},
-scenario_create:{title:'시나리오 작성',resource:'scenarios',action:'create',fields:[field('title','시나리오 제목','text',true),field('topic_id','주제 ID'),field('decision_id','연결할 결정 ID'),field('assumptions','시나리오 가정','assumptions'),field('conditions','관측 조건','conditions')]},
-scenario_compare:{title:'시나리오 비교 분석',resource:'scenarios',action:'compare',note:'선택한 시나리오를 실제 AI 분석으로 비교합니다. 결과는 비동기로 생성됩니다.',fields:[field('ids','비교할 시나리오 ID · 한 줄에 하나','lines',true)]},
-scenario_draft:{title:'MiroFish 실행 초안',resource:'scenarios',action:'draft',note:'실행 초안을 생성합니다. 실제 시뮬레이션 실행은 실험실에서 확인합니다.',fields:[field('id','시나리오 ID','text',true)]},
-alias:{title:'개념 별칭 추가',resource:'concepts',action:'alias',fields:[field('concept_id','개념 ID','text',true),field('alias','별칭','text',true),field('language','언어 · 예: ko, en'),commonReason]},
-exclude:{title:'개념 제외·복원',resource:'concepts',action:'exclude',fields:[field('id','개념 ID','text',true),field('excluded','처리','select',false,{choices:[['true','제외'],['false','복원']]}),commonReason]},
-split_concept:{title:'개념 별칭 분리',resource:'concepts',action:'split',fields:[field('concept_id','원래 개념 ID','text',true),field('aliases','분리할 별칭 · 한 줄에 하나','lines',true),field('label','새 개념 이름','text',true),commonReason]},
-profile:{title:'판단 기준 저장',resource:'profiles',action:'save',fields:[field('name','기준 이름','text',true),...['importance','risk','evidence','opportunity'].map(k=>field('weight_'+k,labels[k]+' 가중치','number',true,{value:1,min:0,max:100}))]},
-experiment_candidate:{title:'개선 규칙 후보',resource:'experiments',action:'candidate',fields:[field('title','후보 이름','text',true),field('rules','제안 규칙 · 한 줄에 하나','lines',true)]},
-experiment_start:{title:'고정 사례 비교 실험',resource:'experiments',action:'start',note:'실제 AI 호출로 후보 규칙을 검증합니다. 승격은 결과를 확인한 뒤 별도로 결정합니다.',fields:[field('candidate_id','후보 ID','text',true),field('case_count','비교 사례 수','number',true,{value:6,min:1,max:24})]},
-experiment_resume:{title:'검증 실험 재개',resource:'experiments',action:'resume',fields:[field('id','실험 ID','text',true)]},
-experiment_promote:{title:'검증된 규칙 승격',resource:'experiments',action:'promote',note:'서버의 검증 기준을 통과한 실험만 활성 규칙으로 적용됩니다.',fields:[field('id','실험 ID','text',true)]},
-experiment_rollback:{title:'규칙 적용 롤백',resource:'experiments',action:'rollback',fields:[field('activation_id','되돌릴 적용 ID · 비우면 현재 적용')]},
-milestone:{title:'실증·도입 근거 연결',resource:'research',action:'milestone',fields:[field('paper_id','논문 ID','text',true),field('stage','단계','select',false,{choices:['replication','benchmark','implementation','pilot','deployment','procurement','standard']}),field('evidence_ids','연결할 근거 문서','documents',true),field('note','판단 근거와 한계','textarea',true)]}
-};
-defs.decision_update={...defs.decision_create,title:'전략 결정 수정',action:'update',fields:[field('id','결정 ID','text',true),...defs.decision_create.fields]};defs.scenario_update={...defs.scenario_create,title:'시나리오 조건 수정',action:'update',fields:[field('id','시나리오 ID','text',true),...defs.scenario_create.fields]};
-function itemActions(item){return ({events:[['이 사건 병합','merge'],['문서 분리','split_event'],['출처 계보 검토','source']],topics:[['이 주제로 결정 작성','decision_create'],['이 주제로 시나리오 작성','scenario_create']],decisions:[['결정 수정','decision_update'],['새 근거 재검토','decision_review']],scenarios:[['조건 수정','scenario_update'],['시나리오 비교','scenario_compare'],['MiroFish 초안','scenario_draft']],concepts:[['별칭 추가','alias'],['제외·복원','exclude'],['별칭 분리','split_concept']],research:[['실증·도입 근거 연결','milestone']],experiments:[['비교 실험 시작','experiment_start'],['중단된 실험 재개','experiment_resume'],['검증 규칙 승격','experiment_promote']],profiles:[['기준 수정','profile']]})[view]||[];}
-const repeated={options:[field('id','선택지 ID'),field('label','선택지 이름'),field('benefits','기대 효과','textarea'),field('costs','비용','textarea'),field('prerequisites','선행 조건','textarea'),field('counter_evidence','반대 근거','textarea'),field('uncertainties','불확실성','textarea')],assumptions:[field('name','가정 이름'),field('value','가정 값'),field('status','관측 상태','select',false,{choices:['hypothetical','unknown','proposed','enforced','suspended','negated']}),field('basis','근거 설명','textarea'),field('evidence_ids','가정 근거 문서','documents')],conditions:[field('label','관측 조건'),field('state','관측 상태','select',false,{choices:['unknown','observed','not_observed','refuted','proposed','enforced','suspended']}),field('next_review_at','다음 확인일','date')]};
-function inputField(f,value){const label=el('label','',f.label);let input;if(f.type==='select'){input=el('select');for(const choice of f.choices){const [v,t]=Array.isArray(choice)?choice:[choice,states[choice]||choice];const o=el('option','',t);o.value=v;input.append(o);}}else if(['textarea','lines'].includes(f.type))input=el('textarea');else{input=el('input');input.type=f.type==='documents'?'text':f.type;}input.name=f.name;input.required=!!f.required;if(f.min!=null)input.min=f.min;if(f.max!=null)input.max=f.max;const initialValue=Array.isArray(value)?value.join('\n'):value??f.value;if(f.type==='select'){if(initialValue!=null&&initialValue!==''&&[...input.options].some(o=>o.value===String(initialValue)))input.value=String(initialValue);else input.selectedIndex=0;}else input.value=initialValue??'';label.append(input);return {label,input};}
-function documentPicker(f,value){const wrap=el('div'),label=el('label','',f.label),select=el('select');select.multiple=true;select.size=5;select.name=f.name;select.required=!!f.required;for(const id of value||[]){const o=el('option','',id);o.value=id;o.selected=true;select.append(o);}label.append(select);const search=el('input');search.type='search';search.setAttribute('aria-label',f.label+' 검색');search.placeholder='문서 제목 검색';const status=el('p','muted');const find=button('문서 찾기',async()=>{find.disabled=true;try{const data=await api('/api/intelligence?'+new URLSearchParams({view:'documents',q:search.value,page_size:'12'}));const selected=new Set([...select.selectedOptions].map(o=>o.value));[...select.options].filter(o=>!o.selected).forEach(o=>o.remove());for(const item of data.items||[]){const id=item.document_id||item.id;if(!id||selected.has(id))continue;const o=el('option','',title(item));o.value=id;select.append(o);}status.textContent=`검색 결과 ${data.total??data.items?.length??0}개 · 여러 근거를 선택할 수 있습니다.`;}catch(e){status.textContent=e.message;}finally{find.disabled=false;}});wrap.append(label,search,find,status);return wrap;}
-function entityPicker(f,value,kind,multiple=false,item={}){const wrap=el('div'),label=el('label','',f.label.replace(/ ID.*$/,'')),select=el('select');select.name=f.name;select.multiple=multiple;select.size=multiple?5:1;select.required=!!f.required;if(!multiple){const blank=el('option','','선택하세요');blank.value='';select.append(blank);}const values=multiple?(Array.isArray(value)?value:value?[value]:[]):value?[value]:[];values.forEach(id=>{const o=el('option','',id===item.id?title(item):'연결된 항목');o.value=id;o.selected=true;select.append(o);});label.append(select);const search=el('input');search.type='search';search.placeholder='이름·제목 검색';search.setAttribute('aria-label',label.textContent+' 검색');const status=el('p','muted');const find=button('항목 찾기',async()=>{find.disabled=true;try{const data=await api('/api/intelligence?'+new URLSearchParams({view:kind==='candidates'?'experiments':kind,q:search.value,page_size:'24',include_excluded:kind==='concepts'?'1':'0',...(kind==='documents'&&view==='events'&&item.id?{event_id:item.id}:{})}));let items=kind==='candidates'?data.candidates||[]:data.items||[];if(kind==='documents'&&view==='events'&&item.document_ids?.length){const members=new Set(item.document_ids);items=items.filter(entry=>members.has(entry.document_id||entry.id));}const selected=new Set([...select.selectedOptions].map(o=>o.value));[...select.options].filter(o=>o.value&&!o.selected).forEach(o=>o.remove());items.forEach(entry=>{const id=kind==='documents'?(entry.document_id||entry.id):entry.id||entry.paper_id||entry.document_id;if(!id)return;const existing=[...select.options].find(o=>o.value===id);if(existing){existing.textContent=title(entry);return;}const o=el('option','',title(entry));o.value=id;o.selected=selected.has(id);select.append(o);});status.textContent=`${items.length}개 조회 · 이름으로 선택하세요.`;}catch(e){status.textContent=e.message;}finally{find.disabled=false;}});wrap.append(label,search,find,status);find.click();return wrap;}
-function entityKind(f,def){if(f.name==='topic_id')return 'topics';if(f.name==='decision_id')return 'decisions';if(f.name==='concept_id')return 'concepts';if(f.name==='candidate_id')return 'candidates';if(f.name==='paper_id')return 'research';if(f.name==='ids')return def.resource==='events'?'events':'scenarios';if(f.name==='id')return def.resource;if(f.name==='document_id')return 'documents';return null;}
-function syncOptionSelection(){const select=$('#selected-option');if(!select)return;const saved=select.dataset.initial??select.value;delete select.dataset.initial;select.replaceChildren();const blank=el('option','','미선택 · 대안 검토 중');blank.value='';select.append(blank);$('#form-fields').querySelectorAll('[data-repeated="options"] [data-row]').forEach(row=>{const id=row.querySelector('[name="id"]').value,label=row.querySelector('[name="label"]').value;const o=el('option','',label||'이름을 입력할 선택지');o.value=id;select.append(o);});select.value=[...select.options].some(o=>o.value===saved)?saved:'';}
-function repeatedField(f,values){const box=el('fieldset'),legend=el('legend','',f.label),rows=el('div');box.dataset.repeated=f.name;box.append(legend,rows);function add(v={}){const row=el('fieldset');row.dataset.row='true';repeated[f.type].forEach(part=>{if(part.type==='documents'){row.append(documentPicker(part,v[part.name]||[]));return;}const p=inputField(part,v[part.name]??(part.name==='id'?'option_'+Math.random().toString(36).slice(2,10):undefined));if(part.name==='id')p.label.hidden=true;row.append(p.label);});row.append(button('이 항목 삭제',()=>row.remove()));rows.append(row);}for(const v of values?.length?values:[{}])add(v);box.append(button('항목 추가',()=>add()));return box;}
-function openForm(key,item={}){formAction={key,item,def:defs[key]};const d=defs[key];$('#form-title').textContent=d.title;$('#form-error').textContent='';const area=$('#form-fields');area.replaceChildren();if(d.note)area.append(el('p','caution',d.note));d.fields.forEach(f=>{let v=item[f.name];if(['id','concept_id','candidate_id'].includes(f.name))v=v||item.id;if(f.name==='topic_id'&&view==='topics')v=item.id;if(f.name==='ids'&&item.id)v=[item.id];if(f.name.startsWith('weight_'))v=item.weights?.[f.name.slice(7)];if(f.name==='excluded')v=String(item.excluded??true);let wrapper;const kind=entityKind(f,d);if(f.name==='id'&&item.id){const n=inputField({...f,type:'hidden',required:false},item.id);wrapper=n.label;wrapper.hidden=true;}else if(f.name==='selected_option_id'){const n=inputField({...f,type:'select',choices:[['','미선택 · 대안 검토 중']]},'');n.input.id='selected-option';n.input.dataset.initial=v||'';wrapper=n.label;}else if(kind)wrapper=entityPicker(f,v,kind,f.name==='ids',item);else wrapper=repeated[f.type]?repeatedField(f,v):f.type==='documents'?documentPicker(f,v):inputField(f,v).label;wrapper.dataset.field=f.name;area.append(wrapper);});syncOptionSelection();if(!$('#form-dialog').open)$('#form-dialog').showModal();}
-function readInput(input,f){if(input.tagName==='SELECT'&&input.multiple)return [...input.selectedOptions].map(o=>o.value);if(input.tagName==='SELECT'&&f.name!=='excluded')return input.value;if(f.type==='documents')return [...input.selectedOptions].map(o=>o.value);if(f.type==='lines')return input.value.split('\n').map(v=>v.trim()).filter(Boolean);if(f.type==='number')return Number(input.value);if(f.name==='excluded')return input.value==='true';return input.value.trim();}
-$('#form-fields').addEventListener('input',syncOptionSelection);$('#form-fields').addEventListener('click',()=>setTimeout(syncOptionSelection,0));
-$('#action-form').addEventListener('submit',async e=>{e.preventDefault();const {def,item}=formAction,body={action:def.action};for(const f of def.fields){if(repeated[f.type]){const wrap=[...$('#form-fields').querySelectorAll('[data-repeated]')].find(n=>n.dataset.repeated===f.name);body[f.name]=[...wrap.querySelectorAll('[data-row]')].map(row=>Object.fromEntries(repeated[f.type].map(part=>[part.name,readInput(row.querySelector(`[name="${part.name}"]`),part)])));}else body[f.name]=readInput([...$('#form-fields').children].find(n=>n.dataset.field===f.name).querySelector('[name]'),f);}if(def.resource==='profiles'){body.weights={};for(const key of ['importance','risk','evidence','opportunity']){body.weights[key]=body['weight_'+key];delete body['weight_'+key];}if(item.id)body.id=item.id;}$('#form-submit').disabled=true;$('#form-error').textContent='';try{const result=await api('/api/intelligence/'+def.resource,body);$('#form-dialog').close();await load();notify(result.run?'분석을 접수했습니다. 상태 갱신으로 진행 결과를 확인하세요.':'저장했습니다.');if(result.item){currentItem=result.item;}if(result.run||result.comparison||result.draft){$('#detail-title').textContent='요청 결과';$('#detail-body').replaceChildren();renderObject($('#detail-body'),'처리 결과',result.run||result.comparison||result.draft);if(def.action==='draft'&&result.run?.id)$('#detail-body').append(link('MiroFish 실행 초안 열기','/simulation?run='+encodeURIComponent(result.run.id)));else if(result.run?.id)watchJob(result.run.id,result.run.kind);if(!$('#detail-dialog').open)$('#detail-dialog').showModal();}}catch(error){$('#form-error').textContent=error.message;}finally{$('#form-submit').disabled=false;}});
+  function render(data) {
+    const items = view === 'overview' ? data.changes || data.items || [] : data.items || [];
+    $('#items').replaceChildren(...items.map(card));
+    if (!items.length)
+      $('#items').append(
+        el(
+          'p',
+          'empty',
+          '표시할 항목이 없습니다. 아직 평가하지 않은 상태를 변화 없음으로 해석하지 마세요.'
+        )
+      );
+    const c = data.metrics || data.coverage || {};
+    $('#coverage').replaceChildren();
+    $('#coverage-details')?.remove();
+    if (data.coverage && Object.values(data.coverage).some((v) => v && typeof v === 'object')) {
+      const d = el('details');
+      d.id = 'coverage-details';
+      d.append(el('summary', '', '수집 범위 · 국가·언어·실패 내역'));
+      const body = el('div');
+      d.append(body);
+      d.addEventListener('toggle', () => {
+        if (d.open && !body.childNodes.length) renderObject(body, '수집 범위', data.coverage);
+      });
+      $('#coverage').after(d);
+    }
+    Object.entries(c)
+      .filter(([, v]) => v == null || typeof v !== 'object')
+      .slice(0, 8)
+      .forEach(([k, v]) => {
+        const n = el('div', 'metric');
+        n.append(el('span', '', labels[k] || k), el('strong', '', txt(v)));
+        $('#coverage').append(n);
+      });
+    page = data.page || data.pagination?.page || page;
+    totalPages =
+      data.total_pages ||
+      data.pagination?.total_pages ||
+      Math.max(1, Math.ceil((data.total || items.length) / 12));
+    $('#result-count').textContent =
+      `${data.total ?? items.length}개 · ${view === 'overview' ? '우선 확인할 변화 최대 8개' : '페이지당 최대 12개'}`;
+    $('#page-label').textContent = `${page} / ${totalPages}`;
+    $('#previous').disabled = page <= 1;
+    $('#next').disabled = page >= totalPages;
+    if (view === 'experiments' && data.candidates?.length) {
+      const extra = el('details');
+      extra.append(el('summary', '', `후보 규칙 ${data.candidates.length}개`));
+      data.candidates.forEach((c) => {
+        const box = card(c);
+        box.append(button('이 후보로 검증 실험', () => openForm('experiment_start', c)));
+        extra.append(box);
+      });
+      $('#items').append(extra);
+    }
+    if (data.active_rules) renderObject($('#items'), '현재 적용 규칙', data.active_rules);
+  }
+  async function load() {
+    const seq = ++loadId;
+    listAbort?.abort();
+    listAbort = new AbortController();
+    notify('');
+    const q = new URLSearchParams({
+      view,
+      page: String(page),
+      page_size: '12',
+      q: $('#search').value,
+      window_days: $('#window').value,
+    });
+    if (selectedProfile) q.set('profile_id', selectedProfile);
+    if (view === 'concepts' && $('#include-excluded')?.checked) q.set('include_excluded', '1');
+    try {
+      const d = await api('/api/intelligence?' + q, null, listAbort.signal);
+      if (seq === loadId) render(d);
+    } catch (e) {
+      if (e.name !== 'AbortError') notify(e.message);
+    }
+  }
+  const detailViews = {
+    events: 'event',
+    topics: 'topic',
+    decisions: 'decision',
+    scenarios: 'scenario',
+  };
+  async function detail(item) {
+    if (view === 'overview' && item.href) {
+      try {
+        const target = new URL(item.href, location.origin);
+        if (target.origin === location.origin && target.pathname.startsWith('/intelligence')) {
+          location.href = target.href;
+          return;
+        }
+      } catch (_) {}
+    }
+    currentItem = item;
+    returnFocus = document.activeElement;
+    $('#detail-title').textContent = title(item);
+    $('#detail-body').replaceChildren(el('p', '', '상세를 불러오는 중입니다.'));
+    $('#detail-dialog').showModal();
+    try {
+      const data = await api(
+        '/api/intelligence?' +
+          new URLSearchParams({
+            view: detailViews[view] || view,
+            id: item.id || item.paper_id || '',
+            page_size: '12',
+            ...(selectedProfile ? { profile_id: selectedProfile } : {}),
+          })
+      );
+      currentItem = data.item || item;
+      $('#detail-title').textContent = title(currentItem);
+      const body = $('#detail-body');
+      body.replaceChildren();
+      const actions = el('div', 'actions');
+      itemActions(currentItem).forEach(([label, key]) =>
+        actions.append(button(label, () => openForm(key, currentItem)))
+      );
+      body.append(actions);
+      if (currentItem.scores) body.append(scores(currentItem));
+      const advanced = {};
+      for (const [k, v] of Object.entries(currentItem)) {
+        if (['id', 'title', 'name', 'label', 'scores', 'evidence'].includes(k)) continue;
+        if (/hash|snapshot|fingerprint|version|owner|_id$|_ids$/.test(k)) {
+          advanced[k] = v;
+          continue;
+        }
+        if (
+          [
+            'claims',
+            'disagreements',
+            'score_details',
+            'opportunities',
+            'policy_observations',
+            'history',
+            'results',
+          ].includes(k)
+        ) {
+          const fold = el('details');
+          fold.append(
+            el('summary', '', (labels[k] || k) + (Array.isArray(v) ? ` · ${v.length}개` : ''))
+          );
+          const inner = el('div');
+          fold.append(inner);
+          fold.addEventListener('toggle', () => {
+            if (fold.open && !inner.childNodes.length) renderObject(inner, labels[k] || k, v);
+          });
+          body.append(fold);
+        } else renderObject(body, labels[k] || k, v);
+      }
+      if (Object.keys(advanced).length) {
+        const more = el('details');
+        more.append(el('summary', '', '고급 기록 · 식별자와 관리 정보'));
+        renderObject(more, '기록', advanced);
+        body.append(more);
+      }
+      if (data.evidence_total > (data.evidence || []).length)
+        body.append(
+          el(
+            'p',
+            'muted',
+            `연결 근거 ${data.evidence_total}개 중 상세에서 ${(data.evidence || []).length}개 제공. 나머지는 사건·문서 검색에서 확인하세요.`
+          )
+        );
+      evidence(body, data.evidence || currentItem.evidence);
+      if (data.history)
+        renderObject(body, view === 'risk_history' ? '위험 변화 이력' : '변경 이력', data.history);
+      if (['event', 'topic'].includes(detailViews[view])) {
+        const riskIds = currentItem.risk_ids || currentItem.risk_thread_ids || [];
+        body.append(
+          link(
+            '위험 시간축 확인',
+            '/intelligence/risk_history' +
+              (riskIds.length ? '?id=' + encodeURIComponent(riskIds[0]) : '')
+          )
+        );
+      }
+      if (data.runs) renderObject(body, '비교 실행 결과', data.runs);
+    } catch (e) {
+      $('#detail-body').replaceChildren(el('p', '', e.message));
+    }
+  }
+  const field = (name, label, type = 'text', required = false, extra = {}) => ({
+    name,
+    label,
+    type,
+    required,
+    ...extra,
+  });
+  const commonReason = field('reason', '근거와 사유', 'textarea', true);
+  const defs = {
+    merge: {
+      title: '사건 병합',
+      resource: 'events',
+      action: 'merge',
+      fields: [field('ids', '병합할 사건 ID · 한 줄에 하나', 'lines', true), commonReason],
+    },
+    source: {
+      title: '출처 계보 검토',
+      resource: 'events',
+      action: 'source',
+      note: '독립성은 사용자가 근거를 확인해 기록하는 값입니다. 자동으로 독립 확인을 확정하지 않습니다.',
+      fields: [
+        field('document_id', '근거 문서 ID', 'text', true),
+        field('original_source_url', '최초 원출처 URL', 'url', true),
+        field('independence', '출처 관계', 'select', false, {
+          choices: [
+            ['unknown', '미확인'],
+            ['independent', '독립 확인'],
+            ['derived', '전재·파생'],
+          ],
+        }),
+        commonReason,
+      ],
+    },
+    split_event: {
+      title: '사건에서 문서 분리',
+      resource: 'events',
+      action: 'split',
+      fields: [
+        field('id', '사건 ID', 'text', true),
+        field('document_ids', '분리할 근거 문서', 'documents', true),
+        commonReason,
+      ],
+    },
+    decision_create: {
+      title: '전략 결정 기록',
+      resource: 'decisions',
+      action: 'create',
+      fields: [
+        field('title', '결정 제목', 'text', true),
+        field('question', '해결할 전략 질문', 'textarea', true),
+        field('topic_id', '연결할 주제 ID'),
+        field('options', '대응 선택지', 'options'),
+        field('selected_option_id', '선택할 대응 방안'),
+        field('rationale', '선택 이유', 'textarea'),
+        field('hypothesis', '검증할 가설', 'textarea'),
+        field('support_conditions', '가설을 지지하는 조건 · 한 줄에 하나', 'lines'),
+        field('refutation_conditions', '가설을 반박하는 조건 · 한 줄에 하나', 'lines'),
+        field('owner', '담당자'),
+        field('review_at', '다음 검토일', 'date'),
+        field('evidence_ids', '근거 문서', 'documents'),
+        field('status', '상태', 'select', false, {
+          choices: ['proposed', 'active', 'revised', 'withdrawn'],
+        }),
+      ],
+    },
+    decision_review: {
+      title: '새 근거로 결정 재검토',
+      resource: 'decisions',
+      action: 'review',
+      fields: [field('id', '결정 ID', 'text', true)],
+    },
+    scenario_create: {
+      title: '시나리오 작성',
+      resource: 'scenarios',
+      action: 'create',
+      fields: [
+        field('title', '시나리오 제목', 'text', true),
+        field('topic_id', '주제 ID'),
+        field('decision_id', '연결할 결정 ID'),
+        field('assumptions', '시나리오 가정', 'assumptions'),
+        field('conditions', '관측 조건', 'conditions'),
+      ],
+    },
+    scenario_compare: {
+      title: '시나리오 비교 분석',
+      resource: 'scenarios',
+      action: 'compare',
+      note: '선택한 시나리오를 실제 AI 분석으로 비교합니다. 결과는 비동기로 생성됩니다.',
+      fields: [field('ids', '비교할 시나리오 ID · 한 줄에 하나', 'lines', true)],
+    },
+    scenario_draft: {
+      title: 'MiroFish 실행 초안',
+      resource: 'scenarios',
+      action: 'draft',
+      note: '실행 초안을 생성합니다. 실제 시뮬레이션 실행은 실험실에서 확인합니다.',
+      fields: [field('id', '시나리오 ID', 'text', true)],
+    },
+    alias: {
+      title: '개념 별칭 추가',
+      resource: 'concepts',
+      action: 'alias',
+      fields: [
+        field('concept_id', '개념 ID', 'text', true),
+        field('alias', '별칭', 'text', true),
+        field('language', '언어 · 예: ko, en'),
+        commonReason,
+      ],
+    },
+    exclude: {
+      title: '개념 제외·복원',
+      resource: 'concepts',
+      action: 'exclude',
+      fields: [
+        field('id', '개념 ID', 'text', true),
+        field('excluded', '처리', 'select', false, {
+          choices: [
+            ['true', '제외'],
+            ['false', '복원'],
+          ],
+        }),
+        commonReason,
+      ],
+    },
+    split_concept: {
+      title: '개념 별칭 분리',
+      resource: 'concepts',
+      action: 'split',
+      fields: [
+        field('concept_id', '원래 개념 ID', 'text', true),
+        field('aliases', '분리할 별칭 · 한 줄에 하나', 'lines', true),
+        field('label', '새 개념 이름', 'text', true),
+        commonReason,
+      ],
+    },
+    profile: {
+      title: '판단 기준 저장',
+      resource: 'profiles',
+      action: 'save',
+      fields: [
+        field('name', '기준 이름', 'text', true),
+        ...['importance', 'risk', 'evidence', 'opportunity'].map((k) =>
+          field('weight_' + k, labels[k] + ' 가중치', 'number', true, {
+            value: 1,
+            min: 0,
+            max: 100,
+          })
+        ),
+      ],
+    },
+    experiment_candidate: {
+      title: '개선 규칙 후보',
+      resource: 'experiments',
+      action: 'candidate',
+      fields: [
+        field('title', '후보 이름', 'text', true),
+        field('rules', '제안 규칙 · 한 줄에 하나', 'lines', true),
+      ],
+    },
+    experiment_start: {
+      title: '고정 사례 비교 실험',
+      resource: 'experiments',
+      action: 'start',
+      note: '실제 AI 호출로 후보 규칙을 검증합니다. 승격은 결과를 확인한 뒤 별도로 결정합니다.',
+      fields: [
+        field('candidate_id', '후보 ID', 'text', true),
+        field('case_count', '비교 사례 수', 'number', true, { value: 6, min: 1, max: 24 }),
+      ],
+    },
+    experiment_resume: {
+      title: '검증 실험 재개',
+      resource: 'experiments',
+      action: 'resume',
+      fields: [field('id', '실험 ID', 'text', true)],
+    },
+    experiment_promote: {
+      title: '검증된 규칙 승격',
+      resource: 'experiments',
+      action: 'promote',
+      note: '서버의 검증 기준을 통과한 실험만 활성 규칙으로 적용됩니다.',
+      fields: [field('id', '실험 ID', 'text', true)],
+    },
+    experiment_rollback: {
+      title: '규칙 적용 롤백',
+      resource: 'experiments',
+      action: 'rollback',
+      fields: [field('activation_id', '되돌릴 적용 ID · 비우면 현재 적용')],
+    },
+    milestone: {
+      title: '실증·도입 근거 연결',
+      resource: 'research',
+      action: 'milestone',
+      fields: [
+        field('paper_id', '논문 ID', 'text', true),
+        field('stage', '단계', 'select', false, {
+          choices: [
+            'replication',
+            'benchmark',
+            'implementation',
+            'pilot',
+            'deployment',
+            'procurement',
+            'standard',
+          ],
+        }),
+        field('evidence_ids', '연결할 근거 문서', 'documents', true),
+        field('note', '판단 근거와 한계', 'textarea', true),
+      ],
+    },
+  };
+  defs.decision_update = {
+    ...defs.decision_create,
+    title: '전략 결정 수정',
+    action: 'update',
+    fields: [field('id', '결정 ID', 'text', true), ...defs.decision_create.fields],
+  };
+  defs.scenario_update = {
+    ...defs.scenario_create,
+    title: '시나리오 조건 수정',
+    action: 'update',
+    fields: [field('id', '시나리오 ID', 'text', true), ...defs.scenario_create.fields],
+  };
+  function itemActions(item) {
+    return (
+      {
+        events: [
+          ['이 사건 병합', 'merge'],
+          ['문서 분리', 'split_event'],
+          ['출처 계보 검토', 'source'],
+        ],
+        topics: [
+          ['이 주제로 결정 작성', 'decision_create'],
+          ['이 주제로 시나리오 작성', 'scenario_create'],
+        ],
+        decisions: [
+          ['결정 수정', 'decision_update'],
+          ['새 근거 재검토', 'decision_review'],
+        ],
+        scenarios: [
+          ['조건 수정', 'scenario_update'],
+          ['시나리오 비교', 'scenario_compare'],
+          ['MiroFish 초안', 'scenario_draft'],
+        ],
+        concepts: [
+          ['별칭 추가', 'alias'],
+          ['제외·복원', 'exclude'],
+          ['별칭 분리', 'split_concept'],
+        ],
+        research: [['실증·도입 근거 연결', 'milestone']],
+        experiments: [
+          ['비교 실험 시작', 'experiment_start'],
+          ['중단된 실험 재개', 'experiment_resume'],
+          ['검증 규칙 승격', 'experiment_promote'],
+        ],
+        profiles: [['기준 수정', 'profile']],
+      }[view] || []
+    );
+  }
+  const repeated = {
+    options: [
+      field('id', '선택지 ID'),
+      field('label', '선택지 이름'),
+      field('benefits', '기대 효과', 'textarea'),
+      field('costs', '비용', 'textarea'),
+      field('prerequisites', '선행 조건', 'textarea'),
+      field('counter_evidence', '반대 근거', 'textarea'),
+      field('uncertainties', '불확실성', 'textarea'),
+    ],
+    assumptions: [
+      field('name', '가정 이름'),
+      field('value', '가정 값'),
+      field('status', '관측 상태', 'select', false, {
+        choices: ['hypothetical', 'unknown', 'proposed', 'enforced', 'suspended', 'negated'],
+      }),
+      field('basis', '근거 설명', 'textarea'),
+      field('evidence_ids', '가정 근거 문서', 'documents'),
+    ],
+    conditions: [
+      field('label', '관측 조건'),
+      field('state', '관측 상태', 'select', false, {
+        choices: [
+          'unknown',
+          'observed',
+          'not_observed',
+          'refuted',
+          'proposed',
+          'enforced',
+          'suspended',
+        ],
+      }),
+      field('next_review_at', '다음 확인일', 'date'),
+    ],
+  };
+  function inputField(f, value) {
+    const label = el('label', '', f.label);
+    let input;
+    if (f.type === 'select') {
+      input = el('select');
+      for (const choice of f.choices) {
+        const [v, t] = Array.isArray(choice) ? choice : [choice, states[choice] || choice];
+        const o = el('option', '', t);
+        o.value = v;
+        input.append(o);
+      }
+    } else if (['textarea', 'lines'].includes(f.type)) input = el('textarea');
+    else {
+      input = el('input');
+      input.type = f.type === 'documents' ? 'text' : f.type;
+    }
+    input.name = f.name;
+    input.required = !!f.required;
+    if (f.min != null) input.min = f.min;
+    if (f.max != null) input.max = f.max;
+    const initialValue = Array.isArray(value) ? value.join('\n') : (value ?? f.value);
+    if (f.type === 'select') {
+      if (
+        initialValue != null &&
+        initialValue !== '' &&
+        [...input.options].some((o) => o.value === String(initialValue))
+      )
+        input.value = String(initialValue);
+      else input.selectedIndex = 0;
+    } else input.value = initialValue ?? '';
+    label.append(input);
+    return { label, input };
+  }
+  function documentPicker(f, value) {
+    const wrap = el('div'),
+      label = el('label', '', f.label),
+      select = el('select');
+    select.multiple = true;
+    select.size = 5;
+    select.name = f.name;
+    select.required = !!f.required;
+    for (const id of value || []) {
+      const o = el('option', '', id);
+      o.value = id;
+      o.selected = true;
+      select.append(o);
+    }
+    label.append(select);
+    const search = el('input');
+    search.type = 'search';
+    search.setAttribute('aria-label', f.label + ' 검색');
+    search.placeholder = '문서 제목 검색';
+    const status = el('p', 'muted');
+    const find = button('문서 찾기', async () => {
+      find.disabled = true;
+      try {
+        const data = await api(
+          '/api/intelligence?' +
+            new URLSearchParams({ view: 'documents', q: search.value, page_size: '12' })
+        );
+        const selected = new Set([...select.selectedOptions].map((o) => o.value));
+        [...select.options].filter((o) => !o.selected).forEach((o) => o.remove());
+        for (const item of data.items || []) {
+          const id = item.document_id || item.id;
+          if (!id || selected.has(id)) continue;
+          const o = el('option', '', title(item));
+          o.value = id;
+          select.append(o);
+        }
+        status.textContent = `검색 결과 ${data.total ?? data.items?.length ?? 0}개 · 여러 근거를 선택할 수 있습니다.`;
+      } catch (e) {
+        status.textContent = e.message;
+      } finally {
+        find.disabled = false;
+      }
+    });
+    wrap.append(label, search, find, status);
+    return wrap;
+  }
+  function entityPicker(f, value, kind, multiple = false, item = {}) {
+    const wrap = el('div'),
+      label = el('label', '', f.label.replace(/ ID.*$/, '')),
+      select = el('select');
+    select.name = f.name;
+    select.multiple = multiple;
+    select.size = multiple ? 5 : 1;
+    select.required = !!f.required;
+    if (!multiple) {
+      const blank = el('option', '', '선택하세요');
+      blank.value = '';
+      select.append(blank);
+    }
+    const values = multiple
+      ? Array.isArray(value)
+        ? value
+        : value
+          ? [value]
+          : []
+      : value
+        ? [value]
+        : [];
+    values.forEach((id) => {
+      const o = el('option', '', id === item.id ? title(item) : '연결된 항목');
+      o.value = id;
+      o.selected = true;
+      select.append(o);
+    });
+    label.append(select);
+    const search = el('input');
+    search.type = 'search';
+    search.placeholder = '이름·제목 검색';
+    search.setAttribute('aria-label', label.textContent + ' 검색');
+    const status = el('p', 'muted');
+    const find = button('항목 찾기', async () => {
+      find.disabled = true;
+      try {
+        const data = await api(
+          '/api/intelligence?' +
+            new URLSearchParams({
+              view: kind === 'candidates' ? 'experiments' : kind,
+              q: search.value,
+              page_size: '24',
+              include_excluded: kind === 'concepts' ? '1' : '0',
+              ...(kind === 'documents' && view === 'events' && item.id
+                ? { event_id: item.id }
+                : {}),
+            })
+        );
+        let items = kind === 'candidates' ? data.candidates || [] : data.items || [];
+        if (kind === 'documents' && view === 'events' && item.document_ids?.length) {
+          const members = new Set(item.document_ids);
+          items = items.filter((entry) => members.has(entry.document_id || entry.id));
+        }
+        const selected = new Set([...select.selectedOptions].map((o) => o.value));
+        [...select.options].filter((o) => o.value && !o.selected).forEach((o) => o.remove());
+        items.forEach((entry) => {
+          const id =
+            kind === 'documents'
+              ? entry.document_id || entry.id
+              : entry.id || entry.paper_id || entry.document_id;
+          if (!id) return;
+          const existing = [...select.options].find((o) => o.value === id);
+          if (existing) {
+            existing.textContent = title(entry);
+            return;
+          }
+          const o = el('option', '', title(entry));
+          o.value = id;
+          o.selected = selected.has(id);
+          select.append(o);
+        });
+        status.textContent = `${items.length}개 조회 · 이름으로 선택하세요.`;
+      } catch (e) {
+        status.textContent = e.message;
+      } finally {
+        find.disabled = false;
+      }
+    });
+    wrap.append(label, search, find, status);
+    find.click();
+    return wrap;
+  }
+  function entityKind(f, def) {
+    if (f.name === 'topic_id') return 'topics';
+    if (f.name === 'decision_id') return 'decisions';
+    if (f.name === 'concept_id') return 'concepts';
+    if (f.name === 'candidate_id') return 'candidates';
+    if (f.name === 'paper_id') return 'research';
+    if (f.name === 'ids') return def.resource === 'events' ? 'events' : 'scenarios';
+    if (f.name === 'id') return def.resource;
+    if (f.name === 'document_id') return 'documents';
+    return null;
+  }
+  function syncOptionSelection() {
+    const select = $('#selected-option');
+    if (!select) return;
+    const saved = select.dataset.initial ?? select.value;
+    delete select.dataset.initial;
+    select.replaceChildren();
+    const blank = el('option', '', '미선택 · 대안 검토 중');
+    blank.value = '';
+    select.append(blank);
+    $('#form-fields')
+      .querySelectorAll('[data-repeated="options"] [data-row]')
+      .forEach((row) => {
+        const id = row.querySelector('[name="id"]').value,
+          label = row.querySelector('[name="label"]').value;
+        const o = el('option', '', label || '이름을 입력할 선택지');
+        o.value = id;
+        select.append(o);
+      });
+    select.value = [...select.options].some((o) => o.value === saved) ? saved : '';
+  }
+  function repeatedField(f, values) {
+    const box = el('fieldset'),
+      legend = el('legend', '', f.label),
+      rows = el('div');
+    box.dataset.repeated = f.name;
+    box.append(legend, rows);
+    function add(v = {}) {
+      const row = el('fieldset');
+      row.dataset.row = 'true';
+      repeated[f.type].forEach((part) => {
+        if (part.type === 'documents') {
+          row.append(documentPicker(part, v[part.name] || []));
+          return;
+        }
+        const p = inputField(
+          part,
+          v[part.name] ??
+            (part.name === 'id' ? 'option_' + Math.random().toString(36).slice(2, 10) : undefined)
+        );
+        if (part.name === 'id') p.label.hidden = true;
+        row.append(p.label);
+      });
+      row.append(button('이 항목 삭제', () => row.remove()));
+      rows.append(row);
+    }
+    for (const v of values?.length ? values : [{}]) add(v);
+    box.append(button('항목 추가', () => add()));
+    return box;
+  }
+  function openForm(key, item = {}) {
+    formAction = { key, item, def: defs[key] };
+    const d = defs[key];
+    $('#form-title').textContent = d.title;
+    $('#form-error').textContent = '';
+    const area = $('#form-fields');
+    area.replaceChildren();
+    if (d.note) area.append(el('p', 'caution', d.note));
+    d.fields.forEach((f) => {
+      let v = item[f.name];
+      if (['id', 'concept_id', 'candidate_id'].includes(f.name)) v = v || item.id;
+      if (f.name === 'topic_id' && view === 'topics') v = item.id;
+      if (f.name === 'ids' && item.id) v = [item.id];
+      if (f.name.startsWith('weight_')) v = item.weights?.[f.name.slice(7)];
+      if (f.name === 'excluded') v = String(item.excluded ?? true);
+      let wrapper;
+      const kind = entityKind(f, d);
+      if (f.name === 'id' && item.id) {
+        const n = inputField({ ...f, type: 'hidden', required: false }, item.id);
+        wrapper = n.label;
+        wrapper.hidden = true;
+      } else if (f.name === 'selected_option_id') {
+        const n = inputField(
+          { ...f, type: 'select', choices: [['', '미선택 · 대안 검토 중']] },
+          ''
+        );
+        n.input.id = 'selected-option';
+        n.input.dataset.initial = v || '';
+        wrapper = n.label;
+      } else if (kind) wrapper = entityPicker(f, v, kind, f.name === 'ids', item);
+      else
+        wrapper = repeated[f.type]
+          ? repeatedField(f, v)
+          : f.type === 'documents'
+            ? documentPicker(f, v)
+            : inputField(f, v).label;
+      wrapper.dataset.field = f.name;
+      area.append(wrapper);
+    });
+    syncOptionSelection();
+    if (!$('#form-dialog').open) $('#form-dialog').showModal();
+  }
+  function readInput(input, f) {
+    if (input.tagName === 'SELECT' && input.multiple)
+      return [...input.selectedOptions].map((o) => o.value);
+    if (input.tagName === 'SELECT' && f.name !== 'excluded') return input.value;
+    if (f.type === 'documents') return [...input.selectedOptions].map((o) => o.value);
+    if (f.type === 'lines')
+      return input.value
+        .split('\n')
+        .map((v) => v.trim())
+        .filter(Boolean);
+    if (f.type === 'number') return Number(input.value);
+    if (f.name === 'excluded') return input.value === 'true';
+    return input.value.trim();
+  }
+  $('#form-fields').addEventListener('input', syncOptionSelection);
+  $('#form-fields').addEventListener('click', () => setTimeout(syncOptionSelection, 0));
+  $('#action-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { def, item } = formAction,
+      body = { action: def.action };
+    for (const f of def.fields) {
+      if (repeated[f.type]) {
+        const wrap = [...$('#form-fields').querySelectorAll('[data-repeated]')].find(
+          (n) => n.dataset.repeated === f.name
+        );
+        body[f.name] = [...wrap.querySelectorAll('[data-row]')].map((row) =>
+          Object.fromEntries(
+            repeated[f.type].map((part) => [
+              part.name,
+              readInput(row.querySelector(`[name="${part.name}"]`), part),
+            ])
+          )
+        );
+      } else
+        body[f.name] = readInput(
+          [...$('#form-fields').children]
+            .find((n) => n.dataset.field === f.name)
+            .querySelector('[name]'),
+          f
+        );
+    }
+    if (def.resource === 'profiles') {
+      body.weights = {};
+      for (const key of ['importance', 'risk', 'evidence', 'opportunity']) {
+        body.weights[key] = body['weight_' + key];
+        delete body['weight_' + key];
+      }
+      if (item.id) body.id = item.id;
+    }
+    $('#form-submit').disabled = true;
+    $('#form-error').textContent = '';
+    try {
+      const result = await api('/api/intelligence/' + def.resource, body);
+      $('#form-dialog').close();
+      await load();
+      notify(
+        result.run ? '분석을 접수했습니다. 상태 갱신으로 진행 결과를 확인하세요.' : '저장했습니다.'
+      );
+      if (result.item) {
+        currentItem = result.item;
+      }
+      if (result.run || result.comparison || result.draft) {
+        $('#detail-title').textContent = '요청 결과';
+        $('#detail-body').replaceChildren();
+        renderObject(
+          $('#detail-body'),
+          '처리 결과',
+          result.run || result.comparison || result.draft
+        );
+        if (def.action === 'draft' && result.run?.id)
+          $('#detail-body').append(
+            link('MiroFish 실행 초안 열기', '/simulation?run=' + encodeURIComponent(result.run.id))
+          );
+        else if (result.run?.id) watchJob(result.run.id, result.run.kind);
+        if (!$('#detail-dialog').open) $('#detail-dialog').showModal();
+      }
+    } catch (error) {
+      $('#form-error').textContent = error.message;
+    } finally {
+      $('#form-submit').disabled = false;
+    }
+  });
 
-let jobId=null,jobTimer=null,jobBusy=false,jobKind=null;
-async function pollJob(){if(!jobId||jobBusy||document.hidden)return;jobBusy=true;const requestedJob=jobId;try{const data=await api('/api/intelligence?'+new URLSearchParams({view:jobKind==='rule_experiment'?'experiments':'job',id:requestedJob}));if(requestedJob!==jobId)return;const job=data.item||data;const target=$('#job-result');if(target){target.replaceChildren(el('p','',`분석 상태: ${txt(job.status)}`));if(job.error)target.append(el('p','',job.error));if(job.result)renderObject(target,'근거 기반 질의 결과',job.result);}if(['queued','running'].includes(job.status))jobTimer=setTimeout(pollJob,4000);else jobId=null;}catch(error){const target=$('#job-result');if(target)target.replaceChildren(el('p','',error.message));jobId=null;}finally{jobBusy=false;if(jobId&&requestedJob!==jobId)pollJob();}}
-function watchJob(id,kind=null){clearTimeout(jobTimer);jobId=id;jobKind=kind;let target=$('#job-result');if(!target){target=el('div');target.id='job-result';$('#detail-body').append(target);}pollJob();}
-document.addEventListener('visibilitychange',()=>{clearTimeout(jobTimer);if(!document.hidden)pollJob();});
-if(['overview','topics'].includes(view)){const box=el('section','detail-section'),form=el('form'),label=el('label','','저장 근거에 추가 질문'),question=el('textarea');question.required=true;question.minLength=3;question.maxLength=2000;question.placeholder='예: 중국 AI 자립의 병목은 무엇이며 반대 근거는 무엇인가요?';label.append(question);const modeLabel=el('label','','검색 범위'),mode=el('select');mode.id='query-mode';[['hybrid','주제와 전체 근거 함께'],['local','선택 주제 중심'],['global','전체 근거 종합']].forEach(([v,t])=>{const o=el('option','',t);o.value=v;mode.append(o);});modeLabel.append(mode);const topicsLabel=entityPicker(field('query_topics','관심 주제 · 비우면 전체'),[],'topics',true),topics=topicsLabel.querySelector('select');topics.setAttribute('aria-label','질의할 주제 선택');const submit=el('button','','근거 기반 질의');submit.type='submit';form.append(label,modeLabel,topicsLabel,submit);form.addEventListener('submit',async e=>{e.preventDefault();submit.disabled=true;try{const topicIds=[...topics.selectedOptions].map(o=>o.value);if(mode.value==='local'&&topicIds.length!==1)throw Error('선택 주제 중심 질의는 주제를 하나 선택해 주세요.');const data=await api('/api/intelligence/query',{question:question.value,mode:mode.value,topic_ids:topicIds});$('#detail-title').textContent='근거 기반 질의';$('#detail-body').replaceChildren(el('p','','분석을 접수했습니다.'));if(!$('#detail-dialog').open)$('#detail-dialog').showModal();watchJob(data.run.id);}catch(error){notify(error.message);}finally{submit.disabled=false;}});box.append(el('h2','','GraphRAG 추가 질의'),el('p','muted','실제 AI 분석을 실행합니다. 답변의 인용과 불확실성을 확인하세요.'),form);$('#actions').after(box);}
+  let jobId = null,
+    jobTimer = null,
+    jobBusy = false,
+    jobKind = null;
+  async function pollJob() {
+    if (!jobId || jobBusy || document.hidden) return;
+    jobBusy = true;
+    const requestedJob = jobId;
+    try {
+      const data = await api(
+        '/api/intelligence?' +
+          new URLSearchParams({
+            view: jobKind === 'rule_experiment' ? 'experiments' : 'job',
+            id: requestedJob,
+          })
+      );
+      if (requestedJob !== jobId) return;
+      const job = data.item || data;
+      const target = $('#job-result');
+      if (target) {
+        target.replaceChildren(el('p', '', `분석 상태: ${txt(job.status)}`));
+        if (job.error) target.append(el('p', '', job.error));
+        if (job.result) renderObject(target, '근거 기반 질의 결과', job.result);
+      }
+      if (['queued', 'running'].includes(job.status)) jobTimer = setTimeout(pollJob, 4000);
+      else jobId = null;
+    } catch (error) {
+      const target = $('#job-result');
+      if (target) target.replaceChildren(el('p', '', error.message));
+      jobId = null;
+    } finally {
+      jobBusy = false;
+      if (jobId && requestedJob !== jobId) pollJob();
+    }
+  }
+  function watchJob(id, kind = null) {
+    clearTimeout(jobTimer);
+    jobId = id;
+    jobKind = kind;
+    let target = $('#job-result');
+    if (!target) {
+      target = el('div');
+      target.id = 'job-result';
+      $('#detail-body').append(target);
+    }
+    pollJob();
+  }
+  document.addEventListener('visibilitychange', () => {
+    clearTimeout(jobTimer);
+    if (!document.hidden) pollJob();
+  });
+  if (['overview', 'topics'].includes(view)) {
+    const box = el('section', 'detail-section'),
+      form = el('form'),
+      label = el('label', '', '저장 근거에 추가 질문'),
+      question = el('textarea');
+    question.required = true;
+    question.minLength = 3;
+    question.maxLength = 2000;
+    question.placeholder = '예: 중국 AI 자립의 병목은 무엇이며 반대 근거는 무엇인가요?';
+    label.append(question);
+    const modeLabel = el('label', '', '검색 범위'),
+      mode = el('select');
+    mode.id = 'query-mode';
+    [
+      ['hybrid', '주제와 전체 근거 함께'],
+      ['local', '선택 주제 중심'],
+      ['global', '전체 근거 종합'],
+    ].forEach(([v, t]) => {
+      const o = el('option', '', t);
+      o.value = v;
+      mode.append(o);
+    });
+    modeLabel.append(mode);
+    const topicsLabel = entityPicker(
+        field('query_topics', '관심 주제 · 비우면 전체'),
+        [],
+        'topics',
+        true
+      ),
+      topics = topicsLabel.querySelector('select');
+    topics.setAttribute('aria-label', '질의할 주제 선택');
+    const submit = el('button', '', '근거 기반 질의');
+    submit.type = 'submit';
+    form.append(label, modeLabel, topicsLabel, submit);
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submit.disabled = true;
+      try {
+        const topicIds = [...topics.selectedOptions].map((o) => o.value);
+        if (mode.value === 'local' && topicIds.length !== 1)
+          throw Error('선택 주제 중심 질의는 주제를 하나 선택해 주세요.');
+        const data = await api('/api/intelligence/query', {
+          question: question.value,
+          mode: mode.value,
+          topic_ids: topicIds,
+        });
+        $('#detail-title').textContent = '근거 기반 질의';
+        $('#detail-body').replaceChildren(el('p', '', '분석을 접수했습니다.'));
+        if (!$('#detail-dialog').open) $('#detail-dialog').showModal();
+        watchJob(data.run.id);
+      } catch (error) {
+        notify(error.message);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+    box.append(
+      el('h2', '', 'GraphRAG 추가 질의'),
+      el('p', 'muted', '실제 AI 분석을 실행합니다. 답변의 인용과 불확실성을 확인하세요.'),
+      form
+    );
+    $('#actions').after(box);
+  }
 
+  async function initProfiles() {
+    if (!['overview', 'topics', 'events'].includes(view)) return;
+    const label = el('label', '', '판단 프로필'),
+      select = el('select');
+    select.id = 'active-profile';
+    select.setAttribute('aria-label', '적용할 판단 프로필');
+    const initial = el('option', '', '기본 판단 기준');
+    initial.value = '';
+    select.append(initial);
+    label.append(select);
+    $('#filters').append(label);
+    select.addEventListener('change', () => {
+      selectedProfile = select.value;
+      try {
+        localStorage.setItem('intelligence.profile', selectedProfile);
+      } catch (_) {}
+      page = 1;
+      load();
+    });
+    try {
+      const data = await api('/api/intelligence?view=profiles&page_size=100');
+      for (const item of data.items || []) {
+        const option = el('option', '', title(item));
+        option.value = item.id;
+        select.append(option);
+      }
+      let saved = '';
+      try {
+        saved = localStorage.getItem('intelligence.profile') || '';
+      } catch (_) {}
+      if (saved && [...select.options].some((o) => o.value === saved)) {
+        select.value = saved;
+        selectedProfile = saved;
+        load();
+      }
+    } catch (error) {
+      notify('판단 프로필 조회: ' + error.message);
+    }
+  }
+  if (view === 'concepts') {
+    const label = el('label', '', '제외한 개념도 표시'),
+      toggle = el('input');
+    toggle.type = 'checkbox';
+    toggle.id = 'include-excluded';
+    toggle.checked = true;
+    toggle.style.width = 'auto';
+    label.prepend(toggle);
+    $('#filters').append(label);
+    toggle.addEventListener('change', () => {
+      page = 1;
+      load();
+    });
+  }
 
-async function initProfiles(){if(!['overview','topics','events'].includes(view))return;const label=el('label','','판단 프로필'),select=el('select');select.id='active-profile';select.setAttribute('aria-label','적용할 판단 프로필');const initial=el('option','','기본 판단 기준');initial.value='';select.append(initial);label.append(select);$('#filters').append(label);select.addEventListener('change',()=>{selectedProfile=select.value;try{localStorage.setItem('intelligence.profile',selectedProfile);}catch(_){}page=1;load();});try{const data=await api('/api/intelligence?view=profiles&page_size=100');for(const item of data.items||[]){const option=el('option','',title(item));option.value=item.id;select.append(option);}let saved='';try{saved=localStorage.getItem('intelligence.profile')||'';}catch(_){}if(saved&&[...select.options].some(o=>o.value===saved)){select.value=saved;selectedProfile=saved;load();}}catch(error){notify('판단 프로필 조회: '+error.message);}}
-if(view==='concepts'){const label=el('label','','제외한 개념도 표시'),toggle=el('input');toggle.type='checkbox';toggle.id='include-excluded';toggle.checked=true;toggle.style.width='auto';label.prepend(toggle);$('#filters').append(label);toggle.addEventListener('change',()=>{page=1;load();});}
-
-for(const [key,[label]]of Object.entries(views)){const a=link(label,key==='overview'?'/intelligence':'/intelligence/'+key);if(key===view)a.setAttribute('aria-current','page');$('#sections').append(a);}$('#heading').textContent=views[view][0];$('#description').textContent=views[view][1];document.title=views[view][0]+' · 전략 검토실';$('#window-label').hidden=!['topics','events'].includes(view);const topActions={events:[['사건 병합','merge']],decisions:[['결정 기록','decision_create']],scenarios:[['시나리오 작성','scenario_create'],['시나리오 비교','scenario_compare']],concepts:[['별칭 추가','alias']],profiles:[['판단 기준 만들기','profile']],experiments:[['규칙 후보 작성','experiment_candidate'],['실험 시작','experiment_start'],['적용 롤백','experiment_rollback']],research:[['실증·도입 연결','milestone']]};(topActions[view]||[]).forEach(([label,key])=>$('#actions').append(button(label,()=>openForm(key))));if(view==='operations')$('#actions').append(link('개선 실험 관리','/intelligence/experiments'));if(view==='overview')$('#actions').append(link('판단 가중치 관리','/intelligence/profiles'));$('#filters').addEventListener('submit',e=>{e.preventDefault();page=1;load();});$('#refresh').addEventListener('click',load);$('#previous').addEventListener('click',()=>{page--;load();});$('#next').addEventListener('click',()=>{page++;load();});$('#detail-close').addEventListener('click',()=>$('#detail-dialog').close());$('#detail-dialog').addEventListener('close',()=>returnFocus?.focus());$('#form-close').addEventListener('click',()=>$('#form-dialog').close());initProfiles();load();const requestedId=new URLSearchParams(location.search).get('id');if(requestedId)detail({id:requestedId,title:'상세 조회'});
+  for (const [key, [label]] of Object.entries(views)) {
+    const a = link(label, key === 'overview' ? '/intelligence' : '/intelligence/' + key);
+    if (key === view) a.setAttribute('aria-current', 'page');
+    $('#sections').append(a);
+  }
+  $('#heading').textContent = views[view][0];
+  $('#description').textContent = views[view][1];
+  document.title = views[view][0] + ' · 전략 검토실';
+  $('#window-label').hidden = !['topics', 'events'].includes(view);
+  const topActions = {
+    events: [['사건 병합', 'merge']],
+    decisions: [['결정 기록', 'decision_create']],
+    scenarios: [
+      ['시나리오 작성', 'scenario_create'],
+      ['시나리오 비교', 'scenario_compare'],
+    ],
+    concepts: [['별칭 추가', 'alias']],
+    profiles: [['판단 기준 만들기', 'profile']],
+    experiments: [
+      ['규칙 후보 작성', 'experiment_candidate'],
+      ['실험 시작', 'experiment_start'],
+      ['적용 롤백', 'experiment_rollback'],
+    ],
+    research: [['실증·도입 연결', 'milestone']],
+  };
+  (topActions[view] || []).forEach(([label, key]) =>
+    $('#actions').append(button(label, () => openForm(key)))
+  );
+  if (view === 'operations')
+    $('#actions').append(link('개선 실험 관리', '/intelligence/experiments'));
+  if (view === 'overview') $('#actions').append(link('판단 가중치 관리', '/intelligence/profiles'));
+  $('#filters').addEventListener('submit', (e) => {
+    e.preventDefault();
+    page = 1;
+    load();
+  });
+  $('#refresh').addEventListener('click', load);
+  $('#previous').addEventListener('click', () => {
+    page--;
+    load();
+  });
+  $('#next').addEventListener('click', () => {
+    page++;
+    load();
+  });
+  $('#detail-close').addEventListener('click', () => $('#detail-dialog').close());
+  $('#detail-dialog').addEventListener('close', () => returnFocus?.focus());
+  $('#form-close').addEventListener('click', () => $('#form-dialog').close());
+  initProfiles();
+  load();
+  const requestedId = new URLSearchParams(location.search).get('id');
+  if (requestedId) detail({ id: requestedId, title: '상세 조회' });
 })();

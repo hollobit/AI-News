@@ -1,3 +1,76 @@
 <!doctype html>
-<html lang="ko"><head><link rel="stylesheet" href="/workspace.css"><script src="/workspace.js" defer></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>전략 검토실 · 하루 뉴스</title><link rel="stylesheet" href="/intelligence.css"><script src="/intelligence.js" defer></script></head>
-<body><a class="skip" href="#main">본문으로 이동</a><header><a class="brand" href="/intelligence">◈ 전략 검토실</a><nav aria-label="기존 관측 화면"><a href="/strategy">뉴스 관측소</a><a href="/risks">위험 평가</a><a href="/papers">논문</a></nav></header><div class="layout"><nav id="sections" aria-label="전략 검토 메뉴"></nav><main id="main"><div class="heading"><div><p class="eyebrow">EVIDENCE → REVIEW → DECISION</p><h1 id="heading">전략 검토실</h1><p id="description"></p></div><button id="refresh">새로고침</button></div><p id="notice" role="status" aria-live="polite" hidden></p><div id="coverage" class="metrics"></div><div id="actions" class="actions"></div><form id="filters" class="filters"><label>검색<input name="q" id="search" type="search" placeholder="제목·주제 검색"></label><label id="window-label">관측 기간<select id="window" name="window_days"><option value="7">7일</option><option value="28" selected>28일</option><option value="90">90일</option></select></label><button>검색</button></form><p class="caution">중요도·위험·근거 신뢰·기회는 서로 다른 판단입니다. 사건 수와 독립 확인 수를 구분하며, 미평가를 0으로 해석하지 않습니다.</p><p id="result-count" aria-live="polite"></p><div id="items" class="cards"></div><nav class="pagination" aria-label="목록 페이지"><button id="previous">이전</button><span id="page-label"></span><button id="next">다음</button></nav></main></div><dialog id="detail-dialog"><div class="dialog-heading"><h2 id="detail-title">상세</h2><button id="detail-close" aria-label="상세 닫기">닫기</button></div><div id="detail-body"></div></dialog><dialog id="form-dialog"><div class="dialog-heading"><h2 id="form-title">작업</h2><button id="form-close" aria-label="작업 닫기">닫기</button></div><form id="action-form"><div id="form-fields"></div><p id="form-error" role="alert"></p><button id="form-submit" type="submit">저장</button></form></dialog></body></html>
+<html lang="ko">
+  <head>
+    <link rel="stylesheet" href="/workspace.css" />
+    <script src="/workspace.js" defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>전략 검토실 · 하루 뉴스</title>
+    <link rel="stylesheet" href="/intelligence.css" />
+    <script src="/intelligence.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">본문으로 이동</a>
+    <header>
+      <a class="brand" href="/intelligence">◈ 전략 검토실</a>
+      <nav aria-label="기존 관측 화면">
+        <a href="/strategy">뉴스 관측소</a><a href="/risks">위험 평가</a><a href="/papers">논문</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <nav id="sections" aria-label="전략 검토 메뉴"></nav>
+      <main id="main">
+        <div class="heading">
+          <div>
+            <p class="eyebrow">EVIDENCE → REVIEW → DECISION</p>
+            <h1 id="heading">전략 검토실</h1>
+            <p id="description"></p>
+          </div>
+          <button id="refresh">새로고침</button>
+        </div>
+        <p id="notice" role="status" aria-live="polite" hidden></p>
+        <div id="coverage" class="metrics"></div>
+        <div id="actions" class="actions"></div>
+        <form id="filters" class="filters">
+          <label
+            >검색<input name="q" id="search" type="search" placeholder="제목·주제 검색" /></label
+          ><label id="window-label"
+            >관측 기간<select id="window" name="window_days">
+              <option value="7">7일</option>
+              <option value="28" selected>28일</option>
+              <option value="90">90일</option>
+            </select></label
+          ><button>검색</button>
+        </form>
+        <p class="caution">
+          중요도·위험·근거 신뢰·기회는 서로 다른 판단입니다. 사건 수와 독립 확인 수를 구분하며,
+          미평가를 0으로 해석하지 않습니다.
+        </p>
+        <p id="result-count" aria-live="polite"></p>
+        <div id="items" class="cards"></div>
+        <nav class="pagination" aria-label="목록 페이지">
+          <button id="previous">이전</button><span id="page-label"></span
+          ><button id="next">다음</button>
+        </nav>
+      </main>
+    </div>
+    <dialog id="detail-dialog">
+      <div class="dialog-heading">
+        <h2 id="detail-title">상세</h2>
+        <button id="detail-close" aria-label="상세 닫기">닫기</button>
+      </div>
+      <div id="detail-body"></div>
+    </dialog>
+    <dialog id="form-dialog">
+      <div class="dialog-heading">
+        <h2 id="form-title">작업</h2>
+        <button id="form-close" aria-label="작업 닫기">닫기</button>
+      </div>
+      <form id="action-form">
+        <div id="form-fields"></div>
+        <p id="form-error" role="alert"></p>
+        <button id="form-submit" type="submit">저장</button>
+      </form>
+    </dialog>
+  </body>
+</html>

@@ -1,1 +1,110 @@
-<!doctype html><html lang="ko"><head><link rel="stylesheet" href="/workspace.css"><script src="/workspace.js" defer></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>위험 평가 · 하루 뉴스</title><link rel="stylesheet" href="/strategy.css"><link rel="stylesheet" href="/papers.css"><link rel="stylesheet" href="/risks.css"><script src="/risks.js" defer></script></head><body><a class="skip" href="#main">본문으로 이동</a><header class="paper-header"><a class="paper-brand" href="/strategy">◈ AI OBSERVATORY</a><nav aria-label="주 메뉴"><a href="/intelligence">전략 검토실</a><a href="/strategy">전략 관측소</a><a href="/risks" aria-current="page">위험 평가</a><a href="/papers">논문·연구동향</a></nav></header><main id="main" class="paper-main"><section class="page-heading"><div><div class="eyebrow">RISK EVIDENCE / PRIORITY</div><h1>위험 평가와 검토 우선순위</h1><p>현재 위협과 미래 시나리오를 구분하고, 먼저 확인할 근거를 찾습니다.</p></div><button id="risk-refresh" class="button">평가 목록 갱신</button></section><div id="risk-notice" class="notice" role="status" hidden></div><p class="subtle">0–100점은 규칙 기반 검토 순위입니다. 발생 확률이나 세계 전체의 위험 점수가 아닙니다. 미상 항목은 0점으로 확정하지 않습니다.</p><div id="risk-coverage" class="risk-counts"></div><div id="risk-pending"></div><details class="risk-method"><summary>점수 산정과 미평가 항목의 해석</summary><div id="risk-scoring-method"></div><p>현재 근거·향후 시나리오·영향 분야에 가중치를 적용합니다. 부분 평가의 범위는 미상 입력에 따라 가능한 점수 범위이며 통계적 신뢰구간이 아닙니다. 근거 검토는 출처와의 정합성 확인이며 외부 사실 확인을 뜻하지 않습니다.</p></details><section class="section"><div class="filters"><label class="search"><input id="risk-search" type="search" placeholder="위험 제목·근거 검색" aria-label="위험 검색"></label><select id="risk-sort" aria-label="위험 정렬"><option value="priority">검토 우선순</option><option value="recent">분석 최신순</option></select><select id="risk-domain" aria-label="영향 분야"><option value="">모든 영향 분야</option><option value="economy">국가경제</option><option value="security">국가안보</option><option value="industry">산업</option><option value="exports">수출</option><option value="social">사회적 문제</option><option value="life">생활</option><option value="education">교육</option></select><select id="risk-severity" aria-label="현재 위협 수준"><option value="">현재 수준 전체</option><option value="unknown">미상</option><option value="low">낮음</option><option value="moderate">보통</option><option value="high">높음</option><option value="critical">심각</option></select><select id="risk-likelihood" aria-label="미래 발생 가능성"><option value="">미래 가능성 전체</option><option value="unknown">미상</option><option value="low">낮음</option><option value="moderate">보통</option><option value="high">높음</option></select><select id="risk-status" aria-label="평가 상태"><option value="all">활성 평가 전체</option><option value="scored">점수 산정 완료</option><option value="needs_review">검토 필요</option><option value="history">철회·정정 이력</option><option value="withdrawn">원문 오류 철회</option><option value="superseded">후속 평가로 대체된 이력</option><option value="resolved">후속 검토 통과 정정</option></select><button id="risk-clear" class="button">필터 초기화</button></div><p id="risk-result-count" class="subtle" aria-live="polite"></p><div id="risk-list" class="risk-page-list"><div class="empty">위험 평가를 불러오는 중입니다.</div></div><nav class="risk-pagination" aria-label="위험 목록 페이지"><button id="risk-prev" class="button" disabled>이전</button><span id="risk-page-number"></span><button id="risk-next" class="button" disabled>다음</button></nav></section></main><dialog id="risk-dialog"><div class="dialog-top"><span class="eyebrow">RISK EVIDENCE DETAIL</span><button id="risk-close" class="icon-button" aria-label="위험 상세 닫기">×</button></div><div id="risk-detail"></div></dialog></body></html>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <link rel="stylesheet" href="/workspace.css" />
+    <script src="/workspace.js" defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>위험 평가 · 하루 뉴스</title>
+    <link rel="stylesheet" href="/strategy.css" />
+    <link rel="stylesheet" href="/papers.css" />
+    <link rel="stylesheet" href="/risks.css" />
+    <script src="/risks.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">본문으로 이동</a>
+    <header class="paper-header">
+      <a class="paper-brand" href="/strategy">◈ AI OBSERVATORY</a>
+      <nav aria-label="주 메뉴">
+        <a href="/intelligence">전략 검토실</a><a href="/strategy">전략 관측소</a
+        ><a href="/risks" aria-current="page">위험 평가</a><a href="/papers">논문·연구동향</a>
+      </nav>
+    </header>
+    <main id="main" class="paper-main">
+      <section class="page-heading">
+        <div>
+          <div class="eyebrow">RISK EVIDENCE / PRIORITY</div>
+          <h1>위험 평가와 검토 우선순위</h1>
+          <p>현재 위협과 미래 시나리오를 구분하고, 먼저 확인할 근거를 찾습니다.</p>
+        </div>
+        <button id="risk-refresh" class="button">평가 목록 갱신</button>
+      </section>
+      <div id="risk-notice" class="notice" role="status" hidden></div>
+      <p class="subtle">
+        0–100점은 규칙 기반 검토 순위입니다. 발생 확률이나 세계 전체의 위험 점수가 아닙니다. 미상
+        항목은 0점으로 확정하지 않습니다.
+      </p>
+      <div id="risk-coverage" class="risk-counts"></div>
+      <div id="risk-pending"></div>
+      <details class="risk-method">
+        <summary>점수 산정과 미평가 항목의 해석</summary>
+        <div id="risk-scoring-method"></div>
+        <p>
+          현재 근거·향후 시나리오·영향 분야에 가중치를 적용합니다. 부분 평가의 범위는 미상 입력에
+          따라 가능한 점수 범위이며 통계적 신뢰구간이 아닙니다. 근거 검토는 출처와의 정합성 확인이며
+          외부 사실 확인을 뜻하지 않습니다.
+        </p>
+      </details>
+      <section class="section">
+        <div class="filters">
+          <label class="search"
+            ><input
+              id="risk-search"
+              type="search"
+              placeholder="위험 제목·근거 검색"
+              aria-label="위험 검색" /></label
+          ><select id="risk-sort" aria-label="위험 정렬">
+            <option value="priority">검토 우선순</option>
+            <option value="recent">분석 최신순</option></select
+          ><select id="risk-domain" aria-label="영향 분야">
+            <option value="">모든 영향 분야</option>
+            <option value="economy">국가경제</option>
+            <option value="security">국가안보</option>
+            <option value="industry">산업</option>
+            <option value="exports">수출</option>
+            <option value="social">사회적 문제</option>
+            <option value="life">생활</option>
+            <option value="education">교육</option></select
+          ><select id="risk-severity" aria-label="현재 위협 수준">
+            <option value="">현재 수준 전체</option>
+            <option value="unknown">미상</option>
+            <option value="low">낮음</option>
+            <option value="moderate">보통</option>
+            <option value="high">높음</option>
+            <option value="critical">심각</option></select
+          ><select id="risk-likelihood" aria-label="미래 발생 가능성">
+            <option value="">미래 가능성 전체</option>
+            <option value="unknown">미상</option>
+            <option value="low">낮음</option>
+            <option value="moderate">보통</option>
+            <option value="high">높음</option></select
+          ><select id="risk-status" aria-label="평가 상태">
+            <option value="all">활성 평가 전체</option>
+            <option value="scored">점수 산정 완료</option>
+            <option value="needs_review">검토 필요</option>
+            <option value="history">철회·정정 이력</option>
+            <option value="withdrawn">원문 오류 철회</option>
+            <option value="superseded">후속 평가로 대체된 이력</option>
+            <option value="resolved">후속 검토 통과 정정</option></select
+          ><button id="risk-clear" class="button">필터 초기화</button>
+        </div>
+        <p id="risk-result-count" class="subtle" aria-live="polite"></p>
+        <div id="risk-list" class="risk-page-list">
+          <div class="empty">위험 평가를 불러오는 중입니다.</div>
+        </div>
+        <nav class="risk-pagination" aria-label="위험 목록 페이지">
+          <button id="risk-prev" class="button" disabled>이전</button
+          ><span id="risk-page-number"></span
+          ><button id="risk-next" class="button" disabled>다음</button>
+        </nav>
+      </section>
+    </main>
+    <dialog id="risk-dialog">
+      <div class="dialog-top">
+        <span class="eyebrow">RISK EVIDENCE DETAIL</span
+        ><button id="risk-close" class="icon-button" aria-label="위험 상세 닫기">×</button>
+      </div>
+      <div id="risk-detail"></div>
+    </dialog>
+  </body>
+</html>

@@ -1,3 +1,115 @@
-<!doctype html><html lang="ko"><head><link rel="stylesheet" href="/workspace.css"><script src="/workspace.js" defer></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>외부 자료 읽기 · AI 전략 관측소</title><link rel="stylesheet" href="/sources.css"><script src="/sources.js" defer></script></head><body><a class="workspace-skip" href="#main">본문으로 이동</a><main id="main"><nav><a href="/strategy">← 전략 관측소</a><a href="/graph">근거 관계 지도 ↗</a></nav><header><p class="eyebrow">AGENT REACH</p><h1>외부 자료를 분석 근거로</h1><p>공개 웹·X 게시물·GitHub·YouTube·RSS를 읽고, 출처와 수집 범위를 함께 보관합니다.</p></header><section><h2>자료 읽기</h2><form id="read-form"><label for="url">공개 자료 URL</label><div class="inputs"><input id="url" type="url" placeholder="https://…" required maxlength="2048"><select id="mode" aria-label="읽기 형식"><option value="auto">자동 판별</option><option value="rss">RSS / Atom</option></select><button>읽고 저장</button></div></form><p class="hint">읽은 자료는 GraphRAG의 원문 근거로 검색됩니다. 수집 자체가 사실 검증이나 심층 분석 완료를 뜻하지 않습니다.</p><div id="read-status" role="status"></div><article id="read-result" hidden></article></section><section><h2>복구와 추가 근거 보강</h2><p id="pipeline-counts" role="status">상태 확인 중…</p><button id="repair">실패·잘린 원문 최대 50건 복구</button><p id="pipeline-message" role="status"></p><p class="hint">오류별 대기 시간을 적용하며 최대 3회 시도합니다. 본문이 달라진 URL만 별도 재검토합니다. 외부 검색은 첫 GraphRAG 응답 이후 실행됩니다.</p><div id="pipeline-jobs"></div></section>
-<section><h2>전략 주제별 정기 관측</h2><form id="subscription-form"><label>RSS 또는 관측할 단일 자료 URL<input id="subscription-url" type="url" required maxlength="2048" placeholder="https://…"></label><div class="inputs"><label>출처 이름<input id="subscription-label" maxlength="100" required></label><label>관심 전략 키워드<input id="subscription-keywords" maxlength="300" placeholder="예: AI 인프라, 반도체"></label><select id="subscription-mode" aria-label="구독 방식"><option value="rss">RSS/Atom · 기사별 읽기</option><option value="auto">단일 자료 변경 관측</option></select><select id="subscription-interval" aria-label="확인 간격"><option value="21600">6시간마다</option><option value="3600">1시간마다</option><option value="86400">하루마다</option></select><button>관측 추가</button></div></form><p class="hint">관심 키워드는 구독 관리용입니다. 실제 전략 주제 연결은 수집 본문의 관측 근거로 판별합니다. 발행일 미상 자료는 수집 관측일로 표시합니다.</p><div id="subscriptions"></div></section>
-<section><h2>출처별 상태·변경 이력</h2><div id="source-health"></div><form id="passage-form"><label>보관된 원문 URL<input id="passage-url" type="url" required></label><div class="inputs"><input id="passage-query" placeholder="본문에서 찾을 질문·키워드" required aria-label="문단 검색어"><button>문단 검색</button></div></form><div id="source-detail"></div><div id="passages"></div></section><section><h2>연결 가능한 플랫폼</h2><p id="availability" class="hint">실행 환경 확인 중…</p><div id="channels" class="grid"></div></section><section><h2>최근 읽기 작업</h2><div id="jobs"></div></section></main></body></html>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <link rel="stylesheet" href="/workspace.css" />
+    <script src="/workspace.js" defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>외부 자료 읽기 · AI 전략 관측소</title>
+    <link rel="stylesheet" href="/sources.css" />
+    <script src="/sources.js" defer></script>
+  </head>
+  <body>
+    <a class="workspace-skip" href="#main">본문으로 이동</a>
+    <main id="main">
+      <nav><a href="/strategy">← 전략 관측소</a><a href="/graph">근거 관계 지도 ↗</a></nav>
+      <header>
+        <p class="eyebrow">AGENT REACH</p>
+        <h1>외부 자료를 분석 근거로</h1>
+        <p>공개 웹·X 게시물·GitHub·YouTube·RSS를 읽고, 출처와 수집 범위를 함께 보관합니다.</p>
+      </header>
+      <section>
+        <h2>자료 읽기</h2>
+        <form id="read-form">
+          <label for="url">공개 자료 URL</label>
+          <div class="inputs">
+            <input id="url" type="url" placeholder="https://…" required maxlength="2048" /><select
+              id="mode"
+              aria-label="읽기 형식"
+            >
+              <option value="auto">자동 판별</option>
+              <option value="rss">RSS / Atom</option></select
+            ><button>읽고 저장</button>
+          </div>
+        </form>
+        <p class="hint">
+          읽은 자료는 GraphRAG의 원문 근거로 검색됩니다. 수집 자체가 사실 검증이나 심층 분석 완료를
+          뜻하지 않습니다.
+        </p>
+        <div id="read-status" role="status"></div>
+        <article id="read-result" hidden></article>
+      </section>
+      <section>
+        <h2>복구와 추가 근거 보강</h2>
+        <p id="pipeline-counts" role="status">상태 확인 중…</p>
+        <button id="repair">실패·잘린 원문 최대 50건 복구</button>
+        <p id="pipeline-message" role="status"></p>
+        <p class="hint">
+          오류별 대기 시간을 적용하며 최대 3회 시도합니다. 본문이 달라진 URL만 별도 재검토합니다.
+          외부 검색은 첫 GraphRAG 응답 이후 실행됩니다.
+        </p>
+        <div id="pipeline-jobs"></div>
+      </section>
+      <section>
+        <h2>전략 주제별 정기 관측</h2>
+        <form id="subscription-form">
+          <label
+            >RSS 또는 관측할 단일 자료 URL<input
+              id="subscription-url"
+              type="url"
+              required
+              maxlength="2048"
+              placeholder="https://…"
+          /></label>
+          <div class="inputs">
+            <label>출처 이름<input id="subscription-label" maxlength="100" required /></label
+            ><label
+              >관심 전략 키워드<input
+                id="subscription-keywords"
+                maxlength="300"
+                placeholder="예: AI 인프라, 반도체" /></label
+            ><select id="subscription-mode" aria-label="구독 방식">
+              <option value="rss">RSS/Atom · 기사별 읽기</option>
+              <option value="auto">단일 자료 변경 관측</option></select
+            ><select id="subscription-interval" aria-label="확인 간격">
+              <option value="21600">6시간마다</option>
+              <option value="3600">1시간마다</option>
+              <option value="86400">하루마다</option></select
+            ><button>관측 추가</button>
+          </div>
+        </form>
+        <p class="hint">
+          관심 키워드는 구독 관리용입니다. 실제 전략 주제 연결은 수집 본문의 관측 근거로 판별합니다.
+          발행일 미상 자료는 수집 관측일로 표시합니다.
+        </p>
+        <div id="subscriptions"></div>
+      </section>
+      <section>
+        <h2>출처별 상태·변경 이력</h2>
+        <div id="source-health"></div>
+        <form id="passage-form">
+          <label>보관된 원문 URL<input id="passage-url" type="url" required /></label>
+          <div class="inputs">
+            <input
+              id="passage-query"
+              placeholder="본문에서 찾을 질문·키워드"
+              required
+              aria-label="문단 검색어"
+            /><button>문단 검색</button>
+          </div>
+        </form>
+        <div id="source-detail"></div>
+        <div id="passages"></div>
+      </section>
+      <section>
+        <h2>연결 가능한 플랫폼</h2>
+        <p id="availability" class="hint">실행 환경 확인 중…</p>
+        <div id="channels" class="grid"></div>
+      </section>
+      <section>
+        <h2>최근 읽기 작업</h2>
+        <div id="jobs"></div>
+      </section>
+    </main>
+  </body>
+</html>

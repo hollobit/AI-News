@@ -1,69 +1,1062 @@
 <!doctype html>
 <html lang="ko">
-<head><link rel="stylesheet" href="/workspace.css"><script src="/workspace.js" defer></script>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>키워드 관계 지도 · 텔레그램 데일리</title>
-  <style>
-    :root{--navy:#0b1f3a;--blue:#1769e0;--blue-soft:#eaf2ff;--ink:#172033;--muted:#657087;--line:#dce3ed;--paper:#fff;--canvas:#f5f7fa;--violet:#6e4bc4;--teal:#087f75;--amber:#9a5b00;--danger:#a12a2a;--shadow:0 14px 36px rgba(11,31,58,.10)}
-    *{box-sizing:border-box}[hidden]{display:none!important}html{background:var(--canvas)}body{margin:0;min-height:100vh;color:var(--ink);background:var(--canvas);font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button,select{cursor:pointer}a{color:inherit}:where(button,input,select,a,[tabindex]):focus-visible{outline:3px solid #73a8f4;outline-offset:3px}
-    .topbar{display:flex;align-items:center;gap:26px;min-height:72px;padding:14px clamp(18px,4vw,60px);color:#fff;background:var(--navy)}.brand{text-decoration:none;white-space:nowrap}.brand strong{display:block;font-size:18px;letter-spacing:-.02em}.brand span{display:block;margin-top:2px;color:#aebbd0;font-size:11px}.nav{display:flex;gap:3px;padding:3px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.08)}.nav a{min-height:34px;padding:8px 12px;border-radius:7px;color:#c8d3e4;font-size:12px;font-weight:750;text-decoration:none}.nav a:hover{color:#fff}.nav a.active{color:var(--navy);background:#fff}
-    .page{width:min(1540px,100%);margin:0 auto;padding:32px clamp(16px,3vw,48px) 60px}.intro{display:flex;align-items:end;justify-content:space-between;gap:30px;padding-bottom:22px;border-bottom:2px solid var(--navy)}.intro h1{margin:0;color:var(--navy);font-family:Georgia,"Times New Roman",serif;font-size:clamp(34px,5vw,56px);font-weight:500;line-height:1;letter-spacing:-.045em}.intro p{max-width:620px;margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.65}.source-note{max-width:350px;color:#596479;font-size:11px;line-height:1.55;text-align:right}.source-note a{color:var(--blue);font-weight:750}
-    .filterbar{display:grid;grid-template-columns:minmax(220px,2fr) repeat(4,minmax(120px,1fr)) auto;gap:9px;padding:18px 0}.field{display:grid;gap:5px}.field label{color:#536077;font-size:11px;font-weight:750}.field input,.field select{width:100%;height:40px;padding:0 11px;border:1px solid var(--line);border-radius:8px;color:#344054;background:#fff}.analyze{align-self:end;height:40px;padding:0 16px;border:0;border-radius:8px;color:#fff;background:var(--blue);font-size:12px;font-weight:800;white-space:nowrap}.analyze:disabled{cursor:default;opacity:.5}
-    .preview{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:16px;padding:13px 15px;border-left:3px solid #93add3;color:#465269;background:#eef3fa;font-size:12px;line-height:1.55}.preview strong{color:var(--navy)}.state{white-space:nowrap;color:var(--muted);font-weight:750}.state.error{color:var(--danger)}
-    .graph-controls{display:grid;grid-template-columns:minmax(0,2fr) minmax(210px,1fr) auto;gap:14px;align-items:start;margin-bottom:12px;padding:13px 15px;border:1px solid var(--line);background:#fff}.control-group h2{margin:0 0 8px;color:var(--navy);font-size:11px}.filter-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:88px;overflow:auto}.filter-chip{display:inline-flex;align-items:center;gap:5px;min-height:27px;padding:3px 7px;border:1px solid var(--line);border-radius:6px;color:#465269;background:#fff;font-size:10px;font-weight:700}.filter-chip input{width:13px;height:13px;margin:0;accent-color:var(--blue)}.filter-chip i{width:8px;height:8px;border-radius:50%;background:var(--chip,#8793a6)}.filter-chip.relation i{width:14px;height:0;border-top:2px solid var(--chip,#8793a6);border-radius:0}.view-options{display:flex;flex-wrap:wrap;gap:7px}.view-options label{display:flex;align-items:center;gap:6px;color:#536077;font-size:10px;font-weight:700}.view-options select,.view-options input[type="range"]{height:29px;border:1px solid var(--line);border-radius:6px;background:#fff}.view-options select{padding:0 26px 0 8px}.view-options input[type="range"]{width:90px}.graph-stats{grid-column:1/-1;color:var(--muted);font-size:10px;line-height:1.6;text-align:center}.graph-stats strong{color:var(--navy)}
-    .workspace{display:grid;grid-template-columns:minmax(0,1fr) 370px;min-height:650px;border:1px solid var(--line);background:var(--paper);box-shadow:var(--shadow)}.canvas{position:relative;min-width:0;overflow:hidden;background-color:#f9fbfe;background-image:linear-gradient(#e9eef6 1px,transparent 1px),linear-gradient(90deg,#e9eef6 1px,transparent 1px);background-size:28px 28px}.canvas svg{display:block;width:100%;height:650px;touch-action:none;user-select:none}.empty{position:absolute;inset:0;display:grid;place-content:center;padding:40px;color:var(--muted);text-align:center;pointer-events:none}.empty strong{display:block;margin-bottom:8px;color:var(--navy);font-family:Georgia,"Times New Roman",serif;font-size:24px;font-weight:500}.tools{position:absolute;top:14px;left:14px;display:flex;gap:5px}.tools button{display:grid;place-items:center;width:36px;height:36px;border:1px solid var(--line);border-radius:8px;color:var(--navy);background:#fff;font-weight:800;box-shadow:0 4px 12px rgba(11,31,58,.08)}.legend{position:absolute;left:16px;bottom:15px;display:flex;gap:14px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;color:#536077;background:rgba(255,255,255,.94);font-size:10px}.legend span{display:flex;align-items:center;gap:6px}.legend i{display:block;width:22px;border-top:2px solid var(--blue)}.legend .inferred i{border-top-style:dashed;border-color:var(--violet)}
-    .edge{fill:none;stroke:#7089ad;stroke-width:1.5;opacity:.72;cursor:pointer}.edge.inferred{stroke:var(--violet);stroke-dasharray:6 5;opacity:.68}.edge-hit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}.edge.selected{stroke:var(--blue);stroke-width:3;opacity:1}.edge.inferred.selected{stroke:var(--violet)}.edge-label{fill:#5e6d83;font-size:10px;text-anchor:middle;paint-order:stroke;stroke:#f9fbfe;stroke-width:4px;stroke-linejoin:round;pointer-events:none}.node{cursor:pointer}.node circle{fill:#fff;stroke:#1769e0;stroke-width:2;filter:drop-shadow(0 3px 4px rgba(11,31,58,.12))}.node[data-type="country"] circle{stroke:#d76a18}.node[data-type="company"] circle,.node[data-type="organization"] circle{stroke:#6e4bc4}.node[data-type="person"] circle{stroke:#b53e76}.node[data-type="institution"] circle{stroke:#1769e0}.node[data-type="technology"] circle{stroke:#087f75}.node[data-type="concept"] circle{stroke:#b07500}.node[data-type="paper"] circle{stroke:#7448b7}.node[data-type="product"] circle{stroke:#39824c}.node[data-type="event"] circle{stroke:#bd3a3a}.node[data-type="policy"] circle{stroke:#334e78}.node.selected circle{fill:var(--navy);stroke:var(--navy);stroke-width:4}.node text{fill:var(--navy);font-size:11px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke:#f9fbfe;stroke-width:4px;stroke-linejoin:round}.node.selected text{fill:#fff;stroke:var(--navy)}
-    .sidebar{min-width:0;border-left:1px solid var(--line);background:#fff}.side-head{padding:20px;border-bottom:1px solid var(--line)}.side-head h2{margin:0;color:var(--navy);font-size:18px;letter-spacing:-.02em}.side-head p{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.55}.entity-search{width:100%;height:38px;margin-top:13px;padding:0 10px;border:1px solid var(--line);border-radius:7px}.side-scroll{height:553px;overflow:auto}.detail{padding:20px}.detail h3{margin:0 0 7px;color:var(--navy);font-size:19px;line-height:1.4}.detail p{margin:0;color:#465269;font-size:13px;line-height:1.65}.badges{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 13px}.badge{padding:4px 7px;border-radius:99px;color:#536077;background:#edf1f6;font-size:10px;font-weight:800}.badge.reported{color:#1459b7;background:var(--blue-soft)}.badge.inferred{color:var(--violet);background:#f0eafd}.caveat{margin-top:12px!important;padding:9px 10px;border-left:3px solid #d3a34b;color:#684b00!important;background:#fff6df;font-size:11px!important}.evidence{display:grid;gap:10px;margin:17px 0 0;padding:0;list-style:none}.evidence li{padding:11px;border:1px solid var(--line);border-radius:8px;background:#fafbfc}.evidence time{color:var(--blue);font-size:10px;font-weight:800}.evidence strong{display:block;margin:4px 0;color:#344054;font-size:12px;line-height:1.45}.evidence p{font-size:11px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}.links a{color:var(--blue);font-size:10px;font-weight:750;text-decoration:none}.links a:hover{text-decoration:underline}.node-list{display:grid;gap:2px;margin:0;padding:0;list-style:none}.node-list button{width:100%;padding:10px 20px;border:0;color:#344054;background:#fff;text-align:left;font-size:12px}.node-list button:hover,.node-list button.active{color:var(--blue);background:#f2f6fc}.summary{padding:16px 20px;border-bottom:1px solid var(--line);color:#3e4a60;font-size:12px;line-height:1.65}.summary strong{color:var(--navy)}.all-evidence{border-top:1px solid var(--line)}.all-evidence summary{padding:14px 20px;color:var(--blue);font-size:11px;font-weight:800;cursor:pointer}.all-evidence .evidence{padding:0 20px 20px;margin-top:0}
-    .graphrag{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.2fr);margin-top:18px;border:1px solid var(--line);background:#fff;box-shadow:0 8px 24px rgba(11,31,58,.07)}.ask-form{padding:22px;border-right:1px solid var(--line)}.ask-form h2{margin:0;color:var(--navy);font-family:Georgia,"Times New Roman",serif;font-size:24px;font-weight:500}.ask-form p{margin:7px 0 14px;color:var(--muted);font-size:11px;line-height:1.6}.ask-form textarea{width:100%;min-height:92px;padding:11px;border:1px solid var(--line);border-radius:8px;color:#344054;resize:vertical;line-height:1.55}.ask-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px}.ask-scope{color:var(--muted);font-size:10px}.ask-button{min-height:36px;padding:6px 13px;border:0;border-radius:7px;color:#fff;background:var(--navy);font-size:11px;font-weight:800}.ask-button:disabled{cursor:default;opacity:.45}.answer{min-height:190px;padding:22px}.answer h3{margin:0 0 9px;color:var(--navy);font-size:18px}.answer>p{margin:0;color:#3f4a5e;font-size:13px;line-height:1.75;white-space:pre-wrap}.claims{display:grid;gap:8px;margin:15px 0 0;padding-left:20px}.claims li{color:#465269;font-size:12px;line-height:1.6}.claim-evidence{margin-left:6px;color:var(--blue);font-size:10px;font-weight:800}.limitations{margin-top:15px;padding:10px 11px;border-left:3px solid #d3a34b;color:#684b00;background:#fff6df;font-size:11px;line-height:1.55}.answer .evidence{margin-top:14px}
-    @media(max-width:1050px){.filterbar{grid-template-columns:repeat(3,1fr)}.graph-controls{grid-template-columns:1fr}.graph-stats{text-align:left}.workspace{grid-template-columns:1fr}.sidebar{border-top:1px solid var(--line);border-left:0}.side-scroll{height:auto;max-height:600px}.graphrag{grid-template-columns:1fr}.ask-form{border-right:0;border-bottom:1px solid var(--line)}}
-    @media(max-width:680px){.topbar{display:block;padding:16px}.nav{width:max-content;margin-top:13px;max-width:100%;overflow-x:auto}.page{padding:24px 12px 50px}.intro{display:block}.source-note{margin-top:14px;text-align:left}.filterbar{grid-template-columns:1fr 1fr}.field:first-child{grid-column:1/-1}.analyze{grid-column:1/-1}.preview{display:block}.state{display:block;margin-top:7px}.workspace{min-height:520px}.canvas svg{height:520px}.legend{right:10px;left:auto;bottom:10px;display:grid}.side-scroll{max-height:none}.view-options{display:grid;grid-template-columns:1fr 1fr}.ask-actions{align-items:stretch;flex-direction:column}.ask-button{width:100%}}
-    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
-  </style>
-</head>
-<body><a class="workspace-skip" href="#main">본문으로 이동</a>
-  <header class="topbar">
-    <a class="brand" href="/"><strong>텔레그램 데일리</strong><span>날짜별 채널 뉴스</span></a>
-    <nav class="nav" aria-label="주요 화면"><a href="/">뉴스</a><a href="/?view=links&date=all">링크별 분석</a><a class="active" href="/graph" aria-current="page">관계 그래프</a><a href="/archive">URL 기록</a><a href="/research">종합 분석</a><a href="/simulation">시뮬레이션</a></nav>
-  </header>
-  <main id="main" class="page">
-    <header class="intro">
-      <div><h1>키워드 관계 지도</h1><p>채널 메시지에 함께 등장한 인물, 조직, 기술과 주제를 연결해 읽습니다. 각 관계는 선택한 메시지 발췌를 근거로 하며 기사 원문을 검증한 결과는 아닙니다.</p></div>
-      <div class="source-note">MiroFish 온톨로지를 활용한 뉴스 관계 지도입니다. 전체 엔진 실행은 시뮬레이션 화면에서 관리합니다. <a href="/mirofish-source.zip">소스</a> · <a href="/mirofish-license">AGPL 라이선스</a></div>
+  <head>
+    <link rel="stylesheet" href="/workspace.css" />
+    <script src="/workspace.js" defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>키워드 관계 지도 · 텔레그램 데일리</title>
+    <style>
+      :root {
+        --navy: #0b1f3a;
+        --blue: #1769e0;
+        --blue-soft: #eaf2ff;
+        --ink: #172033;
+        --muted: #657087;
+        --line: #dce3ed;
+        --paper: #fff;
+        --canvas: #f5f7fa;
+        --violet: #6e4bc4;
+        --teal: #087f75;
+        --amber: #9a5b00;
+        --danger: #a12a2a;
+        --shadow: 0 14px 36px rgba(11, 31, 58, 0.1);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      html {
+        background: var(--canvas);
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background: var(--canvas);
+        font-family:
+          Pretendard, 'Noto Sans KR', 'Apple SD Gothic Neo', Inter, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button,
+      select {
+        cursor: pointer;
+      }
+      a {
+        color: inherit;
+      }
+      :where(button, input, select, a, [tabindex]):focus-visible {
+        outline: 3px solid #73a8f4;
+        outline-offset: 3px;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        min-height: 72px;
+        padding: 14px clamp(18px, 4vw, 60px);
+        color: #fff;
+        background: var(--navy);
+      }
+      .brand {
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .brand strong {
+        display: block;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+      }
+      .brand span {
+        display: block;
+        margin-top: 2px;
+        color: #aebbd0;
+        font-size: 11px;
+      }
+      .nav {
+        display: flex;
+        gap: 3px;
+        padding: 3px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .nav a {
+        min-height: 34px;
+        padding: 8px 12px;
+        border-radius: 7px;
+        color: #c8d3e4;
+        font-size: 12px;
+        font-weight: 750;
+        text-decoration: none;
+      }
+      .nav a:hover {
+        color: #fff;
+      }
+      .nav a.active {
+        color: var(--navy);
+        background: #fff;
+      }
+      .page {
+        width: min(1540px, 100%);
+        margin: 0 auto;
+        padding: 32px clamp(16px, 3vw, 48px) 60px;
+      }
+      .intro {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 30px;
+        padding-bottom: 22px;
+        border-bottom: 2px solid var(--navy);
+      }
+      .intro h1 {
+        margin: 0;
+        color: var(--navy);
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: clamp(34px, 5vw, 56px);
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: -0.045em;
+      }
+      .intro p {
+        max-width: 620px;
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.65;
+      }
+      .source-note {
+        max-width: 350px;
+        color: #596479;
+        font-size: 11px;
+        line-height: 1.55;
+        text-align: right;
+      }
+      .source-note a {
+        color: var(--blue);
+        font-weight: 750;
+      }
+      .filterbar {
+        display: grid;
+        grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(120px, 1fr)) auto;
+        gap: 9px;
+        padding: 18px 0;
+      }
+      .field {
+        display: grid;
+        gap: 5px;
+      }
+      .field label {
+        color: #536077;
+        font-size: 11px;
+        font-weight: 750;
+      }
+      .field input,
+      .field select {
+        width: 100%;
+        height: 40px;
+        padding: 0 11px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: #344054;
+        background: #fff;
+      }
+      .analyze {
+        align-self: end;
+        height: 40px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 8px;
+        color: #fff;
+        background: var(--blue);
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .analyze:disabled {
+        cursor: default;
+        opacity: 0.5;
+      }
+      .preview {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 16px;
+        padding: 13px 15px;
+        border-left: 3px solid #93add3;
+        color: #465269;
+        background: #eef3fa;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+      .preview strong {
+        color: var(--navy);
+      }
+      .state {
+        white-space: nowrap;
+        color: var(--muted);
+        font-weight: 750;
+      }
+      .state.error {
+        color: var(--danger);
+      }
+      .graph-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(210px, 1fr) auto;
+        gap: 14px;
+        align-items: start;
+        margin-bottom: 12px;
+        padding: 13px 15px;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+      .control-group h2 {
+        margin: 0 0 8px;
+        color: var(--navy);
+        font-size: 11px;
+      }
+      .filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        max-height: 88px;
+        overflow: auto;
+      }
+      .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 27px;
+        padding: 3px 7px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        color: #465269;
+        background: #fff;
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .filter-chip input {
+        width: 13px;
+        height: 13px;
+        margin: 0;
+        accent-color: var(--blue);
+      }
+      .filter-chip i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--chip, #8793a6);
+      }
+      .filter-chip.relation i {
+        width: 14px;
+        height: 0;
+        border-top: 2px solid var(--chip, #8793a6);
+        border-radius: 0;
+      }
+      .view-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .view-options label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #536077;
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .view-options select,
+      .view-options input[type='range'] {
+        height: 29px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+      }
+      .view-options select {
+        padding: 0 26px 0 8px;
+      }
+      .view-options input[type='range'] {
+        width: 90px;
+      }
+      .graph-stats {
+        grid-column: 1/-1;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.6;
+        text-align: center;
+      }
+      .graph-stats strong {
+        color: var(--navy);
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 370px;
+        min-height: 650px;
+        border: 1px solid var(--line);
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+      .canvas {
+        position: relative;
+        min-width: 0;
+        overflow: hidden;
+        background-color: #f9fbfe;
+        background-image:
+          linear-gradient(#e9eef6 1px, transparent 1px),
+          linear-gradient(90deg, #e9eef6 1px, transparent 1px);
+        background-size: 28px 28px;
+      }
+      .canvas svg {
+        display: block;
+        width: 100%;
+        height: 650px;
+        touch-action: none;
+        user-select: none;
+      }
+      .empty {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        padding: 40px;
+        color: var(--muted);
+        text-align: center;
+        pointer-events: none;
+      }
+      .empty strong {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--navy);
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 24px;
+        font-weight: 500;
+      }
+      .tools {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        display: flex;
+        gap: 5px;
+      }
+      .tools button {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--navy);
+        background: #fff;
+        font-weight: 800;
+        box-shadow: 0 4px 12px rgba(11, 31, 58, 0.08);
+      }
+      .legend {
+        position: absolute;
+        left: 16px;
+        bottom: 15px;
+        display: flex;
+        gap: 14px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        color: #536077;
+        background: rgba(255, 255, 255, 0.94);
+        font-size: 10px;
+      }
+      .legend span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .legend i {
+        display: block;
+        width: 22px;
+        border-top: 2px solid var(--blue);
+      }
+      .legend .inferred i {
+        border-top-style: dashed;
+        border-color: var(--violet);
+      }
+      .edge {
+        fill: none;
+        stroke: #7089ad;
+        stroke-width: 1.5;
+        opacity: 0.72;
+        cursor: pointer;
+      }
+      .edge.inferred {
+        stroke: var(--violet);
+        stroke-dasharray: 6 5;
+        opacity: 0.68;
+      }
+      .edge-hit {
+        fill: none;
+        stroke: transparent;
+        stroke-width: 14;
+        cursor: pointer;
+      }
+      .edge.selected {
+        stroke: var(--blue);
+        stroke-width: 3;
+        opacity: 1;
+      }
+      .edge.inferred.selected {
+        stroke: var(--violet);
+      }
+      .edge-label {
+        fill: #5e6d83;
+        font-size: 10px;
+        text-anchor: middle;
+        paint-order: stroke;
+        stroke: #f9fbfe;
+        stroke-width: 4px;
+        stroke-linejoin: round;
+        pointer-events: none;
+      }
+      .node {
+        cursor: pointer;
+      }
+      .node circle {
+        fill: #fff;
+        stroke: #1769e0;
+        stroke-width: 2;
+        filter: drop-shadow(0 3px 4px rgba(11, 31, 58, 0.12));
+      }
+      .node[data-type='country'] circle {
+        stroke: #d76a18;
+      }
+      .node[data-type='company'] circle,
+      .node[data-type='organization'] circle {
+        stroke: #6e4bc4;
+      }
+      .node[data-type='person'] circle {
+        stroke: #b53e76;
+      }
+      .node[data-type='institution'] circle {
+        stroke: #1769e0;
+      }
+      .node[data-type='technology'] circle {
+        stroke: #087f75;
+      }
+      .node[data-type='concept'] circle {
+        stroke: #b07500;
+      }
+      .node[data-type='paper'] circle {
+        stroke: #7448b7;
+      }
+      .node[data-type='product'] circle {
+        stroke: #39824c;
+      }
+      .node[data-type='event'] circle {
+        stroke: #bd3a3a;
+      }
+      .node[data-type='policy'] circle {
+        stroke: #334e78;
+      }
+      .node.selected circle {
+        fill: var(--navy);
+        stroke: var(--navy);
+        stroke-width: 4;
+      }
+      .node text {
+        fill: var(--navy);
+        font-size: 11px;
+        font-weight: 800;
+        text-anchor: middle;
+        paint-order: stroke;
+        stroke: #f9fbfe;
+        stroke-width: 4px;
+        stroke-linejoin: round;
+      }
+      .node.selected text {
+        fill: #fff;
+        stroke: var(--navy);
+      }
+      .sidebar {
+        min-width: 0;
+        border-left: 1px solid var(--line);
+        background: #fff;
+      }
+      .side-head {
+        padding: 20px;
+        border-bottom: 1px solid var(--line);
+      }
+      .side-head h2 {
+        margin: 0;
+        color: var(--navy);
+        font-size: 18px;
+        letter-spacing: -0.02em;
+      }
+      .side-head p {
+        margin: 7px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.55;
+      }
+      .entity-search {
+        width: 100%;
+        height: 38px;
+        margin-top: 13px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+      }
+      .side-scroll {
+        height: 553px;
+        overflow: auto;
+      }
+      .detail {
+        padding: 20px;
+      }
+      .detail h3 {
+        margin: 0 0 7px;
+        color: var(--navy);
+        font-size: 19px;
+        line-height: 1.4;
+      }
+      .detail p {
+        margin: 0;
+        color: #465269;
+        font-size: 13px;
+        line-height: 1.65;
+      }
+      .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 9px 0 13px;
+      }
+      .badge {
+        padding: 4px 7px;
+        border-radius: 99px;
+        color: #536077;
+        background: #edf1f6;
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .badge.reported {
+        color: #1459b7;
+        background: var(--blue-soft);
+      }
+      .badge.inferred {
+        color: var(--violet);
+        background: #f0eafd;
+      }
+      .caveat {
+        margin-top: 12px !important;
+        padding: 9px 10px;
+        border-left: 3px solid #d3a34b;
+        color: #684b00 !important;
+        background: #fff6df;
+        font-size: 11px !important;
+      }
+      .evidence {
+        display: grid;
+        gap: 10px;
+        margin: 17px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .evidence li {
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fafbfc;
+      }
+      .evidence time {
+        color: var(--blue);
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .evidence strong {
+        display: block;
+        margin: 4px 0;
+        color: #344054;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .evidence p {
+        font-size: 11px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .links a {
+        color: var(--blue);
+        font-size: 10px;
+        font-weight: 750;
+        text-decoration: none;
+      }
+      .links a:hover {
+        text-decoration: underline;
+      }
+      .node-list {
+        display: grid;
+        gap: 2px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .node-list button {
+        width: 100%;
+        padding: 10px 20px;
+        border: 0;
+        color: #344054;
+        background: #fff;
+        text-align: left;
+        font-size: 12px;
+      }
+      .node-list button:hover,
+      .node-list button.active {
+        color: var(--blue);
+        background: #f2f6fc;
+      }
+      .summary {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line);
+        color: #3e4a60;
+        font-size: 12px;
+        line-height: 1.65;
+      }
+      .summary strong {
+        color: var(--navy);
+      }
+      .all-evidence {
+        border-top: 1px solid var(--line);
+      }
+      .all-evidence summary {
+        padding: 14px 20px;
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .all-evidence .evidence {
+        padding: 0 20px 20px;
+        margin-top: 0;
+      }
+      .graphrag {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+        margin-top: 18px;
+        border: 1px solid var(--line);
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(11, 31, 58, 0.07);
+      }
+      .ask-form {
+        padding: 22px;
+        border-right: 1px solid var(--line);
+      }
+      .ask-form h2 {
+        margin: 0;
+        color: var(--navy);
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 24px;
+        font-weight: 500;
+      }
+      .ask-form p {
+        margin: 7px 0 14px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+      .ask-form textarea {
+        width: 100%;
+        min-height: 92px;
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: #344054;
+        resize: vertical;
+        line-height: 1.55;
+      }
+      .ask-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 9px;
+      }
+      .ask-scope {
+        color: var(--muted);
+        font-size: 10px;
+      }
+      .ask-button {
+        min-height: 36px;
+        padding: 6px 13px;
+        border: 0;
+        border-radius: 7px;
+        color: #fff;
+        background: var(--navy);
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .ask-button:disabled {
+        cursor: default;
+        opacity: 0.45;
+      }
+      .answer {
+        min-height: 190px;
+        padding: 22px;
+      }
+      .answer h3 {
+        margin: 0 0 9px;
+        color: var(--navy);
+        font-size: 18px;
+      }
+      .answer > p {
+        margin: 0;
+        color: #3f4a5e;
+        font-size: 13px;
+        line-height: 1.75;
+        white-space: pre-wrap;
+      }
+      .claims {
+        display: grid;
+        gap: 8px;
+        margin: 15px 0 0;
+        padding-left: 20px;
+      }
+      .claims li {
+        color: #465269;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      .claim-evidence {
+        margin-left: 6px;
+        color: var(--blue);
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .limitations {
+        margin-top: 15px;
+        padding: 10px 11px;
+        border-left: 3px solid #d3a34b;
+        color: #684b00;
+        background: #fff6df;
+        font-size: 11px;
+        line-height: 1.55;
+      }
+      .answer .evidence {
+        margin-top: 14px;
+      }
+      @media (max-width: 1050px) {
+        .filterbar {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .graph-controls {
+          grid-template-columns: 1fr;
+        }
+        .graph-stats {
+          text-align: left;
+        }
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          border-top: 1px solid var(--line);
+          border-left: 0;
+        }
+        .side-scroll {
+          height: auto;
+          max-height: 600px;
+        }
+        .graphrag {
+          grid-template-columns: 1fr;
+        }
+        .ask-form {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+      @media (max-width: 680px) {
+        .topbar {
+          display: block;
+          padding: 16px;
+        }
+        .nav {
+          width: max-content;
+          margin-top: 13px;
+          max-width: 100%;
+          overflow-x: auto;
+        }
+        .page {
+          padding: 24px 12px 50px;
+        }
+        .intro {
+          display: block;
+        }
+        .source-note {
+          margin-top: 14px;
+          text-align: left;
+        }
+        .filterbar {
+          grid-template-columns: 1fr 1fr;
+        }
+        .field:first-child {
+          grid-column: 1/-1;
+        }
+        .analyze {
+          grid-column: 1/-1;
+        }
+        .preview {
+          display: block;
+        }
+        .state {
+          display: block;
+          margin-top: 7px;
+        }
+        .workspace {
+          min-height: 520px;
+        }
+        .canvas svg {
+          height: 520px;
+        }
+        .legend {
+          right: 10px;
+          left: auto;
+          bottom: 10px;
+          display: grid;
+        }
+        .side-scroll {
+          max-height: none;
+        }
+        .view-options {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+        .ask-actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .ask-button {
+          width: 100%;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="workspace-skip" href="#main">본문으로 이동</a>
+    <header class="topbar">
+      <a class="brand" href="/"><strong>텔레그램 데일리</strong><span>날짜별 채널 뉴스</span></a>
+      <nav class="nav" aria-label="주요 화면">
+        <a href="/">뉴스</a><a href="/?view=links&date=all">링크별 분석</a
+        ><a class="active" href="/graph" aria-current="page">관계 그래프</a
+        ><a href="/archive">URL 기록</a><a href="/research">종합 분석</a
+        ><a href="/simulation">시뮬레이션</a>
+      </nav>
     </header>
-    <form class="filterbar" id="filters" role="search">
-      <div class="field"><label for="q">키워드</label><input id="q" name="q" type="search" placeholder="예: 휴머노이드, OpenAI"></div>
-      <div class="field"><label for="date">날짜</label><select id="date" name="date"><option value="all">모든 날짜</option></select></div>
-      <div class="field"><label for="topic">주제</label><select id="topic" name="topic"><option value="">모든 주제</option><option value="agents">에이전트</option><option value="models">AI 모델</option><option value="robotics">로보틱스</option><option value="medical">의료</option><option value="hardware">하드웨어</option><option value="policy">정책</option><option value="business">비즈니스</option><option value="research">연구</option><option value="general">일반</option></select></div>
-      <div class="field"><label for="content-type">글 유형</label><select id="content-type" name="content_type"><option value="">모든 글 유형</option><option value="news">뉴스 기사</option><option value="paper">논문 소개</option><option value="blog">블로그·해설</option><option value="social">소셜 게시물</option><option value="tool">도구·프로젝트</option><option value="other">기타</option></select></div>
-      <div class="field"><label for="channel">채널</label><input id="channel" name="channel" placeholder="이름 또는 ID · 모든 채널"></div>
-      <button class="analyze" id="analyze" type="submit" disabled>관계 분석 시작</button>
-    </form>
-    <div class="preview" role="status" aria-live="polite"><span id="preview">분석할 메시지 범위를 확인하고 있습니다.</span><span class="state" id="state">불러오는 중</span></div>
-    <section class="graph-controls" aria-label="그래프 표시 필터">
-      <div class="control-group"><h2>엔티티 유형</h2><div class="filter-chips" id="type-filters"><span class="state">분석 후 표시됩니다.</span></div></div>
-      <div class="control-group"><h2>관계 유형</h2><div class="filter-chips" id="relation-filters"><span class="state">분석 후 표시됩니다.</span></div></div>
-      <div class="control-group"><h2>탐색 범위</h2><div class="view-options"><label>이웃 <select id="hops"><option value="1">1단계</option><option value="2">2단계</option><option value="all">전체</option></select></label><label>간격 <input id="density" type="range" min="85" max="105" value="100" aria-label="그래프 노드 간격"></label><label><input id="edge-labels" type="checkbox" checked>관계명</label></div></div>
-      <div class="graph-stats" id="graph-stats">표시할 통합 그래프가 없습니다.</div>
-    </section>
-    <section class="workspace" aria-label="키워드 관계 분석 결과">
-      <div class="canvas" id="canvas">
-        <svg id="graph" viewBox="0 0 900 650" role="img" aria-labelledby="graph-title graph-desc"><title id="graph-title">키워드 관계 그래프</title><desc id="graph-desc">키워드 노드와 방향성 관계를 보여 줍니다.</desc><defs><marker id="arrow-reported" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7089ad"/></marker><marker id="arrow-inferred" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6e4bc4"/></marker></defs><g id="viewport"></g></svg>
-        <div class="empty" id="empty"><div><strong>관계를 분석할 준비가 됐습니다</strong><span>위 필터에서 범위를 정한 뒤 분석을 시작하세요.</span></div></div>
-        <div class="tools" aria-label="그래프 보기 조절"><button type="button" id="zoom-in" aria-label="확대">＋</button><button type="button" id="zoom-out" aria-label="축소">−</button><button type="button" id="zoom-reset" aria-label="전체 보기">⌂</button></div>
-        <div class="legend" aria-label="관계선 범례"><span><i></i>메시지에 보고됨</span><span class="inferred"><i></i>분석에서 추론</span></div>
+    <main id="main" class="page">
+      <header class="intro">
+        <div>
+          <h1>키워드 관계 지도</h1>
+          <p>
+            채널 메시지에 함께 등장한 인물, 조직, 기술과 주제를 연결해 읽습니다. 각 관계는 선택한
+            메시지 발췌를 근거로 하며 기사 원문을 검증한 결과는 아닙니다.
+          </p>
+        </div>
+        <div class="source-note">
+          MiroFish 온톨로지를 활용한 뉴스 관계 지도입니다. 전체 엔진 실행은 시뮬레이션 화면에서
+          관리합니다. <a href="/mirofish-source.zip">소스</a> ·
+          <a href="/mirofish-license">AGPL 라이선스</a>
+        </div>
+      </header>
+      <form class="filterbar" id="filters" role="search">
+        <div class="field">
+          <label for="q">키워드</label
+          ><input id="q" name="q" type="search" placeholder="예: 휴머노이드, OpenAI" />
+        </div>
+        <div class="field">
+          <label for="date">날짜</label
+          ><select id="date" name="date">
+            <option value="all">모든 날짜</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="topic">주제</label
+          ><select id="topic" name="topic">
+            <option value="">모든 주제</option>
+            <option value="agents">에이전트</option>
+            <option value="models">AI 모델</option>
+            <option value="robotics">로보틱스</option>
+            <option value="medical">의료</option>
+            <option value="hardware">하드웨어</option>
+            <option value="policy">정책</option>
+            <option value="business">비즈니스</option>
+            <option value="research">연구</option>
+            <option value="general">일반</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="content-type">글 유형</label
+          ><select id="content-type" name="content_type">
+            <option value="">모든 글 유형</option>
+            <option value="news">뉴스 기사</option>
+            <option value="paper">논문 소개</option>
+            <option value="blog">블로그·해설</option>
+            <option value="social">소셜 게시물</option>
+            <option value="tool">도구·프로젝트</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="channel">채널</label
+          ><input id="channel" name="channel" placeholder="이름 또는 ID · 모든 채널" />
+        </div>
+        <button class="analyze" id="analyze" type="submit" disabled>관계 분석 시작</button>
+      </form>
+      <div class="preview" role="status" aria-live="polite">
+        <span id="preview">분석할 메시지 범위를 확인하고 있습니다.</span
+        ><span class="state" id="state">불러오는 중</span>
       </div>
-      <aside class="sidebar" aria-label="선택한 관계와 근거">
-        <div class="side-head"><h2>관계와 근거</h2><p>노드나 연결선을 선택하면 의미와 근거 메시지를 확인할 수 있습니다.</p><input class="entity-search" id="entity-search" type="search" placeholder="그래프 안에서 찾기" aria-label="그래프 엔티티 검색"></div>
-        <div class="side-scroll" id="side-scroll"><div class="detail" id="detail"><p>분석 결과가 여기에 표시됩니다.</p></div></div>
-      </aside>
-    </section>
-    <section class="graphrag" aria-labelledby="ask-title">
-      <form class="ask-form" id="ask-form"><h2 id="ask-title">그래프에 질문하기</h2><p>현재 필터의 관계와 연결된 Telegram 근거에서 답을 찾습니다. 노드를 선택하면 그 주변 관계를 우선 검색합니다.</p><textarea id="question" aria-label="GraphRAG 질문" placeholder="예: 이 기술과 관련된 주요 기업과 최근 변화는 무엇인가요?" required></textarea><div class="ask-actions"><span class="ask-scope" id="ask-scope">전체 표시 그래프에서 검색</span><button class="ask-button" id="ask-button" type="submit" disabled>근거에서 답 찾기</button></div></form>
-      <article class="answer" id="answer" data-empty="true" aria-live="polite"><h3>GraphRAG 답변</h3><p>관계 분석을 완료한 뒤 질문할 수 있습니다.</p></article>
-    </section>
-  </main>
-  <script src="/graph.js"></script>
-</body>
+      <section class="graph-controls" aria-label="그래프 표시 필터">
+        <div class="control-group">
+          <h2>엔티티 유형</h2>
+          <div class="filter-chips" id="type-filters">
+            <span class="state">분석 후 표시됩니다.</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <h2>관계 유형</h2>
+          <div class="filter-chips" id="relation-filters">
+            <span class="state">분석 후 표시됩니다.</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <h2>탐색 범위</h2>
+          <div class="view-options">
+            <label
+              >이웃
+              <select id="hops">
+                <option value="1">1단계</option>
+                <option value="2">2단계</option>
+                <option value="all">전체</option>
+              </select></label
+            ><label
+              >간격
+              <input
+                id="density"
+                type="range"
+                min="85"
+                max="105"
+                value="100"
+                aria-label="그래프 노드 간격" /></label
+            ><label><input id="edge-labels" type="checkbox" checked />관계명</label>
+          </div>
+        </div>
+        <div class="graph-stats" id="graph-stats">표시할 통합 그래프가 없습니다.</div>
+      </section>
+      <section class="workspace" aria-label="키워드 관계 분석 결과">
+        <div class="canvas" id="canvas">
+          <svg id="graph" viewBox="0 0 900 650" role="img" aria-labelledby="graph-title graph-desc">
+            <title id="graph-title">키워드 관계 그래프</title>
+            <desc id="graph-desc">키워드 노드와 방향성 관계를 보여 줍니다.</desc>
+            <defs>
+              <marker
+                id="arrow-reported"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#7089ad" />
+              </marker>
+              <marker
+                id="arrow-inferred"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#6e4bc4" />
+              </marker>
+            </defs>
+            <g id="viewport"></g>
+          </svg>
+          <div class="empty" id="empty">
+            <div>
+              <strong>관계를 분석할 준비가 됐습니다</strong
+              ><span>위 필터에서 범위를 정한 뒤 분석을 시작하세요.</span>
+            </div>
+          </div>
+          <div class="tools" aria-label="그래프 보기 조절">
+            <button type="button" id="zoom-in" aria-label="확대">＋</button
+            ><button type="button" id="zoom-out" aria-label="축소">−</button
+            ><button type="button" id="zoom-reset" aria-label="전체 보기">⌂</button>
+          </div>
+          <div class="legend" aria-label="관계선 범례">
+            <span><i></i>메시지에 보고됨</span><span class="inferred"><i></i>분석에서 추론</span>
+          </div>
+        </div>
+        <aside class="sidebar" aria-label="선택한 관계와 근거">
+          <div class="side-head">
+            <h2>관계와 근거</h2>
+            <p>노드나 연결선을 선택하면 의미와 근거 메시지를 확인할 수 있습니다.</p>
+            <input
+              class="entity-search"
+              id="entity-search"
+              type="search"
+              placeholder="그래프 안에서 찾기"
+              aria-label="그래프 엔티티 검색"
+            />
+          </div>
+          <div class="side-scroll" id="side-scroll">
+            <div class="detail" id="detail"><p>분석 결과가 여기에 표시됩니다.</p></div>
+          </div>
+        </aside>
+      </section>
+      <section class="graphrag" aria-labelledby="ask-title">
+        <form class="ask-form" id="ask-form">
+          <h2 id="ask-title">그래프에 질문하기</h2>
+          <p>
+            현재 필터의 관계와 연결된 Telegram 근거에서 답을 찾습니다. 노드를 선택하면 그 주변
+            관계를 우선 검색합니다.
+          </p>
+          <textarea
+            id="question"
+            aria-label="GraphRAG 질문"
+            placeholder="예: 이 기술과 관련된 주요 기업과 최근 변화는 무엇인가요?"
+            required
+          ></textarea>
+          <div class="ask-actions">
+            <span class="ask-scope" id="ask-scope">전체 표시 그래프에서 검색</span
+            ><button class="ask-button" id="ask-button" type="submit" disabled>
+              근거에서 답 찾기
+            </button>
+          </div>
+        </form>
+        <article class="answer" id="answer" data-empty="true" aria-live="polite">
+          <h3>GraphRAG 답변</h3>
+          <p>관계 분석을 완료한 뒤 질문할 수 있습니다.</p>
+        </article>
+      </section>
+    </main>
+    <script src="/graph.js"></script>
+  </body>
 </html>
