@@ -11,15 +11,13 @@ from corpus_completion import CompletionRunner, connect, init, recover_engine_fa
 
 class EngineRecoveryTests(unittest.TestCase):
     def test_requested_continuation_recovers_exact_database_lock_only(self):
-        script = Path(__file__).resolve().parents[1] / '.runtime/verification/continue_requested_analysis.py'
-        spec = importlib.util.spec_from_file_location('requested_analysis_continuation', script)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        import engine_errors as module
         paused = {'status': 'paused', 'owner_pid': None}
         self.assertTrue(module.deep_engine_pause(dict(paused, error='database is locked')))
         self.assertTrue(module.deep_engine_pause(dict(paused, error=str(EngineError('database_locked')))))
         self.assertFalse(module.deep_engine_pause(dict(paused, error='기사에 database is locked 문구가 없습니다')))
         self.assertFalse(module.deep_engine_pause(dict(paused, error=str(EngineError('rate_limit')))))
+        self.assertFalse(module.deep_engine_pause(dict(paused, pause_requested=1, error='database is locked')))
         self.assertFalse(module.deep_engine_pause({'status': 'running', 'owner_pid': None,
                                                    'error': 'database is locked'}))
 

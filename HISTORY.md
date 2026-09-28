@@ -8,6 +8,7 @@
 - 읽기 대시보드와 `/operations`를 분리하고 공통 JSON 요청/ETag/취소·polling/상태·본문 이동/focus 자산을 추가했다. 내용/규칙 해시별 분류·전략 점수를 별도 계산 DB에 저장한다. 기본/논문 검토 무결성 공통 helper와 export ID 충돌/관계 끝점 검사를 추가했다.
 - 프런트엔드 포맷은 기능 변경과 별도 커밋으로 분리했다. 직접 작성한 JavaScript 22개 파일의 포맷 전후 AST가 일치하며, three.js 원본은 제외했다. 공개 분류 select 닫는 태그 누락도 별도 수정했다. CI에 결정적인 대시보드 브라우저 회귀를 포함했다.
 - 실제 게시 중 대용량 호환 knowledge 파일의 일시적 GitHub 업로드 실패를 확인했다. 같은 내용의 blob은 같은 SHA이므로 해당 업로드만 최대 3회 재시도하고 commit/ref 게시에는 자동 재시도를 추가하지 않았다. 인증/권한 오류는 재시도하지 않는다.
+- 첫 원격 CI는 기존 테스트 두 개가 미추적 `.runtime` 스크립트를 참조해 실패했다. feedback backfill을 `completion_feedback.py`로 승격하고 continuation의 순수 admission 조건을 공통 엔진 모듈로 옮겼다. 로컬 legacy driver도 이 조건을 사용하며 사용자 pause가 과거 엔진 오류보다 우선한다. 테스트를 제외하지 않았다.
 - 633개 Python 테스트·56 subtest, JavaScript 계약 4개, 공개 12메뉴/전체 검색/딥링크/기간·확장/모바일, 로컬 운영/읽기·키보드·모바일 검증 통과. CI와 실행/계약 문서를 추가했다. 상세 범위와 아직 달성하지 않은 성능·추가 모듈화 목표는 REFACTORING_GUIDE.md에 남겼다.
 
 ## 2026-09-29 — 선택한 기본 재개·자동 복구·지도/GraphRAG 성능

@@ -180,9 +180,7 @@ class CompletionTests(unittest.TestCase):
         self.assertTrue(all(json.loads(row[2])['verified'] is False for row in rows))
 
     def test_feedback_backfill_is_opt_in_backed_up_and_pending_only(self):
-        import importlib.util
-        spec=importlib.util.spec_from_file_location('feedback_script',Path(__file__).resolve().parents[1]/'.runtime/verification/backfill_completion_feedback.py')
-        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        import completion_feedback as module
         runner=CompletionRunner(self.path,'cycle');runner.prepare()
         FakeWorkflow.reject_all=True;old=FakeWorkflow(self.path).create_run(self.items,{})
         with connect(self.path) as db:

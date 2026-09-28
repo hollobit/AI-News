@@ -53,3 +53,16 @@ def infrastructure_error(message):
         if text in str(message or ''):
             return code
     return None
+
+
+def deep_engine_pause(value):
+    """Continuation admission shared with the local legacy driver.
+
+    This predicate does not resume anything. Explicit cycle pause always takes
+    precedence over an infrastructure error left on an older checkpoint.
+    """
+    from recursive_improvement import owner_alive
+    return (value.get('status') == 'paused' and not value.get('pause_requested')
+            and not owner_alive(value.get('owner_pid'))
+            and infrastructure_error(value.get('error')) in
+            {'timeout', 'queue_timeout', 'database_locked', 'execution_failed'})
