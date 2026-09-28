@@ -1,0 +1,12 @@
+data/
+__pycache__/
+.env
+.venv/
+.DS_Store
+
+.env.mirofish
+.runtime/
+log/
+*.swp
+*.log
+config.json

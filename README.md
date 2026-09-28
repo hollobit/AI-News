@@ -1,795 +1,546 @@
-# AI-News
-- [x] [Semantation(new)](#Semantic-Segmentation)
-- [x] [Re-Identification](#Re-Identification)
-- [x] [Classification](https://github.com/xiaoketongxue/CV-News/blob/master/Others.md)  
-- [x] [Graph Neural Networks](https://github.com/xiaoketongxue/CV-News/blob/master/Others.md)    
-- [x] [Super-Resolution](https://github.com/xiaoketongxue/CV-News/blob/master/Others.md)    
-- [x] [Registration](https://github.com/xiaoketongxue/CV-News/blob/master/Others.md)  
-- [x] [Normalization](https://github.com/xiaoketongxue/CV-News/blob/master/Others.md)   
-- [x] [Survey](https://github.com/xiaoketongxue/CV-News/blob/master/Others.md)   
-- [x] [Dataset](https://github.com/xiaoketongxue/CV-News/blob/master/Others.md)  
-- [x] [Conference and Journal ](https://github.com/xiaoketongxue/CV-News/blob/master/Others.md) 
+# AI 전략 관측소 · 하루 뉴스
 
-# Segmentation
-- [x] [Semantic Segmentation](#Semantic-Segmentation)
-- [x] [2D Medical Segmentation](#2D-Medical-Segmentation)
-- [x] [3D Medical Segmentation](#3D-Medical-Segmentation)
-- [x] [Instance Segmentation](#Instance-Segmentation)
-- [x] [Panoptic Segmentation](#Panoptic-Segmentation)
-- [x] [Video Segmentation](#Video-Segmentation)
+## Telegram 정기 수집·기본 분석 스킬
 
-## Semantic Segmentation
-### 2020
-  - AAAI
-    + [Segmenting Medical MRI via Recurrent Decoding Cell](https://arxiv.org/abs/1911.09401)[[Code]](https://github.com/beijixiong3510/OWM)
-    + [F3Net: Fusion, Feedback and Focus for Salient Object Detection](https://arxiv.org/abs/1911.11445)[[Code]](https://github.com/weijun88/F3Net)
-    + [An Adversarial Perturbation Oriented Domain Adaptation Approach for Semantic Segmentation](https://arxiv.org/abs/1912.08954)
-    + [JSNet: Joint Instance and Semantic Segmentation of 3D Point Clouds](https://arxiv.org/abs/1912.09654)[Code](https://github.com/dlinzhao/JSNet)
-  - ICLR
-    + [FasterSeg: Searching for Faster Real-time Semantic Segmentation ](https://openreview.net/pdf?id=BJgqQ6NYvB)[[Code]](https://github.com/TAMU-VITA/FasterSeg)
+`skills/news-telegram-collect`는 이 프로젝트의 수집·기본 분석 스킬입니다. 개인 스킬 경로 `~/.codex/skills/news-telegram-collect`에도 설치할 수 있으며 `$news-telegram-collect`로 호출합니다. 실제 Telegram 수집기는 기존 감독기에서 약 30초 간격으로 신규 업데이트를 확인합니다.
+
+`scheduled_collection.py`는 최근 수집 확인과 기사 추출 완료 뒤 현재 입력 해시·저장 독립 검토를 대조하고 신규·변경 입력만 기본 분석 대상으로 처리합니다. 기존 유효 결과는 재사용하며 2 workers·1건 묶음을 사용합니다. 미완료 run의 사용자 중지·검토 실패·모델 오류를 자동 해제하거나 새 run으로 우회하지 않습니다. `--check`는 DB 점검, `--status`는 마지막 실행 결과 조회입니다.
+
+`ops/com.hollobit.ai-news.baseline.plist`는 로그인 시와 이후 5분 간격으로 이 점검을 실행합니다. 수집기·기본 분석 owner가 이미 실행 중이면 중복 실행하지 않습니다. 컴퓨터 잠자기 중에는 실행되지 않습니다. 새 설치에서는 `config.example.json`을 `config.json`으로 복사해 채널을 설정하고 기존 환경 설정 안내를 따릅니다.
+
+소스는 `news-app` 브랜치에 보관합니다. 새 체크아웃에서는 `git clone --recurse-submodules --branch news-app https://github.com/hollobit/AI-News.git`로 고정 Agent-Reach 소스도 받습니다. 공개 읽기 전용 사이트는 기존 `gh-pages` 브랜치를 사용합니다.
+
+공개 읽기 전용 사이트: https://hollobit.github.io/AI-News/ . 뉴스·날짜별 아카이브·기본/심층 검토 분석·위험과 조건부 시나리오·논문·위키·출처 목록 및 기존 관측 지도/지식 관계 탐색을 제공합니다. 새 LLM 질문 생성·수집·설정 변경은 로컬 서버 전용입니다. 전체 공개본 생성은 `.venv/bin/python export_wiki_site.py --full-site --output .runtime/public-site`, 배포/동기화는 [PAGES_DEPLOYMENT.md](PAGES_DEPLOYMENT.md)를 참고하세요.
+
+## 지식 위키
+
+공개 관계 탐색은 현재 입력·독립 검토를 통과한 뉴스와 논문의 문서별 분석 전체를 연결합니다. 뉴스 문서 수, 종합 위키 페이지 수, 지도 노드 수는 서로 다릅니다. 종합 위키의 검토된 의미 관계와 90일 문서별 공동 관측(탐색 추천)을 구분하며, 전체 분석 연결이 모든 문서의 종합 위키 편찬 완료를 뜻하지는 않습니다. 신규·변경 자료는 다음 공개 스냅샷 생성에서 반영됩니다. 로컬 지식 API는 조회 지연 방지를 위해 종합 위키 범위를 유지합니다.
+
+`service_supervisor.py server|collector|deep`는 기존 프로세스를 중복 실행하지 않는 감독기입니다. 설치된 프로젝트 LaunchAgent가 로그인 후 시작합니다. 서버·수집기는 빠른 실패 3회 후 자동 실행을 멈추고 로그를 남깁니다. 심층은 실행 기록의 소유자만 없어진 경우 복구하며, 사용자 일시중지·검토 대기·완료를 자동 해제하지 않습니다. 모델 오류로 일시중지된 분석의 재개는 별도 점검이 필요합니다.
+
+`/knowledge`는 원자료·주장·주제·대상·개념·사건을 연결한 지식 지도입니다. 로컬에 포함한 three.js로 3D 탐험을 기본 제공하며, 드래그 회전·휠/두 손가락 확대·키보드 방향키·노드 선택과 카메라 위치 URL 복원을 지원합니다. WebGL을 사용할 수 없으면 기존 2D SVG 지도로 전환합니다. 두 보기에서 유형/연결 묶음 색상, 검색, 관계 층 필터, 인접 노드 탐색, 지식 점검을 공유합니다. 관측 지도의 공동 등장 선과 검토된 의미 관계, 단순 탐색 추천은 구분합니다.
+
+`/wiki`에서 임의 주제를 추가하고 검색어·활성화·과거 근거(최대 8개 추가)를 관리합니다. 기존 주제 범위와 합쳐 근거는 최대 24개입니다. GraphRAG의 검토된 질문은 위키 저장 버튼으로 원출처 재검토를 요청할 수 있습니다. `/api/wiki/vault`는 Obsidian 호환 ZIP입니다.
+
+GitHub Pages용 읽기 전용 사이트: `.venv/bin/python export_wiki_site.py`. 기본 생성 위치는 `.runtime/wiki-site`, 원문 발췌·DB·인증 설정은 제외합니다. 로컬 생성만 수행하며 자동 게시하지 않습니다. [공개 범위·배포 안내](PAGES_DEPLOYMENT.md).
+
+`/wiki`에서 의료·공공 AX·소버린 AI를 주제 → 대상·사건·쟁점 → 원근거 순서로 탐색합니다. 새 뉴스가 들어오면 관련 주제의 종합 설명을 갱신하고, 주장과 관계의 독립 검토를 통과한 판만 공개합니다. 원문이 바뀌거나 삭제되면 이전 설명은 현재 페이지에서 제외되고 재검토 대상으로 표시됩니다.
+
+- 기존 외부 분석 활성화 설정을 따르며, 서버가 10분 대기 주기로 입력 변경을 확인합니다. 생성·검토 소요 시간은 별도입니다. 변경 없는 완료 판은 재생성하지 않습니다.
+- 최근 일치 뉴스 최대 12개·검토 논문 초록 최대 3개와 이전의 유효 근거를 합쳐 최대 24개로 종합합니다. 전체 뉴스 전수 위키화가 아닙니다.
+- 주제·대상·사건·쟁점 페이지, 인용 발췌, 관계 설명, 갱신 이력과 설명 추가·제외 기록을 제공합니다. 미검토 초안은 공개하지 않습니다.
+- 기사 해설의 **이 기사를 연결한 지식 위키** 링크는 해당 원출처를 실제 인용한 페이지로 연결합니다. 연결이 없으면 빈 목록이며, 관계를 추측해 만들지 않습니다.
+- GraphRAG는 현재 위키의 설명을 참고하되 원출처로 다시 대조하고 인용합니다. 위키를 별도의 독립 증거로 세지 않으며 기존 선택 범위를 확대하지 않습니다.
+- 기존 관측 지도는 공동 관측, 위키는 검토된 의미 관계입니다. 양쪽의 관계를 혼용하지 않습니다.
+
+API: `GET /api/wiki?id=medical`, `GET /api/wiki?source_url=…`, `POST /api/wiki {"topic":"medical"}`. 저장·공개·재검토 규칙과 초기 범위는 [WIKI_SCHEMA.md](WIKI_SCHEMA.md)를 참고하세요.
+
+관측 지도(`/observatory`)의 **더 많은 노드 보기**를 누르면 기본 주제 36·키워드 48·관계 180개 상한을 주제 72·키워드 96·관계 360개까지 확장합니다. 선택 기간의 실제 근거가 있는 후보만 표시하며, 기본 범위로 복귀할 수 있습니다. 집계 중에는 기존 자료가 유지됩니다.
+
+Hermes agent가 텔레그램 채널에 보낸 메시지를 개별 뉴스로 나누고 날짜·주제·콘텐츠 유형별로 모아 읽는 개인용 뉴스 페이지입니다. 여러 날짜의 반복 링크는 링크별 분석 화면에서 함께 볼 수 있습니다. 기본 수집·분류에는 Python 3.10 이상만 필요합니다. 전략 화면의 형태소 분석에는 별도의 Kiwi 패키지가 필요합니다. 외부 의미 분석은 별도 활성화와 로그인된 Codex CLI가 필요합니다.
 
 
-### 2019
-  - Nature Machine Intelligence
-    + [Clinically applicable deep learning framework for organs at risk delineation in CT images](https://www_nature.xilesou.top/articles/s42256-019-0099-z)[[Code]](https://github.com/uci-cbcl/UaNet)
-    + [An integrated iterative annotation technique for easing neural network training in medical image analysis](https://www.nature.com/articles/s42256-019-0018-3)[[Code]](https://github.com/SarderLab/H-AI-L)
-    + [Continual learning of context-dependent processing in neural networks](https://www_nature.xilesou.top/articles/s42256-019-0080-x)
-    + [Human-level recognition of blast cells in acute myeloid leukaemia with convolutional neural networks](https://www.nature.com/articles/s42256-019-0101-9)[[Code]](https://codeocean.com/capsule/9068249/tree/v1)
-    + [Deep learning and alternative learning strategies for retrospective real-world clinical data](https://www.nature.com/articles/s41746-019-0122-0)[[Code]](https://github.com/davidchenatmayo/ForPubDM)
-  - NEW
-    + [PointRend: Image Segmentation as Rendering](https://arxiv.org/abs/1912.08193)[Kaiming He]
-    + [Momentum Contrast for Unsupervised Visual Representation Learning](https://arxiv.org/abs/1911.05722)[Kaiming He]
-    + [Kaolin: A PyTorch Library for Accelerating 3D Deep Learning Research](https://arxiv.org/abs/1911.05063)[[Code]](https://github.com/NVIDIAGameWorks/kaolin/)
-    + [Reinventing 2D Convolutions for 3D Medical Images](https://arxiv.org/abs/1911.10477)[[Code]](https://github.com/m3dv/ACSConv)
-    + [A Multigrid Method for Efficiently Training Video Models](https://arxiv.org/abs/1912.00998)[Kaiming He]
-  - ICCV2019
-    + [ShelfNet for Fast Semantic Segmentation](https://arxiv.org/abs/1811.11254v6)[[Code]](https://arxiv.org/abs/1811.11254v6)
-    + [Recurrent U-Net for Resource-Constrained Segmentation](http://openaccess.thecvf.com/content_ICCV_2019/papers/Wang_Recurrent_U-Net_for_Resource-Constrained_Segmentation_ICCV_2019_paper.pdf)
-    + [Eye Semantic Segmentation with a Lightweight Model](https://arxiv.org/abs/1911.01049)[Code](https://github.com/th2l/Eye_VR_Segmentation)[Workshop]
-    + [On the Efficacy of Knowledge Distillation](https://arxiv.org/abs/1910.01348)
-    + [DeepGCNs: Making GCNs Go as Deep as CNNs](https://arxiv.org/abs/1910.06849)
-    + [SegSort: Segmentation by Discriminative Sorting of Segments](https://arxiv.org/abs/1910.06962)[[Code]](https://jyhjinghwang.github.io/projects/segsort.html)
-    + [Domain Adaptation for Semantic Segmentation with Maximum Squares Loss](https://arxiv.org/abs/1909.13589)
-    + [ACFNet: Attentional Class Feature Network for Semantic Segmentation](https://arxiv.org/abs/1909.09408)
-    + [Asymmetric Non-local Neural Networks for Semantic Segmentation](https://arxiv.org/abs/1908.07678)[[Code]](https://github.com/MendelXu/ANN)
-    + [Gated-SCNN: Gated Shape CNNs for Semantic Segmentation](https://arxiv.org/abs/1907.05740)[[Project]](https://nv-tlabs.github.io/GSCNN/)
-    + [CCNet: Criss-Cross Attention for Semantic Segmentation](https://arxiv.org/abs/1811.11721)[[Pytorch]](https://github.com/speedinghzl/CCNet)
-    + [SPGNet: Semantic Prediction Guidance for Scene Parsing](https://arxiv.org/abs/1908.09798)
-    + [Expectation-Maximization Attention Networks for Semantic Segmentation(31 Jul)](https://arxiv.org/abs/1907.13426)[[Code]](https://github.com/XiaLiPKU/EMANet) 
-    + [Boundary-Aware Feature Propagation for Scene Segmentation](https://arxiv.org/abs/1909.00179)
-    + [Hierarchical Point-Edge Interaction Network for Point Cloud Semantic Segmentation](https://arxiv.org/abs/1909.10469)
-    + [Explicit Shape Encoding for Real-Time Instance Segmentation](https://arxiv.org/abs/1908.04067)[[Code]](https://github.com/WenqiangX/ese_seg)
-    + [Joint Learning of Saliency Detection and Weakly Supervised Semantic Segmentation](https://arxiv.org/abs/1909.04161)
-    + [Self-Ensembling with GAN-based Data Augmentation for Domain Adaptation in Semantic Segmentation](https://arxiv.org/abs/1909.00589)
-    + [Semantic-Transferable Weakly-Supervised Endoscopic Lesions Segmentation](https://arxiv.org/abs/1908.07669)
-    + [Incremental Class Discovery for Semantic Segmentation with RGBD Sensing](https://arxiv.org/abs/1907.10008)
-    + [Similarity-Preserving Knowledge Distillation](https://arxiv.org/abs/1907.09682)
-    + [Orientation-aware Semantic Segmentation on Icosahedron Spheres](https://arxiv.org/abs/1907.12849)
-    + [Incremental Learning Techniques for Semantic Segmentation](https://arxiv.org/abs/1907.13372)
-    + [Cascaded Context Pyramid for Full-Resolution 3D Semantic Scene Completion](https://arxiv.org/abs/1908.00382)
-    + [Learning Lightweight Lane Detection CNNs by Self Attention Distillation](https://arxiv.org/abs/1908.00821)[[tensorflow]](https://github.com/cardwing/Codes-for-Lane-Detection)
-    + [SqueezeNAS: Fast neural architecture search for faster semantic segmentation](https://arxiv.org/abs/1908.01748)[[ICCVW]]
-    + [GridDehazeNet: Attention-Based Multi-Scale Network for Image Dehazing](https://arxiv.org/abs/1908.03245)
-    + [Interpolated Convolutional Networks for 3D Point Cloud Understanding](https://arxiv.org/abs/1908.04512)
-    + [PANet: Few-Shot Image Semantic Segmentation with Prototype Alignment](https://arxiv.org/abs/1908.06391)
-    + [Fine-Grained Segmentation Networks: Self-Supervised Segmentation for Improved Long-Term Visual Localization](https://arxiv.org/abs/1908.06387)
-    + [Learning Semantic-Specific Graph Representation for Multi-Label Image Recognition](https://arxiv.org/abs/1908.07325)[[Code]](https://github.com/HCPLab-SYSU/SSGRL)
-    + [Attention on Attention for Image Captioning](https://arxiv.org/abs/1908.06954)[[Code]](https://github.com/husthuaan/AoANet)
-    + [A Fast and Accurate One-Stage Approach to Visual Grounding](https://arxiv.org/abs/1908.06354)
-    + [Context-Aware Emotion Recognition Networks](https://arxiv.org/abs/1908.05913)[[Code]](https://arxiv.org/abs/1908.05913)
-    + [Learning Filter Basis for Convolutional Neural Network Compression](https://arxiv.org/pdf/1908.08932.pdf)[[Pytorch]](https://github.com/ofsoundof/learning_filter_basis)
-    + [Stochastic Filter Groups for Multi-Task CNNs: Learning Specialist and Generalist Convolution Kernels](https://arxiv.org/abs/1908.09597)
-    + [Deep Camera: A Fully Convolutional Neural Network for Image Signal Processing](https://arxiv.org/abs/1908.09191)[[workshop]]
-    + [Dual Attention MobDenseNet(DAMDNet) for Robust 3D Face Alignment](https://arxiv.org/abs/1908.11821)[Code](https://github.com/LeiJiangJNU/DAMDNet)[[workshop]]
-    + [Adversarial Learning with Margin-based Triplet Embedding Regularization](https://arxiv.org/abs/1909.09481)[Code](https://github.com/zhongyy/Adversarial_MTER)
-    + [Learning to Reconstruct 3D Human Pose and Shape via Model-fitting in the Loop](https://arxiv.org/abs/1909.12828)[Code](https://www.seas.upenn.edu/~nkolot/projects/spin/)
-    + [RITnet: Real-time Semantic Segmentation of the Eye for Gaze Tracking](https://arxiv.org/abs/1910.00694)[[Code]](https://bitbucket.org/eye-ush/ritnet/)[workshop]
-    + [Mask-Guided Attention Network for Occluded Pedestrian Detection](https://arxiv.org/abs/1910.06160)[[Code]](https://github.com/Leotju/MGAN)
-    + [Guided Image-to-Image Translation with Bi-Directional Feature Transformation](https://arxiv.org/list/cs.CV/recent)[[Code]](https://github.com/vt-vl-lab/Guided-pix2pix)
-    + [Seeing What a GAN Cannot Generate](https://arxiv.org/abs/1910.11626)[[Code]](https://arxiv.org/abs/1910.11626)
-  - NIPS 2019
-    + [Object landmark discovery through unsupervised adaptation](https://arxiv.org/abs/1910.09469)[[Code]](https://arxiv.org/abs/1910.09469)
-    + [Implicit Semantic Data Augmentation for Deep Networks](https://arxiv.org/abs/1909.12220)[[Pytorch]](https://github.com/blackfeather-wang/ISDA-for-Deep-Networks)
-    + [Exploiting Local and Global Structure for Point Cloud Semantic Segmentation with Contextual Point Representations](https://arxiv.org/pdf/1911.05277.pdf)[[code]](https://github.com/fly519/ELGS)
-    + [FireNet: Real-time Segmentation of Fire Perimeter from Aerial Video](https://arxiv.org/abs/1910.06407)[Workshop]
-  - BMVC2019
-    + [MixNet: Mixed Depthwise Convolutional Kernels](https://arxiv.org/abs/1907.09595)[Code](https://github.com/tensorflow/tpu/tree/master/models/official/mnasnet/mixnet)
-    + [DABNet: Depth-wise Asymmetric Bottleneck for Real-time Semantic Segmentation](https://arxiv.org/abs/1907.11357)[[Pytorch]](https://github.com/Reagan1311/DABNet)
-    + [Dual Graph Convolutional Network for Semantic Segmentation](https://arxiv.org/abs/1909.06121)
-    + [Global Aggregation then Local Distribution in Fully Convolutional Networks](https://arxiv.org/abs/1909.07229)[Code](https://github.com/lxtGH/GALD-Net)
-    + [Feature Pyramid Encoding Network for Real-time Semantic Segmentation](https://arxiv.org/abs/1909.08599)
-    + [Accurate and Compact Convolutional Neural Networks with Trained Binarization](https://arxiv.org/abs/1909.11366)[[oral]]
-    + [Referring Expression Object Segmentation with Caption-Aware Consistency](https://arxiv.org/abs/1910.04748)[[Pytorch]](https://github.com/wenz116/lang2seg)
-  - CVPR2019   
-    + [Partial Order Pruning: for Best Speed/Accuracy Trade-off in Neural Architecture Search](https://arxiv.org/abs/1903.03777)[[Code]](https://github.com/lixincn2015/Partial-Order-Pruning)
-    + [Searching for A Robust Neural Architecture in Four GPU Hours](https://arxiv.org/abs/1910.04465)[[Code]](https://github.com/D-X-Y/NAS-Projects)[camera-ready version]
-    + [Auto-DeepLab: Hierarchical Neural Architecture Search for Semantic Image Segmentation](https://arxiv.org/abs/1901.02985)[[Tensorflow]](https://github.com/tensorflow/models/tree/master/research/deeplab)[[Pytorch]](https://github.com/MenghaoGuo/AutoDeeplab)
-    + [ESPNetv2: A Light-weight, Power Efficient, and General Purpose Convolutional Neural Network](https://arxiv.org/search/?query=ESPNetv2&searchtype=all&source=header)[[Code]](https://github.com/sacmehta/ESPNetv2)
-    + [DFANet：Deep Feature Aggregation for Real-Time Semantic Segmentation](https://arxiv.org/abs/1904.02216)[[Pytoch]](https://github.com/huaifeng1993/DFANet)
-    + [In Defense of Pre-trained ImageNet Architectures for Real-time Semantic Segmentation of Road-driving Images(Mar 2019))](https://arxiv.org/abs/1903.08469)[[Pytroch]](https://github.com/orsic/swiftnet)
-    + [Knowledge Adaptation for Efficient Semantic Segmentation(Mar 2019)](https://arxiv.org/abs/1903.04688)
-    + [Dual Attention Network for Scene Segmentation(Sep 2018)](https://arxiv.org/abs/1809.02983)[[Pytorch]](https://github.com/junfu1115/DANet) 
-    + [Adaptive Pyramid Context Network for Semantic Segmentation](http://openaccess.thecvf.com/content_CVPR_2019/papers/He_Adaptive_Pyramid_Context_Network_for_Semantic_Segmentation_CVPR_2019_paper.pdf)
-    + [Co-Occurrent Features in Semantic Segmentation](http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhang_Co-Occurrent_Features_in_Semantic_Segmentation_CVPR_2019_paper.pdf)
-    + [Structured Knowledge Distillation for Semantic Segmentation(Mar 2019)](https://arxiv.org/abs/1903.04197)
-    + [CANet: Class-Agnostic Segmentation Networks with Iterative Refinement and Attentive Few-Shot Learning](https://arxiv.org/abs/1903.02351)
-    + [Semantic Correlation Promoted Shape-Variant Context for Segmentation](https://arxiv.org/abs/1909.02651)
-    + [Collaborative Global-Local Networks for Memory-Efficient Segmentation of Ultra-High Resolution Images](https://arxiv.org/abs/1905.06368)[oral]
-    + [Bidirectional Learning for Domain Adaptation of Semantic Segmentation(Apr 2019)](https://arxiv.org/abs/1904.10620)[[Pytoch]](https://github.com/liyunsheng13/BDL)
-    + [Seamless Scene Segmentation](https://arxiv.org/abs/1905.01220)
-    + [Box-driven Class-wise Region Masking and Filling Rate Guided Loss for Weakly Supervised Semantic Segmentation](https://arxiv.org/abs/1904.11693)   
-    + [Cross-Modal Self-Attention Network for Referring Image Segmentation(Apr 2019)](https://arxiv.org/abs/1904.04745)
-    + [Decoders Matter for Semantic Segmentation: Data-Dependent Decoding Enables Flexible Feature Aggregation](https://arxiv.org/abs/1903.02120)[[Pytorch]](https://github.com/xiaoketongxue/DUpsampling)
-    + [FickleNet: Weakly and Semi-supervised Semantic Image Segmentation using Stochastic Inference](https://arxiv.org/abs/1902.10421)
-    + [A Cross-Season Correspondence Dataset for Robust Semantic Segmentation](https://arxiv.org/abs/1903.06916)
-    + [Large-scale interactive object segmentation with human annotators](https://arxiv.org/abs/1903.10830)
-    + [Deep Modular Co-Attention Networks for Visual Question Answering](https://arxiv.org/abs/1906.10770)
-    + [Enhancing Salient Object Segmentation Through Attention](https://arxiv.org/abs/1905.11522)[CVPRW】
-    + [The Ethical Dilemma when (not) Setting up Cost-based Decision Rules in Semantic Segmentation](https://arxiv.org/abs/1907.01342)
-    + [Structured Binary Neural Networks for Accurate Image Classification and Semantic Segmentation](http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhuang_Structured_Binary_Neural_Networks_for_Accurate_Image_Classification_and_Semantic_CVPR_2019_paper.pdf)
-  - AAAI 2019
-    + [Learning Fully Dense Neural Networks for Image Semantic Segmentation(May 2019)](https://arxiv.org/abs/1905.08929)
-  - ICIP2019
-    + [Incorporating Luminance, Depth and Color Information by a Fusion-based Network for Semantic Segmentation](https://arxiv.org/abs/1809.09077)[[Code]](https://github.com/shangweihung/LDFNet)
-    + [Implicit Background Estimation for Semantic Segmentation](https://arxiv.org/abs/1905.13306)
-    + [LEDNet: A Lightweight Encoder-Decoder Network for Real-Time Semantic Segmentation](https://arxiv.org/pdf/1905.02423.pdf)
-    + [What's There in The Dark](https://ieeexplore.ieee.org/abstract/document/8803299/authors#authors)[[Keras]](https://github.com/sauradip/night_image_semantic_segmentation)
-    + [Diversity in Fashion Recommendation using Semantic Parsing](https://arxiv.org/abs/1910.08292)[[pytorch]](https://github.com/sagarverma/FashionRecommendationST-LSTM)
-  - SPL
-    + [RFBNet: Deep Multimodal Networks with Residual Fusion Blocks for RGB-D Semantic Segmentation(29 Jun)](https://arxiv.org/abs/1907.00135)
-  -  SCI  
-    + [Self-Supervised Model Adaptation for Multimodal Semantic Segmentation](https://arxiv.org/abs/1808.03833)[[Code]](https://github.com/DeepSceneSeg)[IJCV]   
-    + [Fine-grained Action Segmentation using the Semi-Supervised Action GAN](https://arxiv.org/abs/1909.09269)[ Pattern Recognition]  
-  - WACV
-    + [CNN-based Semantic Segmentation using Level Set Loss](https://arxiv.org/abs/1910.00950)
-    + [Shape Constrained Network for Eye Segmentation in the Wild](https://arxiv.org/abs/1910.05283)[[Code]](https://arxiv.org/abs/1910.05283)
-  - ICCD
-    + [VNet: A Versatile Network for Efficient Real-Time Semantic Segmentation](http://www.iccd-conf.com/Program_2019_.html)
-  - other
-    + [SCAttNet: Semantic Segmentation Network with Spatial and Channel Attention Mechanism for High-Resolution Remote Sensing Images](https://arxiv.org/abs/1912.09121)[[Code]](https://github.com/lehaifeng/SCAttNet)
-    + [PixelRL: Fully Convolutional Network with Reinforcement Learning for Image Processing](https://arxiv.org/abs/1912.07190)[[Code]](https://github.com/rfuruta/pixelRL)
-    + [Semantic Segmentation for Compound figures](https://arxiv.org/abs/1912.07142)
-    + [LiteSeg: A Novel Lightweight ConvNet for Semantic Segmentation](https://arxiv.org/abs/1912.06683)
-    + [Waterfall Atrous Spatial Pooling Architecture for Efficient Semantic Segmentation](https://arxiv.org/abs/1912.03183)
-    + [RGPNet: A Real-Time General Purpose Semantic Segmentation](https://arxiv.org/abs/1912.01394)
-    + [Deep Object Co-segmentation via Spatial-Semantic Network Modulation](https://arxiv.org/abs/1911.12950)
-    + [RandLA-Net: Efficient Semantic Segmentation of Large-Scale Point Clouds](https://arxiv.org/abs/1911.11236)[[Code]](https://github.com/QingyongHu/RandLA-Net)
-    + [Stagewise Knowledge Distillation](https://arxiv.org/abs/1911.06786)
-    + [Location-aware Upsampling for Semantic Segmentation](https://arxiv.org/abs/1911.05250)[Code](https://arxiv.org/abs/1911.05250)
-    + [Improving Semantic Segmentation via Dilated Affinity](https://arxiv.org/abs/1907.07011)
-    + [LPRNet: Lightweight Deep Network by Low-rank Pointwise Residual Convolution](https://arxiv.org/abs/1910.11853)
-    + [Attention Mechanism Enhanced Kernel Prediction Networks for Denoising of Burst Images](https://arxiv.org/abs/1910.08313)[[Pytorch]](https://github.com/z-bingo/Attention-Mechanism-Enhanced-KPN)
-    + [Background Segmentation for Vehicle Re-Identification](https://arxiv.org/abs/1910.06613)
-    + [Saliency Guided Self-attention Network for Weakly-supervised Semantic Segmentation](https://arxiv.org/abs/1910.05475)
-    + [Unrestricted Adversarial Attacks for Semantic Segmentation](https://arxiv.org/abs/1910.02354)
-    + [Learning Point Embeddings from Shape Repositories for Few-Shot Segmentation](https://arxiv.org/abs/1910.01269)
-    + [3D Neighborhood Convolution: Learning Depth-Aware Features for RGB-D and RGB Semantic Segmentation](https://arxiv.org/abs/1910.01460)
-    + [End-to-End Deep Convolutional Active Contours for Image Segmentation](https://arxiv.org/abs/1909.13359)
-    + [IPC-Net: 3D point-cloud segmentation using deep inter-point convolutional layers](https://arxiv.org/list/cs.CV/pastweek?skip=0&show=25)
-    + [Point Attention Network for Semantic Segmentation of 3D Point Clouds](https://arxiv.org/abs/1909.12663)
-    + [Object-Contextual Representations for Semantic Segmentation](https://arxiv.org/abs/1909.11065)[[Code]](https://arxiv.org/list/cs.CV/recent)
-    + [A New Few-shot Segmentation Network Based on Class Representation](https://arxiv.org/abs/1909.08754)
-    + [Object Segmentation using Pixel-wise Adversarial Loss](https://arxiv.org/abs/1909.10341)
-    + [Graph-guided Architecture Search for Real-time Semantic Segmentation](https://arxiv.org/abs/1909.06793)
-    + [Boosting Real-Time Driving Scene Parsing with Shared Semantics](https://arxiv.org/abs/1909.07038)
-    + [Squeeze-and-Attention Networks for Semantic Segmentation](https://arxiv.org/abs/1909.03402)
-    + [Semantic Segmentation of Panoramic Images Using a Synthetic Dataset](https://arxiv.org/abs/1909.00532)
-    + [Class-Based Styling: Real-time Localized Style Transfer with Semantic Segmentation](https://arxiv.org/abs/1908.11525)
-    + [Revisiting CycleGAN for semi-supervised segmentation](https://arxiv.org/abs/1908.11569)
-    + [LU-Net: An Efficient Network for 3D LiDAR Point Cloud Semantic Segmentation Based on End-to-End-Learned 3D Features and U-Net](https://arxiv.org/abs/1908.11656)
-    + [Where Is My Mirror?](https://arxiv.org/abs/1908.09101)
-    + [Don't ignore Dropout in Fully Convolutional Networks](https://arxiv.org/abs/1908.09162)
-    + [See More Than Once -- Kernel-Sharing Atrous Convolution for Semantic Segmentation](https://arxiv.org/abs/1908.09443)
-    + [Constructing Self-motivated Pyramid Curriculums for Cross-Domain Semantic Segmentation: A Non-Adversarial Approach](https://arxiv.org/abs/1908.09547)
-    + [Consensus Feature Network for Scene Parsing](https://arxiv.org/abs/1907.12411)
-    + [Semi-Supervised Semantic Segmentation with High- and Low-level Consistency](https://arxiv.org/abs/1908.05724)
-    + [See Clearer at Night: Towards Robust Nighttime Semantic Segmentation through Day-Night Image Conversion](https://arxiv.org/abs/1908.05868)
-    + [Adaptative Inference Cost With Convolutional Neural Mixture Models](https://arxiv.org/abs/1908.06694)
-    + [Dynamic Graph Message Passing Networks](https://arxiv.org/abs/1908.06955)
-    + [PS^2-Net: A Locally and Globally Aware Network for Point-Based Semantic Segmentation](https://arxiv.org/abs/1908.05425)
-    + [MoGA: Searching Beyond MobileNetV3](https://arxiv.org/pdf/1908.01314.pdf)
-    + [I Bet You Are Wrong: Gambling Adversarial Networks for Structured Semantic Segmentation](https://arxiv.org/abs/1908.02711)
-    + [EdgeNet: Semantic Scene Completion from RGB-D images](https://arxiv.org/abs/1908.02893)
-    + [ExtremeC3Net: Extreme Lightweight Portrait Segmentation Networks using Advanced C3-modules](https://arxiv.org/abs/1908.03093)
-    + [Learning Densities in Feature Space for Reliable Segmentation of Indoor Scenes](https://arxiv.org/abs/1908.00448)
-    + [DAR-Net: Dynamic Aggregation Network for Semantic Scene Segmentation](https://arxiv.org/abs/1907.12022)
-    + [Dilated Point Convolutions: On the Receptive Field of Point Convolutions](https://arxiv.org/abs/1907.12046)
-    + [ColorMapGAN: Unsupervised Domain Adaptation for Semantic Segmentation Using Color Mapping Generative Adversarial Networks](https://arxiv.org/abs/1907.12859)
-    + [Grid Saliency for Context Explanations of Semantic Segmentation](https://arxiv.org/abs/1907.13054)
-    + [A Comparative Study of High-Recall Real-Time Semantic Segmentation Based on Swift Factorized Network](https://arxiv.org/abs/1907.11394)
-    + [Semantic Deep Intermodal Feature Transfer: Transferring Feature Descriptors Between Imaging Modalities](https://arxiv.org/list/cs.CV/recent)
-    + [Context-Integrated and Feature-Refined Network for Lightweight Urban Scene Parsing](https://arxiv.org/pdf/1907.11474.pdf)
-    + [Single Level Feature-to-Feature Forecasting with Deformable Convolutions](https://arxiv.org/abs/1907.11475)
-    + [SDNet: Semantically Guided Depth Estimation Network](https://arxiv.org/abs/1907.10659)
-    + [Self-supervised Domain Adaptation for Computer Vision Tasks](https://arxiv.org/abs/1907.10915)[Pytorch](https://github.com/Jiaolong/self-supervised-da)
-    + [Make Skeleton-based Action Recognition Model Smaller, Faster and Better](https://arxiv.org/abs/1907.09658)
-    + [LYTNet: A Convolutional Neural Network for Real-Time Pedestrian Traffic Lights and Zebra Crossing Recognition for the Visually Impaired](https://arxiv.org/abs/1907.09706)
-    + [RRNet: Repetition-Reduction Network for Energy Efficient Decoder of Depth Estimation](https://arxiv.org/abs/1907.09707)
-    + [Multi-Class Lane Semantic Segmentation using Efficient Convolutional Networks](https://arxiv.org/abs/1907.09438)
-    + [Adaptive Context Encoding Module for Semantic Segmentation](https://arxiv.org/abs/1907.06082)
-    + [Mango Tree Net -- A fully convolutional network for semantic segmentation and individual crown detection of mango trees](https://arxiv.org/abs/1907.06915)
-    + [Data Selection for training Semantic Segmentation CNNs with cross-dataset weak supervision](https://arxiv.org/abs/1907.07023)
-    + [Efficient Segmentation: Learning Downsampling Near Semantic Boundaries](https://arxiv.org/abs/1907.07156)
-    + [VarGNet: Variable Group Convolutional Neural Network for Efficient Embedded Computing](https://arxiv.org/abs/1907.05653)
-    + [Gated-SCNN: Gated Shape CNNs for Semantic Segmentation(12 Jul)](https://arxiv.org/abs/1907.05740)[Code](https://nv-tlabs.github.io/GSCNN/)
-    + [SAN: Scale-Aware Network for Semantic Segmentation of High-Resolution Aerial Images](https://arxiv.org/abs/1907.03089)
-    + [Slim-CNN: A Light-Weight CNN for Face Attribute Prediction](https://arxiv.org/abs/1907.02157)
-    + [ELKPPNet: An Edge-aware Neural Network with Large Kernel Pyramid Pooling for Learning Discriminative Features in Semantic Segmentation](https://arxiv.org/abs/1906.11428)
-    + [Hard Pixels Mining: Learning Using Privileged Information for Semantic Segmentation](https://arxiv.org/abs/1906.11437)
-    + [ESNet: An Efficient Symmetric Network for Real-time Semantic Segmentation](https://arxiv.org/abs/1906.09826)[[Pytorch]](https://github.com/xiaoyufenfei/ESNet)
-    + [Recurrent U-Net for Resource-Constrained Segmentation](https://arxiv.org/abs/1906.04913)
-    + [Topology-Preserving Deep Image Segmentation](https://arxiv.org/abs/1906.05404)
-    + [Show, Match and Segment: Joint Learning of Semantic Matching and Object Co-segmentation](https://arxiv.org/pdf/1906.05857.pdf)
-    + [DiCENet: Dimension-wise Convolutions for Efficient Networks](https://arxiv.org/abs/1906.03516)
-    + [Cross-view Semantic Segmentation for Sensing Surroundings](https://arxiv.org/abs/1906.03560)
-    + [NAS-FCOS: Fast Neural Architecture Search for Object Detection](https://arxiv.org/abs/1906.04423)
-    + [Gated CRF Loss for Weakly Supervised Semantic Image Segmentation](https://arxiv.org/abs/1906.04651)
-    + [Seeing Behind Things: Extending Semantic Segmentation to Occluded Regions](https://arxiv.org/abs/1906.02885)
-    + [Zero-Shot Semantic Segmentation](https://arxiv.org/abs/1906.00817)
-    + [Consistency regularization and CutMix for semi-supervised semantic segmentation](https://arxiv.org/abs/1906.01916)
-    + [RGB and LiDAR fusion based 3D Semantic Segmentation for Autonomous Driving](https://arxiv.org/abs/1906.00208)
-    + [Zero-Shot Semantic Segmentation](https://arxiv.org/abs/1906.00817)
-    + [Closed-Loop Adaptation for Weakly-Supervised Semantic Segmentation](https://arxiv.org/abs/1905.12190)
-    + [Closed-Loop Adaptation for Weakly-Supervised Semantic Segmentation](https://arxiv.org/abs/1905.12190)
-    + [Incorporating Human Domain Knowledge in 3D LiDAR-based Semantic Segmentation](https://arxiv.org/abs/1905.09533)
-    + [U-Net Based Multi-instance Video Object Segmentation(May 2019)](https://arxiv.org/abs/1905.07826)
-    + [Boundary Loss for Remote Sensing Imagery Semantic Segmentation(May 2019)](https://arxiv.org/abs/1905.07852)
-    + [Efficient Ladder-style DenseNets for Semantic Segmentation of Large Images(May 2019)](https://arxiv.org/abs/1905.05661)
-    + [Simultaneous Object Detection and Semantic Segmentation](https://arxiv.org/abs/1905.02285)
-    + [Unsupervised Domain Adaptation using Generative Adversarial Networks for Semantic Segmentation of Aerial Images](https://arxiv.org/abs/1905.03198)
-    + [EdgeSegNet: A Compact Network for Semantic Segmentation(May 2019)](https://arxiv.org/abs/1905.04222)
-    + [SEMEDA: Enhancing Segmentation Precision with Semantic Edge Aware Loss](https://arxiv.org/abs/1905.01892)
-    + [Segmenting the Future(Apr 2019)](https://arxiv.org/abs/1904.10666)[[Code]](https://github.com/eddyhkchiu/segmenting_the_future/)
-    + [CaseNet: Content-Adaptive Scale Interaction Networks for Scene Parsing(Apr 2019)](https://arxiv.org/abs/1904.08170)
-    + [ACE: Adapting to Changing Environments for Semantic Segmentation(Apr 2019)](https://arxiv.org/abs/1904.06268)
-    + [FastFCN: Rethinking Dilated Convolution in the Backbone for Semantic Segmentation(Mar 2019)](https://arxiv.org/abs/1903.11816)[[Pytorch]](https://github.com/wuhuikai/FastFCN)
-    + [Architecture Search of Dynamic Cells for Semantic Video Segmentation(Apr 2019)](https://arxiv.org/abs/1904.02371)
-    + [Template-Based Automatic Search of Compact Semantic Segmentation Architectures(Apr 2019)](https://arxiv.org/abs/1904.02365)
-    + [DFANet: Deep Feature Aggregation for Real-Time Semantic Segmentation(Apr 2019)](https://arxiv.org/abs/1904.02216)
-    + [DADA: Depth-aware Domain Adaptation in Semantic Segmentation(Apr 2019)](https://arxiv.org/abs/1904.01886)
-    + [GFF: Gated Fully Fusion for Semantic Segmentation(Apr 2019)](https://arxiv.org/abs/1904.01803)
-    + [MAVNet: an Effective Semantic Segmentation Micro-Network for MAV-based Tasks(Apr 2019)](https://arxiv.org/abs/1904.01795)
-    + [Significance-aware Information Bottleneck for Domain Adaptive Semantic Segmentation(Apr 2019)](https://arxiv.org/abs/1904.00876)
-    + [The Fishyscapes Benchmark: Measuring Blind Spots in Semantic Segmentation(Apr 2019)](https://arxiv.org/abs/1904.03215)
-    + [Weakly Supervised Adversarial Domain Adaptation for Semantic Segmentation in Urban Scenes(Apr 2019)](https://arxiv.org/abs/1904.09092)
-    + [The iterative convolution-thresholding method (ICTM) for image segmentation(Apr 2019)](https://arxiv.org/abs/1904.10917)
-    + [Blurring the Line Between Structure and Learning to Optimize and Adapt Receptive Fields( Apr 2019)](https://arxiv.org/abs/1904.11487)
-### 2018
-  - CVPR 2018
-    + [Context Encoding for Semantic Segmentation(Mar 2018)](https://hangzhang.org/PyTorch-Encoding/experiments/segmentation.html)
-    + [DenseASPP for Semantic Segmentation in StreetScenes](http://openaccess.thecvf.com/content_cvpr_2018/papers/Yang_DenseASPP_for_Semantic_CVPR_2018_paper.pdf)[[Pytorch]](https://github.com/DeepMotionAIResearch/DenseASPP/tree/master/models)
-    + [PAD-Net: Multi-Tasks Guided Prediction-and-Distillation Network for Simultaneous Depth Estimation and Scene Parsing(May 2018)](https://arxiv.org/abs/1805.04409)
-    + [Dense Decoder Shortcut Connections for Single-Pass Semantic Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Bilinski_Dense_Decoder_Shortcut_CVPR_2018_paper.pdf)
-    + [DFN:Learning a Discriminative Feature Network for Semantic Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Yu_Learning_a_Discriminative_CVPR_2018_paper.pdf)
-    + [Guided Proofreading of Automatic Segmentations for Connectomics](http://openaccess.thecvf.com/content_cvpr_2018/papers/Haehn_Guided_Proofreading_of_CVPR_2018_paper.pdf)
-    + [Recurrent Scene Parsing with Perspective Understanding in the Loop](http://openaccess.thecvf.com/content_cvpr_2018/CameraReady/0534.pdf)
-    + [Context Contrasted Feature and Gated Multi-scale Aggregation for Scene Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Ding_Context_Contrasted_Feature_CVPR_2018_paper.pdf)
-    + [icient interactive annotation of segmentation datasets with polygon rnn++](http://openaccess.thecvf.com/content_cvpr_2018/papers/Acuna_Efficient_Interactive_Annotation_CVPR_2018_paper.pdf)
-    + [Compassionately Conservative Balanced Cuts for Image Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Cahill_Compassionately_Conservative_Balanced_CVPR_2018_paper.pdf)
-    + [Dynamic-structured Semantic Propagation Network](http://openaccess.thecvf.com/content_cvpr_2018/papers/Liang_Dynamic-Structured_Semantic_Propagation_CVPR_2018_paper.pdf)
-    + [In-Place Activated BatchNorm for Memory-Optimized Training of DNNs](http://openaccess.thecvf.com/content_cvpr_2018/papers/Bulo_In-Place_Activated_BatchNorm_CVPR_2018_paper.pdf)
-    + [Error Correction for Dense Semantic Image Labeling](http://openaccess.thecvf.com/content_cvpr_2018_workshops/papers/w14/Huang_Error_Correction_for_CVPR_2018_paper.pdf)
-    + [Revisiting Dilated Convolution: A Simple Approach for Weakly- and Semi-Supervised Semantic Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Wei_Revisiting_Dilated_Convolution_CVPR_2018_paper.pdf)
-    + [On the Importance of Label Quality for Semantic Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Zlateski_On_the_Importance_CVPR_2018_paper.pdf)
-    + [Referring Image Segmentation via Recurrent Refinement Networks](http://openaccess.thecvf.com/content_cvpr_2018/papers/Li_Referring_Image_Segmentation_CVPR_2018_paper.pdf)[[Code]](https://github.com/liruiyu/referseg_rrn)  
-    + [Learning Superpixels with Segmentation-Aware Affinity Loss](http://openaccess.thecvf.com/content_cvpr_2018/papers/Tu_Learning_Superpixels_With_CVPR_2018_paper.pdf)
-    + [Weakly and Semi Supervised Human Body Part Parsing via Pose-Guided Knowledge Transfer](http://openaccess.thecvf.com/content_cvpr_2018/papers/Fang_Weakly_and_Semi_CVPR_2018_paper.pdf)
-    + [Multi-Evidence Filtering and Fusion for Multi-Label Classification, Object Detection and Semantic Segmentation Based on Weakly Supervised Learning](https://github.com/wutianyiRosun/Segmentation.X)
-    + [Learning Pixel-Level Semantic Affinity With Image-Level Supervision for Weakly Supervised Semantic Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Ahn_Learning_Pixel-Level_Semantic_CVPR_2018_paper.pdf)
-    + [Weakly-Supervised Semantic Segmentation Network With Deep Seeded Region Growing](http://openaccess.thecvf.com/content_cvpr_2018/papers/Huang_Weakly-Supervised_Semantic_Segmentation_CVPR_2018_paper.pdf)
-    + [Revisiting Dilated Convolution: A Simple Approach for Weakly- and Semi-Supervised Semantic Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Wei_Revisiting_Dilated_Convolution_CVPR_2018_paper.pdf)
-    + [Bootstrapping the Performance of Webly Supervised Semantic Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Shen_Bootstrapping_the_Performance_CVPR_2018_paper.pdf)
-    + [Normalized Cut Loss for Weakly-Supervised CNN Segmentation](http://openaccess.thecvf.com/content_cvpr_2018/papers/Tang_Normalized_Cut_Loss_CVPR_2018_paper.pdf)
-    + [Weakly-Supervised Semantic Segmentation by Iteratively Mining Common Object Features](http://openaccess.thecvf.com/content_cvpr_2018/papers/Wang_Weakly-Supervised_Semantic_Segmentation_CVPR_2018_paper.pdf)
-    + [Weakly Supervised Instance Segmentation Using Class Peak Response](http://openaccess.thecvf.com/content_cvpr_2018/papers/Zhou_Weakly_Supervised_Instance_CVPR_2018_paper.pdf)
+## 2026-09-16 외부 자료·수집 집계·관측 신호 보완
 
-  - ECCV 2018
-    + [BiSeNet: Bilateral Segmentation Network for Real-time Semantic Segmentation(Aug 2018)](https://www.baidu.com/link?url=jC2iP9t_S6_XTmwSijQ9qCKLn6n51z71MV-Tki8qdlIgHCUgXgeIntJCx1PVmzZE&wd=&eqid=af75bc8c00018f26000000035cc7a700)
-    + [ICNet for Real-Time Semantic Segmentation on High-Resolution Images(Apr 2017)](https://arxiv.org/abs/1704.08545)[[Pytorch]](https://github.com/hszhao/ICNet)
-    + [ESPNet: Efficient Spatial Pyramid of Dilated Convolutions for Semantic Segmentation(Mar 2018 )](https://arxiv.org/abs/1803.06815)[[Pytorch]](https://github.com/sacmehta/ESPNet)
-    + [Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation(Feb 2018)](https://arxiv.org/abs/1802.02611v1)[Deeplab V3+]
-    + [Pyramid Attention Network for Semantic Segmentation](https://www.baidu.com/link?url=dZPzXSz0sfHZylg1XlEb608N5xbz2bWdZWR0vJCVEqct4jh21DANQeE1NNqK1gwU&wd=&eqid=f4fbbf6400068658000000025ddf6a2e)
-    + [Adaptive Affinity Fields for Semantic Segmentation(Mar 2018)](https://arxiv.org/abs/1803.10335)
-    + [ExFuse: Enhancing Feature Fusion for Semantic Segmentation(Apr 2018)](https://arxiv.org/abs/1804.03821)
-    + [Unified Perceptual Parsing for Scene Understanding(Jul 2018)](https://arxiv.org/abs/1807.10221)
-    + [Multi-Scale Context Intertwining for Semantic Segmentation](http://openaccess.thecvf.com/content_ECCV_2018/papers/Di_Lin_Multi-Scale_Context_Intertwining_ECCV_2018_paper.pdf)
-    + [PSANet: Point-wise Spatial Attention Network for Scene Parsing](https://hszhao.github.io/papers/eccv18_psanet.pdf)
-  - NeurIPS 2018
-    + [Searching for Efficient Multi-Scale Architectures for Dense Image Prediction(Sep 2018)](https://arxiv.org/abs/1809.04184)[[Tensorflow]](https://github.com/tensorflow/models/tree/master/research/deeplab)
-    + [A Probabilistic U-Net for Segmentation of Ambiguous Images(Jun 2018)](https://arxiv.org/abs/1806.05034)
-    + [DifNet: Semantic Segmentation by DiffusionNetworks(May 2018)](https://arxiv.org/abs/1805.08015v1)
-  - AAAI 2018
-    + [Spatial As Deep: Spatial CNN for Traffic Scene Understanding(Dec 2017)](https://arxiv.org/abs/1712.06080)
-    + [Mix-and-Match Tuning for Self-Supervised Semantic Segmentation(Dec 2017)](https://arxiv.org/abs/1712.00661)
-    + [Searching for Efficient Multi-Scale Architectures for Dense Image Prediction](https://papers.nips.cc/paper/8087-searching-for-efficient-multi-scale-architectures-for-dense-image-prediction.pdf)
-    + [A^2-Nets: Double Attention Networks](https://papers.nips.cc/paper/7318-a2-nets-double-attention-networks.pdf)
-    + [Symbolic Graph Reasoning Meets Convolutions](https://papers.nips.cc/paper/7456-symbolic-graph-reasoning-meets-convolutions)
-    + [Beyond Grids: Learning Graph Representations for Visual Recognition](https://github.com/wutianyiRosun/Segmentation.X)
-  - IJCAI 2018
-    + [High Resolution Feature Recovering for Accelerating Urban Scene Parsing](https://www.ijcai.org/proceedings/2018/0161.pdf)
-  - Othes
-    + [SalsaNet: Fast Road and Vehicle Segmentation in LiDAR Point Clouds for Autonomous Driving](https://arxiv.org/abs/1909.08291)[Code](https://arxiv.org/abs/1909.08291)
-    + [Segmenting Objects in Day and Night:Edge-Conditioned CNN for Thermal Image Semantic Segmentation](https://arxiv.org/pdf/1907.10303.pdf)
-    + [RelationNet: Learning Deep-Aligned Representation for Semantic Image Segmentation][ICPR]
-    + [CCNet: Criss-Cross Attention for Semantic Segmentation(Nov 2018)](https://arxiv.org/abs/1811.11721)[[Pytorch]](https://github.com/speedinghzl/CCNet)
-    + [OCNet: Object Context Network for Scene Parsing(Sep 2018)](https://arxiv.org/abs/1809.00916)[[Pytorch]](https://github.com/PkuRainBow/OCNet.pytorch)
-    + [CGNet: A Light-weight Context Guided Network for Semantic Segmentation(Nov 2018)](https://arxiv.org/abs/1811.08201)[[Pytorch]](https://github.com/wutianyiRosun/CGNet)
-    + [ShelfNet for Real-time Semantic Segmentation, Multi-path segmentation network(Nov 2018)](https://arxiv.org/abs/1811.11254v2)[[Pytorch]](https://github.com/juntang-zhuang/ShelfNet)
-    + [Evaluating Bayesian Deep Learning Methods for Semantic Segmentation(Nov 2018)](https://arxiv.org/abs/1811.12709)
-    + [Improving Semantic Segmentation via Video Propagation and Label Relaxation](https://arxiv.org/abs/1812.01593)[Code](https://nv-adlr.github.io/publication/2018-Segmentation)
-    + [Decoupled Spatial Neural Attention for Weakly Supervised Semantic Segmentation(Mar 2018)](https://arxiv.org/abs/1803.02563)
-    + [Locally Adaptive Learning Loss for Semantic Image Segmentation(Feb 2018)](https://arxiv.org/abs/1802.08290)
-    + [RTSeg: Real-time Semantic Segmentation Comparative Study( Mar 2018)](https://arxiv.org/abs/1803.02758)
-### 2017
-  - CVPR 2017
-    + [Pyramid Scene Parsing Network(Dec 2016)](https://arxiv.org/abs/1612.01105)
-    + [Dilated Residual Networks(Jun 2016)](https://arxiv.org/abs/1705.09914)
-    + [Convolutional RandomWalk Networks for Semantic Image Segmentation(May 2016)](https://arxiv.org/abs/1605.07681)
-    + [Loss Max-Pooling for Semantic Image Segmentation(Apr 2017)](https://arxiv.org/abs/1704.02966)
-    + [Full-Resolution Residual Networks for Semantic Segmentation in Street Scenes(Nov 2016)](https://arxiv.org/abs/1611.08323)
-    + [Gated Feedback Refinement Network for Dense Image Labeling](http://openaccess.thecvf.com/content_cvpr_2017/papers/Islam_Gated_Feedback_Refinement_CVPR_2017_paper.pdf)
-    + [Refinenet: Multi-path refinement networks for high-resolution semantic segmentation](http://openaccess.thecvf.com/content_cvpr_2017/papers/Lin_RefineNet_Multi-Path_Refinement_CVPR_2017_paper.pdf)
-    + [Semantic Segmentation via Structured Patch Prediction, Context CRF and Guidance CRF](http://openaccess.thecvf.com/content_cvpr_2017/papers/Shen_Semantic_Segmentation_via_CVPR_2017_paper.pdf)
-    + [Learning Adaptive Receptive Fields for Deep Image Parsing Network](http://openaccess.thecvf.com/content_cvpr_2017/papers/Wei_Learning_Adaptive_Receptive_CVPR_2017_paper.pdf)
-    + [The One Hundred Layers Tiramisu: Fully Convolutional DenseNets for Semantic Segmentation](https://arxiv.org/abs/1611.09326)[Workshop]
+- `/sources`: Agent-Reach 1.5.0을 프로젝트 전용 환경에 연결했습니다. 공개 웹/X/GitHub/YouTube/RSS 읽기 작업과 결과를 확인합니다. 추가 도구·로그인이 필요한 플랫폼은 설정 필요 상태로 표시합니다. 원문 읽기는 기존 source_excerpts 캐시와 GraphRAG의 **미검토 원문 근거**에 연결됩니다. 상세 설치·범위는 [통합 설명](integrations/agent-reach/README.md)을 참고하세요.
+- Telegram은 **신규 메시지 확인 → 저장·뉴스 분리 → 중복 제거 → 고유 수 갱신** 순서로 기록합니다. 수집기 확인 시각, 메시지 수신/저장 시각, 추출 완료 시각이 다릅니다. 실제 고유 수와 기본 분석 실행의 고정 대상 수를 따로 표시합니다. 점검 시점6278건과 이전 분석 대상6175건의 차이는103건이었습니다. 새 자료의 분석 완료를 뜻하지 않습니다.
+- 전략 카드·선택 탭은 현재·직전 기간 모두 자료가 있는 주제만 표시합니다. 등록 설정은 보존합니다. AI 통제 신호는 같은 문장의 AI 문맥과 정확한 수집 문장을 확인하고, 현재7일의 건수·인용과 직전7일 비교를 표시합니다. 근거 없는 관측 카드는 숨기고, 제안·부정·조건부 표현 및 Telegram/원문 출처를 구분합니다. 실제 통제 효과의 LLM 검증으로 표시하지 않습니다.
+- 영상 기반 시각화는 [구현 제안](VISUALIZATION_PROPOSAL.md)에 화면 구성·데이터 연결·구현 순서·검증 기준을 정리했습니다. 3D 화면 자체는 아직 구현하지 않았습니다.
 
-  - ICCV 2017
-    + [Segmentation-Aware Convolutional Networks Using Local Attention Mask(Mar 2017)](https://arxiv.org/abs/1703.07684)  
-    + [Predicting Deeper into the Future of Semantic Segmentation(Mar 2017)](https://arxiv.org/abs/1703.07684)  
-    + [FoveaNet: Perspective-aware Urban Scene Parsing(Aug 2017))](https://arxiv.org/abs/1708.02421)  
-    + [Dense and Low-Rank Gaussian CRFs Using Deep Embeddings Siddhartha](http://openaccess.thecvf.com/content_ICCV_2017/papers/Chandra_Dense_and_Low-Rank_ICCV_2017_paper.pdf)
-    + [Scale-adaptive Convolutions for Scene Parsing](http://openaccess.thecvf.com/content_ICCV_2017/papers/Zhang_Scale-Adaptive_Convolutions_for_ICCV_2017_paper.pdf)
-    + [Deep Dual Learning for Semantic Image Segmentation](http://openaccess.thecvf.com/content_ICCV_2017/papers/Luo_Deep_Dual_Learning_ICCV_2017_paper.pdf)
-    + [Semi Supervised Semantic Segmentation Using Generative Adversarial Network](http://openaccess.thecvf.com/content_ICCV_2017/papers/Souly__Semi_Supervised_ICCV_2017_paper.pdf)
-  - NIPS 2017
-    + [Learning Affinity via Spatial Propagation Networks](https://papers.nips.cc/paper/6750-learning-affinity-via-spatial-propagation-networks.pdf)
-    + [Dual Path Networks](https://papers.nips.cc/paper/7033-dual-path-networks.pdf)
-  - Others
-    + [Understanding Convolution for Semantic Segmentation](http://cseweb.ucsd.edu/~gary/pubs/panqu-wacv-2018.pdf)[WACV
-]
-    + [Semantic Segmentation with Reverse Attention(Jul 2017)](https://arxiv.org/abs/1707.06426)[BMVC]
-    + [Rethinking Atrous Convolution for Semantic Image Segmentation(Jun 2017)](https://arxiv.org/abs/1706.05587)
-    + [Pixel Deconvolutional Networks(May 2017)](https://arxiv.org/abs/1705.06820)
+## 2026-09-16 복구·GraphRAG·주제 강조
 
-### 2016
-  - CVPR 2016
-    + [Semantic Image Segmentation with Task-Specific Edge Detection Using CNNs and a Discriminatively Trained Domain Transform(Nov 2015)](https://arxiv.org/abs/1511.03328?context=cs.CV)
-    + [ReSeg: A Recurrent Neural Network-based Model for Semantic Segmentation(Nov 2015)](https://arxiv.org/abs/1511.07053)[Workshop][[Pytorch]](https://github.com/Wizaron/reseg-pytorch)
-  - ECCV 2016
-    + [Attention to Scale: Scale-aware Semantic Image Segmentation(Nov 2015)](https://arxiv.org/abs/1511.03339v1)
-    + [Efficient Piecewise Training of Deep Structured Models for Semantic Segmentation](http://openaccess.thecvf.com/content_cvpr_2016/papers/Lin_Efficient_Piecewise_Training_CVPR_2016_paper.pdf)  
-    + [Semantic Object Parsing with Graph LSTM(Mar 2016)](https://arxiv.org/abs/1603.07063)  
-  - ICLR 2016   
-    + [Multi-scale context aggregation by dilated convolutions(Nov 2015) ](https://arxiv.org/abs/1511.07122v2)[[Pytorch]](https://github.com/fyu/drn#semantic-image-segmentataion)  
-    + [Learning Dense Convolutional Embeddings for Semantic Segmentation(Nov 2015)](https://arxiv.org/abs/1511.04377)  
-  - NIPS Workshop   
-    + [Semantic Segmentation using Adversarial Networks(Nov 2016)](https://arxiv.org/abs/1611.08408)  
-  - others   
-    + [ENet: A Deep Neural Network Architecture for Real-Time Semantic Segmentation(Jun 2016)](https://arxiv.org/abs/1606.02147) 
-    + [High-performance Semantic Segmentation Using Very Deep Fully Convolutional Networks(Apr 2016)](https://arxiv.org/abs/1604.04339)
-    + [PixelNet: Towards a General Pixel-level Architecture(Sep 2016))](https://arxiv.org/abs/1609.06694)  
-    + [MultiNet: Real-time Joint Semantic Reasoning for Autonomous Driving(Dec 2016)](https://arxiv.org/abs/1612.07695)  
-### 2015
-  - CVPR 2015
-    + [Fully Convolutional Networks for Semantic Segmentation(Nov 2014)](https://arxiv.org/abs/1411.4038)
-    + [Feedforward semantic segmentation with zoom-out features(Dec 2014)](https://arxiv.org/abs/1412.0774v1)
-    + [Learning to Propose Objects](http://openaccess.thecvf.com/content_cvpr_2015/papers/Krahenbuhl_Learning_to_Propose_2015_CVPR_paper.pdf)[[Project]](http://vladlen.info/publications/learning-to-propose-objects/)[[Pytorch]](https://github.com/philkr/lpo)
-    + [Hypercolumns for Object Segmentation and Fine-grained Localization](http://openaccess.thecvf.com/content_cvpr_2015/papers/Hariharan_Hypercolumns_for_Object_2015_CVPR_paper.pdf)
-    + [Scene Labeling with LSTM Recurrent Neural Networks](http://openaccess.thecvf.com/content_cvpr_2015/papers/Byeon_Scene_Labeling_With_2015_CVPR_paper.pdf)
-    + [Weakly supervised semantic segmentation for social images](http://openaccess.thecvf.com/content_cvpr_2015/papers/Zhang_Weakly_Supervised_Semantic_2015_CVPR_paper.pdf)
-  - ICCV 2015
-    + [Learning deconvolution network for semantic segmentation(May 2015)](https://arxiv.org/abs/1505.04366)
-    + [Semantic Image Segmentation via Deep Parsing Network(Sep 2015)](https://arxiv.org/abs/1509.02634v1)
-  - Other 
-    + [Semantic Image Segmentation with Deep Convolutional Nets and Fully Connected CRFs(Dec 2014](https://arxiv.org/abs/1412.7062)[ICLR][DeepLabv1]  
-    + [U-Net: Convolutional Networks for Biomedical Image Segmentation(May 2015)](https://arxiv.org/abs/1505.04597)[MICCAI]  
-    + [SegNet: A Deep Convolutional Encoder-Decoder Architecture for Image Segmentation(Nov 2015)](https://arxiv.org/abs/1511.00561)   
-    + [Decoupled Deep Neural Network for Semi-supervised Semantic Segmentation](https://papers.nips.cc/paper/5858-decoupled-deep-neural-network-for-semi-supervised-semantic-segmentation)[NIPS]
-### Before 2015
-  - paper
-    + [Simultaneous Detection and Segmentation(Jul 2014)](https://arxiv.org/abs/1407.1808)[ECCV 2014]
-    + [Dense Segmentation-aware Descriptors](https://www.cv-foundation.org/openaccess/content_cvpr_2013/papers/Trulls_Dense_Segmentation-Aware_Descriptors_2013_CVPR_paper.pdf)[CVPR 2013]
-    + [Semantic Segmentation with Second-Order Pooling](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.423.3707&rep=rep1&type=pdf)[ECCV2012]
-    + [Nonparametric Scene Parsing via Label Transfer](http://people.csail.mit.edu/celiu/pdfs/LabelTransferTPAMI.pdf)[TPAMI2011][[Project]](http://people.csail.mit.edu/celiu/LabelTransfer/code.html)
-## 2D Medical Segmentation
-### 2019
-  - ICCV 2019
-    + [Eyenet: Attention based Convolutional Encoder-Decoder Network for Eye Region Segmentation](https://arxiv.org/abs/1910.03274)
-    + [Deep Plug-and-Play Prior for Parallel MRI Reconstruction](https://arxiv.org/abs/1909.00089)
-    + [CAMEL: A Weakly Supervised Learning Framework for Histopathology Image Segmentation](https://arxiv.org/abs/1908.10555)
-    + [Multi-Stage Pathological Image Classification using Semantic Segmentation](https://arxiv.org/abs/1910.04473)
-  - NIPS 2019
-    + [Neural Ordinary Differential Equations for Semantic Segmentation of Individual Colon Glands](https://arxiv.org/abs/1910.10470)[[Code]](https://arxiv.org/abs/1910.10470)
-  - MICCAI 2019
-    + [Globally Guided Progressive Fusion Network for 3D Pancreas Segmentation](https://arxiv.org/abs/1911.10360)
-    + [PGU-net+: Progressive Growing of U-net+ for Automated Cervical Nuclei Segmentation](https://arxiv.org/abs/1911.01062)[MMMI2019 Best Student Paper Award]
-    + [Semi-Supervised Medical Image Segmentation via Learning Consistency under Transformations](https://arxiv.org/abs/1911.01218)
-    + [Automatic Segmentation of Muscle Tissue and Inter-muscular Fat in Thigh and Calf MRI Images](https://arxiv.org/abs/1910.04866)
-    + [Integrating cross-modality hallucinated MRI with CT to aid mediastinal lung tumor segmentation](https://arxiv.org/abs/1909.04542)
-    + [IRNet: Instance Relation Network for Overlapping Cervical Cell Segmentation](https://arxiv.org/abs/1908.06623?context=cs)
-    + [Kidney tumor segmentation using an ensembling multi-stage deep learning approach. A contribution to the KiTS19 challenge](https://arxiv.org/abs/1909.00735)[Challenge]
-    + [Hyper-Pairing Network for Multi-Phase Pancreatic Ductal Adenocarcinoma Segmentation](https://arxiv.org/abs/1909.00906)
-    + [U-Net Fixed-Point Quantization for Medical Image Segmentation](https://arxiv.org/abs/1908.01073)[Code](https://github.com/hossein1387/U-Net-Fixed-Point-Quantization-for-Medical-Image-Segmentation)[Workshop]
-    + [Automated Lesion Detection by Regressing Intensity-Based Distance with a Neural Network](https://arxiv.org/abs/1907.12452)
-    + [Impact of Adversarial Examples on Deep Learning Models for Biomedical Image Segmentation](https://arxiv.org/abs/1907.13124)[[Code]](https://github.com/utkuozbulak/adaptive-segmentation-mask-attack)
-    + [Recurrent Aggregation Learning for Multi-View Echocardiographic Sequences Segmentation](https://arxiv.org/abs/1907.11292)
-    + [NoduleNet: Decoupled False Positive Reductionfor Pulmonary Nodule Detection and Segmentation](https://arxiv.org/abs/1907.11320)
-    + [Multi-task Localization and Segmentation for X-ray Guided Planning in Knee Surgery](https://arxiv.org/abs/1907.10465)
-    + [Mixed-Supervised Dual-Network for Medical Image Segmentation](https://arxiv.org/abs/1907.10209)
-    + [Assessing Reliability and Challenges of Uncertainty Estimations for Medical Image Segmentation](https://arxiv.org/abs/1907.03338)[[Code]](https://github.com/alainjungo/reliability-challenges-uncertainty)
-    + [INN: Inflated Neural Networks for IPMN Diagnosis(30 Jun)](https://arxiv.org/abs/1907.00437)[[Code]](https://github.com/lalonderodney/INN-Inflated-Neural-Nets)
-    + [Anatomical Priors for Image Segmentation via Post-Processing with Denoising Autoencoders](https://arxiv.org/abs/1906.02343)    
-    + [Supervised Uncertainty Quantification for Segmentation with Multiple Annotations](https://arxiv.org/abs/1907.01949)
-    + [Graph Convolutional Networks for Coronary Artery Segmentation in Cardiac CT Angiography](https://arxiv.org/abs/1908.05343)[Workshop]
-    + [U-Net Training with Instance-Layer Normalization](https://arxiv.org/abs/1908.08466)[[Workshop]]
-    + [Estimation of preterm birth markers with U-Net segmentation network](https://arxiv.org/abs/1908.09148)[[Workshop]]
-    + [A Weakly Supervised Method for Instance Segmentation of Biological Cells](https://arxiv.org/abs/1908.09891)[[Workshop]][Weakly Supervised]
-    + [Weakly supervised segmentation from extreme points](https://arxiv.org/abs/1910.01236)[Workshop][Weakly supervised]
-    + [A hybrid deep learning framework for integrated segmentation and registration: evaluation on longitudinal white matter tract changes](https://arxiv.org/abs/1908.10221)[[oral]]
-    + [CELNet: Evidence Localization for Pathology Images using Weakly Supervised Learning](https://arxiv.org/abs/1909.07097)[Weakly Supervised]
-    + [Cardiac Segmentation of LGE MRI with Noisy Labels](https://arxiv.org/abs/1910.01242)[Workshop]
-    + [Cephalometric Landmark Detection by AttentiveFeature Pyramid Fusion and Regression-Voting](https://arxiv.org/abs/1908.08841)
-    + [Boundary and Entropy-driven Adversarial Learning for Fundus Image Segmentation](https://arxiv.org/abs/1906.11143)[[Pytorch]](https://github.com/EmmaW8/BEAL)[[Dataset]](https://refuge.grand-challenge.org/)
-    + [Dual Adaptive Pyramid Network for Cross-Stain Histopathology Image Segmentation](https://arxiv.org/abs/1909.11524)
-    + [Attention Guided Network for Retinal Image Segmentation](https://arxiv.org/abs/1907.12930)[[Pytorch]](https://github.com/HzFu/AGNet)
-    + [ET-Net: A Generic Edge-aTtention Guidance Network for Medical Image Segmentation](https://arxiv.org/abs/1907.10936)[Code](https://github.com/ZzzJzzZ/ETNet)
-    + [FocusNet: Imbalanced Large and Small Organ Segmentation with an End-to-End Deep Neural Network for Head and Neck CT Images](https://arxiv.org/abs/1907.12056)[SenseTime]
-    + [Adversarial Learning with Multiscale Features and Kernel Factorization for Retinal Blood Vessel Segmentation(5 Jul)](https://arxiv.org/abs/1907.02742)
-  - CVPR 2019
-    + [Adaptive Weighting Multi-Field-of-View CNN for Semantic Segmentation in Pathology(Apr 2019)](https://arxiv.org/abs/1904.06040)
-    + [Exploiting Computation Power of Blockchain for Biomedical Image Segmentation(Apr 2019)](https://arxiv.org/abs/1904.07349)
-  - AAAI 2019
-    + [Non-Local Context Encoder: Robust Biomedical Image Segmentation against Adversarial Attacks(Apr 2019)](https://arxiv.org/abs/1904.12181)
-  - ISBI2019
-    + [A Novel Focal Tversky loss function with improved Attention U-Net for lesion segmentation(Oct 2018)](https://arxiv.org/abs/1810.07842)[[Keras]](https://github.com/nabsabraham/focal-tversky-unet)
-    + [Automated Segmentation of Pulmonary Lobes using Coordination-Guided Deep Neural Networks(Apr 2019)](https://arxiv.org/abs/1904.09106)
-    + [Automatic Pulmonary Lobe Segmentation Using Deep Learning(Mar 2019)](https://arxiv.org/abs/1903.09879)
-    + [Deep Learning with Anatomical Priors: Imitating Enhanced Autoencoders in Latent Space for Improved Pelvic Bone Segmentation in MRI(March 2019)](https://arxiv.org/search/?query=ISBI&searchtype=all&abstracts=show&order=-announced_date_first&size=50)
-    + [US-net for robust and efficient nuclei instance segmentation(Jan 2019)](https://arxiv.org/abs/1902.00125)
-    + [Deep Convolutional Encoder-Decoders with Aggregated Multi-Resolution Skip Connections for Skin Lesion Segmentation](https://arxiv.org/abs/1901.09197)
-    + [Mask-RCNN and U-net Ensembled for Nuclei Segmentation(Jan 2019)](https://arxiv.org/abs/1901.10170)
-    + [Using CycleGANs for effectively reducing image variability across OCT devices and improving retinal fluid segmentation](https://arxiv.org/abs/1901.08379)
-    + [U2-Net: A Bayesian U-Net model with epistemic uncertainty feedback for photoreceptor layer segmentation in pathological OCT scans](https://arxiv.org/abs/1901.07929)
-    + [SUMNet: Fully Convolutional Model for Fast Segmentation of Anatomical Structures in Ultrasound Volumes](https://arxiv.org/abs/1901.06920)
-    + [Learning Mutually Local-global U-nets For High-resolution Retinal Lesion Segmentation in Fundus Images](https://arxiv.org/abs/1901.06047)
-    + [Cascade Decoder: A Universal Decoding Method for Biomedical Image Segmentation](https://arxiv.org/abs/1901.04949)
-    + [Residual Pyramid FCN for Robust Follicle Segmentation](https://arxiv.org/abs/1901.03760)
-    + [Classification and Detection in Mammograms with Weak Supervision via Dual Branch Deep Neural(Net Apr 2019)](https://arxiv.org/abs/1904.12319)[oral]
-  - EMBC 2019
-    + [Ultrasound segmentation using U-Net: learning from simulated data and testing on real data](https://arxiv.org/abs/1904.11031)[]
-    + [RASNet: Segmentation for Tracking Surgical Instruments in Surgical Videos Using Refined Attention Segmentation Network(May 2019)](https://arxiv.org/abs/1905.08663)
-  - MIDL 2019
-    + [Distance Map Loss Penalty Term for Semantic Segmentation](https://arxiv.org/abs/1908.03679)   
-    + [XLSor: A Robust and Accurate Lung Segmentor on Chest X-Rays Using Criss-Cross Attention and Customized Radiorealistic Abnormalities Generation(Apr 2019))](https://arxiv.org/abs/1904.09229)[[Pytorch]](https://github.com/rsummers11/CADLab/tree/master/Lung_Segmentation_XLSor)
-    + [Learning joint lesion and tissue segmentation from task-specific hetero-modal datasets](https://arxiv.org/abs/1907.03327)
-  - MLMI
-    + [Privacy-preserving Federated Brain Tumour Segmentation](https://arxiv.org/abs/1910.00962)
-    + [Deep Active Lesion Segmentation](https://arxiv.org/abs/1908.06933)
-    + [Weakly Supervised Segmentation by A Deep Geodesic Prior](https://arxiv.org/abs/1908.06498)
-    + [Boundary Aware Networks for Medical Image Segmentation](https://arxiv.org/abs/1908.08071)
-    + [Automatic Rodent Brain MRI Lesion Segmentation with Fully Convolutional Networks](https://arxiv.org/abs/1908.08746)
-    + [Reproducible White Matter Tract Segmentation Using 3D U-Net on a Large-scale DTI Dataset](https://arxiv.org/abs/1908.10219)
-    + [Biomedical Image Segmentation by Retina-like Sequential Attention Mechanism Using Only A Few Training Images](https://arxiv.org/abs/1909.12612)
-  - SCI
-    + [UNet++: Redesigning Skip Connections to Exploit Multiscale Features in Image Segmentation](https://arxiv.org/abs/1912.05074)[[Keras]](https://github.com/MrGiovanni/UNetPlusPlus)[IEEE Transactions on Medical Imaging]
-    + [CA-RefineNet:A Dual Input WSI Image Segmentation Algorithm Based on Attention](https://arxiv.org/abs/1907.06358)
-    + [Deep Q Learning Driven CT Pancreas Segmentation with Geometry-Aware U-Net(Apr 2019))](https://arxiv.org/abs/1904.09120)[IEEE Transactions on Medical Imaging,TMI]
-    + [CE-Net: Context Encoder Network for 2D Medical Image Segmentation(Mar 2019)](https://arxiv.org/abs/1903.02740)[[Pytorch]](https://github.com/Guzaiwang/CE-Net)[[Pytorch2]](https://github.com/xiaoketongxue/CE-Net)[IEEE Transactions on Medical Imaging,TMI] 
-    + [The Mutex Watershed and its Objective: Efficient, Parameter-Free Image Partitioning](https://arxiv.org/abs/1904.12654)[IEEE TRANSACTIONS ON PATTERN ANALYSIS AND MACHINE INTELLIGENCE]
-    + [Patch-based Output Space Adversarial Learning for Joint Optic Disc and Cup Segmentation](https://arxiv.org/abs/1902.07519)[IEEE Transactions on Medical Imaging,TMI]
-    + [Task Decomposition and Synchronization for Semantic Biomedical Image Segmentation(May 2019)](https://arxiv.org/abs/1905.08720)[IEEE Transactions on Medical Imaging,TMI]
-    + [NAS-Unet: Neural Architecture Search for Medical Image Segmentation(Apr 2019)](https://ieeexplore.ieee.org/iel7/6287639/8600701/08681706.pdf)[IEEE Access]
-    + [3-D Surface Segmentation Meets Conditional Random Fields](https://arxiv.org/abs/1906.04714)
-    + [Machine Learning Techniques for Biomedical Image Segmentation: An Overview of Technical Aspects and Introduction to State-of-Art Applications](https://arxiv.org/abs/1911.02521)
+`근거로 읽는 기술 동향`에서 전략 주제를 선택하면 선택 버튼·카드와 뉴스 제목·요약·상세의 일치 표현을 강조합니다. `전체 전략 주제`로 돌아가면 표현 강조도 해제됩니다.
 
-  - other
-    + [Robust Automated Thalamic Nuclei Segmentation using a Multi-planar Cascaded Convolutional Neural Network](https://arxiv.org/abs/1912.07209)
-    + [Divided We Stand: A Novel Residual Group Attention Mechanism for Medical Image Segmentation](https://arxiv.org/abs/1912.02079)
-    + [Iteratively-Refined Interactive 3D Medical Image Segmentation with Multi-Agent Reinforcement Learning](https://arxiv.org/abs/1911.10334)
-    + [HybridNetSeg: A Compact Hybrid Network for Retinal Vessel Segmentation](https://arxiv.org/abs/1911.09982)[[Pytorch]](https://github.com/JACKYLUO1991/HybridNetSeg)
-    + [Retinal Vessel Segmentation based on Fully Convolutional Networks](https://arxiv.org/abs/1911.09915)
-    + [Gland Segmentation in Histopathological Images by Deep Neural Network](https://arxiv.org/abs/1911.00909)
-    + [Semantic Feature Attention Network for Liver Tumor Segmentation in Large-scale CT database](https://arxiv.org/abs/1911.00282)
-    + [MultiResUNet : Rethinking the U-Net Architecture for Multimodal Biomedical Image Segmentation](https://arxiv.org/pdf/1902.04049v1.pdf)[[Keras]](https://github.com/nibtehaz/MultiResUNet)
-    + [Unified Multi-scale Feature Abstraction for Medical Image Segmentation](https://arxiv.org/abs/1910.11456)
-    + [Semantic Segmentation of Skin Lesions using a Small Data Set](https://arxiv.org/abs/1910.10534)
-    + [Attention-Guided Lightweight Network for Real-Time Segmentation of Robotic Surgical Instruments](https://arxiv.org/abs/1910.11109)
-    + [Lung nodule segmentation via level set machine learning](https://arxiv.org/abs/1910.03191)
-    + [A Symmetric Equilibrium Generative Adversarial Network with Attention Refine Block for Retinal Vessel Segmentation](https://arxiv.org/abs/1909.11936)
-    + [Intelligent image synthesis to attack a segmentation CNN using adversarial learning](https://arxiv.org/abs/1909.11167)
-    + [Volume Preserving Image Segmentation with Entropic Regularization Optimal Transport and Its Applications in Deep Learning](https://arxiv.org/abs/1909.09931)
-    + [RAUNet: Residual Attention U-Net for Semantic Segmentation of Cataract Surgical Instruments](https://arxiv.org/abs/1909.10360)
-    + [Fuzzy Semantic Segmentation of Breast Ultrasound Image with Breast Anatomy Constraints](https://arxiv.org/abs/1909.06645)
-    + [Local block-wise self attention for normal organ segmentation](https://arxiv.org/abs/1909.05054)
-    + [ACE-Net: Biomedical Image Segmentation with Augmented Contracting and Expansive Paths](https://arxiv.org/abs/1909.04148)
-    + [On the Evaluation and Real-World Usage Scenarios of Deep Vessel Segmentation for Funduscopy](https://arxiv.org/abs/1909.03856)
-    + [Bi-Directional ConvLSTM U-Net with Densley Connected Convolutions](https://arxiv.org/list/cs.CV/pastweek?skip=75&show=25)
-    + [Combining Multi-Sequence and Synthetic Images for Improved Segmentation of Late Gadolinium Enhancement Cardiac MRI](https://arxiv.org/abs/1909.01182)
-    + [Embracing Imperfect Datasets: A Review of Deep Learning Solutions for Medical Image Segmentation](https://arxiv.org/abs/1908.10454)
-    + [Domain-Agnostic Learning with Anatomy-Consistent Embedding for Cross-Modality Liver Segmentation](https://arxiv.org/abs/1908.10489)
-    + [O-MedAL: Online Active Deep Learning for Medical Image Analysis](https://arxiv.org/abs/1908.10508)
-    + [IRNet: Instance Relation Network for Overlapping Cervical Cell Segmentation](https://arxiv.org/abs/1908.06623)
-    + [A unified representation network for segmentation with missing modalities](https://arxiv.org/abs/1908.06683)
-    + [Lung segmentation on chest x-ray images in patients with severe abnormal findings using deep learning](https://arxiv.org/abs/1908.07704)
-    + [Bayesian Generative Models for Knowledge Transfer in MRI Semantic Segmentation Problems](https://arxiv.org/abs/1908.05480)
-    + [Conv-MCD: A Plug-and-Play Multi-task Module for Medical Image Segmentation](https://arxiv.org/abs/1908.05311)
-    + [Automatic segmentation of kidney and liver tumors in CT images](https://arxiv.org/abs/1908.01279)
-    + [Unsupervised Microvascular Image Segmentation Using an Active Contours Mimicking Neural Network](https://arxiv.org/abs/1908.01373)
-    + [Learning Cross-Modal Deep Representations for Multi-Modal MR Image Segmentation](https://arxiv.org/abs/1908.01997)
-    + [Regularizing Proxies with Multi-Adversarial Training for Unsupervised Domain-Adaptive Semantic Segmentation](https://arxiv.org/abs/1907.12282)
-    + [A Two Stage GAN for High Resolution Retinal Image Generation and Segmentation](https://arxiv.org/abs/1907.12296)
-    + [Multi-Task Attention-Based Semi-Supervised Learning for Medical Image Segmentation](https://arxiv.org/abs/1907.12303)
-    + [Lung image segmentation by generative adversarial networks](https://arxiv.org/abs/1907.13033)
-    + [Unsupervised Domain Adaptation via Disentangled Representations: Application to Cross-Modality Liver Segmentation](https://arxiv.org/abs/1907.13590)
-    + [Annotation-Free Cardiac Vessel Segmentation via Knowledge Transfer from Retinal Images](https://arxiv.org/abs/1907.11483)
-    + [Self-Adaptive 2D-3D Ensemble of Fully Convolutional Networks for Medical Image Segmentation](https://arxiv.org/abs/1907.11587)
-    + [Automated Muscle Segmentation from Clinical CT using Bayesian U-Net for Personalization of a Musculoskeletal Model](https://arxiv.org/abs/1907.08915)
-    + [ASCNet: Adaptive-Scale Convolutional Neural Networks for Multi-Scale Feature Learning](https://arxiv.org/abs/1907.03241)
-    + [DSNet: Automatic Dermoscopic Skin Lesion Segmentation](https://arxiv.org/abs/1907.04305)[[Code]](https://github.com/kamruleee51/Skin-Lesion-Segmentation-Using-Proposed-DSNet)
-    + [A multi-task U-net for segmentation with lazy labels(20 Jun)](https://arxiv.org/abs/1906.12177)
-    + [An Efficient Solution for Breast Tumor Segmentation and Classification in Ultrasound Images Using Deep Adversarial LearningJul 2019)](https://arxiv.org/abs/1907.00887)
-    + [CaDSS: Cataract Dataset for Semantic Segmentation](https://arxiv.org/abs/1906.11586)
-    + [Multi-Scale Attentional Network for Multi-Focal Segmentation of Active Bleed after Pelvic Fractures](https://arxiv.org/abs/1906.09540)
-    + [Multiclass segmentation as multitask learning for drusen segmentation in retinal optical coherence tomography](https://arxiv.org/abs/1906.07679)
-    + [Compressed Sensing MRI via a Multi-scale Dilated Residual Convolution Network](https://arxiv.org/abs/1906.05251)
-    + [V-NAS: Neural Architecture Search for Volumetric Medical Image Segmentation](https://arxiv.org/abs/1906.02817)
-    + [Multi-scale guided attention for medical image segmentation](https://arxiv.org/abs/1906.02849)[[Pytorch]](https://github.com/sinAshish/Multi-Scale-Attention)
-    + [Decompose-and-Integrate Learning for Multi-class Segmentation in Medical Images](https://arxiv.org/abs/1906.02901)
-    + [A Hierarchical Probabilistic U-Net for Modeling Multi-Scale Ambiguities](https://arxiv.org/abs/1905.13077)
-    + [Deep Dilated Convolutional Nets for the Automatic Segmentation of Retinal Vessels](https://arxiv.org/abs/1905.12120)
-    + [Segmentation of blood vessels in retinal fundus images](https://arxiv.org/abs/1905.12596)
-    + [A multi-path 2.5 dimensional convolutional neural network system for segmenting stroke lesions in brain MRI images(May 2019)](https://arxiv.org/abs/1905.10835)
-    + [A 2D dilated residual U-Net for multi-organ segmentation in thoracic CT(May 2019)](https://arxiv.org/abs/1905.07710)
-    + [Dual-branch residual network for lung nodule segmentation(May 2019)](https://arxiv.org/abs/1905.08413)
-    + [A novel algorithm for segmentation of leukocytes in peripheral blood(May 2019)](https://arxiv.org/abs/1905.08416)
-    + [Transfer Learning based Detection of Diabetic Retinopathy from Small Dataset(May 2019)](https://arxiv.org/abs/1905.07203)
-    + [iRA-Net: Bilinear Attention Net for Diabetic Retinopathy Grading(May 2019)](https://arxiv.org/abs/1905.06312)
-    + [Liver Lesion Segmentation with slice-wise 2D Tiramisu and Tversky loss function(May 2019)](https://arxiv.org/pdf/1905.03639.pdf)
-    + [T-Net: Encoder-Decoder in Encoder-Decoder architecture for the main vessel segmentation in coronary angiography](https://arxiv.org/abs/1905.04197)
-    + [Breast Tumor Classification and Segmentation using Convolutional Neural Networks(May 2019)](https://arxiv.org/abs/1905.04247)
-    + [nnU-Net: Breaking the Spell on Successful Medical Image Segmentation(Apr 2019)](https://arxiv.org/abs/1904.08128)[[Code]](https://github.com/MIC-DKFZ/nnunet)
-    + [Feature Fusion Encoder Decoder Network For Automatic Liver Lesion Segmentation(Mar 2019)](https://arxiv.org/abs/1903.11834)  
-    + [MDU-Net: Multi-scale Densely Connected U-Net for biomedical image segmentation(Dec 2018)](https://arxiv.org/abs/1812.00352)
-    + [Segmentation of the Prostatic Gland and the Intraprostatic Lesions on Multiparametic MRI Using Mask-RCNN(Apr 2019)](https://arxiv.org/abs/1904.02575)
-    + [FatSegNet : A Fully Automated Deep Learning Pipeline for Adipose Tissue Segmentation on Abdominal Dixon MRI( Apr 2019)](https://arxiv.org/abs/1904.02082)
-    + [FocusNet: An attention-based Fully Convolutional Network for Medical Image Segmentation(https://arxiv.org/abs/1902.03091)](https://arxiv.org/abs/1902.03091)
-    + [Skin Cancer Segmentation and Classification with NABLA-N and Inception Recurrent Residual Convolutional Networks](https://arxiv.org/abs/1904.11126)
-### 2018
-  - MICCAI
-    + [UNet++: A Nested U-Net Architecture for Medical Image Segmentation(Jul 2018)](https://arxiv.org/abs/1807.10165)[[Keras]](https://github.com/MrGiovanni/UNetPlusPlus)[[Pytorch]](https://github.com/ShawnBIT/UNet-family/blob/master/networks/UNet_Nested.py)
-  - IPMI 2018
-    + [CIA-Net: Robust Nuclei Instance Segmentation with Contour-aware Information Aggregation](https://arxiv.org/abs/1903.05358)
-  - other
-    + [Attention U-Net: Learning Where to Look for the Pancreas(Apr 2018)](https://arxiv.org/abs/1804.03999)[[Pytorch]](https://github.com/ozan-oktay/Attention-Gated-Networks/tree/master/models)
-    + [Attention Gated Networks: Learning to Leverage Salient Regions in Medical Images(Aug 2018)](https://arxiv.org/abs/1808.08114)[[Pytorch]](https://github.com/ozan-oktay/Attention-Gated-Networks/tree/master/models)
-    + [MDU-Net: Multi-scale Densely Connected U-Net for biomedical image segmentation](https://arxiv.org/pdf/1812.00352.pdf)
-    + [DUNet: A deformable network for retinal vessel segmentation](https://arxiv.org/pdf/1811.01206.pdf)
-    + [LADDERNET: Multi-Path Networks Based on U-Net for Medical Image Segmentation](https://arxiv.org/pdf/1810.07810.pdf)[[Pytorch]](https://github.com/juntang-zhuang/LadderNet)
-    + [A Probabilistic U-Net for Segmentation of Ambiguous Images (NIPS)](https://arxiv.org/pdf/1806.05034.pdf)[[tensorflow]](https://github.com/SimonKohl/probabilistic_unet)
-    + [3D RoI-aware U-Net for Accurate and Efficient Colorectal Cancer Segmentation ](https://arxiv.org/pdf/1806.10342.pdf)[[Pytorch]](https://github.com/huangyjhust/3D-RU-Net)
-    
-### Before 2018
-  - 2017
-    + [H-DenseUNet: Hybrid Densely Connected UNet for Liver and Tumor Segmentation from CT Volumes ](https://arxiv.org/pdf/1709.07330.pdf)[[Keras]](https://github.com/xmengli999/H-DenseUNet)[IEEE Transactions on Medical Imaging,TIM]
-  - 2016
-    + [V-Net: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation](http://campar.in.tum.de/pub/milletari2016Vnet/milletari2016Vnet.pdf)[[Pytorch]](https://github.com/mattmacy/vnet.pytorch)[[Cafee]](https://github.com/faustomilletari/VNet)
-    + [3D U-Net: Learning Dense Volumetric Segmentation from Sparse Annotation](https://arxiv.org/pdf/1606.06650.pdf)[[Pytorch]](https://github.com/wolny/pytorch-3dunet)
-  - MICCAI 2015   
-    + [U-Net: Convolutional Networks for Biomedical Image Segmentation(May 2015)](https://arxiv.org/abs/1505.04597)[[Keras]](https://github.com/zhixuhao/unet)[[Pytorch]](https://github.com/ShawnBIT/UNet-family/blob/master/networks/UNet.py)
-## 3D Medical Segmentation
-### 2019
-  - [MICCAI 2019](https://www.miccai2019.org/) [Workshop](https://www.miccai2019.org/programme/workshops-challenges-tutorials/)
-    + [Scribble-based Hierarchical Weakly Supervised Learning for Brain Tumor Segmentation](https://arxiv.org/abs/1911.02014)
-    + [TuNet: End-to-end Hierarchical Brain Tumor Segmentation using Cascaded Networks](https://arxiv.org/abs/1910.05338)[MICCAI BrainLes 2019]
-    + [Semi-Supervised Variational Autoencoder for Survival Prediction](https://arxiv.org/abs/1910.04488)
-    + [Self-supervised Feature Learning for 3D Medical Images by Playing a Rubik's Cube](https://arxiv.org/list/cs.CV/pastweek?skip=25&show=25)
-    + [Neural Style Transfer Improves 3D Cardiovascular MR Image Segmentation on Inconsistent Data](https://arxiv.org/abs/1909.09716)[Code](https://github.com/horsepurve/StyleSegor)
-    + [MSU-Net: Multiscale Statistical U-Net for Real-time 3D Cardiac MRI Video Segmentation](https://arxiv.org/abs/1909.06726)
-    + [SegNAS3D: Network Architecture Search with Derivative-Free Global Optimization for 3D Image Segmentation](https://arxiv.org/abs/1909.05962)
-    + [Resource Optimized Neural Architecture Search for 3D Medical Image Segmentation](https://arxiv.org/abs/1909.00548)
-    + [3D U2-Net: A 3D Universal U-Net for Multi-Domain Medical Image Segmentation](https://arxiv.org/abs/1909.06012)[[Pytorch]](https://github.com/huangmozhilv/u2net_torch/)[S. Kevin Zhou]
-    + [Generative adversarial network for segmentation of motion affected neonatal brain MRI](https://arxiv.org/abs/1906.04704)
-    + [Learning Shape Representation on Sparse Point Clouds for Volumetric Image Segmentation](https://arxiv.org/abs/1906.02281)[[Code]](https://github.com/fabianbalsiger/point-cloud-segmentation-miccai2019)
-    + [Anatomical Priors for Image Segmentation via Post-Processing with Denoising Autoencoders](https://arxiv.org/abs/1906.02343)
-    + [Decompose-and-Integrate Learning for Multi-class Segmentation in Medical Images](https://arxiv.org/abs/1906.02901)
-    + [PseudoEdgeNet: Nuclei Segmentation only with Point Annotations](https://arxiv.org/abs/1906.02924)[weakly supervised ]
-    + [PHiSeg: Capturing Uncertainty in Medical Image Segmentation](https://arxiv.org/abs/1906.04045)[[Code]](https://github.com/baumgach/PHiSeg-code)
-    + [Cardiac MRI Segmentation with Strong Anatomical Guarantees(5 Jul)](https://arxiv.org/abs/1907.02865)
-    + [Data Efficient Unsupervised Domain Adaptation for Cross-Modality Image Segmentation(5 Jul)](https://arxiv.org/abs/1907.02766)[Unsupervised]
-    + [Automated Multi-sequence Cardiac MRI Segmentation Using Supervised Domain Adaptation](https://arxiv.org/abs/1908.07726)[Stacom 2019]
-    + [Unsupervised Multi-modal Style Transfer for Cardiac MR Segmentation](https://arxiv.org/abs/1908.07344)[Stacom 2019]
-    + [Endotracheal Tube Detection and Segmentation in Chest Radiographs using Synthetic Data](https://arxiv.org/abs/1908.07170)
-    + [Multi-step Cascaded Networks for Brain Tumor Segmentation](https://arxiv.org/abs/1908.05887)[[Code]](https://github.com/JohnleeHIT/Brats2019)[BraTS 2019]
-    + [Topology-preserving augmentation for CNN-based segmentation of congenital heart defects from 3D paediatric CMR](https://arxiv.org/abs/1908.08870)[[MICCAI PIPPI]]
-    + [Permutohedral Attention Module for Efficient Non-Local Neural Networks(Jul 2019)](https://arxiv.org/abs/1907.00641)[[Pytorch]](https://github.com/xiaoketongxue/Permutohedral_attention_module)[[Dataset]](http://spineweb.digitalimaginggroup.ca/)
-    + [A Partially Reversible U-Net for Memory-Efficient Volumetric Image Segmentation](https://arxiv.org/abs/1906.06148)[[Pytorch]](https://github.com/RobinBruegger)[[Pytorch2]](https://github.com/RobinBruegger/PartiallyReversibleUnet)
-    + [X-Net: Brain Stroke Lesion Segmentation Based on Depthwise Separable Convolution and Long-range Dependencies](https://arxiv.org/abs/1907.07000)[[Keras]](https://github.com/Andrewsher/X-Net)
-    + [CLCI-Net: Cross-Level fusion and Context Inference Networks for Lesion Segmentation of Chronic Stroke](https://arxiv.org/abs/1907.07008)[Keras](https://github.com/YH0517/CLCI_Net)[[Keras]](https://github.com/YH0517/CLCI_Net)
-    + [3D Dilated Multi-Fiber Network for Real-time Brain Tumor Segmentation in MRI(Apr 2019)](https://arxiv.org/abs/1904.03355)[[Pytorch]](https://github.com/China-LiuXiaopeng/BraTS-DMFNet)[online-evaluation]    
-    + [Project & Excite Modules for Segmentation of Volumetric Medical Scans](https://arxiv.org/abs/1906.04649)[[Pytorch]](https://github.com/ai-med/squeeze_and_excitation) 
-    + [Improving Deep Lesion Detection Using 3D Contextual and Spatial Attention](https://arxiv.org/abs/1907.04052)
-  - IPMI2019
-    + [Brain Tumor Segmentation on MRI with Missing Modalities(Apr 2019)](https://arxiv.org/abs/1904.07290)
-    + [Accurate Nuclear Segmentation with \\Center Vector Encoding](https://arxiv.org/abs/1907.03951)
-    + [Learning-based Optimization of the Under-sampling Pattern in MRI](https://arxiv.org/abs/1901.01960)[Code](https://github.com/cagladbahadir/LOUPE)
-    + [Random 2.5D U-net for Fully 3D Segmentation](https://arxiv.org/abs/1910.10398)[[Workshop]]
-  - ISBI2019
-    + [Prostate Segmentation from 3D MRI Using a Two-Stage Model and Variable-Input Based Uncertainty Measure](https://arxiv.org/abs/1903.02500)
-    + [Improving Catheter Segmentation & Localization in 3D Cardiac Ultrasound Using Direction-Fused FCN](https://arxiv.org/abs/1902.05582)
-  - SCI
-    + [Fetal Ultrasound Image Segmentation for Measuring Biometric Parameters Using Multi-Task Deep Learning](https://arxiv.org/abs/1909.00273)
-    + [3D Whole Brain Segmentation using Spatially Localized Atlas Network Tiles(Mar 2019)](https://arxiv.org/ftp/arxiv/papers/1903/1903.12152.pdf)[[Pytorch]](https://github.com/MASILab/SLANTbrainSeg)[NeuroImage]
-  - arxiv
-    + [Transfer Learning with Edge Attention for Prostate MRI Segmentation](https://arxiv.org/abs/1912.09847)
-    + [C2FNAS: Coarse-to-Fine Neural Architecture Search for 3D Medical Image Segmentation](https://arxiv.org/abs/1912.09628)
-    + [Adversarial normalization for multi domain image segmentation](https://arxiv.org/pdf/1912.00993.pdf)[Adversarial ]
-    + [EM-NET: Centerline-Aware Mitochondria Segmentation in EM Images via Hierarchical View-Ensemble Convolutional Network](https://arxiv.org/abs/1912.00201)
-    + [DARTS: DenseUnet-based Automatic Rapid Tool for brain Segmentation](https://arxiv.org/abs/1911.05567)[Code](https://github.com/NYUMedML/DARTS)
-    + [Trident Segmentation CNN: A Spatiotemporal Transformation CNN for Punctate White Matter Lesions Segmentation in Preterm Neonates](https://arxiv.org/abs/1910.09773)[[Keras]](https://arxiv.org/abs/1910.09773)
-    + [Memory efficient brain tumor segmentation using an autoencoder-regularized U-Net](https://arxiv.org/abs/1910.02058)
-    + [Brain Tumor Segmentation and Survival Prediction](https://arxiv.org/abs/1909.09399)
-    + [3D Deep Affine-Invariant Shape Learning for Brain MR Image Segmentation](https://arxiv.org/abs/1909.06629)
-    + [3D Kidneys and Kidney Tumor Semantic Segmentation using Boundary-Aware Networks](https://arxiv.org/abs/1909.06684)
-    + [Automated Multiclass Cardiac Volume Segmentation and Model Generation](https://arxiv.org/abs/1909.06685)
-    + [MRI Brain Tumor Segmentation using Random Forests and Fully Convolutional Networks](https://arxiv.org/abs/1909.06337)
-    + [An Automatic Cardiac Segmentation Framework based on Multi-sequence MR Image](https://arxiv.org/abs/1909.05488)[[Keras]](https://github.com/Suiiyu/MS-CMR2019/tree/master/code)
-    + [Hybrid Cascaded Neural Network for Liver Lesion Segmentation](https://arxiv.org/abs/1909.04797)
-    + [CEREBRuM: a Convolutional Encoder-decodeR for Fully Volumetric Fast sEgmentation of BRain MRI](https://arxiv.org/abs/1909.05085)
-    + [High Resolution Medical Image Analysis with Spatial Partitioning](https://arxiv.org/abs/1909.03108)
-    + [Deep Learning for Brain Tumor Segmentation in Radiosurgery: Prospective Clinical Evaluation](https://arxiv.org/abs/1909.02799)
-    + [Intensity augmentation for domain transfer of whole breast segmentation in MRI](https://arxiv.org/abs/1909.02642)
-    + [Gland Segmentation in Histopathology Images Using Deep Networks and Handcrafted Features](https://www.baidu.com/link?url=qztifxKRTSMnCsBVaGx4FaZtQbsY5ZaVnfwgUWqQ9rFjJ80Ee8_0TeFJsfw2-FRilGZUmHMFdxw-_xXsqQpzlq&wd=&eqid=93f976b600088d2e000000035d788836)
-    + [Transfer Learning from Partial Annotations for Whole Brain Segmentation](https://arxiv.org/abs/1908.10851)
-    + [Global Planar Convolutions for improved context aggregation in Brain Tumor Segmentation](https://arxiv.org/abs/1908.10281)
-    + [Adversarial Convolutional Networks with Weak Domain-Transfer for Multi-Sequence Cardiac MR Images Segmentation](https://arxiv.org/abs/1908.09298)
-    + [A joint 3D UNet-Graph Neural Network-based method for Airway Segmentation from chest CTs](https://arxiv.org/abs/1908.08588)
-    + [Optimal input configuration of dynamic contrast enhanced MRI in convolutional neural networks for liver segmentation](https://arxiv.org/abs/1908.08251)
-    + [Discretely-constrained deep network for weakly supervised segmentation](https://arxiv.org/abs/1908.05770)
-    + [Pixel-wise Segmentation of Right Ventricle of Heart](https://arxiv.org/abs/1908.08004)
-    + [Boosting Liver and Lesion Segmentation from CT Scans By Mask Mining](https://arxiv.org/abs/1908.05062)
-    + [Segmentation of Multimodal Myocardial Images Using Shape-Transfer GAN](https://arxiv.org/abs/1908.05094)
-    + [D-UNet: a dimension-fusion U shape network for chronic stroke lesion segmentation](https://arxiv.org/abs/1908.05104)
-    + [Automatic acute ischemic stroke lesion segmentation using semi-supervised learning](https://arxiv.org/abs/1908.03735)
-    + [Automated Brain Tumour Segmentation Using Deep Fully Convolutional Residual Networks](https://arxiv.org/abs/1908.04250)
-    + [Generalizing Deep Whole Brain Segmentation for Pediatric and Post-Contrast MRI with Augmented Transfer Learning](https://arxiv.org/abs/1908.04702)
-    + [An attempt at beating the 3D U-Net](https://arxiv.org/abs/1908.02182)
-    + [Multi Scale Supervised 3D U-Net for Kidney and Tumor Segmentation](https://arxiv.org/abs/1908.03204)
-    + [A Unified Point-Based Framework for 3D Segmentation](https://arxiv.org/abs/1908.00478)
-    + [2D and 3D Segmentation of uncertain local collagen fiber orientations in SHG microscopy](https://arxiv.org/abs/1907.12868)
-    + [Convolutional neural network stacking for medical image segmentation in CT scans](https://arxiv.org/abs/1907.10132)
-    + [Unsupervised Segmentation of Hyperspectral Images Using 3D Convolutional Autoencoders](https://arxiv.org/abs/1907.08870)
-    + [FD-FCN: 3D Fully Dense and Fully Convolutional Network for Semantic Segmentation of Brain Anatomy](https://arxiv.org/abs/1907.09194)
-    + [AirwayNet: A Voxel-Connectivity Aware Approach for Accurate Airway Segmentation Using Convolutional Neural Networks](https://arxiv.org/abs/1907.06852)
-    + [CU-Net: Cascaded U-Net with Loss Weighted Sampling for Brain Tumor Segmentation](https://arxiv.org/abs/1907.07677)
-    + [A fully 3D multi-path convolutional neural network with feature fusion and feature weighting for automatic lesion identification in brain MRI images](https://arxiv.org/abs/1907.07807)
-    + [Brain Tissues Segmentation on MR Perfusion Images Using CUSUM Filter for Boundary Pixels](https://arxiv.org/abs/1907.03865)
-    + [Improving 3D U-Net for Brain Tumor Segmentation by Utilizing Lesion Prior(29 Jun )](https://arxiv.org/abs/1907.00281)
-    + [Improving the generalizability of convolutional neural network-based segmentation on CMR images](https://arxiv.org/abs/1907.01268)
-    + [CSSegNet: Fine-Grained Cardiac Structures Segmentation Using Dilated Pyramid Pooling in U-net](https://arxiv.org/abs/1907.01390)
-    + [Anatomically Consistent Segmentation of Organs at Risk in MRI with Convolutional Neural Networks](https://arxiv.org/abs/1907.02003)
-    + [https://arxiv.org/ftp/arxiv/papers/1906/1906.10486.pdf](https://arxiv.org/abs/1906.10486)
-    + [Scalable Neural Architecture Search for 3D Medical Image Segmentation](https://arxiv.org/abs/1906.05956)
-    + [Enforcing temporal consistency in Deep Learning segmentation of brain MR images](https://arxiv.org/abs/1906.07160)
-    + [4D CNN for semantic segmentation of cardiac volumetric sequences](https://arxiv.org/abs/1906.07295)
-    + [Cardiac Segmentation from LGE MRI Using Deep Neural Network Incorporating Shape and Spatial Priors](https://arxiv.org/abs/1906.07347)
-    + [A sparse annotation strategy based on attention-guided active learning for 3D medical image segmentation](https://arxiv.org/abs/1906.07367)
-    + [OctopusNet: A Deep Learning Segmentation Network for Multi-modal Medical Images](https://arxiv.org/abs/1906.02031)
-    + [AssemblyNet: A Novel Deep Decision-Making Process for Whole Brain MRI Segmentation](https://arxiv.org/abs/1906.01862)
-    + [Fully Automated Pancreas Segmentation with Two-stage 3D Convolutional Neural Networks(Jun 2019)](https://arxiv.org/abs/1906.01795)[ cross-validation]
-    + [Generative Model-Based Ischemic Stroke Lesion Segmentation(Jun 2019)](https://arxiv.org/abs/1906.02392)
-    + [Automated Segmentation for Hyperdense Middle Cerebral Artery Sign of Acute Ischemic Stroke on Non-Contrast CT Images(May 2019)](https://arxiv.org/abs/1905.09049)
-    + [3D Dense Separated Convolution Module for Volumetric Image Analysis(May 2019)](https://arxiv.org/abs/1905.08608)[[cross validation]]
-    + [RIU-Net: Embarrassingly simple semantic segmentation of 3D LiDAR point cloud（May 2019)](https://arxiv.org/abs/1905.08748) 
-    + [Thickened 2D Networks for 3D Medical Image Segmentation(Apr 2019)](https://arxiv.org/abs/1904.01150)
-    + [Spherical U-Net on Cortical Surfaces: Methods and Applications(Apr 2019)](https://arxiv.org/abs/1904.00906)[cross-validation] 
-    + [Fully Automatic Segmentation of 3D Brain Ultrasound: Learning from Coarse Annotations(Apr 2019)](https://arxiv.org/abs/1904.08655)[cross-validation]  
-### 2018
-  - MICCAI 2018
-    + [Multi-Task Learning for Left Atrial Segmentation on GE-MRI(Oct 2018)](https://arxiv.org/abs/1810.13205)[[Pytorch]](https://github.com/cherise215/atria_segmentation_2018/)  
-### Before 2018
-  - MICCAI
-    + [3D U-Net: Learning Dense Volumetric Segmentation from Sparse Annotation(Jun 2016)](https://arxiv.org/abs/1606.06650)   
-### Brain Tissue Segmentation
-  - Paper
-    + [DeepMRSeg: A convolutional deep neural network for anatomy and abnormality segmentation on MR images](https://arxiv.org/abs/1907.02110)
-    + [Brain MR Image Segmentation in Small Dataset with Adversarial Defense and Task Reorganization](https://arxiv.org/abs/1906.10400)
-    + [3D Patchwise U-Net with Transition Layers for MR Brain Segmentation(Rank 1)](https://www.springerprofessional.de/en/3d-patchwise-u-net-with-transition-layers-for-mr-brain-segmentat/16457542)[[TensorFlow]](https://github.com/xiaoketongxue/mrbrains18-1)  
-    + [MixNet: Multi-modality Mix Network for Brain Segmentation(Rank3)](https://link.springer.com/chapter/10.1007%2F978-3-030-11723-8_37)[[tensorflow]](https://github.com/xiaoketongxue/MRBrainS-Brain-Segmentation)
-    + [Robust 3D Convolutional Neural Network with Boundary Correction for Accurate Brain Tissue Segmentation(Rank3)](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8543143)[[Keras]]()
-    + [Automatic Brain Structures Segmentation Using Deep Residual Dilated U-Net(Rank9)](https://arxiv.org/abs/1811.04312)
-    + [On direct distribution matching for adapting segmentation networks(Apr 2019)](https://arxiv.org/abs/1904.02657)[[Code]](https://github.com/anonymauthor/DDMSegNet)
-### MS lesion segmentation
-  - Paper
-    + [Soft labeling by Distilling Anatomical knowledge for Improved MS Lesion Segmentation(Jan 2019)](https://arxiv.org/abs/1901.09263)[ISBI2019]
-    + [Multiple Sclerosis Lesion Synthesis in MRI using an encoder-decoder U-NET(Jan 2019)](https://arxiv.org/abs/1901.05733)
-    + [Multiple Sclerosis Lesion Inpainting Using Non-Local Partial Convolutions(Dec 2018)](https://arxiv.org/abs/1901.00055)
-    + [A Self-Adaptive Network For Multiple Sclerosis Lesion Segmentation From Multi-Contrast MRI With Various Imaging Protocols(Nov 2018)](https://arxiv.org/abs/1811.07491)
-    + [Multi-branch Convolutional Neural Network for Multiple Sclerosis Lesion Segmentation(Nov 2018)](https://arxiv.org/abs/1811.02942)[NeuroImage]
-    + [Exploring Uncertainty Measures in Deep Networks for Multiple Sclerosis Lesion Detection and Segmentation((Aug 2018)](https://arxiv.org/abs/1811.07491)[MICCAI 2018]
+GraphRAG는 원문 관련도, 한국어 조사·등록 한영 별칭, 중복 문서 제외를 적용하고 인용 원문의 의미를 별도 검토합니다. 검토가 완결된 동일 질문·동일 근거 답변을 최대 10분 재사용하며, 원문·검색 결과가 바뀌면 새 답변을 생성합니다. 전략 화면과 그래프 화면 모두 주장별 근거를 열 수 있습니다. 엔진 오류는 원인 코드로 기록하고, 반복 실패는 체크포인트를 보존한 채 중지합니다.
 
-## Instance Segmentation
-### 2019
-  - ICCV 2019
-    + [InstaBoost: Boosting Instance Segmentation via Probability Map Guided Copy-Pasting](https://arxiv.org/abs/1908.07801)
-  - CVPR 2019   
-    + [LVIS: A Dataset for Large Vocabulary Instance Segmentation](https://arxiv.org/abs/1908.03195)
-    + [Hybrid Task Cascade for Instance Segmentation(Jan 2019)](https://arxiv.org/abs/1901.07518)[[Pytorch]](https://github.com/open-mmlab/mmdetection)
-    + [Pose2Seg: Detection Free Human Instance Segmentation(Mar 2018)](https://arxiv.org/abs/1803.10683)[[Code]](https://github.com/liruilong940607/OCHumanApi)  
-    + [Budget-aware Semi-Supervised Semantic and Instance Segmentation](https://arxiv.org/abs/1905.05880)[[Workshop]]
-  - other
-    + [A Generalized Framework for Agglomerative Clustering of Signed Graphs applied to Instance Segmentation](https://arxiv.org/abs/1906.11713)
-    + [Instance Segmentation by Jointly Optimizing Spatial Embeddings and Clustering Bandwidth](https://arxiv.org/abs/1906.11109)[[Code]](https://github.com/davyneven/SpatialEmbeddings)
-    + [DARNet: Deep Active Ray Network for Building Segmentation](https://arxiv.org/abs/1905.05889)
-    + [YOLACT: Real-time Instance Segmentation(Apr 2019)](https://arxiv.org/abs/1904.02689)
-    + [Concatenated Feature Pyramid Network for Instance Segmentation(Mar 2019)](https://arxiv.org/abs/1904.00768)
-    + [Single Pixel Reconstruction for One-stage Instance Segmentation(Apr 2019 ](https://arxiv.org/abs/1904.07426)
-    + [Learning Instance Occlusion for Panoptic Segmentation](https://arxiv.org/abs/1906.05896)
-## Panoptic Segmentation
-### 2019
-  - CVPR2019
-    + [Attention-guided Unified Network for Panoptic Segmentation](https://arxiv.org/abs/1812.03904)
-    + [UPSNet: A Unified Panoptic Segmentation Network(Apr 2019)](https://arxiv.org/abs/1901.03784)[[Pytorch]](https://github.com/uber-research/UPSNet)  
-    + [Panoptic Feature Pyramid Networks(Jan 2019](https://arxiv.org/search/?query=Panoptic+Segmentation&searchtype=all)[Kaiming He]
-    + [Interactive Full Image Segmentation by Considering All Regions Jointly](https://arxiv.org/abs/1812.01888)
-    + [Panoptic Segmentation](https://arxiv.org/abs/1801.00868)
-  - other
-    + [Panoptic-DeepLab: A Simple, Strong, and Fast Baseline for Bottom-Up Panoptic Segmentation](https://arxiv.org/list/cs.CV/recent)
-    + [Panoptic-DeepLab](https://arxiv.org/abs/1910.04751)
-    + [Fast Panoptic Segmentation Network](https://arxiv.org/abs/1910.03892
-    + [Generator evaluator-selector net: a modular approach for panoptic segmentation](https://arxiv.org/abs/1908.09108)
-    + [Straight to Shapes++: Real-time Instance Segmentation Made More Accurate(May 2019)](https://arxiv.org/abs/1905.11358)
-    + [DeeperLab: Single-Shot Image Parser(Feb 2019)](https://arxiv.org/abs/1902.05093)[[Code]]
-    + [An End-to-End Network for Panoptic Segmentation(Mar 2019](https://arxiv.org/abs/1903.05027)
-    + [Single Network Panoptic Segmentation for Street Scene Understanding](https://arxiv.org/abs/1902.02678)
-    + [Panoptic Segmentation with a Joint Semantic and Instance Segmentation Network(Feb 2019)](https://arxiv.org/abs/1809.02110)
-    + [Detecting Reflections by Combining Semantic and Instance Segmentation(Apr 2019)](https://arxiv.org/abs/1904.13273)
-    + [PanopticFusion: Online Volumetric Semantic Mapping at the Level of Stuff and Things(March 2019)](https://arxiv.org/search/?query=Panoptic+Segmentation&searchtype=all)
-    + [Class-independent sequential full image segmentation, using a convolutional net that finds a segment within an attention region, given a pointer pixel within this segment(February 2019](https://arxiv.org/search/?query=Panoptic+Segmentation&searchtype=all)
- ### 2018
-  - ECCV2018
-    + [Weakly- and Semi-Supervised Panoptic Segmentation(Aug 2018)](https://arxiv.org/abs/1808.03575)
-  other 
-    + [Learning to Fuse Things and Stuff(Dec 2018)](https://arxiv.org/abs/1812.01192)
- ## Video-Segmentation
- ### 2019
-  - NIPS 
-    + [MetaPix: Few-Shot Video Retargeting](https://arxiv.org/abs/1910.04742)[[Code]](https://imjal.github.io/MetaPix/)[Workshop]
-    + [LiteEval: A Coarse-to-Fine Framework for Resource Efficient Video Recognition](https://arxiv.org/abs/1912.01601)
-  - ICCV 2019
-    + [Anchor Diffusion for Unsupervised Video Object Segmentation](https://arxiv.org/abs/1910.10895)  
-    + [CapsuleVOS: Semi-Supervised Video Object Segmentation Using Capsule Routing](https://arxiv.org/abs/1910.00132)[[Code]](https://github.com/KevinDuarte/CapsuleVOS)
-    + [DMM-Net: Differentiable Mask-Matching Network for Video Object Segmentation](https://arxiv.org/abs/1909.12471)[Pytorch](https://github.com/ZENGXH/DMM_Net)
-    + [RANet: Ranking Attention Network for Fast Video Object Segmentation](https://arxiv.org/abs/1908.06647)[[Cpde]](https://github.com/Storife/RANet)
-    + [Exploiting Temporality for Semi-Supervised Video Segmentation](https://arxiv.org/abs/1908.11309)
-  - CVPR 2019
-    + [Spatiotemporal CNN for Video Object Segmentation(Apr 2019)](https://arxiv.org/abs/1904.02363)[[Code]](https://github.com/longyin880815/STCNN)
-    + [MHP-VOS: Multiple Hypotheses Propagation for Video Object Segmentation](http://openaccess.thecvf.com/content_CVPR_2019/papers/Xu_MHP-VOS_Multiple_Hypotheses_Propagation_for_Video_Object_Segmentation_CVPR_2019_paper.pdf)[[Code]](https://github.com/shuangjiexu/MHP-VOS)
-  - other
-    + [RPM-Net: Robust Pixel-Level Matching Networks for Self-Supervised Video Object Segmentation](https://arxiv.org/abs/1909.13247)
-    + [Towards Good Practices for Video Object Segmentation](https://arxiv.org/abs/1909.13583)
-    + [Towards Good Practices for Video Object Segmentation](https://arxiv.org/abs/1909.13583)
-    + [Fast Video Object Segmentation via Mask Transfer Network](https://arxiv.org/abs/1908.10717)
-    + [Proposal, Tracking and Segmentation (PTS): A Cascaded Network for Video Object Segmentation(Jul 2019)](https://arxiv.org/abs/1907.01203)
-    + [Video Instance Segmentation](https://arxiv.org/abs/1905.04804)
-    + [MAIN: Multi-Attention Instance Network for Video Segmentation](https://arxiv.org/abs/1904.05847)
-  # Re-Identification
-  ## 2019
-   - ICCV  
-     + [ABD-Net: Attentive but Diverse Person Re-Identification](https://arxiv.org/abs/1908.01114)[Code](https://github.com/TAMU-VITA/ABD-Net)   
-     + [Discriminative Feature Learning With Consistent Attention Regularization for Person Re-Identification](http://openaccess.thecvf.com/content_ICCV_2019/papers/Zhou_Discriminative_Feature_Learning_With_Consistent_Attention_Regularization_for_Person_Re-Identification_ICCV_2019_paper.pdf)
-     + [self-Critical Attention Learning for Person Re-Identification](http://openaccess.thecvf.com/content_ICCV_2019/papers/Chen_Self-Critical_Attention_Learning_for_Person_Re-Identification_ICCV_2019_paper.pdf)  
-     + [Attention Bridging Network for Knowledge Transfer](http://openaccess.thecvf.com/content_ICCV_2019/papers/Li_Attention_Bridging_Network_for_Knowledge_Transfer_ICCV_2019_paper.pdf)   
-     + [Attentional Feature-Pair Relation Networks for Accurate Face Recognition](https://arxiv.org/abs/1908.06255)   
-     + [Towards Interpretable Face Recognition](https://arxiv.org/abs/1805.00611)      
-     + [Mixed High-Order Attention Network for Person Re-Identification](https://arxiv.org/abs/1908.05819)[[Code]](http://www.bhchen.cn/)     
-     + [Self-similarity Grouping: A Simple Unsupervised Cross Domain Adaptation Approach for Person Re-identification](https://arxiv.org/abs/1811.10144)[Code](https://github.com/OasisYang/SSG)[Oral]    
-   - Awesome   
-    + [Awesome Person Re-identification (Person ReID)](https://github.com/bismex/Awesome-person-re-identification)  
-  ## 2018
-   + [A2-Nets: Double Attention Networks](https://www.baidu.com/link?url=-dsREYMGs4zZNPIm9M3qq2rdRUcAam6_uPqqBDUqCymQ4TNPpp-D7qWCxZpeyt-bO1-UfVG4njpqXoMA__lQVa&wd=&eqid=bd04129c0000989c000000025df8c83b)[NIPS]     
-   + [CBAM: Convolutional Block Attention Module](https://arxiv.org/abs/1807.06521)[ECCV]    
-  ## 2017
-   + [SVDNet for Pedestrian Retrieval](https://arxiv.org/abs/1703.05693)   
-     
-     
-    
+요청한 기본 분석 미완료 26건은 기존 동결 실행에서 모두 검토를 통과했습니다. 심층 분석 실패·검토 대기는 계속 재처리 중이며 전수 완료 상태가 아닙니다. 실제 속도·품질 측정과 남은 한계는 [GRAPHRAG_REVIEW.md](GRAPHRAG_REVIEW.md)를 참고하세요.
+
+## 전략 검토와 결정: `/intelligence`
+
+뉴스 탐색에서 **원문 버전 → 검토 주장 → 사건 → 주제 → 선택지·조건부 시나리오**로 이어지는 별도 작업 공간입니다.
+
+| 메뉴 | 내용 |
+|---|---|
+| `/intelligence` | 중요한 변화와 재검토할 결정 |
+| `/intelligence/events`, `/intelligence/topics` | 사건·주제 목록, 근거·주장·버전 이력, 사건 병합·분리와 출처 귀속 |
+| `/intelligence/concepts` | 공통 개념의 한국어·영어·중국어 별칭, 원문 표현, 수동 분리·제외 |
+| `/intelligence/decisions` | 선택지·비용·전제·반대 근거·선택 이유·담당자·재검토일 |
+| `/intelligence/scenarios` | 명시 가정·관측 조건, 독립 검토를 거치는 비교, MiroFish 초안 연결 |
+| `/intelligence/research` | 논문 발표부터 재현·실증·도입·조달·표준까지 별도 근거 연결 |
+| `/intelligence/profiles` | 중요도·위험·근거 충족도·기회 가중치 프로필 |
+| `/intelligence/experiments`, `/intelligence/operations` | 고정 근거의 규칙 비교·승격·롤백, 검토 사유별 보완 |
+| `/intelligence/risk_history` | 위험 평가 변경과 재검토 이력 |
+
+새 저장소는 `intel_` 접두어를 사용합니다. 명시 원문 URL이 없는 기사도 수집 원장과 같은 내용 식별자로 보존하며 Telegram 메시지 URL 때문에 서로 다른 기사를 합치지 않습니다. 원문 변경·철회는 관련 주장·사건·주제를 재검토 대상으로 만들고 이전 버전을 남깁니다. 보고량·정부 언급·에이전트 합의는 독립적인 사실 확인 수가 아닙니다.
+
+주제 상세의 7·28·90일 모멘텀은 URL·사건 후보·원출처를 구분합니다. 낮은 표본, 관측 공백, 채널 범위 변화가 있으면 증가율 변화의 해석을 제한합니다. 기사 발행일, Telegram 게시일, 명시 수집시각은 분리합니다. 중요도와 근거 충족도는 별개이며 알 수 없는 위험은 0점 대신 미상·범위로 유지합니다. 여러 문서의 중요도·근거 충족도는 평균, 기회는 검토된 기회 문서 평균, 위험은 최고 수준으로 집계하며 미평가 위험을 유지합니다.
+
+### 전략 검토 API
+
+- `GET /api/intelligence?view=overview`: 개요. `view=events|topics|concepts|documents|claims`는 목록이며 `id`를 주면 상세를 반환합니다.
+- `GET /api/intelligence?view=decisions|scenarios|profiles|research|experiments|operations|risk_history`: 해당 자료·운영 화면.
+- `GET /api/intelligence?view=momentum|coverage`: 기간별 관측과 확보 범위.
+- `POST /api/intelligence/events`: `action=merge|split|source`, 변경 사유와 대상 ID.
+- `POST /api/intelligence/concepts`: `action=alias|split|exclude`, 명시 별칭·언어 또는 제외 상태와 사유.
+- `POST /api/intelligence/decisions`, `/scenarios`, `/profiles`, `/research`: 결정·시나리오·평가 프로필·연구 근거 기록. 시나리오의 `compare`는 외부 분석, `draft`는 MiroFish 초안입니다.
+- `POST /api/intelligence/query`: 질문과 `mode=local|global|hybrid`로 현재 검토 자료의 제한된 종합을 요청합니다.
+- `POST /api/intelligence/experiments`: 후보 기록, 고정 자료 실험, 통과 결과의 명시 승격·롤백.
+- `GET /api/intelligence?view=job&id=...`: 비교·질의 작업 상태와 결과.
+
+목록은 `page`, `page_size`, 검색 `q` 등을 사용합니다. 외부 모델 작업에는 기존 분석 활성화·인증이 필요합니다. 화면 준비와 근거 동기화는 백그라운드에서 수행하며 원문·검토 결과가 바뀌면 관련 결정에 재검토 상태를 붙입니다.
+
+**운영 한계:** 기능 구현은 전수 심층 분석의 완료와 다릅니다. arXiv의 HTTP 429 대기·실패는 확보된 메타데이터로 표시하지 않습니다. MiroFish 전체 엔진은 Zep 키 등 설정이 필요하며 초안 생성을 실제 시뮬레이션 완료로 간주하지 않습니다. 논문 초록·부분 기사 분석의 범위도 유지합니다. 구현 범위와 검증 기준은 [STRATEGY_ROADMAP.md](STRATEGY_ROADMAP.md)에 정리했습니다.
+
+### 통합 검증 결과 (2026-09-15)
+
+- Python 전체 테스트 **451개 및 하위 사례 56개 통과**(11.43초). JavaScript 구문 검사와 기본 데이터 표시 동작 6개도 통과했습니다.
+- 실제 사건·역할·위험 분석은 기사 날짜를 사건 날짜로 혼동한 문제를 독립 감사가 발견해 한 차례 보완한 뒤 검토를 통과했습니다. 실행 시간은 약 205초였습니다.
+- 실제 전략 질의와 시나리오 비교 2건은 독립 검토를 통과했습니다. 두 사례의 규칙 비교 실험은 품질이 동률이고 더 느려 거절됐으며 승격하지 않았습니다.
+- 브라우저 11개 화면에서 JavaScript·API 오류가 없었고, 너비 390px에서 가로 넘침이 없었습니다. MiroFish는 초안 생성까지 확인했습니다.
+
+기본 데이터 안내는 내용이 같은 상태로 재방문하면 접히고, 실제 내용이 갱신되면 자동으로 펼쳐집니다. 진행 시각만 바뀌었다고 같은 설명을 반복해서 펼치지 않습니다. 운영 서버에는 새 코드를 반영했으며 초기 전략 자료 준비는 런타임 상태로 확인할 수 있습니다. 위 검증은 전수 심층 분석 완료나 미확보 외부 원문 확보를 의미하지 않습니다.
+
+## 전략 분석 워크스페이스
+
+기본 `/`와 `/strategy`는 AI 전략 관측소입니다. 기존 날짜별 보기는 `/news`와 기존 `/?date=...` 링크에서 이용할 수 있습니다.
+
+- **전략 주제**: 중국, 미국, 소버린 AI, Physical AI, Agentic AI, AI 인프라, 오픈 모델. 주제 버튼으로 근거 뉴스를 좁히고 사용자 관심 검색어·동의어를 브라우저에 저장합니다. 회사명은 국가별 탐색 단서이며 국가 귀속이나 공식 정부 입장을 판정한 값이 아닙니다.
+- **주제 선택 반응**: 주제 버튼을 누르면 선택 표시와 로딩 안내가 즉시 바뀝니다. 같은 주제를 다시 눌러도 선택이 유지되고, `전체 전략 주제`는 주제·관심 키워드 선택을 해제합니다. 검색·날짜·분야 조건까지 해제하려면 `필터 초기화`를 사용합니다. 조회가 30초를 넘기거나 실패하면 현재 위치에서 다시 시도할 수 있습니다.
+- **성장 추이**: 최신 뉴스 날짜를 끝으로 최근 7일과 직전 7일을 비교합니다. 각 기간 내 동일 정규 URL을 1문서로 집계하고 전체 문서 수 대비 비중 변화(pp)를 계산합니다. 늦은 수집과 채널 편집에 민감하므로 시장 성장률과 구분합니다.
+- **전략 키워드**: Kiwi가 한국어 명사·고유명사와 원문에서 연속한 명사구를 추출합니다. 기술용어 사전으로 `소버린 AI`, `Physical AI`, `강화학습`, `수출통제` 등 복합어와 별칭을 통합하고, 모델 버전명과 원문 위치·품사를 보존합니다. URL 조각, 조사·어미, 일반적인 서술어는 전략 후보에서 제외합니다. 전체 단어 검색 색인은 별도로 보존합니다. 외국어는 등록 기술용어·식별자 중심이며 전 언어의 완전한 형태소 분석을 주장하지 않습니다.
+- **국가·정부 가중치**: 전략 점수 = 비중 변화(pp) × `(1 + 0.35×국가 언급 문서 비율 + 0.35×정부·정책 언급 문서 비율 + 고유 문서 평균 분야점수/100)`. 최대 2.30배이며 후보 우선순위에만 적용합니다. 원래 등장 건수·성장률·비중은 변경하지 않습니다. 실제 근거 수와 가중치가 표시됩니다.
+- **신규 후보**: 최근 3개 이상 고유 문서, 2일 이상 등장, 비중 상승 조건을 적용합니다. 비교 기간에 없었다는 의미이며 세계 최초 용어나 확정된 신산업으로 표시하지 않습니다. 의미적으로 새로 제안한 전략 개념은 협업 분석의 검토 결과에서 구분합니다.
+
+### 실행 환경
+
+```sh
+# Python 3.12 권장. 이미 준비된 이 환경에서는 아래 activate부터 실행합니다.
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python app.py serve --port 8001
+# 별도 터미널
+.venv/bin/python app.py collect
+```
+
+이 작업 환경의 Python은 `.runtime/python`에, 뉴스 앱 환경은 `.venv`에, MiroFish 환경은 `.runtime/mirofish/venv`에 분리되어 있습니다. 원문 재조회·키워드 추출은 로컬에서 처리하며 LLM 분석은 기존 활성화 설정과 로그인된 CLI를 사용합니다. 전역 CLI 실행 파일이 없으면 `.runtime/codex`의 공식 CLI 설치를 우선 사용합니다.
+
+### 짧은 원문 정보 보강
+
+`원문 정보 보강`은 현재 필터의 최신 URL 최대 40개를 조회합니다. 단일 뉴스에서도 원문 정보를 요청할 수 있습니다. `POST /api/sources`는 현재 수집 기록에 있는 URL만 받으며, 일괄 상한은 100개·병렬 조회는 4개입니다. 조회 화면을 열기만 해서는 외부 사이트를 요청하지 않습니다.
+
+`source_excerpts`에 제목·부분 본문 최대 3,500자·최종 URL·조회 시각·상태·내용 해시를 저장합니다. 성공은 7일, 실패는 1시간 캐시하며 종합 분석·링크 의미 분석·빠른 관계 분석·키워드 추출에서 재사용합니다. 재조회되면 파생 색인을 갱신하고 해당 링크 분석을 갱신 필요로 표시합니다. 메시지 원문과 원문 조회 결과는 별도로 표시합니다. 공개 IP·리디렉션·응답 크기 제한은 기존 `source_content.py`를 공유합니다.
+
+### 다중 역할 분석·검증 사이클
+
+`분석 사이클 실행`은 현재 필터에서 선택된 뉴스 최대 8개를 입력으로 사용합니다(API 상한 24개). 실제 단계는 다음과 같습니다.
+
+1. 수집 기록 스냅샷과 URL 중복 정리
+2. 원문 발췌 수집 및 실패·조회 시각 기록
+3. Kiwi 형태소·기술 키워드 추출
+4. 기존 GraphRAG에서 관련 관계·근거 검색
+5. **국가·정부 전략 분석가**와 **기술·사업 전략 분석가**의 병렬 분석
+6. 전략 종합 및 별도 역할의 근거 대조 검토
+7. 거절·지적이 있으면 실패한 기존 URL만 **최대 1회** 캐시를 갱신해 재조회하고, 추가 원문 키워드를 분석한 뒤 **최대 1회** 전략 보완·재검토
+8. 검토 통과는 완료, 해결하지 못한 지적은 `검토 필요`로 보존
+
+```mermaid
+flowchart LR
+    T[Telegram 수집] --> S[고정 뉴스 스냅샷]
+    S --> U[URL 원문 보강]
+    U --> K[Kiwi 키워드 추출]
+    G[(GraphRAG)] --> R[관련 근거 검색]
+    K --> R
+    R --> N[국가·정부 분석가]
+    R --> A[기술·사업 분석가]
+    N --> C[전략 종합]
+    A --> C
+    C --> V[근거 대조 검토]
+    V -->|지적 사항| F[최대 1회 보완]
+    F --> V2[재검토]
+    RV -->|통과| BOTH{전략·위험 검토 통과}
+    RV -->|지적 사항| F
+    V -->|통과| BOTH
+    V2 -->|통과| BOTH
+    BOTH --> E[검토된 해석·인용 근거]
+    V2 -->|미해결| H[검토 필요]
+    E --> G
+    S --> M[MiroFish 실행 초안]
+    M --> O[OASIS 가상 시뮬레이션]
+    O --> P[별도 가상 결과 보고서]
+```
+
+단계·이벤트·중간 산출물·원문 스냅샷은 SQLite `strategic_workflow_*` 테이블에 저장됩니다. 실패·중단은 재개할 수 있으며 한 서비스에서 한 사이클만 실행합니다. 외부 모델이 맡는 역할들은 동일한 인증된 서비스의 별도 요청이며 서로 다른 모델·기관의 독립 검증을 뜻하지 않습니다. 원문 존재와 주장 뒷받침을 대조하는 절차이지 기사의 진실성을 보증하는 기능은 아닙니다.
+
+MiroFish 원본 `backend/app/services/report_agent.py`의 **도구 실행 → 실제 observation 반영 → 다음 판단** ReACT 흐름을 참조했습니다. 이 앱의 순환은 원문 관찰·검색·분석·검토·한 차례 보완으로 제한합니다. MiroFish OASIS의 가상 사회 시뮬레이션 실행과는 별도의 기능입니다.
+
+원문 복구는 검토 거절과 원문 조회 실패가 함께 있을 때만 실행합니다. 스냅샷에 이미 포함된 실패 URL을 `refresh=True`로 재조회하며 성공 URL이나 새 외부 URL을 추가 탐색하지 않습니다. 새 발췌는 실제 근거로 저장하고 최종 검토 해시도 갱신합니다. 기존 GraphRAG 검색은 해석 단서로 재사용하며 새 원문을 독립된 관측으로 대조합니다.
+
+검토를 통과한 결과만 GraphRAG에 `StrategicClaim → SourceDocument` **근거 인용** 관계로 연결합니다. 보고서·원문 해시 일치와 모든 인용의 대조 여부를 검사합니다. 이 관계는 전략 해석의 출처 연결이며 실제 국가·기업 간 인과관계를 뜻하지 않습니다. 기존 GraphRAG 해석은 새 분석의 검색 단서로만 사용하고, 가상 에이전트 발언은 뉴스 사실 근거로 자동 편입하지 않습니다.
+
+조회·실행 API: `GET/POST /api/workflows`, `GET /api/workflows/{id}`, `POST /api/workflows/{id}/resume`.
+
+### 고영향 분야와 AI 통제 동향 모니터링
+
+국가경제·국가안보·산업·수출·사회문제·생활·교육의 명시적 단서를 전략 검토 우선순위에 반영합니다. 키워드 전략 점수는 비중 변화에 국가 언급 비율, 정부·정책 언급 비율, 분야 점수를 적용하며 가중치 상한은 **2.30배**입니다. 등장 건수·성장률·비중 변화 자체는 원래 관측값을 유지합니다. 높은 점수는 검토 우선순위이며 사실성, 영향 규모 또는 인과관계의 확정을 뜻하지 않습니다. 분석가는 영향 대상·관련 결정·실현 조건·피해와 기회를 근거와 함께 설명해야 합니다.
+
+AI 통제 모니터링은 다음 행위를 구분합니다.
+
+- **Kill switch / shutdown**: 실행 중인 AI 시스템을 정지하는 장치나 조치
+- **Training pause**: 새 학습 실행의 일시 중단
+- **Training slowdown**: 정책·안전 목적의 모델 학습 진행속도 조절
+- **Compute limits**: 모델 학습에 사용하는 연산 자원의 상한
+- **Deployment suspension**: 모델·서비스 배포 또는 운영 허가의 중단
+
+상시 5개 주제의 판별 규칙은 유지하며, `trends.monitoring.topics`에서는 고정 주제와 자동 발견 신호를 통제 대상·행동이 비슷한 묶음으로 통합합니다. 현재 7일에 근거가 있는 묶음만 표시하며, 건수는 구성 항목의 합계가 아니라 기간별 고유 문서 합집합입니다. 카드에 최근 14일 일별 추이와 직전 7일 대비 증감을 표시하고, 펼치면 구성 항목의 출처(고정·자동·직접 등록)와 개별 추이·일별 건수를 확인할 수 있습니다. 직전 0건이면 증감률을 계산하지 않습니다. 추이는 현재 규칙으로 보관 뉴스를 재집계한 결과이며 과거 선정 이력을 뜻하지 않습니다. 묶음의 뉴스 보기는 구성 항목의 원래 문장 판별 기준과 제외 설정을 그대로 적용합니다. 연관 키워드는 14일 내 서로 다른 정규 URL 문서 2개 이상에서 실제 공동출현한 Kiwi 명사구·고유명사·기술용어만 제시하고, 근거 제목·URL을 연결합니다. 공동출현은 인과관계나 동의어 판정이 아닙니다. 날짜·주제에 더해 `impact`(7개 영향 분야)와 `sort`(`strategic`/`latest`) 필터를 화면과 원문 보강·연구·역할분석·시뮬레이션 초안에 동일하게 적용합니다. 전략 화면의 기본 정렬은 검토 우선점수 순입니다. 학습률(`learning rate`)이나 학습 처리량 최적화는 정책적 AI 개발 속도 제한과 구분합니다. 분석에서 새 전략 개념을 제안할 때에는 원문에서 **관측**한 용어·동향인지, 근거를 바탕으로 **제안**한 모니터링 개념인지 표시합니다. 기간별 뉴스 출현과 비중 변화는 관측 표본의 변화이며 실제 규제 시행·시장 채택·사회적 확산을 직접 측정하지 않습니다.
+
+### MiroFish 실행 초안
+
+전략 화면에서 현재 필터와 정렬의 우선 20개 뉴스와 가설로 2라운드 실행 초안을 만들 수 있습니다. 초안 생성은 외부 시뮬레이션을 시작하지 않으며, `/simulation`에서 검토 후 실행합니다. 실제 엔진에는 별도 LLM API와 Zep 설정이 필요합니다. 설치 성공, 오프라인 테스트, 뉴스 협업 분석 완료를 실제 OASIS 실행 완료로 표시하지 않습니다.
+
+### 검증
+
+```sh
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m pytest tests -q
+node --check static/strategy.js
+```
+
+## 샘플로 실행
+
+```sh
+python3 app.py demo --db data/demo.sqlite3
+python3 app.py serve --db data/demo.sqlite3
+```
+
+http://127.0.0.1:8000 에서 확인합니다. 샘플 생성은 처음 한 번만 실행하세요. 샘플은 실제 뉴스와 혼동하지 않도록 화면에 표시하며 실제 수집 DB와 분리합니다.
+
+## 실제 채널 연결
+
+현재 대상은 **hollobit_news (`-1004402623886`)**이며 `config.json`에 저장되어 있습니다. 봇 토큰과 채널 접근 권한이 있어야 실제 연결할 수 있습니다.
+
+이 작업 환경에는 수집 봇 토큰을 로컬 `.env`에 설정했습니다. 재시작할 때는 `python3 app.py collect`를 실행하면 됩니다. `.env`는 Git에서 제외되며 소유자만 읽고 쓸 수 있도록 저장했습니다.
+
+1. Telegram의 BotFather에서 수집 전용 봇을 만듭니다. Hermes 발송 봇과 별도의 봇을 사용하세요.
+2. 직접 관리하는 대상 채널에 수집 봇을 관리자로 추가합니다. 메시지를 보내거나 삭제할 권한은 이 앱에서 사용하지 않습니다.
+3. `hollobit_news`의 채널 ID는 이미 설정되어 있습니다. 다른 채널을 추가하려면 `config.json`의 `channels` 목록에 `id`와 `name`을 추가합니다.
+4. 터미널에서 환경변수를 설정합니다. 토큰을 저장소나 채팅에 붙여 넣지 마세요. 아래 zsh 명령은 입력을 숨기고 토큰이 셸 명령 기록에 남지 않게 합니다.
+
+```sh
+read -s 'TELEGRAM_BOT_TOKEN?수집 봇 토큰: '
+export TELEGRAM_BOT_TOKEN
+python3 app.py collect
+```
+
+임시로 대상을 바꾸려면 `TELEGRAM_CHANNEL_IDS` 환경변수에 ID를 쉼표로 구분해 지정합니다. 이 변수는 파일 설정보다 우선하며, 다시 파일 설정을 쓰려면 `unset TELEGRAM_CHANNEL_IDS`를 실행합니다. 허용한 채널만 저장하며 개인 대화나 그룹은 저장하지 않습니다. 수집 프로세스는 한 개만 실행하세요. 기존 webhook이 설정된 봇에서는 polling이 동작하지 않으므로 수집 전용 봇을 권장합니다. 이 앱은 기존 webhook을 변경하지 않습니다.
+
+다른 터미널에서 페이지를 실행합니다.
+
+```sh
+python3 app.py serve
+```
+
+두 프로세스를 계속 실행하면 새 메시지가 DB에 저장되고 날짜별 페이지에 반영됩니다. 열어 둔 화면에서는 새로고침 버튼으로 새 메시지를 확인합니다. 수집과 화면 서버는 같은 기본 DB인 `data/news.sqlite3`를 사용합니다. 날짜 링크는 `/?date=2026-09-12` 형태입니다. 컴퓨터가 꺼져 있는 동안은 수집되지 않습니다.
+
+## 핵심 소식 중심의 첫 화면
+
+첫 화면은 전체 핵심 소식 → 주제별 핵심 뉴스 → 전체 뉴스 순서로 보여줍니다. 주제별 핵심 뉴스는 상단에 선정되지 않은 소식을 우선 소개합니다. 기사 제목을 누르면 원문이 열리며, 별도의 원문 열기 및 Telegram 원문 링크는 뉴스 화면에 표시하지 않습니다. 날짜·주제·콘텐츠 유형·검색 필터가 함께 적용되며 전체 뉴스는 아래에 항상 펼쳐 표시합니다. 상단 바로가기로 이동하거나 모든 날짜·주제를 선택해 전체 기록을 볼 수 있습니다. 핵심 브리핑 요청이 실패해도 전체 뉴스 목록은 표시합니다.
+
+- 설명 변화·구체성·주제 균형에 기반한 자동 선정이며, 반복 게시 횟수를 중요도 점수로 사용하지 않습니다. 카드에 선정 이유를 표시합니다.
+- 같은 링크의 반복과 설명 갱신을 구분합니다. 설명 갱신이 실제 사건의 후속 진행을 확인한 것은 아닙니다.
+- 관련 뉴스는 기사 아래 전체 폭으로 표시하며, 다른 URL의 뉴스 제목과 실제 공통 키워드를 함께 보여줍니다. 동일 URL 이력과 동일 제목의 미러 링크는 제외합니다. 키워드 일치에 기반한 후보이며 인과관계 판정은 아닙니다. 반복 이력은 링크 분석에서 별도로 확인할 수 있습니다.
+- 현재 메시지·원문 발췌와 일치하는 저장된 의미 분석이 있으면 요약에 활용하고, 없으면 메시지 발췌를 사용합니다. 첫 화면을 열 때 외부 분석을 자동 요청하지 않습니다.
+
+## 단어로 이어 읽기
+
+각 뉴스에는 대표 키워드와 **전체 단어 보기**가 있습니다. 전체 단어 보기를 열면 해당 뉴스의 수집된 제목·본문에 등장한 단어를 검색하고 선택할 수 있습니다. 한글·외국어·일반어·숫자·한 글자 단어도 색인에 남기며, 원문은 그대로 보존합니다. 대소문자와 Unicode 표기 차이를 정규화한 단어 단위 연결입니다. 형태소 분석이나 모든 단어의 의미가 같은지 판정하는 기능은 아닙니다.
+
+- 단어를 누르면 전체 날짜에서 해당 단어가 있는 뉴스로 이동합니다. 다른 키워드를 이어 선택해 탐색을 넓힐 수 있습니다.
+- 같은 뉴스에 함께 등장한 단어를 연결하며, 동일한 정규 URL의 재게시를 여러 독립 문서로 세지 않습니다. 동시 등장은 인과관계나 의미적 동등성을 증명하지 않습니다.
+- 기본 화면에는 대표 키워드를 표시하고, 전체 단어 목록은 요청할 때 불러옵니다. 단어를 화면에서 생략하는 것과 색인에서 제외하는 것을 구분합니다.
+- 최초 뉴스 날짜와 최초 수집 시각을 별도로 보존합니다. ‘첫 등장’은 수집 기록 안에서의 최초 등장이지 세계 최초 발표를 뜻하지 않습니다.
+- 새 메시지와 수정 내용이 수집되면 로컬 색인을 갱신합니다. 열린 화면의 새로고침 버튼으로 최신 단어와 연결을 확인할 수 있습니다.
+- 단어 색인은 로컬에서 동작합니다. MiroFish의 사회 시뮬레이션을 실행하거나 외부 뉴스 사이트를 자동 탐색하는 기능은 아닙니다.
+
+## 동작과 현재 범위
+
+- 뉴스 날짜별·주제별 보기, 전체 날짜에서 주제 모아보기, 검색, 채널 필터, 본문 펼치기, 기사 링크와 텔레그램 원문 링크.
+- 뉴스 기사·논문 소개·블로그 및 해설·소셜 게시물·도구 및 프로젝트·기타 유형으로 구분합니다. 출처 도메인과 URL 경로에 근거한 분류이며, 문서 내용을 직접 확인한 결과는 아닙니다. 논문을 소개하는 블로그 링크는 블로그로, 함께 연결된 arXiv 링크는 논문으로 각각 분류합니다.
+- Hermes 메시지의 목록을 개별 뉴스로 분리합니다. 날짜는 개별 항목에 명시된 날짜, 메시지 상단 브리핑 날짜, 텔레그램 발행 날짜(한국 시간) 순으로 적용하며 화면에 근거를 표시합니다. 이는 원문에 적힌 날짜이며 기사 사이트에서 검증한 발행일이 아닙니다.
+- 연도가 없는 날짜는 같은 메시지의 명시된 연도 문맥이 있을 때만 해석합니다. 다른 메시지의 날짜를 가져와 붙이지 않습니다. 분리하기 어려운 메시지는 원문 묶음으로 남습니다.
+- 주제는 본문 키워드와 브리핑 문맥을 이용해 에이전트·개발, AI 모델, 로봇·자율주행, 의료·바이오, 반도체·인프라, 정책·보안, 기업·산업, 연구·논문, 기타 뉴스로 자동 분류합니다. 하나의 대표 주제를 붙이는 규칙 기반 분류이므로 모호한 항목은 오분류될 수 있습니다. 링크 의미 분석은 아래 별도 기능이며, 메시지 발췌에 근거합니다. 기사 본문 조회는 종합 분석에서 수행합니다.
+- 같은 채널에서 본문이 동일한 메시지는 게시 날짜와 ID가 달라도 최초 게시본만 목록·링크 집계·분석에 사용합니다. 공백과 줄바꿈 차이는 무시하지만 본문 날짜·수치·표현 변화는 유지합니다. 원본을 삭제하지 않으며 수정·삭제가 수신되면 대표 메시지를 다시 선택합니다. 서로 다른 채널의 메시지는 별도로 유지합니다.
+- 같은 날짜의 동일한 기사 설명은 하나로 표시하고 텔레그램 출처를 모두 유지합니다. 링크가 같아도 설명이 바뀐 기사는 유지합니다. 원문 메시지는 채널 ID와 메시지 ID별로 각각 보존하며 수정 수신 시 개별 뉴스도 다시 분류합니다.
+- 텍스트와 미디어 캡션을 저장합니다. 이미지·파일 자체, 텍스트 없는 미디어, rich_message 전용 본문은 현재 처리하지 않습니다.
+- 연결 후 전달되는 새 메시지를 수집합니다. 과거 채널 기록을 가져오는 기능은 없습니다. Telegram은 미수신 업데이트를 최대 24시간 보관하므로 장시간 중단 시 누락될 수 있습니다.
+- 일반 채널 메시지 삭제는 자동 동기화하지 않습니다. 비공개 원문 링크는 해당 채널에 접근할 수 있는 계정에서 열어야 합니다.
+- 로컬 개인용 서버입니다. 로그인, 인터넷 배포, 매일 정해진 시각의 완결된 요약 발행은 아직 포함하지 않습니다. 매일의 페이지는 메시지가 들어올 때 바로 구성됩니다.
+- 토큰은 브라우저에 전달되지 않습니다. 시작 시 프로젝트 `.env`에서 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHANNEL_IDS`, `SSL_CERT_FILE`, `NEWS_EXTERNAL_ANALYSIS_ENABLED`만 읽으며 기존 환경변수가 우선합니다. 파일은 따옴표 없는 `KEY=value` 형식이며 셸 명령이나 변수 확장을 실행하지 않습니다. 이 Mac에서는 Python 인증서 오류를 해결하기 위해 설치된 CA 묶음 경로를 `SSL_CERT_FILE`에 설정했습니다. 다른 환경에서는 해당 경로를 그대로 복사하지 마세요. DB에는 메시지 원문이 저장됩니다.
+
+## 링크별 분석
+
+`/?view=links&date=all`에서 링크 그룹을 봅니다. 날짜·주제·콘텐츠 유형 필터와 여러 날짜에 등장한 링크만 보는 필터를 함께 사용할 수 있습니다.
+
+- 항목에 포함된 모든 HTTP(S) 링크를 추출합니다. 추적용 쿼리 파라미터, Reddit 게시물 제목 차이, X/Twitter 주소, arXiv 초록/PDF/버전 표기 등 식별 가능한 변형을 정규화합니다. 버전별 원래 URL은 유지합니다.
+- 같은 링크의 날짜별 언급과 텔레그램 출처를 보존합니다. 최초·최근 날짜는 수집 내용에 표시된 날짜 기준이며, 실제 기사 발행일을 검증한 값이 아닙니다.
+- 서로 다른 링크는 제목의 핵심 용어가 겹치는 경우 관련 후보로 연결합니다. 같은 기사라고 자동 병합하지 않습니다. 제목 표현이 다르면 관련 후보를 찾지 못할 수 있습니다.
+- 메시지 분리 과정에서 기사에 연결되지 않은 원문 URL도 링크 목록에 보존합니다. 문맥이 불확실한 조각은 그 사실을 표시합니다.
+- 로컬 표현 비교는 동일한 설명의 반복과 새로 등장한 표현을 구분합니다. 동의어를 이해하는 의미 분석이나 새로운 사건이 일어났다는 판정이 아닙니다.
+- 상세 의미 분석은 핵심 주장, 의미와 전제, 날짜별 설명의 변화, 추가 확인 사항을 생성하고 각 분석 항목을 근거 메시지에 연결하도록 구현했습니다. 이 작업 환경에서는 사용자 승인 후 `.env`의 `NEWS_EXTERNAL_ANALYSIS_ENABLED=1`로 활성화했습니다. 다른 설치에서는 기본 비활성화이며, 해당 설정과 로그인된 Codex CLI가 필요합니다.
+
+의미 분석을 활성화할 경우 해당 링크의 제목·URL·날짜·메시지 발췌를 로그인된 Codex 서비스에 전달합니다. Telegram 봇 토큰은 전달하지 않습니다. 분석 모델 자체는 기사 웹사이트를 열거나 웹 검색을 수행하지 않습니다. 별도로 조회해 저장한 원문 발췌가 있으면 이를 Telegram 근거와 구분하여 함께 전달합니다. 긴 기록은 날짜별 대표 설명 최대 36개를 사용하고 사용한 근거 수를 결과에 표시합니다.
+
+결과는 로컬 `link_analysis` 테이블에 저장합니다. 메시지 내용이 추가·수정되면 이전 결과를 `갱신 필요` 상태로 표시합니다. 활성화 후 화면의 의미 분석 버튼을 눌렀을 때만 요청하며, 수집할 때마다 모든 링크에 자동으로 외부 분석을 요청하지 않습니다. 한 번에 1개 분석을 실행하고 대기열은 6개로 제한합니다.
+
+## 검증
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+한국 시간 자정 경계, 수정·재수집, 채널 제한, 검색, 캡션 삭제, 수집 커서와 메시지의 원자적 저장, 날짜·주제 분류, 반복 기사 출처 보존을 검증합니다.
+
+## 저장된 메시지 재분류
+
+```sh
+python3 app.py reclassify
+```
+
+`news` 테이블의 원문과 수집 위치는 유지하고 `articles` 테이블의 분류 결과를 다시 만듭니다. 새 메시지는 수집 시 자동으로 분류합니다. 기존 DB는 최초 실행 시 분류 테이블을 생성합니다. 이번 변경 전 원문 DB 백업은 로컬 `data/backups/`에 있습니다.
+
+전체 날짜·주제 페이지는 `/?date=all`, 특정 날짜의 의료 뉴스는 `/?date=2026-07-04&topic=medical`로 열 수 있습니다.
+
+참고: [Telegram Bot API — 업데이트 수신](https://core.telegram.org/bots/api#getting-updates), [getUpdates](https://core.telegram.org/bots/api#getupdates), [메시지 링크](https://core.telegram.org/api/links#message-links).
+
+## URL·제목 영구 보관
+
+`/archive`에서 현재 URL과 수정 이력을 검색하고, 선택 범위를 JSON으로 내려받습니다. `/api/urls`는 페이지 조회, `/api/urls/export.json`은 선택 범위 전체 내보내기입니다. `active=all`로 수정 전 기록도 포함할 수 있습니다.
+
+- `message_snapshots`는 수신한 메시지의 원본 payload와 버전을, `archived_urls`는 URL 등장 위치·원본 주소·표시 제목·근처 문맥·제목 근거·메시지 출처를 저장합니다.
+- 중복 메시지와 같은 주소의 여러 등장도 보관합니다. 뉴스/분석 화면의 중복 제외는 원본 기록을 삭제하지 않습니다.
+- Telegram `text_link`/`url` 엔터티와 캡션을 처리하며, 이모지를 포함한 UTF-16 오프셋으로 표시 제목을 복원합니다. 제목은 메시지의 표시 제목 또는 주변 문맥에서 추정한 값이며 기사 사이트에서 검증한 제목이 아닙니다.
+- 기존 DB는 저장된 텍스트에서 한 번 백필합니다. 이전 수집기가 저장하지 않았던 숨김 링크 엔터티는 복원할 수 없고, 업데이트된 수집기가 수신한 메시지부터 보관합니다. 수신하지 못한 수정·삭제나 Telegram 과거 이력 전체를 자동 복구하는 기능은 아닙니다.
+
+## MiroFish를 적용한 관계 그래프
+
+`/graph`에서 날짜·주제·유형·키워드로 분석 범위를 정하고 관계 분석을 실행합니다. 조직·인물·기술·개념·논문·제품·사건을 노드로, 방향과 설명이 있는 관계를 연결선으로 표시합니다. 노드와 관계를 선택하면 근거 메시지를 확인할 수 있습니다. 직접 보고된 관계와 추론한 관계를 구분합니다.
+
+MiroFish의 `backend/app/utils/ontology.py`를 그대로 가져와 관계 유형의 source/target 정규화에 사용했습니다. 출처 커밋과 복사 범위는 `vendor/mirofish/ORIGIN.md`, 원본 AGPL-3.0은 `vendor/mirofish/LICENSE`에 있습니다. 실행 중인 앱의 코드와 해당 원본은 `/mirofish-source.zip`, 라이선스는 `/mirofish-license`에서 내려받을 수 있습니다. ZIP은 명시된 코드·화면·테스트·문서만 포함하며 `.env`와 수집 DB는 제외합니다.
+
+이 `/graph` 기능은 승인된 Codex 서비스로 관계를 추출하고 SQLite `graph_analysis`에 저장합니다. 별도 `/simulation`에서는 아래의 원본 MiroFish 전체 엔진을 사용합니다. `/graph` 자체는 Zep 서비스로 메시지를 전송하지 않습니다.
+
+전체 URL 기록은 모두 보존하지만, 한 번의 관계 분석은 필터에 맞는 중복 제외 자료 중 시간순 대표 24개, 설명당 최대 1,800자를 사용합니다. 전체 건수와 선택 범위를 화면에 표시합니다. 저장된 모든 자료의 전체 관계를 분석한 결과로 해석하면 안 됩니다. 전체 입력 내용이 달라지면 결과를 갱신 필요로 표시합니다. 기사 본문 조회·논문 전문 검증은 포함하지 않습니다.
+
+## 수집 완료 후 전체 종합 분석
+
+`/research`의 **수집 완료 · 종합 분석** 버튼으로 시작합니다. 시작 시점의 전체 활성 URL 기록과 중복 제외 뉴스 항목을 스냅샷으로 고정합니다. 이후 도착한 메시지는 다음 스냅샷에 반영됩니다. 수집기의 종료나 잠깐의 무응답을 수집 완료로 자동 간주하지 않습니다.
+
+- 같은 원문 주소의 변형·제목·메시지 근거는 묶되 모두 보존하고, URL 없는 항목도 분석 문서로 포함합니다.
+- 공개 HTTP(S) 원문을 수집해 문서별 요약·핵심 주장·주제·국가·참여자·관계·시사점을 분석합니다. 인증이 필요한 자료를 우회하지 않습니다. 현재 PDF는 본문 추출 미지원으로 표시하며 Telegram 발췌를 사용합니다.
+- 원문 수집은 공개 IP만 허용하고 리디렉션마다 검증합니다. 응답은 2MiB, 페이지 수집은 15초로 제한합니다. 분석 입력의 본문은 문서당 최대 3,500자이며 잘림을 표시합니다.
+- 전체 문서를 나눠 처리하고 중간 결과를 `research_documents`, `research_batches`에 저장합니다. 대표 24개만 분석하는 빠른 그래프와 달리 전체 스냅샷을 대상으로 진행합니다. 자료가 많으면 오래 걸립니다. 실패·중단 상태와 처리 건수를 화면에서 확인하고 이어서 실행할 수 있습니다.
+- 모든 성공 문서의 결과를 여러 단계로 종합해 주제별 비중, 국가·기업·전문가·기관 관계, 국가·기업 전략 흐름을 정리합니다. 채널 내 문서 수로 비중을 계산하며 대중의 관심도·여론 조사나 시장 점유율로 해석하지 않습니다.
+- 단기 0–3개월, 중기 3–12개월, 장기 1–3년 전망은 근거·가정·확인 신호·위험을 포함한 조건부 시나리오입니다. 전망을 확인된 사실이나 검증된 예측 정확도로 표시하지 않습니다.
+- 조회: `/api/research`, `/api/research/{id}`, `/api/research/{id}/documents`; 실행·재개: POST `/api/research`, POST `/api/research/{id}/resume`.
+
+## 통합 GraphRAG 탐색과 질의
+
+`/api/graph/integrated`는 저장된 완료 관계 분석과 종합 분석의 완료 문서 관계를 합칩니다. 국가·기업·기관·전문가·정책·기술 등의 유형, 관계 유형, 날짜·키워드·주제·선택 노드 주변으로 탐색합니다. 원본 근거의 출처를 유지하고 같은 문서의 재등장을 독립 근거로 부풀리지 않습니다. 아직 분석하지 않은 자료는 통합 그래프에 포함된 것으로 표시하지 않습니다.
+
+POST `/api/graph/ask`에 `question`과 선택적 `node_ids`를 보내면 키워드 일치와 최대 2단계 이웃 탐색으로 관련 관계·근거를 검색하고, 승인된 Codex 서비스가 그 근거에 한정해 답변합니다. 화면의 노드 수 제한과 별개로 저장된 전체 그래프에서 검색하며, 답변 입력은 노드 16개·관계 32개·근거 12개 이내입니다. 자료가 없으면 근거 부족을 반환합니다. 이 구현은 로컬 관계 그래프 검색과 생성 답변을 연결한 GraphRAG이며, MiroFish 원본 Zep 서비스나 사회 시뮬레이션 전체를 구동하지 않습니다.
+
+
+## MiroFish 전체 시뮬레이션 엔진
+
+`/simulation`에서 뉴스 범위를 선택하고 실행 초안을 만듭니다. 초안에 저장된 제목·URL·날짜·메시지 발췌와 본문을 검토한 뒤 **시뮬레이션 시작**을 누르면 원본 MiroFish API로 작업을 진행합니다. 초안 생성과 화면 조회는 외부 분석을 시작하지 않습니다.
+
+원본 커밋 `39d849138ef254f6c737ab4c4705e5545dbe31d4`의 백엔드·프런트엔드·OASIS 실행 스크립트를 `integrations/mirofish/upstream`에 포함했습니다. 기존 관계 그래프에 온톨로지 함수만 적용한 기능과 별도로, 실제 Python 런타임과 원본 웹 화면을 설치합니다. 수정 내역과 라이선스는 `integrations/mirofish/PATCHES.md`, `SOURCE.json`, `upstream/LICENSE`에서 확인할 수 있습니다.
+
+### 설치와 설정
+
+```sh
+python3 mirofish_runtime.py install
+# .env.mirofish 파일에 사용할 서비스의 값을 입력합니다.
+python3 mirofish_runtime.py status
+python3 mirofish_runtime.py start
+python3 app.py serve
+```
+
+`.env.mirofish`에는 `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL_NAME`, `ZEP_API_KEY`가 필요합니다. 설치 명령은 빈 설정 파일을 권한 0600으로 준비합니다. 키를 소스나 채팅에 붙이지 마세요. 로그인된 Codex 이용 권한은 이 별도 LLM API·Zep 계정의 인증이나 사용 요금을 대신하지 않습니다. 시뮬레이션을 시작하면 선택 자료가 지정한 LLM 서비스와 Zep Cloud로 전달됩니다.
+
+- 뉴스 실행 화면: `http://127.0.0.1:8000/simulation`
+- 원본 MiroFish 화면: `http://127.0.0.1:3000` (엔진 시작 후)
+- 원본 백엔드: `http://127.0.0.1:5001`
+- 엔진 종료: `python3 mirofish_runtime.py stop`
+
+설정값·런타임·뉴스 DB는 소스 ZIP에서 제외합니다. 원본 엔진에는 Telegram 토큰을 전달하지 않습니다. 런타임은 프로젝트의 `.runtime/mirofish`에 분리하며, 웹 서비스는 로컬 주소에 바인딩합니다.
+
+### 실제 실행 흐름
+
+1. 뉴스 스냅샷으로 온톨로지를 생성하고 Zep 그래프를 구축합니다.
+2. 그래프 참여자의 에이전트 프로필과 시뮬레이션 설정을 생성합니다.
+3. OASIS에서 Twitter·Reddit 또는 선택한 한 플랫폼의 가상 상호작용을 실행합니다.
+4. 지정 라운드가 끝나고 실행 환경을 종료한 뒤 원본 보고서 에이전트로 보고서를 생성합니다.
+
+작업 ID·진행 단계·결과는 SQLite에, 입력 스냅샷은 로컬 파일에 보존합니다. 중지·재개 버튼과 오류 상태를 제공하며, 서버가 재시작되면 진행 중 기록을 일시 중지 상태로 복구합니다. 원본 그래프 생성과 프로필 생성처럼 외부 서비스에서 이미 처리 중인 요청은 즉시 취소되지 않을 수 있습니다. 한 실행은 최대 40라운드·5,000개 뉴스, 스냅샷 16MiB이며 초과 시 자동으로 자료를 누락하지 않고 범위를 줄이도록 알립니다.
+
+원본 화면의 그래프·에이전트 활동·인터뷰·보고서 대화 기능도 사용할 수 있습니다. 인터뷰는 시뮬레이션 환경이 살아 있는 동안 가능하며, 뉴스 화면의 자동 보고서 흐름은 라운드 종료 후 환경을 닫습니다. 보고서 대화는 생성된 보고서를 대상으로 사용합니다. 뉴스 API에서도 `/api/simulation/{id}/interview`, `/api/simulation/{id}/chat`을 제공합니다.
+
+시뮬레이션의 발언과 행동은 가상 에이전트가 생성한 결과입니다. 국가·기업의 실제 입장이나 검증된 미래 예측으로 해석하지 않습니다. 실제 LLM·Zep 계정이 설정되지 않은 상태에서는 실행을 차단하며, 설치·오프라인 테스트 성공을 실제 시뮬레이션 완료로 표시하지 않습니다.
+
+### 전체 뉴스 분석과 Recursive Self Improvement
+
+`/strategy`의 **전체 뉴스 분석·자기개선 시작**은 정규 URL과 동일한 제목·본문을 기준으로 중복을 제거한 전체 Telegram 대기열을 처리합니다. 본문 속 추가 URL, 파서가 남긴 링크 조각, 숨은 Telegram 링크, URL 없는 뉴스도 포함합니다. 반복 게시의 원본 문맥은 보관함에 남기고 대표 뉴스와 확보한 원문 발췌를 분석 단위로 사용합니다.
+
+기본값은 회차당 뉴스 6개, 대기 뉴스가 있는 동안 회차 종료 후 5초 간격, 회차 수 제한 없음입니다. 새 근거가 없으면 15분 뒤 대기열을 다시 확인합니다. 서버가 실행되는 동안 백그라운드로 진행하며, 중지 요청 후에는 실행 중인 회차를 마무리하고 다음 회차를 시작하지 않습니다. 이력과 체크포인트는 DB에 저장하고 화면에서 재개할 수 있습니다.
+
+순환은 **근거 선택 → 원문·GraphRAG 보강 → 역할별 분석 → 독립된 검토 요청 → 회고·후속 과제 → 절차 규칙 반영 → 다음 근거 선택**으로 이어집니다. 검토에서 드러난 누락·불확실성은 다음 회차의 질문과 검토 절차에 들어갑니다. 후속 검색어는 실제 원문의 형태소 키워드에서만 선택하고, 전체 대기열도 함께 처리해 주제 편향으로 미처리 뉴스가 남지 않게 합니다.
+
+검토가 통과한 결과는 버전 이력이 있는 전략 카탈로그에 누적합니다. **관측 용어**, **제안 전략 개념**, **검토된 해석의 근거 인용 관계**를 구분합니다. 새 개념이 늘었다는 사실을 모델 능력이 좋아졌다는 증거로 취급하지 않습니다. 회차별 인용·원문·검토 지적 수를 같은 기준으로 비교하며, 서로 다른 뉴스 묶음의 수치 변화는 품질 상승으로 단정하지 않습니다. 모델 가중치나 실행 코드는 자동 수정하지 않습니다.
+
+진행률의 분모는 현재 전체 고유 분석 단위입니다. 분석 처리, 검토 통과, 검토 필요, 미처리를 구분합니다. 새 뉴스가 수집되면 분모가 증가할 수 있으며, 미처리 0건과 모든 검토 통과는 다른 상태입니다.
+
+API: `GET/POST /api/improvement`, `GET /api/improvement/{id}`, `POST /api/improvement/{id}/pause`, `POST /api/improvement/{id}/resume`. 기본 전체 범위는 `full_corpus: true`; 현재 화면 범위만 분석하려면 `false`를 사용합니다. `news_limit`, `interval_seconds`, `max_rounds`로 실행 범위를 조정하며 `max_rounds: 0`은 회차 제한 없는 반복입니다.
+
+### 현재 위협과 향후 잠재 위험
+
+각 역할 분석 회차에 위험 분석가와 별도의 위험 검토 요청을 추가합니다. 현재 위협 등급(`unknown/low/moderate/high/critical`)과 미래 가능성(`unknown/low/moderate/high`), 기간(`unknown/0-3mo/3-12mo/12-36mo`)을 따로 기록합니다. 이는 원문을 근거로 한 질적 판단이며 통계적 발생 확률이 아닙니다.
+
+각 위험에는 영향 분야·대상, 실제 관측 지표, 현재 판단 근거, 미래 시나리오와 가정, 상승 신호, 완화 조치, 반대 근거, 불확실성 및 원문 인용이 포함됩니다. 평가한 근거와 정보 부족으로 평가하지 못한 근거를 구분합니다. 위험 목록이 비어 있어도 안전함을 입증한 것은 아닙니다.
+
+독립된 위험 검토가 인용·날짜·등급·실현 조건을 대조합니다. 검토가 거절되면 기존 보완 순환에서 다시 분석하고, 해결되지 않은 결과는 검토 필요로 남깁니다. 과거 전략 분석에 위험 등급을 임의로 채우지 않으며, RSI 대기열에서 위험 미평가 자료를 보강합니다.
+
+`GET /api/risks`는 저장된 위험 평가와 검토·미평가 범위를 반환합니다. 오래되었거나 날짜가 확인되지 않는 근거는 최신 상황 판단과 구분합니다. 화면의 집계는 저장된 분석의 범위이며 전 세계의 단일 위협 점수가 아닙니다.
+
+관측·측정 한계의 기록과 주기적 재평가에는 [NIST AI RMF Measure](https://airc.nist.gov/airmf-resources/playbook/measure/)와 [Manage](https://airc.nist.gov/airmf-resources/playbook/manage/)의 원칙을 참고했습니다. 위 등급 범주는 이 앱의 표시 방식입니다.
+
+### 전체 뉴스 병렬 기본 분석
+
+전략 화면의 **전체 뉴스 기본 분석**에서 수집된 모든 뉴스의 중복 제거 스냅샷을 분석합니다. 화면의 날짜·분야 필터와 관계없이 전체 보관함을 대상으로 합니다. 기본 설정은 작업자 6개, 배치당 뉴스 12개입니다. 형태소 전처리와 모델 분석을 동시에 진행하며 각 분석 배치 뒤에 별도의 의미 검증 요청을 수행합니다.
+
+뉴스마다 요약, 원문 표현이 확인된 형태소 키워드, AX·의료·보안·안전·기술 분야, 국가·정부·고영향 분야의 전략적 관련성, 기본 위험 신호와 분석 한계를 저장합니다. 기본 분석은 Telegram 발췌와 이미 확보한 URL 발췌를 사용합니다. 위험 신호는 정밀 위험 등급이나 발생 확률이 아닙니다.
+
+전처리·AI 분석·검토 통과·대기·실패·검토 필요 수를 따로 집계합니다. 실패 항목은 한 번 자동 재시도하며, 모든 항목이 검토를 통과해야 실행 상태가 `complete`가 됩니다. 실행 중지와 재개가 가능하고 현재 입력 해시와 일치하는 검토 결과를 재사용합니다. 시작 이후 추가 수집된 뉴스는 다음 전체 분석 실행에서 기존 검토 결과를 재사용하면서 추가 처리합니다.
+
+API: `GET/POST /api/baseline`, `GET /api/baseline/{id}`, `POST /api/baseline/{id}/pause`, `POST /api/baseline/{id}/resume`.
+
+재시도에서는 해당 문서의 이전 검증 지적과 수정 대상 보고서를 함께 전달합니다. 이전 보고서는 새로운 원문 근거가 아니며, 수정 후 별도 검증을 다시 거칩니다. 긴 브리핑의 여러 URL은 각 링크 주변 원문 문단으로 분리하고 원래 위치와 해시를 보존합니다. 한 기사에 링크가 하나뿐인 경우 본문은 그대로 유지합니다.
+
+현재 입력 해시와 일치하는 검토 완료 기본 분석은 GraphRAG에도 연결됩니다. 요약→원문은 `근거 인용`, 형태소 키워드→원문은 `원문 표현 관측` 관계이며 임의의 인과관계를 생성하지 않습니다. 원문 내용이 달라진 결과는 현재 그래프에서 제외하고 추가 분석 대상으로 남깁니다.
+
+첫 전수 실행 6,154건의 검토 완료 기본 데이터는 `data/exports/news-baseline-6154.csv`와 `data/exports/news-baseline-6154.jsonl`에 저장했습니다. 이는 첫 실행의 고정된 발췌 스냅샷이며 이후 원문 보강과 신규 수집을 반영한 결과와 구분합니다.
+
+### 논문 및 분야별 보기
+
+`/papers`는 Telegram에 실제 등장한 arXiv 논문을 기본 논문 ID로 중복 제거하고 관측 버전을 보존합니다. 공식 API 메타데이터를 확보한 논문에 대해서만 저자·초록·분류·최초 게시일 기반 동향을 표시합니다. 수집 범위 안의 동향이며 arXiv 전체 연구량을 뜻하지 않습니다.
+
+논문 분석은 문제·방법·보고된 결과·비교·한계·재현성·키워드·전략적 의미·위험을 정리하고 별도 검토를 거칩니다. 초록과 공식 메타데이터, 확보 가능한 HTML 본문의 일부를 구분하여 인용합니다. 최신 메타데이터와 일치하고 검토를 통과한 논문 주장만 GraphRAG에 출처 인용 관계로 연결합니다.
+
+뉴스와 논문 모두 AX(인공지능 전환), 의료, 보안, 안전, 기술로 필터링할 수 있습니다. 분야는 실제 원문의 단서로 분류하며 여러 분야에 동시에 포함될 수 있습니다.
+
+
+### 성능 최적화 및 실행 관측
+
+전략 화면은 뉴스 12건, 전체 동향, 그래프를 독립적으로 조회합니다. 더 보기에서 다음 페이지를 받고 원문·분석 상세는 뉴스를 선택할 때 불러옵니다. 그래프 미리보기는 노드 16개와 근거 3개를 반환하며 전체 관계 검색 자료는 보존합니다.
+
+- `GET /api/strategy?view=news&page=1&page_size=12`: 경량 뉴스 목록·필터·페이지 정보
+- `GET /api/strategy?view=overview`: 전체 관측 동향·수집 범위·저장 연구 요약
+- `GET /api/strategy/item?id=...`: 뉴스의 원문 및 분석 상세
+- `GET /api/{baseline|improvement|workflows}[/{id}]?view=status`: 경량 진행 상태와 ETag. 기존 전체 조회는 상세를 펼칠 때 사용합니다.
+- `GET /api/runtime/analysis`: 전체 서비스의 공유 LLM 동시 실행 한도·대기·소요 시간·입출력 길이. 프롬프트와 인증정보는 기록하지 않습니다.
+
+기본 분석·심층 분석·논문·연구는 SQLite 기반 프로세스 간 호출 예산 6개를 공유합니다. 기본 배치는 12개이며 새 기본 분석 요청에 `adaptive_batches: true`를 지정하면 발췌 길이에 따라 8/12/16개를 선택합니다. 동일 근거·위험보고서·검증 버전의 통과 감사만 재사용하며 검토 기준은 유지합니다.
+
+조회 캐시는 원문과 검토 결과 변경을 추적하고, 같은 갱신 요청을 하나로 합칩니다. 형태소·전략 점수·분야 계산은 내용 해시로 재사용하고 같은 URL 조회도 하나로 합칩니다. 원문 변경 시 전체 목록의 재결합과 전역 관계 병합은 필요하지만 변경되지 않은 개별 문서 검증은 재사용합니다. 변경 근거에 의존한 이전 기본 분석은 재검증 전까지 현재 그래프에서 제외합니다.
+
+추가 수집분과 발췌 수정을 반영한 6,175건 기본 분석은 모두 독립 검토를 통과했습니다. 결과: `data/exports/news-baseline-b371d603dac0400db0462243dcd70f43.jsonl`. 심층 전략·위험 분석은 별도의 순환 작업으로 계속 진행합니다.
+
+### 동적 주제·신호와 자동화
+
+전략 주제, AI 통제·변화 신호, 같은 원문에서 함께 등장한 전략 후보를 수집 자료의 실제 형태소 표현으로 자동 발견합니다. 문서 수와 원문 위치를 확인하고, 최근 7일과 직전 7일의 모멘텀을 갱신합니다. 제안·부정·조건부 언급은 구분하며, 규칙 검토를 사실·인과관계·통제 시행 확인으로 표시하지 않습니다.
+
+**전략 주제·변화 신호 관리**에서 항목을 직접 추가하거나 제외·복원할 수 있습니다. 제외한 항목은 자동 발견으로 다시 나타나지 않습니다. 관리 목록은 검색과 30개씩 더 보기를 지원합니다.
+
+동적 후보는 기존 RSI의 후속 탐색 우선순위에 연결됩니다. 비정상 종료된 실행은 같은 ID로 복구하고 사용자가 일시중지한 실행은 유지합니다. 같은 DB에 웹 서버가 중복 실행되는 것은 차단합니다. 자세한 기준과 점검 결과는 [AUTOMATION_REVIEW.md](AUTOMATION_REVIEW.md)를 참고하세요.
+
+위험 분석은 `/risks`에서 12개씩 조회하며 현재 위협·미래 관심 지수·영향 분야를 구분합니다. 산식, 미확인 점수 범위와 자동화 검증은 [AUTOMATION_REVIEW.md](AUTOMATION_REVIEW.md)를 참고하세요.
+
+
+## 전수 심층 분석 마무리 실행
+
+기존 RSI를 체크포인트까지 일시중지한 뒤 `corpus_completion.py --cycle <ID> --workers 6 --batch-size 16`으로 같은 사이클의 전수 완료 원장을 처리할 수 있습니다. 먼저 분석할 자료를 고정하고, 현재 문맥·원문·실제 인용·독립 검토가 모두 일치하는 결과만 재사용합니다. 실행 중인 작업은 중단 후 같은 체크포인트로 재개하고, 검토 미통과 문서는 실제 지적과 함께 6개·1개 묶음으로 줄여 최대 3회 처리합니다. 판정 기준을 바꾸거나 미통과 결과를 완료로 승인하지 않습니다.
+
+국가·기술·위험 분석은 병렬 역할로 진행하며 전체 서비스가 AI 호출 상한 6개를 공유합니다. 원문과 저장된 형태소 분석은 보존하고 모델에 반복 전달하는 키워드·그래프 힌트만 줄입니다. 동일 보고서·근거·검증 버전·인용 대조를 통과한 전략 및 위험 감사만 재사용합니다. 인용 ID는 각 요청의 실제 근거 목록으로 제한합니다.
+
+위험의 `unknown` 기간은 시점을 판단할 근거가 없다는 뜻입니다. 평가 불가 자료도 독립적으로 대조하고, **위험을 검토했다는 사실**과 **위험 등급을 평가할 수 있다는 사실**을 구분합니다. 잘못된 기사 연결은 철회·정정 이력에 남기며, 교정 후속 분석이 현재 원문 검토를 통과해야 정정 완료로 표시합니다.
+
+명시적으로 원문 연결 오류를 철회한 경우, 해당 근거에 의존한 전략 주장은 현재 GraphRAG와 검토 기억의 검색 대상에서 제외합니다. 같은 실행의 정상 주장은 유지하며, 관측 키워드는 다른 정상 문서·실행의 지원을 보존합니다. 원본 분석과 철회 이유, 교정 후속 실행은 이력으로 남깁니다. 정정 내역만 변경되어도 관련 그래프 캐시를 갱신합니다.
+
+새 구조의 구현 범위와 남은 검증은 [STRATEGY_ROADMAP.md](STRATEGY_ROADMAP.md)를 참고하세요.
+
+### 동적 관측 지도
+
+`/observatory`에서 최근 14일의 전략 주제별 입체 곡선, 전략 키워드 관계 지도, 날짜별 히트맵과 근거 패널을 함께 봅니다. 전략 대시보드의 **라이브 관측 지도** 메뉴에서 이동합니다. 날짜 슬라이더/재생은 그날의 관측량을 표시하며, 노드·연결선·히트맵 선택은 같은 근거 패널과 강조 상태를 공유합니다. 시점 회전은 별도로 멈출 수 있습니다. 키보드 선택, 움직임 감소 설정, 모바일 화면을 지원합니다.
+
+`/api/observatory`는 현재 규칙으로 보관 자료를 재집계하며 소스 revision과 주제 등록부 version으로 캐시합니다. 통합 신호·기존 주제·증가 및 감소하는 자동 발견 주제를 고르게 골라 최대 36개 주제와 반복 키워드 최대 48개, 동일 문서·날짜에서 함께 관측된 연결 최대 180개를 표시합니다. 키워드는 주제별 관련 표현을 우선 확보하고, 추가 전략 주제는 두 기간에 모두 근거가 있는 경우만 포함합니다. 드문 주제도 연결을 유지하도록 주제별 주요 연결과 키워드간 연결을 우선 확보합니다. 기간 집계는 고유 문서 합집합, 일별 집계는 날짜별 고유 문서 수입니다. 연결과 날짜별 근거 목록은 최대 3개 표본이며, 공동 관측을 인과관계나 LLM 검토된 주장으로 표시하지 않습니다.
+
+15초 간격으로 데이터를 다시 확인하고 변경된 결과만 다시 구성합니다. 화면을 떠나면 주기적 조회와 애니메이션을 멈춥니다. 실패하면 마지막 정상 자료와 갱신 실패 안내를 유지합니다. 수집·원문·기본 분석·심층 검토 상태는 기존 상태 API에서 따로 읽으며 집계 대상과 시각을 표시합니다. 신규 모델 호출이나 수집 작업을 시작하지 않습니다. 과거 날짜 재생은 과거 당시의 작업 진행 이력이 아니라, 현재 규칙에 따른 뉴스 관측 추이입니다.
+
+검증: `.venv/bin/python -m pytest tests/test_observatory.py`, `.venv/bin/python tests/ui_observatory.py`, 실제 서버 읽기 전용 확인은 `--live` 옵션입니다.
+
+관측 지도는 선택한 기간의 고유 문서 수가 양수이고 실제 근거 참조가 있는 주제·키워드만 표시합니다. 날짜별 0건 주제는 곡선·주제 목록·선택 메뉴·관계 지도·히트맵에서 숨기고 관련 선택을 해제합니다. 근거가 없는 히트맵 셀은 선택할 수 없으며, 14일 전체로 돌아오면 그 기간의 근거가 있는 주제를 다시 표시합니다.
+
+관측 지도 탐색은 증가/감소/자동 발견/통합 통제 신호별 필터와 주제·키워드 검색을 지원합니다. 이름과 직접 연결된 주제·키워드 이름을 대상으로 `AI 반도체` 또는 `AI AND 반도체`는 모두 포함, `로봇 OR 반도체` 또는 `로봇 | 반도체`는 하나 이상 포함, `"수출 통제"`는 연속 표현, `AI -중국`은 제외 조건입니다. AND는 OR보다 먼저 묶이며 괄호 문법은 제공하지 않습니다. 같은 기사에서 복합 검색어가 모두 나왔다는 판정이나 원문 전체 검색은 아닙니다. 문법 오류는 입력란 옆에 안내하고 결과를 표시하지 않습니다.
+
+관계 지도는 관측 연결의 강도로 노드를 재배치하고 선택한 노드를 중심으로 이웃을 모읍니다. 노드 드래그, 재배치 버튼, 연결 흐름 켜기/끄기를 지원합니다. 선의 움직임은 관계의 시각적 강조이며 실제 처리·인과 방향이 아닙니다. 작은 주제의 추이는 명시적으로 선택하는 로그 높이로 확대할 수 있습니다. 복합 검색 문법 검증은 `node tests/observatory_search.test.cjs`로 실행합니다.
+
+### 2026-09-16 처리 재개와 응답·관측 지도 개선
+
+심층 완료 원장은 `--review-first`로 이전 검토·실패 건을 우선 처리할 수 있습니다. 재시작 때 새로 수집한 고유 문서를 추가하고, 기존 완료 판정은 현재 근거와 다시 대조합니다. 실행 중 체크포인트와 최대 재시도 횟수는 유지합니다. 기본 분석은 현재 스냅샷과 일치하는 검증 결과만 재사용하므로, 과거 고정 대상의 완료 숫자와 새 실행의 완료 숫자는 다를 수 있습니다.
+
+GraphRAG 최초 응답은 전체 그래프 준비와 분리된 SQLite 전문 검색으로 근거 발췌를 먼저 제공합니다. 기사 추가·수정·삭제 때 검색 인덱스도 갱신합니다. 노드·전략 주제 범위를 임의로 확대하지 않으며, 발췌를 검증된 분석으로 표시하지 않습니다. 추가 분석은 질문별 검색 계획, 종합, 독립 검토를 거쳐 저장합니다. 동일 질문의 동시 요청은 작업을 공유하고, 분석 중 근거가 변경되면 한 차례 자동 재검토합니다. **5초 목표는 첫 근거 응답이며 전체 LLM 검토 완료 시간의 보장은 아닙니다.**
+
+관측 지도는 14·30·90일을 선택할 수 있습니다. 선택한 기간의 실제 관측으로 주제·키워드·연결을 다시 선정하고, 직전 같은 길이의 기간과 비교합니다. 과거 주제도 선택 기간에 근거가 있으면 후보에 포함합니다. 비교 날짜와 자료가 관측된 날짜 수를 표시하며, 과거 자료가 부족하면 비교 한계를 표시합니다. `/api/observatory?window=30`처럼 조회하며, 최초 집계는 백그라운드로 처리합니다. 준비 전에는 HTTP 202, 저장된 이전 집계를 표시할 때에는 집계 시각과 갱신 상태를 제공합니다.
+
+`/api/observatory/status`는 백그라운드로 수집·분석 상태를 집계하고 마지막 집계 시각을 반환합니다. 심층 완료 수는 완료 원장을 우선 사용합니다. 실제 처리 기록은 `/api/observatory/history` 및 SSE `/api/observatory/events`로 읽습니다. 재연결의 Last-Event-ID와 최근 200건 중복 식별자를 지원하며, 화면의 **실제 처리 기록 재생**에서 확인할 수 있습니다. 이 기록은 뉴스 날짜별 추이 재생과 별개입니다. SSE 연결 장애 시 15초 조회를 유지합니다.
+
+프로젝트 테스트는 `.venv/bin/python -m pytest tests`로 실행합니다. `integrations/*/upstream`의 외부 프로젝트 테스트는 해당 프로젝트의 별도 환경이 필요합니다.
+
+### Agent-Reach 원문 보강과 정기 관측
+
+`/sources`에 실패·잘린 원문 복구, RSS/단일 자료 정기 관측 관리, 수집 성공·실패 시각과 오류/재시도 상태, 본문 버전 및 문단 검색을 추가했습니다. 전체 본문은 수집 한도 내에서 별도로 저장하고, GraphRAG가 부족한 근거를 발견하면 첫 답변 이후 제한된 외부 검색과 독립 검토를 진행합니다. 새 본문이 확인된 URL만 재검토합니다. [연동 상세](integrations/agent-reach/README.md)
+
+기사마다 사실·배경·의미·활용 조건·반대 근거·후속 관찰을 설명하는 기능은 [기사별 상세 해설 제안](ARTICLE_ANALYSIS_PROPOSAL.md)에 정리했습니다. 기사 목록·전략 기사 카드의 **기사 상세 해설**에서 `/article?url=...`로 이동해 생성할 수 있습니다. 원문 문단과 비교 자료, 전략 키워드 관계 및 관측 변화(최근/이전 7일·일별·관계별)를 함께 해설하고 독립 검토를 통과한 결과만 표시합니다. 최초 생성은 백그라운드에서 진행되며 결과는 URL별로 저장합니다. 본문·비교 원문·연결 관측 결과가 바뀌면 갱신 필요로 표시합니다.
+
+
+### 기사 해설의 관측 변화 분석
+
+- 사실·새로움·의미·활용·연결 관측 변화·한계·후속 신호를 구분하며 항목마다 인용을 펼쳐 확인합니다.
+- 주제 빈도 변화와 관계 공동 관측 변화를 구분합니다. 이전 0건의 증감률은 계산하지 않으며 소표본을 표시합니다. 연결 증가를 인과관계나 시장 전체의 성장으로 단정하지 않습니다.
+- 관측 지도에 선정된 주제·키워드의 전체 기사 소속을 조회합니다. 날짜별 인용 표본에 없는 기사도 소속을 대조합니다. 지도 밖의 관계는 분석 범위에 포함되지 않습니다.
+- 원문 앞부분 최대 24개 문단과 관련 비교 문단 최대 6개, 연결 관계 최대 20개를 사용합니다. 실제 분석 문자 수·수집 잘림·분석 시각을 표시합니다. 수집된 전체 본문을 모두 분석했다는 뜻은 아닙니다.
+- 한 번에 1개 해설을 생성하며 대기열은 최대 20개입니다. 최초 생성은 LLM 대기/검토 시간을 포함하며 5초 완료를 보장하지 않습니다. 저장 결과 조회는 모델을 다시 호출하지 않습니다. 전 기사 자동 일괄 생성은 하지 않습니다.
+- API: GET `/api/article-explanations?url=...`, POST `/api/article-explanations` `{ "url": "https://..." }`. 실패·본문 부족·검토 필요·원문 변경 상태에서 다시 요청할 수 있습니다.
+
+
+### 2026-09-17 기사 해설 편집 보강
+
+핵심 내용의 작동 방식·원문 속 사용 장면·독자의 효용을 중심으로 작성합니다. 요약/핵심 내용/의미만 필수이며, 비교·활용·관측 변화·제약·후속 사건은 유용한 내용이 있을 때만 표시합니다. 한계/반대 근거/후속 신호를 채우기 위한 자료 부족 목록과 일반적인 검증 숙제를 생성하지 않습니다. 독립 검토는 사실성뿐 아니라 기사 관련성·중복·독자 효용을 검토하고 불필요한 항목을 제거합니다. 핵심 사실이 검토를 통과하지 못하면 게시하지 않습니다.
+
+관측 변화는 기사 이해에 기여하는 연결만 해설하고 관계 지도·전체 수치는 접어서 제공합니다. 다른 기사 페이지의 추천 목록에 반복된 동일 기사 제목 및 동일 본문 발췌는 비교 자료에서 제외합니다. 해설 버전이 바뀌면 기존 저장본을 갱신 필요로 표시하여 새 기준으로 생성합니다.
+
+핵심 내용이 검토에서 거절되면 지적 사항을 반영해 한 번 수정하고, 수정본 전체를 다시 독립 검토합니다. 두 번째에도 통과하지 못하면 보완 필요로 남깁니다. 요약의 핵심 사실 재언급과 본문 절 사이의 불필요한 반복을 구분합니다.
+
+### 논문 수집 재개와 분석 활용
+
+`/papers`의 자동 수집·분석을 켜면 미확보 arXiv 메타데이터를 10개씩 처리하고 출처를 확인한 제목·초록이 확보된 논문을 분석·독립 검토에 넘깁니다. API 요청 제한/Retry-After와 기존 조회 간격을 지키며, 공식 API 연속 수집 실패 3회면 해당 API 재시도만 일시중지합니다. 대체 공급자와 확보한 논문의 분석은 계속됩니다. 화면에 다음 수집 시각과 오류가 표시됩니다. 재개 버튼은 외부 서버의 대기 시간을 초기화하지 않습니다. 실패 논문 분석은 최대 2회 시도하며 보완 필요 분석은 자동 통과시키지 않습니다.
+
+검토 완료 논문은 기존 GraphRAG에 더해 기사 상세 해설의 관련 근거로 검색됩니다. 초록·HTML 일부 발췌와 검토된 해석을 구분하며, 인용한 논문의 원문/분석 변경 또는 새 관련 검토 논문이 생기면 해설을 갱신 필요로 표시합니다. 전략 주제 및 관측 지도 화면의 ‘전략 주제와 연결된 검토 완료 논문’ 패널에서 주제별 논문 분석을 확인할 수 있습니다. 연구 근거를 뉴스 관측 건수에 합산하지 않습니다.
+
+API: GET/POST `/api/papers/pipeline` (`enabled` boolean), GET `/api/papers/strategy`. 수집 제한으로 대기 중인 상태는 수집/분석 완료가 아닙니다.
+
+### 관심 전략 주제와 신규 관측
+
+의료·공공 AX를 독립 전략 주제로 제공합니다. 현재 기간 고유 근거가 1건 이상이면 이전 기간이 0건이어도 ‘신규 관측 · 이전 기간 비교 불가’로 표시하며 증감률을 만들지 않습니다. 관측 지도에도 현재 근거가 있는 신규 주제를 포함하고 의료·공공 AX의 자리를 우선 확보합니다. 현재 근거가 0건인 주제는 계속 숨기고, 정확히 일치하는 자동 별칭은 고정 주제와 중복 표시하지 않습니다. 의료 분류는 기사 중심 주제 판정이 아니라 본문 등의 의료 관련 표현에 기반한 관측입니다.
+
+
+논문 메타데이터 대체 수집: `import_arxiv_snapshot.py`는 arXiv 공식 Kaggle 배포본을 내려받아 기존 등록 논문 ID에 해당하는 제목·초록만 저장합니다. 약 5.5GB JSONL 배포본이며 중단 시 Range 재개를 지원합니다. 상시 파이프라인은 OAI-PMH 증분 및 OpenAlex/Semantic Scholar 색인을 제한된 빈도로 확인합니다. 429/Retry-After·일일 요청 한도·제공자별 대기를 지키며 API 키는 선택 설정입니다. 출처·버전·입력 변경을 보존하고 오래된 정보나 외부 색인이 확보된 공식 정보를 덮어쓰지 않도록 합니다. 외부 색인 분석은 공식 원문 분석과 표시·인용을 구별하며, 현재 입력과 독립 검토 결과가 일치하는 논문만 기사 해설·GraphRAG·전략 연구 패널에 반영합니다. 배포본 확보가 논문 전문 확보나 분석 검토 완료를 뜻하지는 않습니다.

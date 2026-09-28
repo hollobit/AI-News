@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>지식 위키 · 뉴스와 맥락</title><link rel="stylesheet" href="/wiki.css"><script src="/wiki.js" defer></script></head>
+<body><header><a class="brand" href="/wiki">지식 위키 <small>NEWS → KNOWLEDGE</small></a><nav aria-label="주 메뉴"><a href="/strategy">전략</a><a href="/observatory">관측 지도</a><a href="/graph">GraphRAG</a><a href="/">뉴스</a></nav></header>
+<main><section class="intro"><p class="eyebrow">뉴스를 넘어, 이어지는 설명</p><h1>무엇이 달라졌고, 어떻게 연결될까요?</h1><p>의료 · 공공 AX · 소버린 AI와 직접 추가한 주제의 대상, 사건, 쟁점을 원근거와 함께 축적합니다. 관계는 공동 등장 횟수가 아닌, 검토된 연결 설명입니다.</p></section>
+<p id="notice" role="status" aria-live="polite">위키를 불러오는 중입니다.</p>
+<p><a href="/knowledge">지식 연결 지도 · 점검 열기</a> · <a href="/api/wiki/vault">Obsidian 호환 위키 ZIP</a></p>
+<details><summary>주제 관리 · 과거 근거 확장</summary>
+<form id="topic-form"><p>기존 주제 ID를 입력하면 설정을 수정합니다. 설정 변경 후 독립 검토가 다시 필요합니다.</p>
+<label>주제 ID <input name="topic" required pattern="[a-z][a-z0-9_-]{0,63}" placeholder="예: robotics"></label>
+<label>이름 <input name="name" required maxlength="100"></label>
+<label>검색어 (쉼표 구분) <input name="terms" required placeholder="로봇, robotics, humanoid"></label>
+<label><input name="enabled" type="checkbox" checked> 활성화</label>
+<label><input name="historical" type="checkbox"> 오래된 근거도 최대 8개 추가</label>
+<button type="submit">주제 저장</button></form>
+<p><a href="/api/wiki/export" download>현재 검토된 위키 Markdown 내려받기</a></p>
+</details>
+<details><summary>주제 간 대상 별칭 연결</summary><p>원래 페이지와 검토 이력은 보존합니다. 이 연결은 사용자의 동일 대상 판단이며 검토된 의미 관계나 독립 근거가 아닙니다.</p>
+<form id="alias-form"><label>대상 페이지 ID <input name="source" required></label><label>연결할 대상 ID <input name="target" required></label><label>동일 대상 판단 근거 <input name="reason" required maxlength="500"></label><label><input name="remove" type="checkbox"> 연결 해제</label><button type="submit">별칭 저장</button></form></details>
+<section id="topics" class="topics" aria-label="주제별 갱신 상태"></section>
+<div class="layout"><aside><label for="search">위키 페이지 검색</label><input id="search" type="search" maxlength="200" placeholder="주제 · 대상 · 사건 · 쟁점"><nav id="pages" aria-label="위키 페이지"></nav></aside>
+<article id="detail"><h2>주제를 선택해 주세요</h2><p>처음 생성하는 페이지는 원근거 종합과 독립 검토가 끝난 뒤 표시됩니다.</p></article></div>
+<footer>LLM 검토 통과는 제공된 근거와 설명의 일치 여부를 뜻하며, 현실의 사실성을 보증하지 않습니다. 논문 초록과 뉴스 원문은 구분합니다.</footer></main></body></html>

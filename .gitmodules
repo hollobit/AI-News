@@ -1,0 +1,3 @@
+[submodule "integrations/agent-reach/upstream"]
+	path = integrations/agent-reach/upstream
+	url = https://github.com/Panniantong/Agent-Reach.git

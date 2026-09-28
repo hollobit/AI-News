@@ -1,0 +1,8 @@
+{
+  "name": "MiroFish",
+  "repository": "https://github.com/666ghj/MiroFish.git",
+  "commit": "39d849138ef254f6c737ab4c4705e5545dbe31d4",
+  "license": "AGPL-3.0",
+  "vendored_path": "upstream",
+  "excluded": [".git", "node_modules", ".venv", "uploads"]
+}

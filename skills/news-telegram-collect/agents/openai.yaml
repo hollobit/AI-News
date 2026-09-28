@@ -1,0 +1,4 @@
+interface:
+  display_name: "뉴스 정기 수집·기본 분석"
+  short_description: "Telegram 신규 메시지를 수집하고 변경 뉴스의 기본 분석과 독립 검토를 실행합니다"
+  default_prompt: "$news-telegram-collect로 Telegram 신규 메시지를 확인하고 기본 분석을 진행해 주세요."

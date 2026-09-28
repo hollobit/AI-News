@@ -1,0 +1,14 @@
+{
+  "format": 1,
+  "source": "https://github.com/666ghj/MiroFish.git",
+  "commit": "39d849138ef254f6c737ab4c4705e5545dbe31d4",
+  "license_file": "upstream/LICENSE",
+  "included_roots": [
+    "upstream/backend",
+    "upstream/frontend",
+    "upstream/scripts",
+    "upstream/locales",
+    "upstream/static"
+  ],
+  "excluded_names": [".git", "node_modules", ".venv", "uploads", ".env"]
+}
