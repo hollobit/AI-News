@@ -77,7 +77,10 @@ def export_site(db_path, output, include_excerpts=False, full_site=False):
     if full_site:html=html.replace('data-mode="static"','data-mode="static" data-split="true"')
     (target/'index.html').write_text(html)
     for name in ('public-data.js','workspace.js','workspace.css','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE'):(target/name).write_bytes((ROOT/'static'/name).read_bytes())
-    marker.write_text(json.dumps(data,ensure_ascii=False,indent=2))
+    # The compatibility graph retains every field but avoids tens of MiB of
+    # pretty-print padding in full-site blob uploads.
+    format_options = {'separators': (',', ':')} if full_site else {'indent': 2}
+    marker.write_text(json.dumps(data,ensure_ascii=False,**format_options))
     (target/'.nojekyll').write_text('')
     (target/'README.md').write_text('# 읽기 전용 지식 위키\n\n이 폴더만 Pages 전용 저장소에 게시합니다. 데이터는 게시 시점의 스냅샷입니다.\nDB·환경 설정·원격 인증 파일을 추가하지 마세요.\n')
     if full_site:

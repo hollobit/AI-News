@@ -9,6 +9,7 @@ from playwright.async_api import async_playwright,expect
 async def main():
     folder=Path(os.environ.get('PUBLIC_SITE_DIR',str(ROOT/'.runtime/public-site')));errors=[];requests=[]
     remote='--remote' in sys.argv
+    if remote:expect.set_options(timeout=30000)
     base='https://hollobit.github.io/AI-News/' if remote else 'http://public.test/AI-News/'
     async with async_playwright() as p:
         browser=await p.chromium.launch()
@@ -101,7 +102,7 @@ async def main():
         await page.screenshot(path=str(ROOT/'.runtime/verification/public-observatory.png'),full_page=True)
         await page.goto(base+'knowledge.html')
         await page.locator('#mode2d').click()
-        await expect(page.locator('#nodes g').first).to_be_visible()
+        await expect(page.locator('#nodes g').first).to_be_visible(timeout=30000)
         # Round-trip every content route and its selected view state.
         await page.goto(base+'index.html?view=strategy')
         curve=page.get_by_role('link',name='곡선·근거·관계 보기').first
@@ -163,7 +164,7 @@ async def main():
         await page.goto(base+'knowledge.html#layer=semantic&color=community&limit=200')
         await page.locator('#mode2d').click()
         await expect(page.locator('#layer')).to_have_value('semantic')
-        await expect(page.locator('#nodes g').first).to_be_visible()
+        await expect(page.locator('#nodes g').first).to_be_visible(timeout=30000)
         title=(await page.locator('#node-list button').first.inner_text()).split(' · ',1)[1]
         await page.locator('#node-list button').first.click()
         await expect(page.locator('#detail h2')).to_have_text(title,timeout=30000)
@@ -189,6 +190,9 @@ async def main():
         await expect(page.locator('#search')).to_have_value('')
         assert not any('/api/' in path for path in requests)
         assert not errors,errors
-        print(json.dumps({'remote':remote,'menus':12,'views':12,'article_knowledge_links':True,'mirofish_menu':True,'periods':[14,30,90],'expanded':True,'all_documents':full['count'],'pagination_search_download':True,'cross_page_search':True,'mobile':True,'deep_links':True,'reload_and_back':True,'missing_targets':True,'api_requests':0,'errors':errors}))
+        result={'remote':remote,'menus':12,'views':12,'article_knowledge_links':True,'mirofish_menu':True,'periods':[14,30,90],'expanded':True,'all_documents':full['count'],'pagination_search_download':True,'cross_page_search':True,'mobile':True,'deep_links':True,'reload_and_back':True,'missing_targets':True,'api_requests':0,'errors':errors}
+        report=Path(os.environ.get('UI_REPORT_PATH',str(ROOT/'.runtime/verification'/('public-remote-ui.json' if remote else 'public-local-ui.json'))))
+        report.parent.mkdir(parents=True,exist_ok=True);report.write_text(json.dumps(result,ensure_ascii=False,indent=2))
+        print(json.dumps(result))
         await browser.close()
 asyncio.run(main())
