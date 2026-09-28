@@ -1,66 +1,701 @@
-(() => {'use strict';
-const $=id=>document.getElementById(id), el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
-const names={strategy:'전략 대시보드',news:'뉴스',archive:'날짜별 아카이브',observatory:'관측 지도',research:'뉴스 분석',risks:'위험·조건부 시나리오',papers:'논문',wiki:'지식 위키',graph:'관계 탐색',sources:'출처 목록',simulation:'MiroFish 분석',services:'서비스 안내'};
-let view=new URLSearchParams(location.search).get('view')||'strategy',site,wiki,obs,limit=40,archivePage=1;
-let restoreFilters=true;
-function restoreURL(){const p=new URLSearchParams(location.search);$('search').value=p.get('q')||'';for(const k of ['day','topic']){const value=p.get(k)||'';if(value&&![...$(k).options].some(o=>o.value===value))$(k).add(new Option(value,value));$(k).value=value;}$('reviewed').checked=p.get('reviewed')==='1';limit=Math.max(40,Math.min(10000,Number(p.get('limit'))||40));archivePage=Math.max(1,Number(p.get('page'))||1);}
-function saveURL(){const u=new URL(location.href);for(const k of ['q','day','topic','reviewed','limit','page','id','section'])u.searchParams.delete(k);u.searchParams.set('view',view);for(const [k,v] of [['q',$('search').value],['day',$('day').value],['topic',$('topic').value],['reviewed',$('reviewed').checked?'1':''],['limit',limit>40?String(limit):''],['page',view==='archive'&&archivePage>1?String(archivePage):'']])if(v)u.searchParams.set(k,v);if(u.href!==location.href)history.pushState(null,'',u);}
-if(!names[view])view='services';
-$('search').value=new URLSearchParams(location.search).get('q')||'';
-const url=(v)=>v==='observatory'?'observatory.html':v==='graph'?'knowledge.html':'index.html?view='+v;
-const link=(text,href)=>{const a=el('a',text);a.href=href;return a;};
-for(const [key,name] of Object.entries(names)){const a=link(name,url(key));if(view===key)a.setAttribute('aria-current','page');$('menu').append(a);}
-$('title').textContent=names[view];document.title=names[view]+' · AI 뉴스';
-function safe(value){try{const u=new URL(value);return ['http:','https:'].includes(u.protocol)?u.href:'';}catch{return '';}}
-function external(text,value){const u=safe(value);if(!u)return el('span','공개 출처 링크 없음');const a=link(text,u);a.target='_blank';a.rel='noopener noreferrer';return a;}
-function card(title,meta){const n=el('article',undefined,'card');n.append(el('small',meta,'tag'),el('h2',title));return n;}
-function article(a){const n=card(a.title,`${a.day} · ${a.topic} · ${a.analyses.length?'현재 입력·독립 검토 확인':'제목·출처만 공개'}`);for(const r of a.analyses){const d=el('details');d.append(el('summary',r.kind+(r.title?' · '+r.title:'')),el('p',r.text));if(r.uncertainty)d.append(el('p','불확실성: '+r.uncertainty));n.append(d);}const links=el('div',undefined,'links');links.append(external('원출처',a.url),link('지식 연결','knowledge.html#'+new URLSearchParams({article_id:a.id,source_url:a.url})));n.append(links);return n;}
-function paper(p){const n=card(p.title,`${p.id} · ${p.day} · ${p.status} · ${p.provider}`);if(p.summary)n.append(el('p',p.summary));for(const c of p.claims){const d=el('details');d.append(el('summary',c.title),el('p',c.detail),el('p','불확실성: '+c.uncertainty));n.append(d);}n.append(external('논문 원출처',p.url),document.createTextNode(' · '),link('지식 연결','knowledge.html#id='+encodeURIComponent('source:paper:'+p.id)));return n;}
-function wikiPage(p){const n=card(p.title,p.kind+' · 검토 판 '+p.revision);for(const c of p.claims){n.append(el('p',c.text));for(const id of c.evidence_ids){const source=wiki.nodes.find(n=>n.id===id);if(source?.url)n.append(external('인용 출처 · '+source.title,source.url));}}const node=wiki.nodes.find(n=>(n.page_ids||[]).includes(p.id));if(node)n.append(link('관계 탐색','knowledge.html#id='+encodeURIComponent(node.id)));return n;}
-function searchText(item){return [item.title,item.topic,item.url,item.summary,item.current_basis,item.scenario,item.uncertainty,...(item.assumptions||[]),...(item.mitigations||[]),...(item.analyses||[]).flatMap(a=>[a.title,a.text,a.uncertainty]),...(item.claims||[]).flatMap(c=>[c.title,c.text,c.detail,c.uncertainty])].filter(Boolean).join(' ').toLocaleLowerCase();}
-function appendNetwork(parent,items,centerLabel,title,description){if(!window.NewsNetwork)return;const section=el('section',undefined,'news-network-section');const intro=el('div',undefined,'news-network-intro');const wrap=document.createElement('div');wrap.append(el('h3',title),el('p',description));intro.append(wrap);const target=document.createElement('div');section.append(intro,target);parent.append(section);window.NewsNetwork.render(target,items,{centerLabel,limit:48});}
-function appendRiskNetwork(parent){const data=site.risk_graph;if(!data?.nodes?.length||!window.RiskNetwork)return;const day=$('day').value;let scoped=data;const connect=(selected)=>{const connected=new Set(selected);(data.edges||[]).forEach(e=>{if(selected.has(e.source))connected.add(e.target);if(selected.has(e.target))connected.add(e.source);});const nodes=data.nodes.filter(n=>connected.has(n.id)),edges=(data.edges||[]).filter(e=>connected.has(e.source)&&connected.has(e.target));return {...data,nodes,edges,coverage:{...(data.coverage||{}),risks:selected.size,source_documents:nodes.filter(n=>n.kind==='evidence').length,graphrag_nodes:nodes.filter(n=>n.kind==='graphrag').length,relationships:edges.length}};};if(day){const selected=new Set(data.nodes.filter(n=>n.kind==='risk'&&((n.days||[]).includes(day)||n.day===day)).map(n=>n.id));scoped=connect(selected);}else{const selected=new Set(data.nodes.filter(n=>n.kind==='risk').sort((a,b)=>(b.weight||0)-(a.weight||0)).slice(0,80).map(n=>n.id));scoped=connect(selected);}const section=el('section',undefined,'risk-network-section');const intro=el('div',undefined,'news-network-intro');const wrap=document.createElement('div');wrap.append(el('h3','위험·조건부 시나리오 GraphRAG 연결 지도'),el('p',day?`${day}의 근거와 연결된 위험·시나리오만 표시합니다. 선택 날짜의 근거가 없는 항목은 지도에서 제외됩니다. 가중치는 검토 우선순위와 유사성 기반이며 발생 확률이나 인과관계를 뜻하지 않습니다.`:'전체 원장 중 연결 가중치가 높은 위험을 요약 표시합니다. 날짜를 선택하면 해당 날짜의 위험과 관련 근거로 지도가 다시 좁혀집니다.'));intro.append(wrap);const summary=el('div',undefined,'risk-network-summary');summary.id='risk-network-summary';const target=el('div',undefined,'risk-network');target.id='risk-network';target.append(el('p','관계 지도를 불러오는 중입니다.','subtle'));const detail=el('p',undefined,'risk-network-detail');detail.id='risk-network-detail';section.append(intro,summary,target,detail);parent.append(section);try{window.RiskNetwork.render(scoped);}catch(error){target.replaceChildren(el('p','관계 지도는 현재 스냅샷을 불러오지 못했습니다. 아래 위험 분석 목록은 계속 확인할 수 있습니다.','empty'));}}
-function similarRiskBlock(r){const current=(site.risk_graph.nodes||[]).find(n=>n.kind==='risk'&&(n.label===r.title||n.name===r.title));const block=el('div',undefined,'risk-similar-block');block.append(el('h3','유사 위험·공통 검토 근거'),el('p','같은 검토 근거를 공유하는 항목입니다. 검색 유사성·근거 연결을 보여줄 뿐, 인과관계나 발생 확률을 의미하지 않습니다.','muted'));if(!current){block.append(el('p','연결된 GraphRAG 위험 정보가 없습니다.','empty'));return block;}const related=[];for(const e of site.risk_graph.edges||[]){if(e.relation!=='공유 검토 근거 · 유사성'||(e.source!==current.id&&e.target!==current.id))continue;const id=e.source===current.id?e.target:e.source,n=(site.risk_graph.nodes||[]).find(item=>item.id===id&&item.kind==='risk');if(n)related.push({edge:e,node:n});}related.sort((a,b)=>(b.edge.similarity||0)-(a.edge.similarity||0)||(b.node.weight||0)-(a.node.weight||0));if(!related.length){block.append(el('p','공유 검토 근거가 있는 유사 위험이 없습니다.','empty'));return block;}const list=el('ul','risk-similar-list');related.slice(0,8).forEach(({edge,node:n})=>{const li=el('li',undefined,`${n.label||n.name} · 유사성 ${edge.similarity??'미상'} · 가중치 ${n.weight??'미상'} · 공유 근거 ${n.shared_evidence_count??0}개`);const a=link('위험 목록에서 보기','index.html?'+new URLSearchParams({view:'risks',q:n.label||n.name}));li.append(document.createTextNode(' '),a);list.append(li);});block.append(list);if(related.length>8)block.append(el('p',`유사 위험 ${related.length}개 중 상위 8개를 표시합니다.`,'muted'));return block;}
-function matching(item){const q=$('search').value.trim().toLocaleLowerCase();return (!q||searchText(item).includes(q))&&(!$('day').value||item.day===$('day').value)&&(!$('topic').value||item.topic===$('topic').value);}
-function dashboardTopics(){const q=$('search').value.trim().toLocaleLowerCase(),day=$('day').value,topic=$('topic').value,reviewed=$('reviewed').checked;
- const eligible=new Set(site.news.filter(n=>(!day||n.day===day)&&(!topic||n.topic===topic)&&(!reviewed||n.analyses.length)).map(n=>n.url).filter(Boolean));
- const labels=new Map((obs.nodes||[]).map(n=>[n.id,n.label]));
- return (obs.nodes||[]).filter(n=>{if(n.kind!=='topic'||n.count<=0)return false;if(day&&(n.series[obs.days.indexOf(day)]||0)<=0)return false;
- const evidence=(n.evidence_by_day||[]).flatMap((ids,i)=>!day||obs.days[i]===day?ids:[]).map(id=>obs.evidence?.[id]).filter(Boolean);
- if((topic||reviewed)&&!evidence.some(e=>eligible.has(e.url)))return false;
- const neighbors=(obs.edges||[]).filter(e=>e.source===n.id||e.target===n.id).map(e=>labels.get(e.source===n.id?e.target:e.source));
- return !q||[n.label,...neighbors,...evidence.map(e=>e.title)].filter(Boolean).join(' ').toLocaleLowerCase().includes(q);});}
-function render(){if(restoreFilters){restoreURL();restoreFilters=false;}const box=$('content');box.replaceChildren();let items=[],draw=article;
- if(view==='simulation'){
- const intro=card('MiroFish 전략 시뮬레이션','가정 기반 탐색 · 실제 예측이나 검증된 사실과 구분');
- intro.append(el('p','공개 GitHub Pages에서는 엔진을 실행하지 않습니다. 아래에서 분석에 사용할 뉴스를 확인한 뒤, 이 컴퓨터의 로컬 실행 화면에서 자료 구성 → 실행을 진행하세요.'),el('p','로컬 엔진에는 LLM 설정과 ZEP_API_KEY가 필요합니다. 비밀 키는 웹페이지나 채팅에 입력하지 말고 로컬 .env.mirofish에 설정하세요. 실행 화면이 열리지 않으면 로컬 서버가 실행 중인지 확인하세요.'));
- const params=new URLSearchParams({q:$('search').value,...($('day').value?{date:$('day').value}:{}),...($('topic').value?{topic:$('topic').value}:{})});
- const launch=link('로컬 MiroFish 실행 화면 열기','http://127.0.0.1:8001/simulation?'+params);launch.id='mirofish-local';launch.target='_blank';launch.rel='noopener noreferrer';intro.append(launch);
- intro.append(el('p','이 링크는 방문자 자신의 컴퓨터를 엽니다. 공개 사이트에서 로컬 서버로 자동 요청하거나 실행 명령을 보내지 않습니다. 실행 초안·미검토 보고서는 공개 사실로 게시하지 않습니다.','muted'));
- box.append(intro,el('h2','분석에 사용할 뉴스 검색'));items=site.news;
- }
- if(view==='services'){box.append(card('공개 웹에서 가능한 기능','조회·검색·필터·내려받기'),el('p','뉴스와 검토된 기본·심층 분석, 날짜별 아카이브, 14·30·90일 관측 곡선·관계 지도·히트맵·확장·날짜 재생, 검토 논문, 위키와 인용 관계 탐색을 제공합니다.'),card('로컬 서버가 필요한 기능','공개본에서는 실행하지 않음'),el('p','뉴스 수집·원문 확보·LLM 질문 생성·재분석·주제 설정 변경·사건 병합·결정 편집·시뮬레이션 실행·내부 운영 로그는 공개 사이트에 연결하지 않습니다. 질문 대신 공개 검토 자료를 검색할 수 있습니다. 시뮬레이션 초안과 미검토 해석은 공개 사실로 게시하지 않습니다.'));$('result-count').textContent='';$('more').hidden=true;return;}
- if(view==='strategy'){
- const selectedTopics=dashboardTopics(),grid=el('div',undefined,'grid');grid.id='dashboard-topics';
- box.append(el('h2',`관련 전략 주제 ${selectedTopics.length}개`));
- box.append(el('p','주제 이름·연결 키워드·공개 근거 표본에서 찾습니다. 날짜·분류·검토 필터도 적용합니다. 곡선과 건수는 해당 주제의 전체 관측 집계이며 검색 결과만의 재집계가 아닙니다.','muted'));
- for(const t of selectedTopics){const n=card(t.label,`주제 전체 ${obs.comparison_days}일 고유 문서 ${t.current} · 이전 ${t.previous}${t.previous===0?' · 신규 관측/비교 한계':''}`);const bars=el('div',undefined,'bars'),max=Math.max(1,...t.series);t.series.forEach((v,i)=>{const b=el('i');b.style.height=(v/max*80)+'px';b.title=obs.days[i]+' · '+v;bars.append(b);});n.append(bars,link('곡선·근거·관계 보기','observatory.html?'+new URLSearchParams({window:String(obs.comparison_days||14),id:t.id,expand:obs.limits?.expanded?'1':'0',...($('day').value?{date:$('day').value}:{})})));grid.append(n);}
- if(!selectedTopics.length)grid.append(el('p','현재 검색·필터에 일치하는 전략 주제가 없습니다.','empty'));
- box.append(grid);box.append(el('h2',$('search').value.trim()?'검색 결과 뉴스와 검토 분석':'최근 뉴스와 검토 분석'));items=site.news;
- }else if(view==='risks'){items=site.risks||[];draw=r=>{const n=card(r.title,r.day+' · 검토된 해석 · 현재 위험 '+r.current_severity);for(const [k,label] of [['current_basis','현재 판단 근거'],['scenario','조건부 미래 시나리오'],['assumptions','전제'],['uncertainty','불확실성'],['mitigations','완화 방안']]){n.append(el('h3',label),el('p',Array.isArray(r[k])?r[k].join('\n'):r[k]||''));}n.append(similarRiskBlock(r),external('인용 출처',r.url),document.createTextNode(' · '),link('관련 뉴스 분석','index.html?view=news&id='+r.article_id));return n;};appendRiskNetwork(box);}
- else if(view==='papers'){items=site.papers;draw=paper;}
- else if(view==='wiki'){items=wiki.pages;draw=wikiPage;}
- else if(view==='sources'){const map=new Map(site.news.filter(a=>a.url).map(a=>[a.url,a]));items=[...map.values()];draw=a=>{const n=card(a.title,a.day);n.append(external(a.url,a.url));return n;};}
- else if(view!=='simulation')items=site.news.filter(a=>view!=='research'||a.analyses.length);
- items=items.filter(matching).filter(a=>!$('reviewed').checked||['wiki','risks'].includes(view)||a.analyses?.length||a.status==='검토 완료');
- if(view==='strategy')appendNetwork(box,items,'최근 뉴스와 검토 분석','최근 뉴스와 검토 분석 연결망','중앙 범위에서 주제로, 주제에서 뉴스로 이어집니다. 선은 분류·공동 범위를 보여주며 인과관계가 아닙니다.');
- if(view==='archive')appendNetwork(box,items,$('day').value||'전체 날짜','날짜별 뉴스 연결망','선택한 날짜 또는 전체 기간의 뉴스·주제·검토 상태를 연결해 봅니다. 연결망은 탐색용이며 인과관계를 뜻하지 않습니다.');
- if(view==='risks')items=items.map(i=>({...i,id:i.article_id+':'+i.title}));
- const requested=new URLSearchParams(location.search).get('id');if(requested)items=items.filter(i=>i.id===requested);
-const archivePaging=view==='archive'&&!requested,archiveTotalPages=Math.max(1,Math.ceil(items.length/40));archivePage=Math.min(archivePage,archiveTotalPages);const displayItems=archivePaging?items.slice((archivePage-1)*40,archivePage*40):items.slice(0,limit);
-$('result-count').textContent=`공개 자료 ${items.length.toLocaleString()}개 · ${displayItems.length.toLocaleString()}개 표시`+(archivePaging?` · 전체 날짜 ${archivePage} / ${archiveTotalPages}페이지 · 40개 단위`:'');
- let day='';for(const item of displayItems){if(view==='archive'&&item.day!==day){day=item.day;box.append(el('h2',day));}const n=draw(item),params=new URLSearchParams({view,id:item.id});n.append(el('p'),link('이 내용의 고유 링크','index.html?'+params));for(const [i,d] of [...n.querySelectorAll('details')].entries()){const section=String(i);const p=new URLSearchParams(params);p.set('section',section);d.append(link('이 분석의 고유 링크','index.html?'+p));if(requested&&(!new URLSearchParams(location.search).has('section')||new URLSearchParams(location.search).get('section')===section))d.open=true;d.querySelector('summary').addEventListener('click',()=>setTimeout(()=>{const u=new URL(location.href);u.search=d.open?p:params;history.replaceState(null,'',u);},0));}box.append(n);}$('more').hidden=view==='archive'||limit>=items.length;$('archive-pagination').hidden=!archivePaging||archiveTotalPages<=1;$('archive-page-number').textContent=archivePaging?`${archivePage} / ${archiveTotalPages} 페이지`:'';$('archive-prev').disabled=!archivePaging||archivePage<=1;$('archive-next').disabled=!archivePaging||archivePage>=archiveTotalPages;
-}
-async function load(){try{[site,wiki,obs]=await Promise.all(['site.json','knowledge.json','observatory-14-default.json'].map(async path=>{const r=await fetch(path);if(!r.ok)throw Error('공개 자료 조회 실패');return r.json();}));$('notice').textContent='읽기 전용 공개 스냅샷 · '+new Date(site.exported_at).toLocaleString('ko-KR')+' · 원문 발췌 제외 · 전체 분석 완료를 뜻하지 않습니다.';for(const [key,label] of [['news','고유 뉴스'],['reviewed_news','검토 분석 연결 뉴스'],['papers','메타데이터 확보 논문'],['reviewed_papers','현재 검토 논문']]){const n=el('article',undefined,'metric');n.append(el('small',label),el('strong',site.coverage[key].toLocaleString()));$('metrics').append(n);}const items=view==='papers'?site.papers:site.news;for(const day of [...new Set(items.map(a=>a.day).filter(Boolean))].sort().reverse())$('day').add(new Option(day,day));for(const topic of [...new Set(items.map(a=>a.topic).filter(Boolean))].sort())$('topic').add(new Option(topic,topic));render();}catch(e){$('notice').textContent=e.message;}}
-for(const id of ['search','day','topic','reviewed'])$(id).addEventListener(id==='search'?'input':'change',()=>{limit=40;archivePage=1;saveURL();render();});$('more').onclick=()=>{limit+=40;saveURL();render();};$('archive-prev').onclick=()=>{if(archivePage>1){archivePage--;saveURL();render();}};$('archive-next').onclick=()=>{archivePage++;saveURL();render();};addEventListener('popstate',()=>{restoreFilters=true;render();});load();
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id),
+    el = (tag, text, cls) => {
+      const n = document.createElement(tag);
+      if (text !== undefined) n.textContent = text;
+      if (cls) n.className = cls;
+      return n;
+    };
+  const names = {
+    strategy: '전략 대시보드',
+    news: '뉴스',
+    archive: '날짜별 아카이브',
+    observatory: '관측 지도',
+    research: '뉴스 분석',
+    risks: '위험·조건부 시나리오',
+    papers: '논문',
+    wiki: '지식 위키',
+    graph: '관계 탐색',
+    sources: '출처 목록',
+    simulation: 'MiroFish 분석',
+    services: '서비스 안내',
+  };
+  let view = new URLSearchParams(location.search).get('view') || 'strategy',
+    site,
+    wiki,
+    obs,
+    limit = 40,
+    archivePage = 1;
+  let restoreFilters = true,
+    renderToken = 0,
+    splitMode = false,
+    newsSearch = null;
+  function restoreURL() {
+    const p = new URLSearchParams(location.search);
+    $('search').value = p.get('q') || '';
+    for (const k of ['day', 'topic']) {
+      const value = p.get(k) || '';
+      if (value && ![...$(k).options].some((o) => o.value === value))
+        $(k).add(new Option(value, value));
+      $(k).value = value;
+    }
+    $('reviewed').checked = p.get('reviewed') === '1';
+    limit = Math.max(40, Math.min(10000, Number(p.get('limit')) || 40));
+    archivePage = Math.max(1, Number(p.get('page')) || 1);
+  }
+  function saveURL() {
+    const u = new URL(location.href);
+    for (const k of ['q', 'day', 'topic', 'reviewed', 'limit', 'page', 'id', 'section'])
+      u.searchParams.delete(k);
+    u.searchParams.set('view', view);
+    for (const [k, v] of [
+      ['q', $('search').value],
+      ['day', $('day').value],
+      ['topic', $('topic').value],
+      ['reviewed', $('reviewed').checked ? '1' : ''],
+      ['limit', limit > 40 ? String(limit) : ''],
+      ['page', view === 'archive' && archivePage > 1 ? String(archivePage) : ''],
+    ])
+      if (v) u.searchParams.set(k, v);
+    if (u.href !== location.href) history.pushState(null, '', u);
+  }
+  if (!names[view]) view = 'services';
+  $('search').value = new URLSearchParams(location.search).get('q') || '';
+  const url = (v) =>
+    v === 'observatory'
+      ? 'observatory.html'
+      : v === 'graph'
+        ? 'knowledge.html'
+        : 'index.html?view=' + v;
+  const link = (text, href) => {
+    const a = el('a', text);
+    a.href = href;
+    return a;
+  };
+  for (const [key, name] of Object.entries(names)) {
+    const a = link(name, url(key));
+    if (view === key) a.setAttribute('aria-current', 'page');
+    $('menu').append(a);
+  }
+  $('title').textContent = names[view];
+  document.title = names[view] + ' · AI 뉴스';
+  function safe(value) {
+    try {
+      const u = new URL(value);
+      return ['http:', 'https:'].includes(u.protocol) ? u.href : '';
+    } catch {
+      return '';
+    }
+  }
+  function external(text, value) {
+    const u = safe(value);
+    if (!u) return el('span', '공개 출처 링크 없음');
+    const a = link(text, u);
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    return a;
+  }
+  function card(title, meta) {
+    const n = el('article', undefined, 'card');
+    n.append(el('small', meta, 'tag'), el('h2', title));
+    return n;
+  }
+  function article(a) {
+    const n = card(
+      a.title,
+      `${a.day} · ${a.topic} · ${a.analyses.length ? '현재 입력·독립 검토 확인' : '제목·출처만 공개'}`
+    );
+    for (const r of a.analyses) {
+      const d = el('details');
+      d.append(el('summary', r.kind + (r.title ? ' · ' + r.title : '')), el('p', r.text));
+      if (r.uncertainty) d.append(el('p', '불확실성: ' + r.uncertainty));
+      n.append(d);
+    }
+    const links = el('div', undefined, 'links');
+    links.append(
+      external('원출처', a.url),
+      link(
+        '지식 연결',
+        'knowledge.html#' + new URLSearchParams({ article_id: a.id, source_url: a.url })
+      )
+    );
+    n.append(links);
+    return n;
+  }
+  function paper(p) {
+    const n = card(p.title, `${p.id} · ${p.day} · ${p.status} · ${p.provider}`);
+    if (p.summary) n.append(el('p', p.summary));
+    for (const c of p.claims) {
+      const d = el('details');
+      d.append(el('summary', c.title), el('p', c.detail), el('p', '불확실성: ' + c.uncertainty));
+      n.append(d);
+    }
+    n.append(
+      external('논문 원출처', p.url),
+      document.createTextNode(' · '),
+      link('지식 연결', 'knowledge.html#id=' + encodeURIComponent('source:paper:' + p.id))
+    );
+    return n;
+  }
+  function wikiPage(p) {
+    const n = card(p.title, p.kind + ' · 검토 판 ' + p.revision);
+    for (const c of p.claims) {
+      n.append(el('p', c.text));
+      for (const id of c.evidence_ids) {
+        const source = wiki.nodes.find((n) => n.id === id);
+        if (source?.url) n.append(external('인용 출처 · ' + source.title, source.url));
+      }
+    }
+    const node = wiki.nodes.find((n) => (n.page_ids || []).includes(p.id));
+    if (node) n.append(link('관계 탐색', 'knowledge.html#id=' + encodeURIComponent(node.id)));
+    return n;
+  }
+  function searchText(item) {
+    if (item._compact && newsSearch) return (newsSearch[item.id] || '').toLocaleLowerCase();
+    return [
+      item.title,
+      item.topic,
+      item.url,
+      item.summary,
+      item.current_basis,
+      item.scenario,
+      item.uncertainty,
+      ...(item.assumptions || []),
+      ...(item.mitigations || []),
+      ...(item.analyses || []).flatMap((a) => [a.title, a.text, a.uncertainty]),
+      ...(item.claims || []).flatMap((c) => [c.title, c.text, c.detail, c.uncertainty]),
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLocaleLowerCase();
+  }
+  function appendNetwork(parent, items, centerLabel, title, description) {
+    if (!window.NewsNetwork) return;
+    const section = el('section', undefined, 'news-network-section');
+    const intro = el('div', undefined, 'news-network-intro');
+    const wrap = document.createElement('div');
+    wrap.append(el('h3', title), el('p', description));
+    intro.append(wrap);
+    const target = document.createElement('div');
+    section.append(intro, target);
+    parent.append(section);
+    window.NewsNetwork.render(target, items, { centerLabel, limit: 48 });
+  }
+  function appendRiskNetwork(parent) {
+    const data = site.risk_graph;
+    if (!data?.nodes?.length || !window.RiskNetwork) return;
+    const day = $('day').value;
+    let scoped = data;
+    const connect = (selected) => {
+      const connected = new Set(selected);
+      (data.edges || []).forEach((e) => {
+        if (selected.has(e.source)) connected.add(e.target);
+        if (selected.has(e.target)) connected.add(e.source);
+      });
+      const nodes = data.nodes.filter((n) => connected.has(n.id)),
+        edges = (data.edges || []).filter(
+          (e) => connected.has(e.source) && connected.has(e.target)
+        );
+      return {
+        ...data,
+        nodes,
+        edges,
+        coverage: {
+          ...(data.coverage || {}),
+          risks: selected.size,
+          source_documents: nodes.filter((n) => n.kind === 'evidence').length,
+          graphrag_nodes: nodes.filter((n) => n.kind === 'graphrag').length,
+          relationships: edges.length,
+        },
+      };
+    };
+    if (day) {
+      const selected = new Set(
+        data.nodes
+          .filter((n) => n.kind === 'risk' && ((n.days || []).includes(day) || n.day === day))
+          .map((n) => n.id)
+      );
+      scoped = connect(selected);
+    } else {
+      const selected = new Set(
+        data.nodes
+          .filter((n) => n.kind === 'risk')
+          .sort((a, b) => (b.weight || 0) - (a.weight || 0))
+          .slice(0, 80)
+          .map((n) => n.id)
+      );
+      scoped = connect(selected);
+    }
+    const section = el('section', undefined, 'risk-network-section');
+    const intro = el('div', undefined, 'news-network-intro');
+    const wrap = document.createElement('div');
+    wrap.append(
+      el('h3', '위험·조건부 시나리오 GraphRAG 연결 지도'),
+      el(
+        'p',
+        day
+          ? `${day}의 근거와 연결된 위험·시나리오만 표시합니다. 선택 날짜의 근거가 없는 항목은 지도에서 제외됩니다. 가중치는 검토 우선순위와 유사성 기반이며 발생 확률이나 인과관계를 뜻하지 않습니다.`
+          : '전체 원장 중 연결 가중치가 높은 위험을 요약 표시합니다. 날짜를 선택하면 해당 날짜의 위험과 관련 근거로 지도가 다시 좁혀집니다.'
+      )
+    );
+    intro.append(wrap);
+    const summary = el('div', undefined, 'risk-network-summary');
+    summary.id = 'risk-network-summary';
+    const target = el('div', undefined, 'risk-network');
+    target.id = 'risk-network';
+    target.append(el('p', '관계 지도를 불러오는 중입니다.', 'subtle'));
+    const detail = el('p', undefined, 'risk-network-detail');
+    detail.id = 'risk-network-detail';
+    section.append(intro, summary, target, detail);
+    parent.append(section);
+    try {
+      window.RiskNetwork.render(scoped);
+    } catch (error) {
+      target.replaceChildren(
+        el(
+          'p',
+          '관계 지도는 현재 스냅샷을 불러오지 못했습니다. 아래 위험 분석 목록은 계속 확인할 수 있습니다.',
+          'empty'
+        )
+      );
+    }
+  }
+  function similarRiskBlock(r) {
+    const current = (site.risk_graph.nodes || []).find(
+      (n) => n.kind === 'risk' && (n.label === r.title || n.name === r.title)
+    );
+    const block = el('div', undefined, 'risk-similar-block');
+    block.append(
+      el('h3', '유사 위험·공통 검토 근거'),
+      el(
+        'p',
+        '같은 검토 근거를 공유하는 항목입니다. 검색 유사성·근거 연결을 보여줄 뿐, 인과관계나 발생 확률을 의미하지 않습니다.',
+        'muted'
+      )
+    );
+    if (!current) {
+      block.append(el('p', '연결된 GraphRAG 위험 정보가 없습니다.', 'empty'));
+      return block;
+    }
+    const related = [];
+    for (const e of site.risk_graph.edges || []) {
+      if (
+        e.relation !== '공유 검토 근거 · 유사성' ||
+        (e.source !== current.id && e.target !== current.id)
+      )
+        continue;
+      const id = e.source === current.id ? e.target : e.source,
+        n = (site.risk_graph.nodes || []).find((item) => item.id === id && item.kind === 'risk');
+      if (n) related.push({ edge: e, node: n });
+    }
+    related.sort(
+      (a, b) =>
+        (b.edge.similarity || 0) - (a.edge.similarity || 0) ||
+        (b.node.weight || 0) - (a.node.weight || 0)
+    );
+    if (!related.length) {
+      block.append(el('p', '공유 검토 근거가 있는 유사 위험이 없습니다.', 'empty'));
+      return block;
+    }
+    const list = el('ul', 'risk-similar-list');
+    related.slice(0, 8).forEach(({ edge, node: n }) => {
+      const li = el(
+        'li',
+        undefined,
+        `${n.label || n.name} · 유사성 ${edge.similarity ?? '미상'} · 가중치 ${n.weight ?? '미상'} · 공유 근거 ${n.shared_evidence_count ?? 0}개`
+      );
+      const a = link(
+        '위험 목록에서 보기',
+        'index.html?' + new URLSearchParams({ view: 'risks', q: n.label || n.name })
+      );
+      li.append(document.createTextNode(' '), a);
+      list.append(li);
+    });
+    block.append(list);
+    if (related.length > 8)
+      block.append(el('p', `유사 위험 ${related.length}개 중 상위 8개를 표시합니다.`, 'muted'));
+    return block;
+  }
+  function matching(item) {
+    const q = $('search').value.trim().toLocaleLowerCase();
+    return (
+      (!q || searchText(item).includes(q)) &&
+      (!$('day').value || item.day === $('day').value) &&
+      (!$('topic').value || item.topic === $('topic').value)
+    );
+  }
+  function dashboardTopics() {
+    const q = $('search').value.trim().toLocaleLowerCase(),
+      day = $('day').value,
+      topic = $('topic').value,
+      reviewed = $('reviewed').checked;
+    const eligible = new Set(
+      site.news
+        .filter(
+          (n) =>
+            (!day || n.day === day) &&
+            (!topic || n.topic === topic) &&
+            (!reviewed || n.analyses.length)
+        )
+        .map((n) => n.url)
+        .filter(Boolean)
+    );
+    const labels = new Map((obs.nodes || []).map((n) => [n.id, n.label]));
+    return (obs.nodes || []).filter((n) => {
+      if (n.kind !== 'topic' || n.count <= 0) return false;
+      if (day && (n.series[obs.days.indexOf(day)] || 0) <= 0) return false;
+      const evidence = (n.evidence_by_day || [])
+        .flatMap((ids, i) => (!day || obs.days[i] === day ? ids : []))
+        .map((id) => obs.evidence?.[id])
+        .filter(Boolean);
+      if ((topic || reviewed) && !evidence.some((e) => eligible.has(e.url))) return false;
+      const neighbors = (obs.edges || [])
+        .filter((e) => e.source === n.id || e.target === n.id)
+        .map((e) => labels.get(e.source === n.id ? e.target : e.source));
+      return (
+        !q ||
+        [n.label, ...neighbors, ...evidence.map((e) => e.title)]
+          .filter(Boolean)
+          .join(' ')
+          .toLocaleLowerCase()
+          .includes(q)
+      );
+    });
+  }
+  async function render() {
+    const token = ++renderToken;
+    if (restoreFilters) {
+      restoreURL();
+      restoreFilters = false;
+    }
+    try {
+      if (splitMode && $('search').value.trim() && site.news.length && !newsSearch)
+        newsSearch = await PublicData.searchNews();
+      if (token !== renderToken) return;
+      const box = $('content');
+      box.replaceChildren();
+      let items = [],
+        draw = article;
+      if (view === 'simulation') {
+        const intro = card(
+          'MiroFish 전략 시뮬레이션',
+          '가정 기반 탐색 · 실제 예측이나 검증된 사실과 구분'
+        );
+        intro.append(
+          el(
+            'p',
+            '공개 GitHub Pages에서는 엔진을 실행하지 않습니다. 아래에서 분석에 사용할 뉴스를 확인한 뒤, 이 컴퓨터의 로컬 실행 화면에서 자료 구성 → 실행을 진행하세요.'
+          ),
+          el(
+            'p',
+            '로컬 엔진에는 LLM 설정과 ZEP_API_KEY가 필요합니다. 비밀 키는 웹페이지나 채팅에 입력하지 말고 로컬 .env.mirofish에 설정하세요. 실행 화면이 열리지 않으면 로컬 서버가 실행 중인지 확인하세요.'
+          )
+        );
+        const params = new URLSearchParams({
+          q: $('search').value,
+          ...($('day').value ? { date: $('day').value } : {}),
+          ...($('topic').value ? { topic: $('topic').value } : {}),
+        });
+        const launch = link(
+          '로컬 MiroFish 실행 화면 열기',
+          'http://127.0.0.1:8001/simulation?' + params
+        );
+        launch.id = 'mirofish-local';
+        launch.target = '_blank';
+        launch.rel = 'noopener noreferrer';
+        intro.append(launch);
+        intro.append(
+          el(
+            'p',
+            '이 링크는 방문자 자신의 컴퓨터를 엽니다. 공개 사이트에서 로컬 서버로 자동 요청하거나 실행 명령을 보내지 않습니다. 실행 초안·미검토 보고서는 공개 사실로 게시하지 않습니다.',
+            'muted'
+          )
+        );
+        box.append(intro, el('h2', '분석에 사용할 뉴스 검색'));
+        items = site.news;
+      }
+      if (view === 'services') {
+        box.append(
+          card('공개 웹에서 가능한 기능', '조회·검색·필터·내려받기'),
+          el(
+            'p',
+            '뉴스와 검토된 기본·심층 분석, 날짜별 아카이브, 14·30·90일 관측 곡선·관계 지도·히트맵·확장·날짜 재생, 검토 논문, 위키와 인용 관계 탐색을 제공합니다.'
+          ),
+          card('로컬 서버가 필요한 기능', '공개본에서는 실행하지 않음'),
+          el(
+            'p',
+            '뉴스 수집·원문 확보·LLM 질문 생성·재분석·주제 설정 변경·사건 병합·결정 편집·시뮬레이션 실행·내부 운영 로그는 공개 사이트에 연결하지 않습니다. 질문 대신 공개 검토 자료를 검색할 수 있습니다. 시뮬레이션 초안과 미검토 해석은 공개 사실로 게시하지 않습니다.'
+          )
+        );
+        $('result-count').textContent = '';
+        $('more').hidden = true;
+        return;
+      }
+      if (view === 'strategy') {
+        const selectedTopics = dashboardTopics(),
+          grid = el('div', undefined, 'grid');
+        grid.id = 'dashboard-topics';
+        box.append(el('h2', `관련 전략 주제 ${selectedTopics.length}개`));
+        box.append(
+          el(
+            'p',
+            '주제 이름·연결 키워드·공개 근거 표본에서 찾습니다. 날짜·분류·검토 필터도 적용합니다. 곡선과 건수는 해당 주제의 전체 관측 집계이며 검색 결과만의 재집계가 아닙니다.',
+            'muted'
+          )
+        );
+        for (const t of selectedTopics) {
+          const n = card(
+            t.label,
+            `주제 전체 ${obs.comparison_days}일 고유 문서 ${t.current} · 이전 ${t.previous}${t.previous === 0 ? ' · 신규 관측/비교 한계' : ''}`
+          );
+          const bars = el('div', undefined, 'bars'),
+            max = Math.max(1, ...t.series);
+          t.series.forEach((v, i) => {
+            const b = el('i');
+            b.style.height = (v / max) * 80 + 'px';
+            b.title = obs.days[i] + ' · ' + v;
+            bars.append(b);
+          });
+          n.append(
+            bars,
+            link(
+              '곡선·근거·관계 보기',
+              'observatory.html?' +
+                new URLSearchParams({
+                  window: String(obs.comparison_days || 14),
+                  id: t.id,
+                  expand: obs.limits?.expanded ? '1' : '0',
+                  ...($('day').value ? { date: $('day').value } : {}),
+                })
+            )
+          );
+          grid.append(n);
+        }
+        if (!selectedTopics.length)
+          grid.append(el('p', '현재 검색·필터에 일치하는 전략 주제가 없습니다.', 'empty'));
+        box.append(grid);
+        box.append(
+          el(
+            'h2',
+            $('search').value.trim() ? '검색 결과 뉴스와 검토 분석' : '최근 뉴스와 검토 분석'
+          )
+        );
+        items = site.news;
+      } else if (view === 'risks') {
+        items = site.risks || [];
+        draw = (r) => {
+          const n = card(r.title, r.day + ' · 검토된 해석 · 현재 위험 ' + r.current_severity);
+          for (const [k, label] of [
+            ['current_basis', '현재 판단 근거'],
+            ['scenario', '조건부 미래 시나리오'],
+            ['assumptions', '전제'],
+            ['uncertainty', '불확실성'],
+            ['mitigations', '완화 방안'],
+          ]) {
+            n.append(el('h3', label), el('p', Array.isArray(r[k]) ? r[k].join('\n') : r[k] || ''));
+          }
+          n.append(
+            similarRiskBlock(r),
+            external('인용 출처', r.url),
+            document.createTextNode(' · '),
+            link('관련 뉴스 분석', 'index.html?view=news&id=' + r.article_id)
+          );
+          return n;
+        };
+        appendRiskNetwork(box);
+      } else if (view === 'papers') {
+        items = site.papers;
+        draw = paper;
+      } else if (view === 'wiki') {
+        items = wiki.pages;
+        draw = wikiPage;
+      } else if (view === 'sources') {
+        const map = new Map(site.news.filter((a) => a.url).map((a) => [a.url, a]));
+        items = [...map.values()];
+        draw = (a) => {
+          const n = card(a.title, a.day);
+          n.append(external(a.url, a.url));
+          return n;
+        };
+      } else if (view !== 'simulation')
+        items = site.news.filter((a) => view !== 'research' || a.analyses.length);
+      items = items
+        .filter(matching)
+        .filter(
+          (a) =>
+            !$('reviewed').checked ||
+            ['wiki', 'risks'].includes(view) ||
+            a.analyses?.length ||
+            a.status === '검토 완료'
+        );
+      if (view === 'strategy')
+        appendNetwork(
+          box,
+          items,
+          '최근 뉴스와 검토 분석',
+          '최근 뉴스와 검토 분석 연결망',
+          '중앙 범위에서 주제로, 주제에서 뉴스로 이어집니다. 선은 분류·공동 범위를 보여주며 인과관계가 아닙니다.'
+        );
+      if (view === 'archive')
+        appendNetwork(
+          box,
+          items,
+          $('day').value || '전체 날짜',
+          '날짜별 뉴스 연결망',
+          '선택한 날짜 또는 전체 기간의 뉴스·주제·검토 상태를 연결해 봅니다. 연결망은 탐색용이며 인과관계를 뜻하지 않습니다.'
+        );
+      if (view === 'risks') items = items.map((i) => ({ ...i, id: i.article_id + ':' + i.title }));
+      const requested = new URLSearchParams(location.search).get('id');
+      if (requested) items = items.filter((i) => i.id === requested);
+      const archivePaging = view === 'archive' && !requested,
+        archiveTotalPages = Math.max(1, Math.ceil(items.length / 40));
+      archivePage = Math.min(archivePage, archiveTotalPages);
+      let displayItems = archivePaging
+        ? items.slice((archivePage - 1) * 40, archivePage * 40)
+        : items.slice(0, limit);
+      if (splitMode && displayItems.some((i) => i._compact) && view !== 'sources') {
+        const details = new Map(
+          (await PublicData.articles(displayItems.map((i) => i.id))).map((i) => [i.id, i])
+        );
+        if (token !== renderToken) return;
+        displayItems = displayItems.map((i) => details.get(i.id) || i);
+      }
+      $('result-count').textContent =
+        `공개 자료 ${items.length.toLocaleString()}개 · ${displayItems.length.toLocaleString()}개 표시` +
+        (archivePaging
+          ? ` · 전체 날짜 ${archivePage} / ${archiveTotalPages}페이지 · 40개 단위`
+          : '');
+      let day = '';
+      for (const item of displayItems) {
+        if (view === 'archive' && item.day !== day) {
+          day = item.day;
+          box.append(el('h2', day));
+        }
+        const n = draw(item),
+          params = new URLSearchParams({ view, id: item.id });
+        n.append(el('p'), link('이 내용의 고유 링크', 'index.html?' + params));
+        for (const [i, d] of [...n.querySelectorAll('details')].entries()) {
+          const section = String(i);
+          const p = new URLSearchParams(params);
+          p.set('section', section);
+          d.append(link('이 분석의 고유 링크', 'index.html?' + p));
+          if (
+            requested &&
+            (!new URLSearchParams(location.search).has('section') ||
+              new URLSearchParams(location.search).get('section') === section)
+          )
+            d.open = true;
+          d.querySelector('summary').addEventListener('click', () =>
+            setTimeout(() => {
+              const u = new URL(location.href);
+              u.search = d.open ? p : params;
+              history.replaceState(null, '', u);
+            }, 0)
+          );
+        }
+        box.append(n);
+      }
+      $('more').hidden = view === 'archive' || limit >= items.length;
+      $('archive-pagination').hidden = !archivePaging || archiveTotalPages <= 1;
+      $('archive-page-number').textContent = archivePaging
+        ? `${archivePage} / ${archiveTotalPages} 페이지`
+        : '';
+      $('archive-prev').disabled = !archivePaging || archivePage <= 1;
+      $('archive-next').disabled = !archivePaging || archivePage >= archiveTotalPages;
+    } catch (e) {
+      if (token === renderToken) $('notice').textContent = e.message;
+    }
+  }
+  async function load() {
+    try {
+      if (window.PublicData) {
+        try {
+          const manifest = await PublicData.manifest();
+          splitMode = true;
+          site = {
+            news: [],
+            papers: [],
+            risks: [],
+            risk_graph: { nodes: [], edges: [] },
+            coverage: manifest.coverage,
+            exported_at: manifest.exported_at,
+          };
+          wiki = { pages: [], nodes: [] };
+          obs = { nodes: [], edges: [], days: [] };
+          if (!['papers', 'wiki', 'services'].includes(view)) site.news = await PublicData.news();
+          if (view === 'papers') site.papers = await PublicData.section('papers');
+          if (view === 'wiki') wiki = await PublicData.section('wiki');
+          if (view === 'risks') {
+            [site.risks, site.risk_graph] = await Promise.all([
+              PublicData.section('risks'),
+              PublicData.section('risk_graph'),
+            ]);
+          }
+          if (view === 'strategy') obs = await PublicData.section('observatory');
+        } catch (e) {
+          if (splitMode) throw e;
+        }
+      }
+      if (!splitMode)
+        [site, wiki, obs] = await Promise.all(
+          ['site.json', 'knowledge.json', 'observatory-14-default.json'].map(async (path) => {
+            const r = await fetch(path);
+            if (!r.ok) throw Error('공개 자료 조회 실패');
+            return r.json();
+          })
+        );
+      $('notice').textContent =
+        '읽기 전용 공개 스냅샷 · ' +
+        new Date(site.exported_at).toLocaleString('ko-KR') +
+        ' · 원문 발췌 제외 · 전체 분석 완료를 뜻하지 않습니다.';
+      for (const [key, label] of [
+        ['news', '고유 뉴스'],
+        ['reviewed_news', '검토 분석 연결 뉴스'],
+        ['papers', '메타데이터 확보 논문'],
+        ['reviewed_papers', '현재 검토 논문'],
+      ]) {
+        const n = el('article', undefined, 'metric');
+        n.append(el('small', label), el('strong', site.coverage[key].toLocaleString()));
+        $('metrics').append(n);
+      }
+      const items = view === 'papers' ? site.papers : site.news;
+      for (const day of [...new Set(items.map((a) => a.day).filter(Boolean))].sort().reverse())
+        $('day').add(new Option(day, day));
+      for (const topic of [...new Set(items.map((a) => a.topic).filter(Boolean))].sort())
+        $('topic').add(new Option(topic, topic));
+      await render();
+    } catch (e) {
+      $('notice').textContent = e.message;
+    }
+  }
+  for (const id of ['search', 'day', 'topic', 'reviewed'])
+    $(id).addEventListener(id === 'search' ? 'input' : 'change', () => {
+      limit = 40;
+      archivePage = 1;
+      saveURL();
+      render();
+    });
+  $('more').onclick = () => {
+    limit += 40;
+    saveURL();
+    render();
+  };
+  $('archive-prev').onclick = () => {
+    if (archivePage > 1) {
+      archivePage--;
+      saveURL();
+      render();
+    }
+  };
+  $('archive-next').onclick = () => {
+    archivePage++;
+    saveURL();
+    render();
+  };
+  addEventListener('popstate', () => {
+    restoreFilters = true;
+    render();
+  });
+  load();
 })();

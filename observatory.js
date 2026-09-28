@@ -1,155 +1,1354 @@
 (() => {
-'use strict';
-const $=s=>document.querySelector(s), ns='http://www.w3.org/2000/svg';
-const publicMode=document.documentElement.dataset.public==='true';
-const colors=['#3566a8','#188f9d','#676fa8','#37a7b0','#547a9a','#ad8259','#728f65','#6174b3'];
-const state={data:null,day:-1,selected:'',playing:false,rotating:false,yaw:-.38,pitch:.35,busy:false,expanded:false};
-let restoring=false,pendingRoute=null;
-function readRoute(){const p=new URLSearchParams(location.search);return {window:['14','30','90'].includes(p.get('window'))?p.get('window'):'14',expanded:p.get('expand')==='1',id:p.get('id')||'',date:p.get('date')||'',q:p.get('q')||'',filter:['all','rising','falling','automatic','control'].includes(p.get('filter'))?p.get('filter'):'all',log:p.get('log')==='1'};}
-function routeURL(){const u=new URL(location.href),p=new URLSearchParams();p.set('window',$('#window').value);if(state.expanded)p.set('expand','1');if(state.selected)p.set('id',state.selected);if(state.day>=0&&state.data)p.set('date',state.data.days[state.day]);if(searchQuery())p.set('q',searchQuery());if($('#theme-filter').value!=='all')p.set('filter',$('#theme-filter').value);if($('#log-scale').checked)p.set('log','1');for(const key of ['docq','docs'])if(u.searchParams.has(key))p.set(key,u.searchParams.get(key));u.search=p;return u;}
-function saveRoute(push=true){if(restoring||pendingRoute)return;const u=routeURL();if(u.href!==location.href)history[push?'pushState':'replaceState'](null,'',u);}
-function restoreRoute(){restoring=true;stopPlay();const r=readRoute();pendingRoute=r;$('#window').value=r.window;state.expanded=r.expanded;$('#theme-search').value=r.q;$('#theme-filter').value=r.filter;$('#log-scale').checked=r.log;state.selected=r.id;state.day=-1;restoring=false;refresh();}
-const reduced=matchMedia('(prefers-reduced-motion: reduce)');let pollTimer,playTimer,frame=0,lastFrame=0,hits=[];
-const node=(tag,text,cls)=>{const e=document.createElement(tag);if(text!=null)e.textContent=text;if(cls)e.className=cls;return e;};
-const svg=(tag,attrs={})=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e;};
-const num=n=>Number.isFinite(n)?n.toLocaleString('ko-KR'):'—';
-const count=n=>state.day<0?n.count:n.series[state.day]||0;
-const time=s=>s?new Date(s).toLocaleString('ko-KR',{dateStyle:'short',timeStyle:'medium'}):'기록 없음';
-const allTopics=()=>state.data?.nodes.filter(n=>n.kind==='topic')||[];
-let supportData=null,supportDay=null,supportCache=new WeakMap();
-function supported(n){if(!n)return false;if(supportData!==state.data||supportDay!==state.day){supportData=state.data;supportDay=state.day;supportCache=new WeakMap();}if(supportCache.has(n))return supportCache.get(n);const value=computeSupported(n);supportCache.set(n,value);return value;}
-function computeSupported(n){if(!n||count(n)<=0)return false;const samples=state.day<0?(n.evidence_by_day||[]).flat():(n.evidence_by_day?.[state.day]||[]);return samples.some(id=>{const e=state.data?.evidence[id];return e&&state.data.days.includes(e.day)&&(state.day<0||e.day===state.data.days[state.day])&&(e.excerpt||e.title);});}
-const searchQuery=()=>$('#theme-search').value.trim();
-let queryCacheText=null,queryCache=null;
-function searchExpression(){const text=searchQuery();if(queryCacheText!==text){queryCacheText=text;queryCache=ObservatorySearch.parse(text);}return queryCache;}
-function searchLabels(n){const labels=[n.label];for(const e of state.data?.edges||[]){if(!supported(e))continue;const other=e.source===n.id?e.target:e.target===n.id?e.source:null;if(other){const target=state.data.nodes.find(node=>node.id===other);if(supported(target))labels.push(target.label);}}if(state.data?.document_index_version===1)for(const id of (state.day<0?n.document_ids_by_day?.flat():n.document_ids_by_day?.[state.day])||[])labels.push(state.data.documents[id]?.title||'');return labels;}
-const matchesSearch=n=>!searchQuery()||ObservatorySearch.matches(searchExpression(),searchLabels(n));
-const topics=()=>{const mode=$('#theme-filter').value;return allTopics().filter(n=>supported(n)&&matchesSearch(n)&&(mode==='all'||mode==='rising'&&n.current>n.previous||mode==='falling'&&n.current<n.previous||mode==='automatic'&&!['builtin','grouped','manual'].includes(n.origin)||mode==='control'&&n.origin==='grouped'));};
-const topicColor=t=>colors[allTopics().findIndex(n=>n.id===t.id)%colors.length];
-const activate=(el,fn)=>{el.addEventListener('click',fn);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}});};
-async function api(url){if(publicMode){const p=new URL(url,location.href).searchParams;url=`observatory-${p.get('window')||14}-${p.get('expand')==='1'?'expanded':'default'}.json`;}const response=await fetch(url,{signal:AbortSignal.timeout(state.data?25000:120000)});if(!response.ok)throw Error(`${response.status} · 자료를 불러오지 못했습니다.`);const result=await response.json();if(result.unavailable)throw Error('이 기간의 공개 스냅샷이 아직 없습니다.');return result;}
-function picked(){return state.data?.nodes.find(n=>n.id===state.selected)||state.data?.edges.find(n=>n.id===state.selected);}
-function related(){const ids=new Set();if(!state.selected)return ids;ids.add(state.selected);const selection=picked();if(selection?.source){ids.add(selection.source);ids.add(selection.target);}else for(const e of state.data.edges)if((e.source===state.selected||e.target===state.selected)&&count(e)>0){ids.add(e.source);ids.add(e.target);}return ids;}
-function completeDocuments(selection){const d=state.data;const idsFor=n=>state.day<0?(n?.document_ids_by_day||[]).flat():(n?.document_ids_by_day?.[state.day]||[]);let ids;
- if(selection.source){const a=d.nodes.find(n=>n.id===selection.source),b=d.nodes.find(n=>n.id===selection.target),right=new Set(idsFor(b));ids=idsFor(a).filter(id=>right.has(id));}else ids=idsFor(selection);
- const unique=new Map();for(const id of ids){const e=d.documents[id];if(!e)continue;const old=unique.get(e.document_id);if(old){old.days.add(e.day);if(e.day>old.day)Object.assign(old,e);}else unique.set(e.document_id,{...e,days:new Set([e.day])});}return [...unique.values()].sort((a,b)=>b.day.localeCompare(a.day)||a.title.localeCompare(b.title));}
-function renderAllDocuments(sel,box){const documents=completeDocuments(sel),p=new URLSearchParams(location.search);let query=p.get('docq')||'',limit=Math.max(50,Math.min(100000,Number(p.get('docs'))||50));
- $('#selection-meta').textContent=`${state.day<0?state.data.days.length+'일 전체':state.data.days[state.day]} · 전체 고유 문서 ${num(documents.length)}개 · 선택 기간 ${num(sel.current)} / 직전 ${num(sel.previous)}개. 같은 문서의 여러 날짜 관측은 한 항목으로 합칩니다.${documents.length!==count(sel)?' 집계 수와 목록 수가 다릅니다. 최신 집계를 확인해 주세요.':''}`;
- const controls=node('div',null,'document-controls'),label=node('label','전체 문서 검색 '),input=node('input'),download=node('button','전체 목록 내려받기'),status=node('p'),list=node('div'),more=node('button','50개 더 보기');input.type='search';input.id='document-search';status.id='document-count';more.id='more-documents';download.id='download-documents';input.value=query;input.placeholder='제목·출처 검색';label.append(input);controls.append(label,download);box.append(controls,status,list,more);
- const matched=()=>documents.filter(e=>!query||[e.title,e.url].join(' ').toLocaleLowerCase().includes(query.toLocaleLowerCase()));
- const remember=()=>{const u=new URL(location.href);if(query)u.searchParams.set('docq',query);else u.searchParams.delete('docq');if(limit>50)u.searchParams.set('docs',String(limit));else u.searchParams.delete('docs');history.replaceState(null,'',u);};
- const drawList=()=>{const rows=matched();list.replaceChildren();status.textContent=`전체 ${num(documents.length)}개 · 검색 결과 ${num(rows.length)}개 · ${num(Math.min(limit,rows.length))}개 표시`;more.hidden=limit>=rows.length;download.textContent=query?'검색 결과 목록 내려받기':'전체 목록 내려받기';
- for(const e of rows.slice(0,limit)){const card=node('article',null,'evidence-item'),a=node('a',e.title);a.href=publicMode?'index.html?view=archive&day='+encodeURIComponent(e.day):'/news?date='+encodeURIComponent(e.day);try{const u=new URL(e.url);if(['http:','https:'].includes(u.protocol)){a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';}}catch(_){}card.append(a,node('small',[...e.days].sort().join(', ')+' · 고유 문서 · 원문 발췌 제외'));if(e.url){const detail=node('a','관련 뉴스·분석 보기 ↗');detail.href=publicMode?'index.html?view=news&q='+encodeURIComponent(e.url):'/article?url='+encodeURIComponent(e.url);card.append(detail);}list.append(card);}if(!rows.length)list.append(node('p','일치하는 문서가 없습니다.','empty'));};
- input.oninput=()=>{query=input.value.trim();limit=50;remember();drawList();};more.onclick=()=>{limit+=50;remember();drawList();};download.onclick=()=>{const body=matched().map(e=>({title:e.title,url:e.url,days:[...e.days].sort()}));const blob=new Blob([JSON.stringify({selection:sel.id,period:state.data.days,documents:body},null,2)],{type:'application/json'}),href=URL.createObjectURL(blob),a=node('a');a.href=href;a.download='observatory-documents.json';a.click();setTimeout(()=>URL.revokeObjectURL(href),1000);};drawList();}
-function select(id){if(!state.data)return;state.selected=id;if(id&&!supported(picked()))state.selected='';$('#focus').value=state.data.nodes.some(n=>n.id===id)?id:'';renderSelection();updateGraph();updateHeat();draw();for(const b of $('#topics').children)b.setAttribute('aria-pressed',b.dataset.id===id);saveRoute();}
-function renderSelection(){const sel=picked(),d=state.data;if(!d)return;const title=sel?.label||(sel?`${d.nodes.find(n=>n.id===sel.source)?.label} ↔ ${d.nodes.find(n=>n.id===sel.target)?.label}`:'근거 살펴보기');$('#selection-title').textContent=title;const box=$('#evidence');box.replaceChildren();if(!sel){$('#selection-meta').textContent='주제·키워드·연결선을 선택해 주세요. 날짜를 재생하면 관측량과 연결이 함께 바뀝니다.';return;}
- if(d.document_index_version===1){renderAllDocuments(sel,box);return;}
- $('#selection-meta').textContent=`${state.day<0?`${state.data.days.length}일 전체`:d.days[state.day]} · 고유 문서 ${num(count(sel))}개 · 선택한 ${d.comparison_days||7}일 ${num(sel.current)} / 직전 ${d.comparison_days||7}일 ${num(sel.previous)}개. 이전 저장본: 날짜별 최대 3개 표본이며 전체 문서 목록 재집계를 기다리고 있습니다.`;
- const ids=state.day<0?sel.evidence_by_day.flat().reverse():sel.evidence_by_day[state.day];const seen=new Set();
- for(const id of ids){const e=d.evidence[id];if(!e||seen.has(e.document_id))continue;seen.add(e.document_id);const card=node('article',null,'evidence-item');const a=node('a',e.title);a.href='/news?date='+encodeURIComponent(e.day);try{const url=new URL(e.url);if(['http:','https:'].includes(url.protocol)){a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';}}catch(_){}card.append(a,node('small',`${e.day} · 보관 뉴스 발췌`),node('p',e.excerpt));try{const u=new URL(e.url);if(['http:','https:'].includes(u.protocol)){const explain=node('a','기사·연결 변화 상세 해설 ↗');explain.href='/article?url='+encodeURIComponent(e.url);card.append(explain);}}catch(_){}box.append(card);}
- if(!seen.size)box.append(node('p','선택한 날짜에 관측 근거가 없습니다.','empty'));
- if(publicMode)for(const card of box.querySelectorAll('.evidence-item')){const small=card.querySelector('small');if(small)small.textContent=small.textContent.replace('보관 뉴스 발췌','출처 제목 · 원문 발췌 비공개');for(const p of card.querySelectorAll('p'))p.remove();for(const a of card.querySelectorAll('a')){const u=new URL(a.href,location.href);if(u.pathname==='/article')a.href='index.html?view=news&q='+encodeURIComponent(u.searchParams.get('url')||'');else if(u.pathname==='/news')a.href='index.html?view=archive';}}
-}
-function buildControls(){const d=state.data,focus=$('#focus'),old=state.selected;focus.replaceChildren(new Option('모든 주제·키워드',''));for(const n of graphNodes())focus.add(new Option(`${n.kind==='topic'?'주제':'키워드'} · ${n.label}`,n.id));focus.value=d.nodes.some(n=>n.id===old)?old:'';
- const list=$('#topics');list.replaceChildren();topics().forEach((t,i)=>{const b=node('button',`${t.label} · ${num(count(t))} · ${t.current>t.previous?'↑':t.current<t.previous?'↓':'→'}${num(Math.abs(t.current-t.previous))}`);b.dataset.id=t.id;b.style.setProperty('--swatch',topicColor(t));b.setAttribute('aria-pressed',t.id===state.selected);b.onclick=()=>select(t.id);list.append(b);});
- if(!topics().length)list.append(node('p','선택한 기간에 관측 근거가 있는 전략 주제가 없습니다.','note'));
- const searchError=searchExpression().error;$('#search-error').hidden=!searchError;$('#search-error').textContent=searchError;$('#theme-search').setAttribute('aria-invalid',Boolean(searchError));
- $('#theme-count').textContent=`${searchQuery()?'검색 결과 · ':''}주제 ${topics().length}개 · 키워드 ${graphNodes().filter(n=>n.kind==='keyword').length}개 · 화살표는 직전 ${state.data.comparison_days||7}일 대비 증감${state.data.comparison?' · 비교 '+state.data.comparison.previous_start+'~'+state.data.comparison.previous_end+' (자료 관측 '+state.data.comparison.previous_observed_days+'일)'+(state.data.comparison.previous_observed_days<(state.data.comparison_days||7)?' · 이전 자료 부족: 증감 해석 주의':''):''}`;$('#search-clear').hidden=!searchQuery();
- updateExpansionControl();
- $('#all').textContent=`${d.days.length}일 전체`;$('#day').max=d.days.length-1;$('#day').disabled=false;$('#play').disabled=false;$('#period').textContent=`${d.days[0]} — ${d.days.at(-1)}`;$('#method').textContent=d.method;
- $('#scope').textContent=`반복 관측 키워드 ${d.limits.keywords}개 이내 · 근거가 있는 주제 ${topics().length}개 · 연결 최대 ${d.limits.edges}개${d.limits.expanded?' · 확장 표시 중':''}. 모든 주제에 같은 색 농도 기준을 적용합니다. 일별 합계는 기간 고유 문서 수와 다를 수 있습니다.`;
-}
-const positions=new Map();let layoutFrame=0,layoutTicks=0,graphDrag=null,flow=true;let activeNodes=[],activeEdges=[];
-function graphNodes(){const ts=topics(),ids=new Set(ts.map(t=>t.id));const filtering=$('#theme-filter').value!=='all'||$('#theme-search').value.trim();return state.data?.nodes.filter(n=>supported(n)&&(n.kind==='topic'?ids.has(n.id):matchesSearch(n)&&(!filtering||$('#theme-filter').value==='all'||state.data.edges.some(e=>supported(e)&&((e.source===n.id&&ids.has(e.target))||(e.target===n.id&&ids.has(e.source)))))))||[];}
-function buildGraph(){const root=$('#network');root.replaceChildren();const d=state.data,valid=new Set(d.nodes.map(n=>n.id));for(const id of positions.keys())if(!valid.has(id))positions.delete(id);
- d.nodes.forEach((n,i)=>{if(!positions.has(n.id)){const a=i/d.nodes.length*Math.PI*2;positions.set(n.id,{x:350+200*Math.cos(a),y:250+160*Math.sin(a),vx:0,vy:0});}});
- for(const e of d.edges){const path=svg('path',{fill:'none',stroke:'#82b4c7',class:'edge',tabindex:0,role:'button','data-id':e.id});path.append(svg('title'));activate(path,()=>select(e.id));root.append(path);}
- for(const n of d.nodes){const g=svg('g',{class:'node',tabindex:0,role:'button','data-id':n.id});g.append(svg('circle',{fill:n.kind==='topic'?'#3d6ba8':'#3ea0a7',stroke:'#fff','stroke-width':2}));const label=svg('text',{x:0,y:24,'text-anchor':'middle'});label.textContent=n.label.length>15?n.label.slice(0,14)+'…':n.label;g.append(label,svg('title'));activate(g,event=>{if(!event||!g.dataset.dragged)select(n.id);});g.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();const p=positions.get(n.id);graphDrag={id:n.id,startX:event.clientX,startY:event.clientY,p};g.dataset.dragged='';g.setPointerCapture(event.pointerId);});g.addEventListener('pointermove',event=>{if(graphDrag?.id!==n.id)return;const matrix=root.getScreenCTM();if(!matrix)return;const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());Object.assign(graphDrag.p,{x:Math.max(40,Math.min(660,point.x)),y:Math.max(35,Math.min(465,point.y)),vx:0,vy:0});if(Math.hypot(event.clientX-graphDrag.startX,event.clientY-graphDrag.startY)>4)g.dataset.dragged='true';paintGraph();});const end=()=>{graphDrag=null;startLayout();};g.addEventListener('pointerup',end);g.addEventListener('pointercancel',end);root.append(g);}
- updateGraph();
-}
-function paintGraph(){for(const el of $('#network').querySelectorAll('.node')){const p=positions.get(el.dataset.id);if(p)el.setAttribute('transform',`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`);}for(const el of $('#network').querySelectorAll('.edge')){const e=state.data.edges.find(e=>e.id===el.dataset.id),a=positions.get(e.source),b=positions.get(e.target);if(a&&b){const bend=.12;el.setAttribute('d',`M${a.x},${a.y} Q${(a.x+b.x)/2-(b.y-a.y)*bend},${(a.y+b.y)/2+(b.x-a.x)*bend} ${b.x},${b.y}`);}}}
-function stepLayout(){const ids=related(),focus=picked(),center=focus?.id&&!focus.source?focus.id:null;
- for(let i=0;i<activeNodes.length;i++){const a=positions.get(activeNodes[i].id);for(let j=i+1;j<activeNodes.length;j++){const b=positions.get(activeNodes[j].id);let dx=a.x-b.x,dy=a.y-b.y;const dist=Math.max(25,Math.hypot(dx,dy));if(dx===0&&dy===0)dx=.1;const f=700/(dist*dist);a.vx+=dx/dist*f;b.vx-=dx/dist*f;a.vy+=dy/dist*f;b.vy-=dy/dist*f;}}
- for(const e of activeEdges){const a=positions.get(e.source),b=positions.get(e.target),dx=b.x-a.x,dy=b.y-a.y,dist=Math.max(1,Math.hypot(dx,dy)),desired=100-Math.min(35,Math.sqrt(count(e))*3),f=(dist-desired)*.0018;a.vx+=dx/dist*f;a.vy+=dy/dist*f;b.vx-=dx/dist*f;b.vy-=dy/dist*f;}
- activeNodes.forEach((n,i)=>{const p=positions.get(n.id);if(graphDrag?.id===n.id)return;const neighbor=ids.has(n.id),angle=i/Math.max(activeNodes.length,1)*Math.PI*2,ring=center?(neighbor?145:280):(n.kind==='topic'?145:240);let tx=350+ring*Math.cos(angle),ty=250+ring*.74*Math.sin(angle);if(n.id===center){tx=350;ty=250;}const pull=n.id===center?.12:.018;p.vx=(p.vx+(tx-p.x)*pull)*.78;p.vy=(p.vy+(ty-p.y)*pull)*.78;p.x=Math.max(45,Math.min(655,p.x+p.vx));p.y=Math.max(35,Math.min(465,p.y+p.vy));});
-}
-function startLayout(){cancelAnimationFrame(layoutFrame);layoutFrame=0;if(document.hidden)return;layoutTicks=0;if(reduced.matches){for(let i=0;i<70;i++)stepLayout();paintGraph();return;}const tick=()=>{layoutFrame=0;if(document.hidden)return;stepLayout();paintGraph();if(++layoutTicks<150)layoutFrame=requestAnimationFrame(tick);};layoutFrame=requestAnimationFrame(tick);}
-function updateGraph(){if(!state.data)return;const d=state.data,ids=related();activeNodes=graphNodes();const visible=new Set(activeNodes.map(n=>n.id));activeEdges=d.edges.filter(e=>supported(e)&&visible.has(e.source)&&visible.has(e.target));const edges=new Set(activeEdges.map(e=>e.id));
- for(const el of $('#network').querySelectorAll('.edge')){const e=d.edges.find(e=>e.id===el.dataset.id),v=count(e),show=edges.has(e.id),active=!state.selected||e.id===state.selected||e.source===state.selected||e.target===state.selected;const was=el.dataset.visible==='true';el.dataset.visible=String(show);el.style.display=show?'':'none';el.classList.toggle('appearing',show&&!was);el.setAttribute('tabindex',show?0:-1);el.style.opacity=active?.6:.06;el.classList.toggle('flowing',show&&active&&flow);el.setAttribute('stroke',e.id===state.selected?'#b28147':'#549aaf');el.setAttribute('stroke-width',Math.min(6,1+Math.sqrt(v)*.4));el.setAttribute('aria-label',`${d.nodes.find(n=>n.id===e.source).label} ↔ ${d.nodes.find(n=>n.id===e.target).label}, ${num(v)}개 문서`);el.querySelector('title').textContent=el.getAttribute('aria-label');el.setAttribute('aria-pressed',e.id===state.selected);}
- for(const el of $('#network').querySelectorAll('.node')){const n=d.nodes.find(n=>n.id===el.dataset.id),v=count(n),show=visible.has(n.id),active=!state.selected||ids.has(n.id);el.style.display=show?'':'none';el.setAttribute('tabindex',show?0:-1);el.style.opacity=active?1:.25;el.classList.toggle('search-match',Boolean(searchQuery()&&ObservatorySearch.matches(searchExpression(),[n.label])));el.querySelector('circle').setAttribute('r',Math.min(21,5+Math.sqrt(v)*1.3));el.querySelector('circle').setAttribute('stroke',n.id===state.selected?'#d89b49':'#fff');el.setAttribute('aria-label',`${n.label}, ${num(v)}개 문서`);el.setAttribute('aria-pressed',n.id===state.selected);el.querySelector('title').textContent=el.getAttribute('aria-label');}
- $('#graph-count').textContent=`${activeNodes.length}개 노드 · ${activeEdges.length}개 연결`;paintGraph();startLayout();
-}
-function buildHeat(){const table=$('#heatmap');table.replaceChildren(node('caption','전략 주제별 일별 고유 문서 수'));const head=node('thead'),row=node('tr');row.append(node('th','전략 주제'));for(const day of state.data.days){const th=node('th',day.slice(5));th.scope='col';row.append(th);}head.append(row);table.append(head);const body=node('tbody');const max=Math.max(1,...allTopics().flatMap(t=>t.series));for(const t of topics()){const tr=node('tr'),th=node('th',t.label);th.scope='row';tr.append(th);t.series.forEach((v,i)=>{const td=node('td'),b=node('button',num(v));b.dataset.topic=t.id;b.dataset.day=i;b.disabled=v<=0||!(t.evidence_by_day?.[i]||[]).some(id=>state.data.evidence[id]?.day===state.data.days[i]);b.style.setProperty('--intensity',v?.12+.55*v/max:.035);b.setAttribute('aria-label',`${t.label} ${state.data.days[i]} ${v}건`);b.onclick=()=>{stopPlay();setDay(i);select(t.id);};td.append(b);tr.append(td);});body.append(tr);}table.append(body);updateHeat();}
-function updateHeat(){for(const b of $('#heatmap').querySelectorAll('button'))b.setAttribute('aria-pressed',b.dataset.topic===state.selected&&Number(b.dataset.day)===state.day);}
-function setDay(day){state.day=day;if(state.selected&&!supported(picked()))state.selected='';$('#day-label').textContent=day<0?`${state.data.days.length}일 전체`:state.data.days[day];$('#all').setAttribute('aria-pressed',day<0);if(day>=0)$('#day').value=day;if(state.data){buildControls();buildHeat();}updateGraph();renderSelection();draw();saveRoute(!state.playing);}
-function stopPlay(){clearInterval(playTimer);state.playing=false;$('#play').textContent='▶ 날짜 재생';}
-function togglePlay(){if(state.playing)return stopPlay();state.playing=true;$('#play').textContent='Ⅱ 재생 멈춤';setDay(state.day<0?0:state.day);playTimer=setInterval(()=>{if(state.day>=state.data.days.length-1){stopPlay();return;}setDay(state.day+1);},1200);}
-const canvas=$('#streams'),ctx=canvas.getContext('2d');
-function draw(){if(!ctx)return;const rect=canvas.getBoundingClientRect(),ratio=Math.min(devicePixelRatio||1,2),w=rect.width,h=rect.height;if(canvas.width!==Math.round(w*ratio)||canvas.height!==Math.round(h*ratio)){canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);}ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,w,h);hits=[];const ts=topics();if(!ts.length){ctx.fillStyle='#647d8e';ctx.font='14px sans-serif';ctx.fillText(state.data?'현재 표시할 관측 주제가 없습니다.':'근거 데이터를 연결하고 있습니다…',25,h/2);return;}
- const max=Math.max(1,...allTopics().flatMap(t=>t.series)),ids=related(),scale=Math.min(w/620,h/370),cy=Math.cos(state.yaw),sy=Math.sin(state.yaw),cp=Math.cos(state.pitch),sp=Math.sin(state.pitch);
- const project=(x,y,z)=>{const xx=x*cy+z*sy,zz=-x*sy+z*cy;return [w*.51+xx*scale,h*.62+(-y*cp+zz*sp)*scale];};
- const line=(a,b,color,width=1)=>{ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
- for(let i=0;i<state.data.days.length;i++)line(project(-240+i*480/(state.data.days.length-1),0,-100),project(-240+i*480/(state.data.days.length-1),0,100),'#e0e9ee');for(let i=0;i<5;i++)line(project(-240,0,-100+i*50),project(240,0,-100+i*50),'#e0e9ee');
- ctx.font='10px sans-serif';ctx.fillStyle='#6f889a';for(const i of [0,Math.floor((state.data.days.length-1)/2),state.data.days.length-1]){const p=project(-240+i*480/(state.data.days.length-1),0,115);ctx.fillText(state.data.days[i].slice(5),p[0]-12,p[1]+15);}for(const f of [0,.5,1]){const p=project(-260,160*f,-100);ctx.fillText(String(Math.round($('#log-scale').checked?Math.expm1(Math.log1p(max)*f):max*f)),p[0]-18,p[1]+3);}
- ts.forEach((t,ti)=>{const z=-90+180*allTopics().findIndex(n=>n.id===t.id)/Math.max(1,allTopics().length-1),pts=t.series.map((v,i)=>project(-240+i*480/(state.data.days.length-1),($('#log-scale').checked?Math.log1p(v)/Math.log1p(max):v/max)*160,z)),active=!state.selected||ids.has(t.id);ctx.globalAlpha=active?.85:.12;ctx.beginPath();ctx.moveTo(...pts[0]);for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];ctx.bezierCurveTo((a[0]+b[0])/2,a[1],(a[0]+b[0])/2,b[1],...b);}ctx.strokeStyle=topicColor(t);ctx.lineWidth=t.id===state.selected?3.5:1.8;ctx.stroke();pts.forEach((p,i)=>{ctx.beginPath();ctx.arc(...p,i===state.day?5:1.6,0,Math.PI*2);ctx.fillStyle=topicColor(t);ctx.fill();hits.push({x:p[0],y:p[1],id:t.id});if(i===state.day&&active){ctx.font='10px sans-serif';ctx.fillText(String(t.series[i]),p[0]+7,p[1]-5);}});});ctx.globalAlpha=1;
-}
-function animate(stamp){frame=0;if(document.hidden||!state.rotating||reduced.matches)return;if(stamp-lastFrame>32){state.yaw+=.0025;draw();lastFrame=stamp;}frame=requestAnimationFrame(animate);}
-let drag=null;
-canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')return;drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{if(!drag)return;state.yaw+=(e.clientX-drag.x)*.005;state.pitch=Math.max(.05,Math.min(1,(state.pitch+(e.clientY-drag.y)*.003)));drag.x=e.clientX;drag.y=e.clientY;draw();});
-canvas.addEventListener('pointerup',e=>{const moved=drag&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>5;drag=null;if(moved)return;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;const hit=hits.map(p=>({...p,d:Math.hypot(p.x-x,p.y-y)})).sort((a,b)=>a.d-b.d)[0];if(hit?.d<18)select(hit.id);});canvas.addEventListener('pointercancel',()=>{drag=null;});
-function stage(label,value,detail,running=false){const el=node('article',null,'stage'+(running?' running':''));el.append(node('small',label),node('strong',value),node('span',detail));return el;}
-async function refreshStatus(){if(publicMode)return;let snapshot;try{snapshot=await api('/api/observatory/status');}catch(_){}let collector,corpus,sources,base,deep;
- if(snapshot?.collector){({collector,corpus,sources,base,deep}=snapshot);}else {const paths=['/api/collector/channels','/api/corpus/status','/api/sources','/api/baseline?view=status','/api/improvement?view=status'];const results=await Promise.allSettled(paths.map(api));[collector,corpus,sources,base,deep]=results.map(r=>r.status==='fulfilled'?r.value:null);}
- const b=base?.runs?.[0],r=deep?.runs?.[0],bm=b?.metrics,rm=r?.metrics;
- $('#stages').replaceChildren(stage('01 / TELEGRAM 확인',collector?'수집 기록':'조회 실패',collector?'마지막 확인 '+time(collector.last_success):'다음 갱신에서 재시도'),stage('02 / 기사 추출',collector?.pipeline?.status==='complete'?'완료':'확인 중',time(collector?.pipeline?.extracted_at)),stage('03 / 고유 뉴스',num(corpus?.total_unique??collector?.pipeline?.total_unique),Number.isFinite(corpus?.total_unique)?'현재 수집 코퍼스 · 중복 제거':'마지막 추출 집계 · '+time(collector?.pipeline?.extracted_at)),stage('04 / 원문 확보',num(sources?.counts?.fetched),sources?`대기 ${num(sources.pending)} · 전체 원문 기록 ${num(sources.total)}`:'조회 실패',(sources?.pending||0)>0),stage('05 / 기본 분석',num(bm?.analyzed),b?`고정 대상 ${num(bm?.total)} · ${b.status}`:base?'실행 기록 없음':'조회 실패 · 재시도 대기',b?.status==='running'),stage('06 / 심층 검토',num(rm?.completion_complete??rm?.verified_unique),r?`검토 통과 · ${r.status} · 대상 ${num(rm?.completion_total??rm?.total_unique)}`:deep?'실행 기록 없음':'조회 실패 · 재시도 대기',r?.status==='running'));
- const log=$('#operations');log.replaceChildren();
- if(snapshot?.computed_at)log.append(node('p',`상태 집계 ${time(snapshot.computed_at)}${snapshot.refreshing?' · 갱신 중':''}${snapshot.error?' · '+snapshot.error:''}`));
- for(const [label,run,metric,response] of [['기본 분석',b,bm,base],['심층 검토',r,rm,deep]]){const row=node('article');row.append(node('strong',label),node('p',run?`${run.status} · 갱신 ${time(run.updated_at)} · 실패 ${num(metric?.completion_failed??metric?.failed??metric?.failed_unique)} · 검토 대기 ${num(metric?.completion_needs_review??metric?.needs_review??metric?.needs_review_unique)}`:response?'실행 기록 없음':'상태 조회 실패 · 다음 갱신에서 재시도'));
- if(run?.last_event)row.append(node('p',`${time(run.last_event.created_at)} · ${run.last_event.stage||run.last_event.status||''} · ${run.last_event.detail||''}`));if(run?.error)row.append(node('p',run.error));log.append(row);}
- const channel=collector?.channels?.find(c=>/hollobit_news/i.test(c.name));$('#channel-time').textContent=channel?`hollobit_news · 마지막 확인 ${time(channel.last_checked_at)} · 메시지 수신 ${time(channel.last_received_at)} · 추출 완료 ${time(channel.last_extracted_at)} · 시간대 ${Intl.DateTimeFormat().resolvedOptions().timeZone}`:'채널별 읽기 기록은 전략 대시보드에서 확인할 수 있습니다. 각 단계의 집계 대상은 서로 다릅니다.';
-}
-function updateExpansionControl(){const button=$('#expand-graph');button.disabled=false;button.textContent=state.expanded?'기본 범위로 돌아가기':'더 많은 노드 보기';button.setAttribute('aria-pressed',String(state.expanded));}
-async function refresh(){
- if(state.busy||document.hidden)return;
- const requestedWindow=$('#window').value,requestedExpanded=state.expanded;
- const changed=()=>requestedWindow!==$('#window').value||requestedExpanded!==state.expanded;
- state.busy=true;$('#refresh').disabled=true;clearTimeout(pollTimer);
- refreshStatus();
- try{
-  const d=await api('/api/observatory?window='+requestedWindow+'&expand='+(requestedExpanded?'1':'0'));
-  if(changed())return;
-  if(!d.days){$('#updated').textContent=`${requestedWindow}일 ${requestedExpanded?'확장':'기본'} 자료 집계 중${state.data?' · 기존 '+state.data.days.length+'일 '+(state.data.limits.expanded?'확장':'기본')+' 자료 표시':''}.`;if(d.refresh_error)throw Error(d.refresh_error);return;}
-  const route=pendingRoute;
-  if(!state.data||d.version!==state.data.version||route){restoring=true;const oldDay=route?.date||state.data?.days[state.day];state.data=d;state.day=oldDay?d.days.indexOf(oldDay):-1;if(route)state.selected=route.id;if(state.selected&&!picked())state.selected='';buildControls();buildGraph();buildHeat();setDay(state.day);restoring=false;pendingRoute=null;}
-  updateExpansionControl();
-  $('#updated').textContent=`확인 ${new Date().toLocaleTimeString('ko-KR')} · 데이터 집계 ${time(d.computed_at)}${d.refreshing?' · 새 자료 집계 중 (마지막 집계 표시)':''}${d.refresh_error?' · '+d.refresh_error:''}`;$('#error').hidden=true;
-  if(route&&((route.id&&state.selected!==route.id)||(route.date&&!d.days.includes(route.date)))){$('#error').hidden=false;$('#error').textContent='링크의 대상 또는 날짜가 현재 스냅샷/표시 범위에 없습니다. 기간·확장 범위를 확인해 주세요. 다른 주제로 대신 연결하지 않았습니다.';}
- }catch(e){if(!changed()){$('#error').hidden=false;$('#error').textContent=`${e.message} ${state.data?'마지막 정상 자료를 표시 중입니다.':'다시 갱신해 주세요.'}`;$('#updated').textContent='갱신 실패 · 재시도 대기';}}
- finally{state.busy=false;$('#refresh').disabled=false;const ready=state.data?.days.length===Number(requestedWindow)&&Boolean(state.data?.limits.expanded)===requestedExpanded;pollTimer=setTimeout(refresh,changed()?0:ready?15000:2000);}
-}
-$('#refresh').onclick=refresh;$('#focus').onchange=e=>select(e.target.value);$('#reset').onclick=()=>select('');$('#play').onclick=togglePlay;$('#all').onclick=()=>{stopPlay();setDay(-1);};$('#day').oninput=e=>{stopPlay();setDay(Number(e.target.value));};$('#motion').onclick=()=>{state.rotating=!state.rotating;$('#motion').setAttribute('aria-pressed',state.rotating);$('#motion').textContent=state.rotating?'회전 멈춤':'시점 회전';if(state.rotating&&!frame)frame=requestAnimationFrame(animate);};
-reduced.addEventListener('change',()=>{if(reduced.matches){startLayout();state.rotating=false;$('#motion').setAttribute('aria-pressed','false');$('#motion').textContent='시점 회전';}});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlay();clearTimeout(pollTimer);cancelAnimationFrame(frame);frame=0;cancelAnimationFrame(layoutFrame);layoutFrame=0;$('#network').classList.add('paused');}else{$('#network').classList.remove('paused');refresh();startLayout();if(state.rotating)frame=requestAnimationFrame(animate);}});
-const explore=()=>{state.selected='';if(state.data){buildControls();buildHeat();updateGraph();renderSelection();draw();}saveRoute();};
-$('#window').onchange=()=>{stopPlay();state.day=-1;pendingRoute=null;saveRoute();$('#updated').textContent=`${$('#window').value}일 자료로 전환 중${state.data?' · 기존 '+state.data.days.length+'일 자료 표시':''}.`;refresh();};
-let historyEvents=[],historyTimer=null,eventSource=null;
-function showHistory(index){const e=historyEvents[index];if(!e)return;$('#history-position').value=index;$('#history-detail').textContent=`${time(e.created_at)} · ${e.kind==='baseline'?'기본 분석':'심층 검토'} · ${e.stage} · ${e.detail}`;for(const [i,el] of [...$('#stages').children].entries())el.classList.toggle('replaying',i===(e.kind==='baseline'?4:5));}
-function receiveHistory(d){if(historyTimer||!Array.isArray(d.events))return;historyEvents=d.events;$('#history-position').max=Math.max(0,historyEvents.length-1);$('#history-position').disabled=!historyEvents.length;$('#history-play').disabled=!historyEvents.length;if(!historyTimer){if(historyEvents.length)showHistory(historyEvents.length-1);else $('#history-detail').textContent='저장된 처리 기록이 없습니다.';}}
-function stopHistory(){clearInterval(historyTimer);historyTimer=null;$('#history-play').textContent='▶ 기록 재생';}
-$('#history-position').oninput=()=>{stopHistory();showHistory(Number($('#history-position').value));};
-$('#history-play').onclick=()=>{if(historyTimer){stopHistory();return;}if(!historyEvents.length)return;let index=0;showHistory(index);$('#history-play').textContent='Ⅱ 재생 멈춤';historyTimer=setInterval(()=>{if(++index>=historyEvents.length){stopHistory();return;}showHistory(index);},1000);};
-function connectEvents(){if(publicMode||eventSource||document.hidden)return;eventSource=new EventSource('/api/observatory/events');eventSource.addEventListener('processing',e=>{try{receiveHistory(JSON.parse(e.data));refreshStatus();$('#live-status').textContent='실시간 처리 기록 연결';}catch(_){} });eventSource.onerror=()=>{$('#live-status').textContent='재연결 중 · 15초 주기 확인';};}
-async function pollHistory(){if(publicMode)return;if(!document.hidden)try{receiveHistory(await api('/api/observatory/history'));}catch(_){}setTimeout(pollHistory,15000);}
-document.addEventListener('visibilitychange',()=>{if(document.hidden){eventSource?.close();eventSource=null;stopHistory();}else connectEvents();});
-connectEvents();pollHistory();
-if(publicMode){$('#live-status').textContent='읽기 전용 스냅샷';for(const id of ['stages','channel-time'])$(('#'+id)).hidden=true;$('.operations').hidden=true;$('#history-play').closest('section').hidden=true;$('[data-paper-research]').replaceChildren(Object.assign(document.createElement('a'),{href:'index.html?view=papers',textContent:'검토된 논문 분석 보기'}));document.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;const u=new URL(a.href,location.href);if(u.origin===location.origin&&u.pathname==='/article'){e.preventDefault();location.href='index.html?view=news';}else if(u.origin===location.origin&&u.pathname==='/news'){e.preventDefault();location.href='index.html?view=archive';}});}
-let searchTimer;$('#theme-filter').onchange=explore;$('#theme-search').oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(explore,140);};$('#search-clear').onclick=()=>{clearTimeout(searchTimer);$('#theme-search').value='';explore();$('#theme-search').focus();};$('#theme-search').onkeydown=e=>{if(e.key==='Escape')$('#search-clear').click();};$('#log-scale').onchange=draw;
-$('#relayout').onclick=startLayout;$('#network-motion').onclick=()=>{flow=!flow;$('#network-motion').setAttribute('aria-pressed',flow);$('#network-motion').textContent=flow?'연결 흐름 켜짐':'연결 흐름 꺼짐';updateGraph();};
-$('#expand-graph').onclick=()=>{stopPlay();state.expanded=!state.expanded;pendingRoute=null;saveRoute();updateExpansionControl();$('#updated').textContent=(state.expanded?'확장된 주제·키워드 자료를 준비하는 중입니다.':'기본 범위 자료로 돌아가는 중입니다.')+' 기존 자료를 표시합니다.';refresh();};
-new ResizeObserver(draw).observe(canvas);
-if(!reduced.matches&&innerWidth>800){state.rotating=true;$('#motion').textContent='회전 멈춤';$('#motion').setAttribute('aria-pressed','true');frame=requestAnimationFrame(animate);}
-$('#log-scale').addEventListener('change',()=>saveRoute());
-addEventListener('popstate',restoreRoute);
-restoreRoute();
+  'use strict';
+  const $ = (s) => document.querySelector(s),
+    ns = 'http://www.w3.org/2000/svg';
+  const publicMode = document.documentElement.dataset.public === 'true';
+  const colors = [
+    '#3566a8',
+    '#188f9d',
+    '#676fa8',
+    '#37a7b0',
+    '#547a9a',
+    '#ad8259',
+    '#728f65',
+    '#6174b3',
+  ];
+  const state = {
+    data: null,
+    day: -1,
+    selected: '',
+    playing: false,
+    rotating: false,
+    yaw: -0.38,
+    pitch: 0.35,
+    busy: false,
+    expanded: false,
+  };
+  let restoring = false,
+    pendingRoute = null;
+  function readRoute() {
+    const p = new URLSearchParams(location.search);
+    return {
+      window: ['14', '30', '90'].includes(p.get('window')) ? p.get('window') : '14',
+      expanded: p.get('expand') === '1',
+      id: p.get('id') || '',
+      date: p.get('date') || '',
+      q: p.get('q') || '',
+      filter: ['all', 'rising', 'falling', 'automatic', 'control'].includes(p.get('filter'))
+        ? p.get('filter')
+        : 'all',
+      log: p.get('log') === '1',
+    };
+  }
+  function routeURL() {
+    const u = new URL(location.href),
+      p = new URLSearchParams();
+    p.set('window', $('#window').value);
+    if (state.expanded) p.set('expand', '1');
+    if (state.selected) p.set('id', state.selected);
+    if (state.day >= 0 && state.data) p.set('date', state.data.days[state.day]);
+    if (searchQuery()) p.set('q', searchQuery());
+    if ($('#theme-filter').value !== 'all') p.set('filter', $('#theme-filter').value);
+    if ($('#log-scale').checked) p.set('log', '1');
+    for (const key of ['docq', 'docs'])
+      if (u.searchParams.has(key)) p.set(key, u.searchParams.get(key));
+    u.search = p;
+    return u;
+  }
+  function saveRoute(push = true) {
+    if (restoring || pendingRoute) return;
+    const u = routeURL();
+    if (u.href !== location.href) history[push ? 'pushState' : 'replaceState'](null, '', u);
+  }
+  function restoreRoute() {
+    restoring = true;
+    stopPlay();
+    const r = readRoute();
+    pendingRoute = r;
+    $('#window').value = r.window;
+    state.expanded = r.expanded;
+    $('#theme-search').value = r.q;
+    $('#theme-filter').value = r.filter;
+    $('#log-scale').checked = r.log;
+    state.selected = r.id;
+    state.day = -1;
+    restoring = false;
+    refresh();
+  }
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let pollTimer,
+    playTimer,
+    frame = 0,
+    lastFrame = 0,
+    hits = [];
+  const node = (tag, text, cls) => {
+    const e = document.createElement(tag);
+    if (text != null) e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
+  };
+  const svg = (tag, attrs = {}) => {
+    const e = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    return e;
+  };
+  const num = (n) => (Number.isFinite(n) ? n.toLocaleString('ko-KR') : '—');
+  const count = (n) => (state.day < 0 ? n.count : n.series[state.day] || 0);
+  const time = (s) =>
+    s
+      ? new Date(s).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'medium' })
+      : '기록 없음';
+  const allTopics = () => state.data?.nodes.filter((n) => n.kind === 'topic') || [];
+  let supportData = null,
+    supportDay = null,
+    supportCache = new WeakMap();
+  function supported(n) {
+    if (!n) return false;
+    if (supportData !== state.data || supportDay !== state.day) {
+      supportData = state.data;
+      supportDay = state.day;
+      supportCache = new WeakMap();
+    }
+    if (supportCache.has(n)) return supportCache.get(n);
+    const value = computeSupported(n);
+    supportCache.set(n, value);
+    return value;
+  }
+  function computeSupported(n) {
+    if (!n || count(n) <= 0) return false;
+    const samples =
+      state.day < 0 ? (n.evidence_by_day || []).flat() : n.evidence_by_day?.[state.day] || [];
+    return samples.some((id) => {
+      const e = state.data?.evidence[id];
+      return (
+        e &&
+        state.data.days.includes(e.day) &&
+        (state.day < 0 || e.day === state.data.days[state.day]) &&
+        (e.excerpt || e.title)
+      );
+    });
+  }
+  const searchQuery = () => $('#theme-search').value.trim();
+  let queryCacheText = null,
+    queryCache = null;
+  function searchExpression() {
+    const text = searchQuery();
+    if (queryCacheText !== text) {
+      queryCacheText = text;
+      queryCache = ObservatorySearch.parse(text);
+    }
+    return queryCache;
+  }
+  function searchLabels(n) {
+    const labels = [n.label];
+    for (const e of state.data?.edges || []) {
+      if (!supported(e)) continue;
+      const other = e.source === n.id ? e.target : e.target === n.id ? e.source : null;
+      if (other) {
+        const target = state.data.nodes.find((node) => node.id === other);
+        if (supported(target)) labels.push(target.label);
+      }
+    }
+    if (state.data?.document_index_version === 1)
+      for (const id of (state.day < 0
+        ? n.document_ids_by_day?.flat()
+        : n.document_ids_by_day?.[state.day]) || [])
+        labels.push(state.data.documents[id]?.title || '');
+    return labels;
+  }
+  const matchesSearch = (n) =>
+    !searchQuery() || ObservatorySearch.matches(searchExpression(), searchLabels(n));
+  const topics = () => {
+    const mode = $('#theme-filter').value;
+    return allTopics().filter(
+      (n) =>
+        supported(n) &&
+        matchesSearch(n) &&
+        (mode === 'all' ||
+          (mode === 'rising' && n.current > n.previous) ||
+          (mode === 'falling' && n.current < n.previous) ||
+          (mode === 'automatic' && !['builtin', 'grouped', 'manual'].includes(n.origin)) ||
+          (mode === 'control' && n.origin === 'grouped'))
+    );
+  };
+  const topicColor = (t) => colors[allTopics().findIndex((n) => n.id === t.id) % colors.length];
+  const activate = (el, fn) => {
+    el.addEventListener('click', fn);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fn();
+      }
+    });
+  };
+  async function api(url) {
+    if (publicMode) {
+      const p = new URL(url, location.href).searchParams;
+      url = `observatory-${p.get('window') || 14}-${p.get('expand') === '1' ? 'expanded' : 'default'}.json`;
+    }
+    const result = await Workspace.request(url, { timeout: state.data ? 25000 : 120000 });
+    if (result.unavailable) throw Error('이 기간의 공개 스냅샷이 아직 없습니다.');
+    return result;
+  }
+  function picked() {
+    return (
+      state.data?.nodes.find((n) => n.id === state.selected) ||
+      state.data?.edges.find((n) => n.id === state.selected)
+    );
+  }
+  function related() {
+    const ids = new Set();
+    if (!state.selected) return ids;
+    ids.add(state.selected);
+    const selection = picked();
+    if (selection?.source) {
+      ids.add(selection.source);
+      ids.add(selection.target);
+    } else
+      for (const e of state.data.edges)
+        if ((e.source === state.selected || e.target === state.selected) && count(e) > 0) {
+          ids.add(e.source);
+          ids.add(e.target);
+        }
+    return ids;
+  }
+  function completeDocuments(selection) {
+    const d = state.data;
+    const idsFor = (n) =>
+      state.day < 0
+        ? (n?.document_ids_by_day || []).flat()
+        : n?.document_ids_by_day?.[state.day] || [];
+    let ids;
+    if (selection.source) {
+      const a = d.nodes.find((n) => n.id === selection.source),
+        b = d.nodes.find((n) => n.id === selection.target),
+        right = new Set(idsFor(b));
+      ids = idsFor(a).filter((id) => right.has(id));
+    } else ids = idsFor(selection);
+    const unique = new Map();
+    for (const id of ids) {
+      const e = d.documents[id];
+      if (!e) continue;
+      const old = unique.get(e.document_id);
+      if (old) {
+        old.days.add(e.day);
+        if (e.day > old.day) Object.assign(old, e);
+      } else unique.set(e.document_id, { ...e, days: new Set([e.day]) });
+    }
+    return [...unique.values()].sort(
+      (a, b) => b.day.localeCompare(a.day) || a.title.localeCompare(b.title)
+    );
+  }
+  function renderAllDocuments(sel, box) {
+    const documents = completeDocuments(sel),
+      p = new URLSearchParams(location.search);
+    let query = p.get('docq') || '',
+      limit = Math.max(50, Math.min(100000, Number(p.get('docs')) || 50));
+    $('#selection-meta').textContent =
+      `${state.day < 0 ? state.data.days.length + '일 전체' : state.data.days[state.day]} · 전체 고유 문서 ${num(documents.length)}개 · 선택 기간 ${num(sel.current)} / 직전 ${num(sel.previous)}개. 같은 문서의 여러 날짜 관측은 한 항목으로 합칩니다.${documents.length !== count(sel) ? ' 집계 수와 목록 수가 다릅니다. 최신 집계를 확인해 주세요.' : ''}`;
+    const controls = node('div', null, 'document-controls'),
+      label = node('label', '전체 문서 검색 '),
+      input = node('input'),
+      download = node('button', '전체 목록 내려받기'),
+      status = node('p'),
+      list = node('div'),
+      more = node('button', '50개 더 보기');
+    input.type = 'search';
+    input.id = 'document-search';
+    status.id = 'document-count';
+    more.id = 'more-documents';
+    download.id = 'download-documents';
+    input.value = query;
+    input.placeholder = '제목·출처 검색';
+    label.append(input);
+    controls.append(label, download);
+    box.append(controls, status, list, more);
+    const matched = () =>
+      documents.filter(
+        (e) =>
+          !query ||
+          [e.title, e.url].join(' ').toLocaleLowerCase().includes(query.toLocaleLowerCase())
+      );
+    const remember = () => {
+      const u = new URL(location.href);
+      if (query) u.searchParams.set('docq', query);
+      else u.searchParams.delete('docq');
+      if (limit > 50) u.searchParams.set('docs', String(limit));
+      else u.searchParams.delete('docs');
+      history.replaceState(null, '', u);
+    };
+    const drawList = () => {
+      const rows = matched();
+      list.replaceChildren();
+      status.textContent = `전체 ${num(documents.length)}개 · 검색 결과 ${num(rows.length)}개 · ${num(Math.min(limit, rows.length))}개 표시`;
+      more.hidden = limit >= rows.length;
+      download.textContent = query ? '검색 결과 목록 내려받기' : '전체 목록 내려받기';
+      for (const e of rows.slice(0, limit)) {
+        const card = node('article', null, 'evidence-item'),
+          a = node('a', e.title);
+        a.href = publicMode
+          ? 'index.html?view=archive&day=' + encodeURIComponent(e.day)
+          : '/news?date=' + encodeURIComponent(e.day);
+        try {
+          const u = new URL(e.url);
+          if (['http:', 'https:'].includes(u.protocol)) {
+            a.href = u.href;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+          }
+        } catch (_) {}
+        card.append(
+          a,
+          node('small', [...e.days].sort().join(', ') + ' · 고유 문서 · 원문 발췌 제외')
+        );
+        if (e.url) {
+          const detail = node('a', '관련 뉴스·분석 보기 ↗');
+          detail.href = publicMode
+            ? 'index.html?view=news&q=' + encodeURIComponent(e.url)
+            : '/article?url=' + encodeURIComponent(e.url);
+          card.append(detail);
+        }
+        list.append(card);
+      }
+      if (!rows.length) list.append(node('p', '일치하는 문서가 없습니다.', 'empty'));
+    };
+    input.oninput = () => {
+      query = input.value.trim();
+      limit = 50;
+      remember();
+      drawList();
+    };
+    more.onclick = () => {
+      limit += 50;
+      remember();
+      drawList();
+    };
+    download.onclick = () => {
+      const body = matched().map((e) => ({ title: e.title, url: e.url, days: [...e.days].sort() }));
+      const blob = new Blob(
+          [
+            JSON.stringify(
+              { selection: sel.id, period: state.data.days, documents: body },
+              null,
+              2
+            ),
+          ],
+          { type: 'application/json' }
+        ),
+        href = URL.createObjectURL(blob),
+        a = node('a');
+      a.href = href;
+      a.download = 'observatory-documents.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(href), 1000);
+    };
+    drawList();
+  }
+  function select(id) {
+    if (!state.data) return;
+    state.selected = id;
+    if (id && !supported(picked())) state.selected = '';
+    $('#focus').value = state.data.nodes.some((n) => n.id === id) ? id : '';
+    renderSelection();
+    updateGraph();
+    updateHeat();
+    draw();
+    for (const b of $('#topics').children) b.setAttribute('aria-pressed', b.dataset.id === id);
+    saveRoute();
+  }
+  function renderSelection() {
+    const sel = picked(),
+      d = state.data;
+    if (!d) return;
+    const title =
+      sel?.label ||
+      (sel
+        ? `${d.nodes.find((n) => n.id === sel.source)?.label} ↔ ${d.nodes.find((n) => n.id === sel.target)?.label}`
+        : '근거 살펴보기');
+    $('#selection-title').textContent = title;
+    const box = $('#evidence');
+    box.replaceChildren();
+    if (!sel) {
+      $('#selection-meta').textContent =
+        '주제·키워드·연결선을 선택해 주세요. 날짜를 재생하면 관측량과 연결이 함께 바뀝니다.';
+      return;
+    }
+    if (d.document_index_version === 1) {
+      renderAllDocuments(sel, box);
+      return;
+    }
+    $('#selection-meta').textContent =
+      `${state.day < 0 ? `${state.data.days.length}일 전체` : d.days[state.day]} · 고유 문서 ${num(count(sel))}개 · 선택한 ${d.comparison_days || 7}일 ${num(sel.current)} / 직전 ${d.comparison_days || 7}일 ${num(sel.previous)}개. 이전 저장본: 날짜별 최대 3개 표본이며 전체 문서 목록 재집계를 기다리고 있습니다.`;
+    const ids =
+      state.day < 0 ? sel.evidence_by_day.flat().reverse() : sel.evidence_by_day[state.day];
+    const seen = new Set();
+    for (const id of ids) {
+      const e = d.evidence[id];
+      if (!e || seen.has(e.document_id)) continue;
+      seen.add(e.document_id);
+      const card = node('article', null, 'evidence-item');
+      const a = node('a', e.title);
+      a.href = '/news?date=' + encodeURIComponent(e.day);
+      try {
+        const url = new URL(e.url);
+        if (['http:', 'https:'].includes(url.protocol)) {
+          a.href = url.href;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+        }
+      } catch (_) {}
+      card.append(a, node('small', `${e.day} · 보관 뉴스 발췌`), node('p', e.excerpt));
+      try {
+        const u = new URL(e.url);
+        if (['http:', 'https:'].includes(u.protocol)) {
+          const explain = node('a', '기사·연결 변화 상세 해설 ↗');
+          explain.href = '/article?url=' + encodeURIComponent(e.url);
+          card.append(explain);
+        }
+      } catch (_) {}
+      box.append(card);
+    }
+    if (!seen.size) box.append(node('p', '선택한 날짜에 관측 근거가 없습니다.', 'empty'));
+    if (publicMode)
+      for (const card of box.querySelectorAll('.evidence-item')) {
+        const small = card.querySelector('small');
+        if (small)
+          small.textContent = small.textContent.replace(
+            '보관 뉴스 발췌',
+            '출처 제목 · 원문 발췌 비공개'
+          );
+        for (const p of card.querySelectorAll('p')) p.remove();
+        for (const a of card.querySelectorAll('a')) {
+          const u = new URL(a.href, location.href);
+          if (u.pathname === '/article')
+            a.href =
+              'index.html?view=news&q=' + encodeURIComponent(u.searchParams.get('url') || '');
+          else if (u.pathname === '/news') a.href = 'index.html?view=archive';
+        }
+      }
+  }
+  function buildControls() {
+    const d = state.data,
+      focus = $('#focus'),
+      old = state.selected;
+    focus.replaceChildren(new Option('모든 주제·키워드', ''));
+    for (const n of graphNodes())
+      focus.add(new Option(`${n.kind === 'topic' ? '주제' : '키워드'} · ${n.label}`, n.id));
+    focus.value = d.nodes.some((n) => n.id === old) ? old : '';
+    const list = $('#topics');
+    list.replaceChildren();
+    topics().forEach((t, i) => {
+      const b = node(
+        'button',
+        `${t.label} · ${num(count(t))} · ${t.current > t.previous ? '↑' : t.current < t.previous ? '↓' : '→'}${num(Math.abs(t.current - t.previous))}`
+      );
+      b.dataset.id = t.id;
+      b.style.setProperty('--swatch', topicColor(t));
+      b.setAttribute('aria-pressed', t.id === state.selected);
+      b.onclick = () => select(t.id);
+      list.append(b);
+    });
+    if (!topics().length)
+      list.append(node('p', '선택한 기간에 관측 근거가 있는 전략 주제가 없습니다.', 'note'));
+    const searchError = searchExpression().error;
+    $('#search-error').hidden = !searchError;
+    $('#search-error').textContent = searchError;
+    $('#theme-search').setAttribute('aria-invalid', Boolean(searchError));
+    $('#theme-count').textContent =
+      `${searchQuery() ? '검색 결과 · ' : ''}주제 ${topics().length}개 · 키워드 ${graphNodes().filter((n) => n.kind === 'keyword').length}개 · 화살표는 직전 ${state.data.comparison_days || 7}일 대비 증감${state.data.comparison ? ' · 비교 ' + state.data.comparison.previous_start + '~' + state.data.comparison.previous_end + ' (자료 관측 ' + state.data.comparison.previous_observed_days + '일)' + (state.data.comparison.previous_observed_days < (state.data.comparison_days || 7) ? ' · 이전 자료 부족: 증감 해석 주의' : '') : ''}`;
+    $('#search-clear').hidden = !searchQuery();
+    updateExpansionControl();
+    $('#all').textContent = `${d.days.length}일 전체`;
+    $('#day').max = d.days.length - 1;
+    $('#day').disabled = false;
+    $('#play').disabled = false;
+    $('#period').textContent = `${d.days[0]} — ${d.days.at(-1)}`;
+    $('#method').textContent = d.method;
+    $('#scope').textContent =
+      `반복 관측 키워드 ${d.limits.keywords}개 이내 · 근거가 있는 주제 ${topics().length}개 · 연결 최대 ${d.limits.edges}개${d.limits.expanded ? ' · 확장 표시 중' : ''}. 모든 주제에 같은 색 농도 기준을 적용합니다. 일별 합계는 기간 고유 문서 수와 다를 수 있습니다.`;
+  }
+  const positions = new Map();
+  let layoutFrame = 0,
+    layoutTicks = 0,
+    graphDrag = null,
+    flow = true;
+  let activeNodes = [],
+    activeEdges = [];
+  function graphNodes() {
+    const ts = topics(),
+      ids = new Set(ts.map((t) => t.id));
+    const filtering = $('#theme-filter').value !== 'all' || $('#theme-search').value.trim();
+    return (
+      state.data?.nodes.filter(
+        (n) =>
+          supported(n) &&
+          (n.kind === 'topic'
+            ? ids.has(n.id)
+            : matchesSearch(n) &&
+              (!filtering ||
+                $('#theme-filter').value === 'all' ||
+                state.data.edges.some(
+                  (e) =>
+                    supported(e) &&
+                    ((e.source === n.id && ids.has(e.target)) ||
+                      (e.target === n.id && ids.has(e.source)))
+                )))
+      ) || []
+    );
+  }
+  function buildGraph() {
+    const root = $('#network');
+    root.replaceChildren();
+    const d = state.data,
+      valid = new Set(d.nodes.map((n) => n.id));
+    for (const id of positions.keys()) if (!valid.has(id)) positions.delete(id);
+    d.nodes.forEach((n, i) => {
+      if (!positions.has(n.id)) {
+        const a = (i / d.nodes.length) * Math.PI * 2;
+        positions.set(n.id, {
+          x: 350 + 200 * Math.cos(a),
+          y: 250 + 160 * Math.sin(a),
+          vx: 0,
+          vy: 0,
+        });
+      }
+    });
+    for (const e of d.edges) {
+      const path = svg('path', {
+        fill: 'none',
+        stroke: '#82b4c7',
+        class: 'edge',
+        tabindex: 0,
+        role: 'button',
+        'data-id': e.id,
+      });
+      path.append(svg('title'));
+      activate(path, () => select(e.id));
+      root.append(path);
+    }
+    for (const n of d.nodes) {
+      const g = svg('g', { class: 'node', tabindex: 0, role: 'button', 'data-id': n.id });
+      g.append(
+        svg('circle', {
+          fill: n.kind === 'topic' ? '#3d6ba8' : '#3ea0a7',
+          stroke: '#fff',
+          'stroke-width': 2,
+        })
+      );
+      const label = svg('text', { x: 0, y: 24, 'text-anchor': 'middle' });
+      label.textContent = n.label.length > 15 ? n.label.slice(0, 14) + '…' : n.label;
+      g.append(label, svg('title'));
+      activate(g, (event) => {
+        if (!event || !g.dataset.dragged) select(n.id);
+      });
+      g.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        const p = positions.get(n.id);
+        graphDrag = { id: n.id, startX: event.clientX, startY: event.clientY, p };
+        g.dataset.dragged = '';
+        g.setPointerCapture(event.pointerId);
+      });
+      g.addEventListener('pointermove', (event) => {
+        if (graphDrag?.id !== n.id) return;
+        const matrix = root.getScreenCTM();
+        if (!matrix) return;
+        const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
+        Object.assign(graphDrag.p, {
+          x: Math.max(40, Math.min(660, point.x)),
+          y: Math.max(35, Math.min(465, point.y)),
+          vx: 0,
+          vy: 0,
+        });
+        if (Math.hypot(event.clientX - graphDrag.startX, event.clientY - graphDrag.startY) > 4)
+          g.dataset.dragged = 'true';
+        paintGraph();
+      });
+      const end = () => {
+        graphDrag = null;
+        startLayout();
+      };
+      g.addEventListener('pointerup', end);
+      g.addEventListener('pointercancel', end);
+      root.append(g);
+    }
+    updateGraph();
+  }
+  function paintGraph() {
+    for (const el of $('#network').querySelectorAll('.node')) {
+      const p = positions.get(el.dataset.id);
+      if (p) el.setAttribute('transform', `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`);
+    }
+    for (const el of $('#network').querySelectorAll('.edge')) {
+      const e = state.data.edges.find((e) => e.id === el.dataset.id),
+        a = positions.get(e.source),
+        b = positions.get(e.target);
+      if (a && b) {
+        const bend = 0.12;
+        el.setAttribute(
+          'd',
+          `M${a.x},${a.y} Q${(a.x + b.x) / 2 - (b.y - a.y) * bend},${(a.y + b.y) / 2 + (b.x - a.x) * bend} ${b.x},${b.y}`
+        );
+      }
+    }
+  }
+  function stepLayout() {
+    const ids = related(),
+      focus = picked(),
+      center = focus?.id && !focus.source ? focus.id : null;
+    for (let i = 0; i < activeNodes.length; i++) {
+      const a = positions.get(activeNodes[i].id);
+      for (let j = i + 1; j < activeNodes.length; j++) {
+        const b = positions.get(activeNodes[j].id);
+        let dx = a.x - b.x,
+          dy = a.y - b.y;
+        const dist = Math.max(25, Math.hypot(dx, dy));
+        if (dx === 0 && dy === 0) dx = 0.1;
+        const f = 700 / (dist * dist);
+        a.vx += (dx / dist) * f;
+        b.vx -= (dx / dist) * f;
+        a.vy += (dy / dist) * f;
+        b.vy -= (dy / dist) * f;
+      }
+    }
+    for (const e of activeEdges) {
+      const a = positions.get(e.source),
+        b = positions.get(e.target),
+        dx = b.x - a.x,
+        dy = b.y - a.y,
+        dist = Math.max(1, Math.hypot(dx, dy)),
+        desired = 100 - Math.min(35, Math.sqrt(count(e)) * 3),
+        f = (dist - desired) * 0.0018;
+      a.vx += (dx / dist) * f;
+      a.vy += (dy / dist) * f;
+      b.vx -= (dx / dist) * f;
+      b.vy -= (dy / dist) * f;
+    }
+    activeNodes.forEach((n, i) => {
+      const p = positions.get(n.id);
+      if (graphDrag?.id === n.id) return;
+      const neighbor = ids.has(n.id),
+        angle = (i / Math.max(activeNodes.length, 1)) * Math.PI * 2,
+        ring = center ? (neighbor ? 145 : 280) : n.kind === 'topic' ? 145 : 240;
+      let tx = 350 + ring * Math.cos(angle),
+        ty = 250 + ring * 0.74 * Math.sin(angle);
+      if (n.id === center) {
+        tx = 350;
+        ty = 250;
+      }
+      const pull = n.id === center ? 0.12 : 0.018;
+      p.vx = (p.vx + (tx - p.x) * pull) * 0.78;
+      p.vy = (p.vy + (ty - p.y) * pull) * 0.78;
+      p.x = Math.max(45, Math.min(655, p.x + p.vx));
+      p.y = Math.max(35, Math.min(465, p.y + p.vy));
+    });
+  }
+  function startLayout() {
+    cancelAnimationFrame(layoutFrame);
+    layoutFrame = 0;
+    if (document.hidden) return;
+    layoutTicks = 0;
+    if (reduced.matches) {
+      for (let i = 0; i < 70; i++) stepLayout();
+      paintGraph();
+      return;
+    }
+    const tick = () => {
+      layoutFrame = 0;
+      if (document.hidden) return;
+      stepLayout();
+      paintGraph();
+      if (++layoutTicks < 150) layoutFrame = requestAnimationFrame(tick);
+    };
+    layoutFrame = requestAnimationFrame(tick);
+  }
+  function updateGraph() {
+    if (!state.data) return;
+    const d = state.data,
+      ids = related();
+    activeNodes = graphNodes();
+    const visible = new Set(activeNodes.map((n) => n.id));
+    activeEdges = d.edges.filter(
+      (e) => supported(e) && visible.has(e.source) && visible.has(e.target)
+    );
+    const edges = new Set(activeEdges.map((e) => e.id));
+    for (const el of $('#network').querySelectorAll('.edge')) {
+      const e = d.edges.find((e) => e.id === el.dataset.id),
+        v = count(e),
+        show = edges.has(e.id),
+        active =
+          !state.selected ||
+          e.id === state.selected ||
+          e.source === state.selected ||
+          e.target === state.selected;
+      const was = el.dataset.visible === 'true';
+      el.dataset.visible = String(show);
+      el.style.display = show ? '' : 'none';
+      el.classList.toggle('appearing', show && !was);
+      el.setAttribute('tabindex', show ? 0 : -1);
+      el.style.opacity = active ? 0.6 : 0.06;
+      el.classList.toggle('flowing', show && active && flow);
+      el.setAttribute('stroke', e.id === state.selected ? '#b28147' : '#549aaf');
+      el.setAttribute('stroke-width', Math.min(6, 1 + Math.sqrt(v) * 0.4));
+      el.setAttribute(
+        'aria-label',
+        `${d.nodes.find((n) => n.id === e.source).label} ↔ ${d.nodes.find((n) => n.id === e.target).label}, ${num(v)}개 문서`
+      );
+      el.querySelector('title').textContent = el.getAttribute('aria-label');
+      el.setAttribute('aria-pressed', e.id === state.selected);
+    }
+    for (const el of $('#network').querySelectorAll('.node')) {
+      const n = d.nodes.find((n) => n.id === el.dataset.id),
+        v = count(n),
+        show = visible.has(n.id),
+        active = !state.selected || ids.has(n.id);
+      el.style.display = show ? '' : 'none';
+      el.setAttribute('tabindex', show ? 0 : -1);
+      el.style.opacity = active ? 1 : 0.25;
+      el.classList.toggle(
+        'search-match',
+        Boolean(searchQuery() && ObservatorySearch.matches(searchExpression(), [n.label]))
+      );
+      el.querySelector('circle').setAttribute('r', Math.min(21, 5 + Math.sqrt(v) * 1.3));
+      el.querySelector('circle').setAttribute(
+        'stroke',
+        n.id === state.selected ? '#d89b49' : '#fff'
+      );
+      el.setAttribute('aria-label', `${n.label}, ${num(v)}개 문서`);
+      el.setAttribute('aria-pressed', n.id === state.selected);
+      el.querySelector('title').textContent = el.getAttribute('aria-label');
+    }
+    $('#graph-count').textContent = `${activeNodes.length}개 노드 · ${activeEdges.length}개 연결`;
+    paintGraph();
+    startLayout();
+  }
+  function buildHeat() {
+    const table = $('#heatmap');
+    table.replaceChildren(node('caption', '전략 주제별 일별 고유 문서 수'));
+    const head = node('thead'),
+      row = node('tr');
+    row.append(node('th', '전략 주제'));
+    for (const day of state.data.days) {
+      const th = node('th', day.slice(5));
+      th.scope = 'col';
+      row.append(th);
+    }
+    head.append(row);
+    table.append(head);
+    const body = node('tbody');
+    const max = Math.max(1, ...allTopics().flatMap((t) => t.series));
+    for (const t of topics()) {
+      const tr = node('tr'),
+        th = node('th', t.label);
+      th.scope = 'row';
+      tr.append(th);
+      t.series.forEach((v, i) => {
+        const td = node('td'),
+          b = node('button', num(v));
+        b.dataset.topic = t.id;
+        b.dataset.day = i;
+        b.disabled =
+          v <= 0 ||
+          !(t.evidence_by_day?.[i] || []).some(
+            (id) => state.data.evidence[id]?.day === state.data.days[i]
+          );
+        b.style.setProperty('--intensity', v ? 0.12 + (0.55 * v) / max : 0.035);
+        b.setAttribute('aria-label', `${t.label} ${state.data.days[i]} ${v}건`);
+        b.onclick = () => {
+          stopPlay();
+          setDay(i);
+          select(t.id);
+        };
+        td.append(b);
+        tr.append(td);
+      });
+      body.append(tr);
+    }
+    table.append(body);
+    updateHeat();
+  }
+  function updateHeat() {
+    for (const b of $('#heatmap').querySelectorAll('button'))
+      b.setAttribute(
+        'aria-pressed',
+        b.dataset.topic === state.selected && Number(b.dataset.day) === state.day
+      );
+  }
+  function setDay(day) {
+    state.day = day;
+    if (state.selected && !supported(picked())) state.selected = '';
+    $('#day-label').textContent =
+      day < 0 ? `${state.data.days.length}일 전체` : state.data.days[day];
+    $('#all').setAttribute('aria-pressed', day < 0);
+    if (day >= 0) $('#day').value = day;
+    if (state.data) {
+      buildControls();
+      buildHeat();
+    }
+    updateGraph();
+    renderSelection();
+    draw();
+    saveRoute(!state.playing);
+  }
+  function stopPlay() {
+    clearInterval(playTimer);
+    state.playing = false;
+    $('#play').textContent = '▶ 날짜 재생';
+  }
+  function togglePlay() {
+    if (state.playing) return stopPlay();
+    state.playing = true;
+    $('#play').textContent = 'Ⅱ 재생 멈춤';
+    setDay(state.day < 0 ? 0 : state.day);
+    playTimer = setInterval(() => {
+      if (state.day >= state.data.days.length - 1) {
+        stopPlay();
+        return;
+      }
+      setDay(state.day + 1);
+    }, 1200);
+  }
+  const canvas = $('#streams'),
+    ctx = canvas.getContext('2d');
+  function draw() {
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect(),
+      ratio = Math.min(devicePixelRatio || 1, 2),
+      w = rect.width,
+      h = rect.height;
+    if (canvas.width !== Math.round(w * ratio) || canvas.height !== Math.round(h * ratio)) {
+      canvas.width = Math.round(w * ratio);
+      canvas.height = Math.round(h * ratio);
+    }
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    hits = [];
+    const ts = topics();
+    if (!ts.length) {
+      ctx.fillStyle = '#647d8e';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(
+        state.data ? '현재 표시할 관측 주제가 없습니다.' : '근거 데이터를 연결하고 있습니다…',
+        25,
+        h / 2
+      );
+      return;
+    }
+    const max = Math.max(1, ...allTopics().flatMap((t) => t.series)),
+      ids = related(),
+      scale = Math.min(w / 620, h / 370),
+      cy = Math.cos(state.yaw),
+      sy = Math.sin(state.yaw),
+      cp = Math.cos(state.pitch),
+      sp = Math.sin(state.pitch);
+    const project = (x, y, z) => {
+      const xx = x * cy + z * sy,
+        zz = -x * sy + z * cy;
+      return [w * 0.51 + xx * scale, h * 0.62 + (-y * cp + zz * sp) * scale];
+    };
+    const line = (a, b, color, width = 1) => {
+      ctx.beginPath();
+      ctx.moveTo(...a);
+      ctx.lineTo(...b);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.stroke();
+    };
+    for (let i = 0; i < state.data.days.length; i++)
+      line(
+        project(-240 + (i * 480) / (state.data.days.length - 1), 0, -100),
+        project(-240 + (i * 480) / (state.data.days.length - 1), 0, 100),
+        '#e0e9ee'
+      );
+    for (let i = 0; i < 5; i++)
+      line(project(-240, 0, -100 + i * 50), project(240, 0, -100 + i * 50), '#e0e9ee');
+    ctx.font = '10px sans-serif';
+    ctx.fillStyle = '#6f889a';
+    for (const i of [0, Math.floor((state.data.days.length - 1) / 2), state.data.days.length - 1]) {
+      const p = project(-240 + (i * 480) / (state.data.days.length - 1), 0, 115);
+      ctx.fillText(state.data.days[i].slice(5), p[0] - 12, p[1] + 15);
+    }
+    for (const f of [0, 0.5, 1]) {
+      const p = project(-260, 160 * f, -100);
+      ctx.fillText(
+        String(Math.round($('#log-scale').checked ? Math.expm1(Math.log1p(max) * f) : max * f)),
+        p[0] - 18,
+        p[1] + 3
+      );
+    }
+    ts.forEach((t, ti) => {
+      const z =
+          -90 +
+          (180 * allTopics().findIndex((n) => n.id === t.id)) / Math.max(1, allTopics().length - 1),
+        pts = t.series.map((v, i) =>
+          project(
+            -240 + (i * 480) / (state.data.days.length - 1),
+            ($('#log-scale').checked ? Math.log1p(v) / Math.log1p(max) : v / max) * 160,
+            z
+          )
+        ),
+        active = !state.selected || ids.has(t.id);
+      ctx.globalAlpha = active ? 0.85 : 0.12;
+      ctx.beginPath();
+      ctx.moveTo(...pts[0]);
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1],
+          b = pts[i];
+        ctx.bezierCurveTo((a[0] + b[0]) / 2, a[1], (a[0] + b[0]) / 2, b[1], ...b);
+      }
+      ctx.strokeStyle = topicColor(t);
+      ctx.lineWidth = t.id === state.selected ? 3.5 : 1.8;
+      ctx.stroke();
+      pts.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.arc(...p, i === state.day ? 5 : 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = topicColor(t);
+        ctx.fill();
+        hits.push({ x: p[0], y: p[1], id: t.id });
+        if (i === state.day && active) {
+          ctx.font = '10px sans-serif';
+          ctx.fillText(String(t.series[i]), p[0] + 7, p[1] - 5);
+        }
+      });
+    });
+    ctx.globalAlpha = 1;
+  }
+  function animate(stamp) {
+    frame = 0;
+    if (document.hidden || !state.rotating || reduced.matches) return;
+    if (stamp - lastFrame > 32) {
+      state.yaw += 0.0025;
+      draw();
+      lastFrame = stamp;
+    }
+    frame = requestAnimationFrame(animate);
+  }
+  let drag = null;
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') return;
+    drag = { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY };
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    state.yaw += (e.clientX - drag.x) * 0.005;
+    state.pitch = Math.max(0.05, Math.min(1, state.pitch + (e.clientY - drag.y) * 0.003));
+    drag.x = e.clientX;
+    drag.y = e.clientY;
+    draw();
+  });
+  canvas.addEventListener('pointerup', (e) => {
+    const moved = drag && Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) > 5;
+    drag = null;
+    if (moved) return;
+    const rect = canvas.getBoundingClientRect(),
+      x = e.clientX - rect.left,
+      y = e.clientY - rect.top;
+    const hit = hits
+      .map((p) => ({ ...p, d: Math.hypot(p.x - x, p.y - y) }))
+      .sort((a, b) => a.d - b.d)[0];
+    if (hit?.d < 18) select(hit.id);
+  });
+  canvas.addEventListener('pointercancel', () => {
+    drag = null;
+  });
+  function stage(label, value, detail, running = false) {
+    const el = node('article', null, 'stage' + (running ? ' running' : ''));
+    el.append(node('small', label), node('strong', value), node('span', detail));
+    return el;
+  }
+  async function refreshStatus() {
+    if (publicMode) return;
+    let snapshot;
+    try {
+      snapshot = await api('/api/observatory/status');
+    } catch (_) {}
+    let collector, corpus, sources, base, deep;
+    if (snapshot?.collector) {
+      ({ collector, corpus, sources, base, deep } = snapshot);
+    } else {
+      const paths = [
+        '/api/collector/channels',
+        '/api/corpus/status',
+        '/api/sources',
+        '/api/baseline?view=status',
+        '/api/improvement?view=status',
+      ];
+      const results = await Promise.allSettled(paths.map(api));
+      [collector, corpus, sources, base, deep] = results.map((r) =>
+        r.status === 'fulfilled' ? r.value : null
+      );
+    }
+    const b = base?.runs?.[0],
+      r = deep?.runs?.[0],
+      bm = b?.metrics,
+      rm = r?.metrics;
+    $('#stages').replaceChildren(
+      stage(
+        '01 / TELEGRAM 확인',
+        collector ? '수집 기록' : '조회 실패',
+        collector ? '마지막 확인 ' + time(collector.last_success) : '다음 갱신에서 재시도'
+      ),
+      stage(
+        '02 / 기사 추출',
+        collector?.pipeline?.status === 'complete' ? '완료' : '확인 중',
+        time(collector?.pipeline?.extracted_at)
+      ),
+      stage(
+        '03 / 고유 뉴스',
+        num(corpus?.total_unique ?? collector?.pipeline?.total_unique),
+        Number.isFinite(corpus?.total_unique)
+          ? '현재 수집 코퍼스 · 중복 제거'
+          : '마지막 추출 집계 · ' + time(collector?.pipeline?.extracted_at)
+      ),
+      stage(
+        '04 / 원문 확보',
+        num(sources?.counts?.fetched),
+        sources
+          ? `대기 ${num(sources.pending)} · 전체 원문 기록 ${num(sources.total)}`
+          : '조회 실패',
+        (sources?.pending || 0) > 0
+      ),
+      stage(
+        '05 / 기본 분석',
+        num(bm?.analyzed),
+        b
+          ? `고정 대상 ${num(bm?.total)} · ${b.status}`
+          : base
+            ? '실행 기록 없음'
+            : '조회 실패 · 재시도 대기',
+        b?.status === 'running'
+      ),
+      stage(
+        '06 / 심층 검토',
+        num(rm?.completion_complete ?? rm?.verified_unique),
+        r
+          ? `검토 통과 · ${r.status} · 대상 ${num(rm?.completion_total ?? rm?.total_unique)}`
+          : deep
+            ? '실행 기록 없음'
+            : '조회 실패 · 재시도 대기',
+        r?.status === 'running'
+      )
+    );
+    const log = $('#operations');
+    log.replaceChildren();
+    if (snapshot?.computed_at)
+      log.append(
+        node(
+          'p',
+          `상태 집계 ${time(snapshot.computed_at)}${snapshot.refreshing ? ' · 갱신 중' : ''}${snapshot.error ? ' · ' + snapshot.error : ''}`
+        )
+      );
+    for (const [label, run, metric, response] of [
+      ['기본 분석', b, bm, base],
+      ['심층 검토', r, rm, deep],
+    ]) {
+      const row = node('article');
+      row.append(
+        node('strong', label),
+        node(
+          'p',
+          run
+            ? `${run.status} · 갱신 ${time(run.updated_at)} · 실패 ${num(metric?.completion_failed ?? metric?.failed ?? metric?.failed_unique)} · 검토 대기 ${num(metric?.completion_needs_review ?? metric?.needs_review ?? metric?.needs_review_unique)}`
+            : response
+              ? '실행 기록 없음'
+              : '상태 조회 실패 · 다음 갱신에서 재시도'
+        )
+      );
+      if (run?.last_event)
+        row.append(
+          node(
+            'p',
+            `${time(run.last_event.created_at)} · ${run.last_event.stage || run.last_event.status || ''} · ${run.last_event.detail || ''}`
+          )
+        );
+      if (run?.error) row.append(node('p', run.error));
+      log.append(row);
+    }
+    const channel = collector?.channels?.find((c) => /hollobit_news/i.test(c.name));
+    $('#channel-time').textContent = channel
+      ? `hollobit_news · 마지막 확인 ${time(channel.last_checked_at)} · 메시지 수신 ${time(channel.last_received_at)} · 추출 완료 ${time(channel.last_extracted_at)} · 시간대 ${Intl.DateTimeFormat().resolvedOptions().timeZone}`
+      : '채널별 읽기 기록은 전략 대시보드에서 확인할 수 있습니다. 각 단계의 집계 대상은 서로 다릅니다.';
+  }
+  function updateExpansionControl() {
+    const button = $('#expand-graph');
+    button.disabled = false;
+    button.textContent = state.expanded ? '기본 범위로 돌아가기' : '더 많은 노드 보기';
+    button.setAttribute('aria-pressed', String(state.expanded));
+  }
+  async function refresh() {
+    if (state.busy || document.hidden) return;
+    const requestedWindow = $('#window').value,
+      requestedExpanded = state.expanded;
+    const changed = () =>
+      requestedWindow !== $('#window').value || requestedExpanded !== state.expanded;
+    state.busy = true;
+    $('#refresh').disabled = true;
+    clearTimeout(pollTimer);
+    refreshStatus();
+    try {
+      const d = await api(
+        '/api/observatory?window=' + requestedWindow + '&expand=' + (requestedExpanded ? '1' : '0')
+      );
+      if (changed()) return;
+      if (!d.days) {
+        $('#updated').textContent =
+          `${requestedWindow}일 ${requestedExpanded ? '확장' : '기본'} 자료 집계 중${state.data ? ' · 기존 ' + state.data.days.length + '일 ' + (state.data.limits.expanded ? '확장' : '기본') + ' 자료 표시' : ''}.`;
+        if (d.refresh_error) throw Error(d.refresh_error);
+        return;
+      }
+      const route = pendingRoute;
+      if (!state.data || d.version !== state.data.version || route) {
+        restoring = true;
+        const oldDay = route?.date || state.data?.days[state.day];
+        state.data = d;
+        state.day = oldDay ? d.days.indexOf(oldDay) : -1;
+        if (route) state.selected = route.id;
+        if (state.selected && !picked()) state.selected = '';
+        buildControls();
+        buildGraph();
+        buildHeat();
+        setDay(state.day);
+        restoring = false;
+        pendingRoute = null;
+      }
+      updateExpansionControl();
+      $('#updated').textContent =
+        `확인 ${new Date().toLocaleTimeString('ko-KR')} · 데이터 집계 ${time(d.computed_at)}${d.refreshing ? ' · 새 자료 집계 중 (마지막 집계 표시)' : ''}${d.refresh_error ? ' · ' + d.refresh_error : ''}`;
+      $('#error').hidden = true;
+      if (
+        route &&
+        ((route.id && state.selected !== route.id) || (route.date && !d.days.includes(route.date)))
+      ) {
+        $('#error').hidden = false;
+        $('#error').textContent =
+          '링크의 대상 또는 날짜가 현재 스냅샷/표시 범위에 없습니다. 기간·확장 범위를 확인해 주세요. 다른 주제로 대신 연결하지 않았습니다.';
+      }
+    } catch (e) {
+      if (!changed()) {
+        $('#error').hidden = false;
+        $('#error').textContent =
+          `${e.message} ${state.data ? '마지막 정상 자료를 표시 중입니다.' : '다시 갱신해 주세요.'}`;
+        $('#updated').textContent = '갱신 실패 · 재시도 대기';
+      }
+    } finally {
+      state.busy = false;
+      $('#refresh').disabled = false;
+      const ready =
+        state.data?.days.length === Number(requestedWindow) &&
+        Boolean(state.data?.limits.expanded) === requestedExpanded;
+      pollTimer = setTimeout(refresh, changed() ? 0 : ready ? 15000 : 2000);
+    }
+  }
+  $('#refresh').onclick = refresh;
+  $('#focus').onchange = (e) => select(e.target.value);
+  $('#reset').onclick = () => select('');
+  $('#play').onclick = togglePlay;
+  $('#all').onclick = () => {
+    stopPlay();
+    setDay(-1);
+  };
+  $('#day').oninput = (e) => {
+    stopPlay();
+    setDay(Number(e.target.value));
+  };
+  $('#motion').onclick = () => {
+    state.rotating = !state.rotating;
+    $('#motion').setAttribute('aria-pressed', state.rotating);
+    $('#motion').textContent = state.rotating ? '회전 멈춤' : '시점 회전';
+    if (state.rotating && !frame) frame = requestAnimationFrame(animate);
+  };
+  reduced.addEventListener('change', () => {
+    if (reduced.matches) {
+      startLayout();
+      state.rotating = false;
+      $('#motion').setAttribute('aria-pressed', 'false');
+      $('#motion').textContent = '시점 회전';
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopPlay();
+      clearTimeout(pollTimer);
+      cancelAnimationFrame(frame);
+      frame = 0;
+      cancelAnimationFrame(layoutFrame);
+      layoutFrame = 0;
+      $('#network').classList.add('paused');
+    } else {
+      $('#network').classList.remove('paused');
+      refresh();
+      startLayout();
+      if (state.rotating) frame = requestAnimationFrame(animate);
+    }
+  });
+  const explore = () => {
+    state.selected = '';
+    if (state.data) {
+      buildControls();
+      buildHeat();
+      updateGraph();
+      renderSelection();
+      draw();
+    }
+    saveRoute();
+  };
+  $('#window').onchange = () => {
+    stopPlay();
+    state.day = -1;
+    pendingRoute = null;
+    saveRoute();
+    $('#updated').textContent =
+      `${$('#window').value}일 자료로 전환 중${state.data ? ' · 기존 ' + state.data.days.length + '일 자료 표시' : ''}.`;
+    refresh();
+  };
+  let historyEvents = [],
+    historyTimer = null,
+    eventSource = null;
+  function showHistory(index) {
+    const e = historyEvents[index];
+    if (!e) return;
+    $('#history-position').value = index;
+    $('#history-detail').textContent =
+      `${time(e.created_at)} · ${e.kind === 'baseline' ? '기본 분석' : '심층 검토'} · ${e.stage} · ${e.detail}`;
+    for (const [i, el] of [...$('#stages').children].entries())
+      el.classList.toggle('replaying', i === (e.kind === 'baseline' ? 4 : 5));
+  }
+  function receiveHistory(d) {
+    if (historyTimer || !Array.isArray(d.events)) return;
+    historyEvents = d.events;
+    $('#history-position').max = Math.max(0, historyEvents.length - 1);
+    $('#history-position').disabled = !historyEvents.length;
+    $('#history-play').disabled = !historyEvents.length;
+    if (!historyTimer) {
+      if (historyEvents.length) showHistory(historyEvents.length - 1);
+      else $('#history-detail').textContent = '저장된 처리 기록이 없습니다.';
+    }
+  }
+  function stopHistory() {
+    clearInterval(historyTimer);
+    historyTimer = null;
+    $('#history-play').textContent = '▶ 기록 재생';
+  }
+  $('#history-position').oninput = () => {
+    stopHistory();
+    showHistory(Number($('#history-position').value));
+  };
+  $('#history-play').onclick = () => {
+    if (historyTimer) {
+      stopHistory();
+      return;
+    }
+    if (!historyEvents.length) return;
+    let index = 0;
+    showHistory(index);
+    $('#history-play').textContent = 'Ⅱ 재생 멈춤';
+    historyTimer = setInterval(() => {
+      if (++index >= historyEvents.length) {
+        stopHistory();
+        return;
+      }
+      showHistory(index);
+    }, 1000);
+  };
+  function connectEvents() {
+    if (publicMode || eventSource || document.hidden) return;
+    eventSource = new EventSource('/api/observatory/events');
+    eventSource.addEventListener('processing', (e) => {
+      try {
+        receiveHistory(JSON.parse(e.data));
+        refreshStatus();
+        $('#live-status').textContent = '실시간 처리 기록 연결';
+      } catch (_) {}
+    });
+    eventSource.onerror = () => {
+      $('#live-status').textContent = '재연결 중 · 15초 주기 확인';
+    };
+  }
+  async function pollHistory() {
+    if (publicMode) return;
+    if (!document.hidden)
+      try {
+        receiveHistory(await api('/api/observatory/history'));
+      } catch (_) {}
+    setTimeout(pollHistory, 15000);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      eventSource?.close();
+      eventSource = null;
+      stopHistory();
+    } else connectEvents();
+  });
+  connectEvents();
+  pollHistory();
+  if (publicMode) {
+    $('#live-status').textContent = '읽기 전용 스냅샷';
+    for (const id of ['stages', 'channel-time']) $('#' + id).hidden = true;
+    $('.operations').hidden = true;
+    $('#history-play').closest('section').hidden = true;
+    $('[data-paper-research]').replaceChildren(
+      Object.assign(document.createElement('a'), {
+        href: 'index.html?view=papers',
+        textContent: '검토된 논문 분석 보기',
+      })
+    );
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a');
+      if (!a) return;
+      const u = new URL(a.href, location.href);
+      if (u.origin === location.origin && u.pathname === '/article') {
+        e.preventDefault();
+        location.href = 'index.html?view=news';
+      } else if (u.origin === location.origin && u.pathname === '/news') {
+        e.preventDefault();
+        location.href = 'index.html?view=archive';
+      }
+    });
+  }
+  let searchTimer;
+  $('#theme-filter').onchange = explore;
+  $('#theme-search').oninput = () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(explore, 140);
+  };
+  $('#search-clear').onclick = () => {
+    clearTimeout(searchTimer);
+    $('#theme-search').value = '';
+    explore();
+    $('#theme-search').focus();
+  };
+  $('#theme-search').onkeydown = (e) => {
+    if (e.key === 'Escape') $('#search-clear').click();
+  };
+  $('#log-scale').onchange = draw;
+  $('#relayout').onclick = startLayout;
+  $('#network-motion').onclick = () => {
+    flow = !flow;
+    $('#network-motion').setAttribute('aria-pressed', flow);
+    $('#network-motion').textContent = flow ? '연결 흐름 켜짐' : '연결 흐름 꺼짐';
+    updateGraph();
+  };
+  $('#expand-graph').onclick = () => {
+    stopPlay();
+    state.expanded = !state.expanded;
+    pendingRoute = null;
+    saveRoute();
+    updateExpansionControl();
+    $('#updated').textContent =
+      (state.expanded
+        ? '확장된 주제·키워드 자료를 준비하는 중입니다.'
+        : '기본 범위 자료로 돌아가는 중입니다.') + ' 기존 자료를 표시합니다.';
+    refresh();
+  };
+  new ResizeObserver(draw).observe(canvas);
+  if (!reduced.matches && innerWidth > 800) {
+    state.rotating = true;
+    $('#motion').textContent = '회전 멈춤';
+    $('#motion').setAttribute('aria-pressed', 'true');
+    frame = requestAnimationFrame(animate);
+  }
+  $('#log-scale').addEventListener('change', () => saveRoute());
+  addEventListener('popstate', restoreRoute);
+  restoreRoute();
 })();

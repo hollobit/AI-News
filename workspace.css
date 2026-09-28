@@ -1,0 +1,44 @@
+:root {
+  --workspace-focus: #2167bc;
+  --workspace-line: #dce4e8;
+}
+.workspace-skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 10000;
+  padding: 10px 16px;
+  color: #fff;
+  background: #172b38;
+  transform: translateY(-200%);
+}
+.workspace-skip:focus {
+  transform: none;
+}
+:focus-visible {
+  outline: 3px solid var(--workspace-focus);
+  outline-offset: 3px;
+}
+[aria-current='page'] {
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.workspace-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--workspace-line);
+}
+html[data-workspace='reading'] [data-operations] {
+  display: none;
+}
+html[data-workspace='operations'] [data-reading] {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+}
