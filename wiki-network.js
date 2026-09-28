@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  addEventListener('public-data-updated', () => location.reload());
   const $ = (id) => document.getElementById(id),
     ns = 'http://www.w3.org/2000/svg';
   const labels = {
