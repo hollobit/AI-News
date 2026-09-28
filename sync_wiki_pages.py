@@ -99,6 +99,49 @@ def fingerprint(files):
         normalized[name]=json.dumps(data,sort_keys=True,ensure_ascii=False)
     return hashlib.sha256(json.dumps(normalized,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
 
+# Large compatibility snapshots do not need base64 HTTP bodies. Git transports
+# the same immutable objects and atomically updates only the dedicated ref.
+GIT_THRESHOLD = 16 * 1024 * 1024
+
+
+def git_publish(files, parent, *, root=None, expected_remote=None):
+    root = Path(root) if root is not None else Path(__file__).resolve().parent
+    def command(arguments, content=None):
+        try:
+            result = subprocess.run(['git', *arguments], cwd=root, input=content,
+                capture_output=True, timeout=120)
+        except subprocess.TimeoutExpired as error:
+            raise RuntimeError('Pages Git transport timed out; check the remote ref before retrying') from error
+        if result.returncode:
+            raise RuntimeError('Pages Git transport failed at ' + arguments[0])
+        return result.stdout.decode().strip()
+    remote = command(['remote','get-url','origin'])
+    allowed = {expected_remote} if expected_remote is not None else {
+        'https://github.com/' + REPO + '.git', 'https://github.com/' + REPO,
+        'git@github.com:' + REPO + '.git'}
+    if remote not in allowed:
+        raise RuntimeError('Unexpected Pages Git remote')
+    if parent:
+        exists = subprocess.run(['git','cat-file','-e',parent+'^{commit}'],cwd=root,capture_output=True)
+        if exists.returncode:
+            command(['fetch','--no-tags','--depth=1','origin',parent])
+    entries = []
+    for name, content in sorted(files.items()):
+        # Callers already enforce published_files/dependency/content validation.
+        # The tree primitive additionally refuses paths/modes outside flat assets.
+        if '/' in name or '\t' in name or '\n' in name or name in ('.','..'):
+            raise ValueError('Invalid Pages Git asset path')
+        sha = command(['hash-object','-w','--stdin'], content.encode())
+        entries.append('100644 blob ' + sha + '\t' + name + '\n')
+    tree = command(['mktree'], ''.join(entries).encode())
+    arguments = ['commit-tree',tree]
+    if parent: arguments += ['-p',parent]
+    commit = command(arguments, b'Sync reviewed read-only wiki site\n')
+    # Never checkout/reset the user's source branch; no force or automatic ref retry.
+    command(['push','origin',commit+':refs/heads/'+BRANCH])
+    return commit
+
+
 def sync(db, output):
     summary=export_site(db,output,full_site=True)
     names=published_files(output)
@@ -145,6 +188,9 @@ def sync(db, output):
                 old[name]=base64.b64decode(blob['content']).decode()
             if fingerprint(old)==fingerprint({name:files[name] for name in timed}):
                 return dict(summary,status='unchanged',commit=parent)
+    if any(len(content.encode()) > GIT_THRESHOLD for content in files.values()):
+        commit = git_publish(files, parent)
+        return dict(summary, status='published', commit=commit, transport='git')
     # Only independent blob creation is parallel. Tree/commit/ref publication is
     # sequential and happens after every asset has been uploaded successfully.
     def upload(item):
