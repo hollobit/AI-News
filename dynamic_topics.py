@@ -1,5 +1,7 @@
 """Corpus-derived topics and control-change observations, never causal forecasts."""
 from collections import defaultdict
+from functools import lru_cache
+from bisect import bisect_left, bisect_right
 from datetime import date, timedelta
 import hashlib
 import json
@@ -54,6 +56,21 @@ def _segments(item):
     return segments
 
 
+@lru_cache(maxsize=1024)
+def _text_boundaries(text):
+    bounds=[0]
+    for match in re.finditer(r'\n+|(?<=[.!?。！？])\s+',text):
+        bounds.extend([match.start(),match.end()])
+    bounds.append(len(text))
+    return tuple(bounds), tuple((m.start(),m.end()) for m in re.finditer(r'https?://\S+',text))
+
+
+@lru_cache(maxsize=2048)
+def _sentence_cues(text):
+    return {name:tuple(dict.fromkeys(m[0] for m in pattern.finditer(text)))
+            for name,pattern in [('ai',_AI),('control',_CONTROL),('change',_CHANGE),('governance',_GOVERNANCE)]}
+
+
 def _evidence(item,term,doc):
     start,end=term.get('start'),term.get('end')
     if not isinstance(start,int) or not isinstance(end,int) or start<0 or end<=start:
@@ -65,14 +82,11 @@ def _evidence(item,term,doc):
             continue
         # URL mentions are not vocabulary evidence, even if a supplied record
         # claims their character offsets are a noun phrase.
-        if any(match.start() < end-offset and match.end() > local for match in re.finditer(r'https?://\S+',text)):
+        bounds, urls = _text_boundaries(text)
+        if any(left < end-offset and right > local for left,right in urls):
             return None
-        bounds=[0]
-        for match in re.finditer(r'\n+|(?<=[.!?。！？])\s+',text):
-            bounds.extend([match.start(),match.end()])
-        bounds.append(len(text))
-        left=max(pos for pos in bounds if pos<=local)
-        right=min(pos for pos in bounds if pos>=end-offset)
+        left=bounds[bisect_right(bounds,local)-1]
+        right=bounds[bisect_left(bounds,end-offset)]
         sentence=text[left:right]
         quote_start=left
         # A quote is bounded around the observed term; control gates below use
@@ -81,10 +95,7 @@ def _evidence(item,term,doc):
             quote_start=max(left,local-220)
             sentence=text[quote_start:min(right,quote_start+700)]
         full_sentence=text[left:right]
-        cues = {'ai':list(dict.fromkeys(m[0] for m in _AI.finditer(full_sentence))),
-                'control':list(dict.fromkeys(m[0] for m in _CONTROL.finditer(full_sentence))),
-                'change':list(dict.fromkeys(m[0] for m in _CHANGE.finditer(full_sentence))),
-                'governance':list(dict.fromkeys(m[0] for m in _GOVERNANCE.finditer(full_sentence)))}
+        cues = {name:list(values) for name,values in _sentence_cues(full_sentence).items()}
         return {'document_id':doc,'url':item.get('source_url') or '',
                 'title':str(item.get('title') or '')[:300],'quote':sentence,
                 'origin':origin,'start':quote_start,'end':quote_start+len(sentence),
@@ -95,12 +106,18 @@ def _evidence(item,term,doc):
     return None
 
 
+@lru_cache(maxsize=2048)
+def _strategic_context(text):
+    return bool(_AI.search(text)), bool(_CONTROL.search(text) and _CHANGE.search(text))
+
+
 def _strategic(item, term):
     priority=item.get('strategic_value') or evaluate_news(item)
-    return bool(_AI.search(item_text(item)) and (priority['score']>0 or
+    ai, control_change = _strategic_context(item_text(item))
+    return bool(ai and (priority['score']>0 or
         term.get('kind') in {'technical_dictionary','model_identifier'} or
         item.get('topic') in {'agents','models','robotics','hardware','policy','research'} or
-        (_CONTROL.search(item_text(item)) and _CHANGE.search(item_text(item)))))
+        control_change))
 
 
 def _term_evidence(item,term,doc,control=False):

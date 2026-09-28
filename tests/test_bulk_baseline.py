@@ -111,6 +111,8 @@ class BaselineTests(unittest.TestCase):
             entered.set();release.wait(3);return self.model(p,s)
         s=self.service(blocking);r=s.start({'batch_size':2,'workers':1});self.assertTrue(entered.wait(3))
         s.pause(r['id']);release.set();paused=self.done(s,r['id'])
+        with s.db() as db:
+            self.assertEqual(db.execute("SELECT count(*) FROM bulk_baseline_events WHERE run_id=? AND stage='user_pause_requested'",(r['id'],)).fetchone()[0],1)
         self.assertEqual(paused['status'],'paused');self.assertEqual(paused['metrics']['verified'],2)
         done=self.done(s,s.resume(r['id'])['id']);self.assertEqual(done['metrics']['verified'],7)
 

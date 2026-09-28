@@ -93,14 +93,27 @@ def filter_group(db,items,identity,records=None,registry=None):
     members=[e for e in members if family_for(e)[0]==identity]
     if not members:raise ValueError('존재하지 않거나 제외된 관측 신호 묶음입니다.')
     if records is None:records=keyword_records(db,items)
+    # Automatic signals with morphology IDs cannot match an item without that
+    # ID. Narrow the loop, then keep the original source/context matcher.
+    unconditional=[];by_keyword={}
+    for index,member in enumerate(members):
+        kid=member.get('keyword_id') or (member.get('metadata') or {}).get('keyword_id')
+        if member['origin'] in ('builtin','manual') or not kid:
+            unconditional.append(index)
+        else:
+            by_keyword.setdefault(kid,[]).append(index)
     result=[]
     for item in items:
         terms=[]
-        for member in members:
+        keywords=records.get(keyword_record_id(item),[])
+        indices=set(unconditional)
+        for term in keywords:indices.update(by_keyword.get(term.get('id'),[]))
+        for index in sorted(indices):
+            member=members[index]
             if member['origin']=='builtin':
                 matches=control_observations(item,member)
                 terms.extend(t for e in matches for t in e['matched_terms'])
-            elif match_dynamic_item(item,member,records.get(keyword_record_id(item),[])):
+            elif match_dynamic_item(item,member,keywords):
                 terms.extend(member['terms'])
         if terms:result.append(dict(item,matched_terms=list(dict.fromkeys(terms))))
     return result

@@ -1,5 +1,6 @@
 """Use only current, independently reviewed paper findings in reader-facing views."""
 import json
+from functools import lru_cache
 from paper_graph import paper_sources
 from evidence_search import terms
 from source_store import digest
@@ -10,11 +11,18 @@ def token(source):
     return digest(row['input_hash']+'\0'+(row.get('result_json') or ''))
 
 
+@lru_cache(maxsize=1024)
+def _source_terms(text):
+    # Cache only lexical work by exact text. paper_sources still validates current
+    # metadata, input hash and independent review on every retrieval.
+    return frozenset(terms(text))
+
+
 def retrieve(db,query,limit=2):
     sources,coverage=paper_sources(db);query_terms=set(terms(query));ranked=[]
     for source in sources:
         graph=source['result'];text=' '.join(e.get('title','')+' '+e.get('text','') for e in graph['evidence'])
-        overlap=query_terms&set(terms(text))
+        overlap=query_terms&_source_terms(text)
         # Require multiple shared terms; a generic single AI mention is insufficient.
         if len(overlap)>=2 or source['id'] in query:ranked.append((len(overlap),source))
     evidence=[];dependencies=[]

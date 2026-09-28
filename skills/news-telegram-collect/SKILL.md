@@ -19,8 +19,8 @@ description: 뉴스 프로젝트의 Telegram 신규 메시지 정기 수집과 �
 
 ## 중단과 검증
 
-- 자동 스케줄러는 최신 run이 paused/failed/requires_review이거나 owner 없이 실행 상태인 경우 새 run이나 재시도로 우회하지 않고 `baseline_attention_required`를 기록한다. 사용자 일시중지와 내용 검토 실패를 자동 해제하지 않는다.
-- 모델 시간 초과·DB 잠금은 최신 이벤트·갱신시각·owner 생존을 대조해 별도 점검한다. 명시 재개 요청이 있으면 동일 run을 이어 처리한다. 검토 실패의 attempts를 초기화하거나 기준을 낮추지 않는다.
+- 자동 스케줄러는 paused run의 최신 엔진 이벤트와 종료 시각(최대 300초의 worker 마무리 간격), owner 부재, 이후 사용자 중지 이벤트 부재를 확인한다. timeout·queue_timeout·database_locked·network·capacity만 소규모 실제 엔진 확인 후 동일 run으로 재개한다. 사용량 제한·인증·권한·circuit_open 및 내용 검토 실패는 자동 해제하지 않는다.
+- `.runtime/scheduled-collection-recovery.json`에 복구 예산을 보존한다. 5분부터 지수 대기하며 진척 없는 시도 3회·run당 총 20회가 상한이다. 시도는 호출 전에 예약하고 실제 검토 완료 증가가 있어야 무진척 횟수를 초기화한다. 사용자 중지 중복 확인은 엔진 probe 전후 모두 수행한다. 문서의 attempts나 검토 기준을 초기화하지 않는다.
 - 실제 API `/api/baseline/<id>?view=status`와 DB 원장에서 verified/pending/retry/needs_review/failed 및 owner 생존을 확인한다. completed 행도 현재 해시·인용·저장 독립 검토가 맞아야 재사용한다.
 - 심층 cycle, 논문 분석, MiroFish, 공개 사이트 게시를 이 스킬의 실행에 추가하지 않는다. 뉴스·논문 건수도 합치지 않는다.
 - 마지막 Telegram 확인과 실제 추출 시각, 신규 고유 수와 누적 수, 기본 run 고정 대상과 완료/대기/실패를 구분해 보고한다. 기본 run 완료는 이후 새 입력의 완료를 뜻하지 않는다.

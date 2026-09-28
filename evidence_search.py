@@ -36,11 +36,17 @@ def query_anchors(question):
 
 
 @lru_cache(maxsize=1)
-def alias_patterns():
+def alias_rules():
     from morphology import PHRASES
     return [(canonical.casefold(), re.compile(r'(?<![a-z0-9])(?:'+
-            '|'.join(re.escape(a.casefold()) for a in aliases)+r')(?![a-z0-9])'))
+            '|'.join(re.escape(a.casefold()) for a in aliases)+r')(?![a-z0-9])'),
+            tuple(a.casefold() for a in aliases))
             for canonical, aliases in {**PHRASES, **ALIASES}.items()]
+
+
+@lru_cache(maxsize=1)
+def alias_patterns():
+    return [(canonical, pattern) for canonical, pattern, _ in alias_rules()]
 
 
 def terms(value):
@@ -53,8 +59,10 @@ def terms(value):
             if len(stem)>=2:
                 tokens.append(stem)
         tokens.append(word)
-    for canonical, pattern in alias_patterns():
-        if pattern.search(value):
+    for canonical, pattern, literals in alias_rules():
+        # Every regex alternative is an escaped literal. Absence of all literals
+        # proves a miss; actual matches still use the exact boundary expression.
+        if any(literal in value for literal in literals) and pattern.search(value):
             tokens.append('concept:'+canonical)
     return [token for token in tokens if token not in STOP]
 

@@ -84,6 +84,19 @@ def test_unrelated_ai_sentence_does_not_turn_car_stop_into_ai_control():
     assert match_topic({'text':'AI kill switch 도입을 제안했다.'},topic)
 
 
+def test_control_matching_preserves_whitespace_boundaries_and_changed_input():
+    from strategy_monitoring import control_observations, WATCH_LENSES
+    topic=next(t for t in WATCH_LENSES if t['id']=='training_pause')
+    row={'text':'AI training\t  pause proposed.'}
+    observed=control_observations(row,topic)
+    assert observed and 'training pause' in observed[0]['matched_terms']
+    assert observed[0]['quote']==row['text']
+    row['text']='AI training pausesX proposed.'
+    assert not control_observations(row,topic)
+    row['text']='AI https://example.org/training-pause'
+    assert not control_observations(row,topic)
+
+
 def test_current_count_quotes_and_conditional_status_are_consistent():
     from strategy_monitoring import build_monitoring
     rows=[{'message_id':1,'title':'이전 기사','text':'AI kill switch 도입을 제안했다.','day':'2026-09-02','source_url':'https://example.org/old'},

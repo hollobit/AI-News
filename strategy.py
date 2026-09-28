@@ -11,7 +11,7 @@ def focused_items(items):
             if item.get('source_url') and not item.get('url_context') else item for item in items]
 
 
-def select_strategy_items(db, params, items=None, records=None, precomputed=False, registry=None):
+def select_strategy_items(db, params, items=None, records=None, precomputed=False, registry=None, membership_only=False):
     """Use the same explainable priority and filters for display and actions."""
     from app import read_news
     from strategy_trends import filter_lens, filter_strategic_keyword
@@ -35,6 +35,10 @@ def select_strategy_items(db, params, items=None, records=None, precomputed=Fals
                 raise ValueError('제외된 전략 주제입니다. 관리 목록에서 복원해 주세요.')
         items = filter_lens(items, lens_id, params.get('terms', [''])[0])
     items = filter_strategic_keyword(db, items, params, records=records)
+    if membership_only:
+        if any(params.get(k) for k in ('sector','impact','sort')):
+            raise ValueError('소속 조회에는 분야·영향·정렬 옵션을 사용할 수 없습니다.')
+        return items
     from sector_taxonomy import filter_sector, classify_sectors, SECTORS
     if precomputed:
         sector = params.get('sector', [''])[0]

@@ -55,7 +55,7 @@ def source_text(item):
     return unicodedata.normalize('NFKC', re.sub(r'https?://\S+', ' ', '\n'.join(parts))).casefold()
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=16384)
 def _ai_sentences(fields):
     ai_context=re.compile(r'(?i)(?<![a-z0-9])(?:ai|llm|agi|gpt|artificial intelligence|machine learning)(?![a-z0-9])|인공지능|언어.?모델|에이전트|로봇|신경망')
     result=[]
@@ -73,6 +73,13 @@ def _control_pattern(term):
     return re.compile(pattern)
 
 
+@lru_cache(maxsize=128)
+def _control_head(term):
+    # The first token is required even when a multiword term allows variable
+    # whitespace. Keep the regex for exact boundaries and whitespace semantics.
+    return next(iter(term.casefold().split()), '')
+
+
 def control_observations(item, topic):
     """Keep exact sentences with AI context; URL paths and unrelated paragraphs do not count."""
     from dynamic_topics import _AI, _CONDITIONAL, _PROPOSED
@@ -81,7 +88,7 @@ def control_observations(item, topic):
     if source.get('status')=='fetched':fields.extend(('fetched_'+key,str(source.get(key) or '')) for key in ('title','text'))
     observations=[]
     for origin,sentence,text in _ai_sentences(tuple(fields)):
-        matches=[term for term in topic['terms'] if _control_pattern(term).search(text)]
+        matches=[term for term in topic['terms'] if _control_head(term) in text and _control_pattern(term).search(text)]
         if not matches:continue
         if topic['id']=='training_control' and re.search(r'learning[ -]rate|학습률|optimizer|최적화',text):
             if not re.search(r'정책|규제|안전|거버넌스|유예|moratorium|governance|policy|regulation|safety',text):continue

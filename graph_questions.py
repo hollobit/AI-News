@@ -214,7 +214,7 @@ class GraphQuestions:
         answer=dict(current['result'])
         if current['status'] in ('queued','running','preparing'):
             answer['job']={'id':job['id'],'status':current['status'],'url':'/api/graph/answers/'+job['id']}
-        answer['timing']={'total_ms':round((time.monotonic()-started)*1000,2),'answer_cache_hit':current['status']=='complete'}
+        answer['timing']={**answer.get('timing',{}),'total_ms':round((time.monotonic()-started)*1000,2),'answer_cache_hit':current['status']=='complete'}
         return answer
 
     def _save(self,identity,status,result,error=''):
@@ -253,6 +253,7 @@ class GraphQuestions:
                 if time.monotonic()>deadline:raise RuntimeError('검색 근거 준비 시간이 초과되었습니다.')
                 time.sleep(.1)
             if self.closed:return
+            retrieval_ms=round((time.monotonic()-begun)*1000,2)
             result=quick_answer(graph,request['question'],request['node_ids'])
             self._save(identity,'running' if self.enabled else 'evidence_only',result)
             if not self.enabled or (not result.get('evidence') and not self.enricher):
@@ -277,6 +278,8 @@ class GraphQuestions:
                 task=self.enricher.research(request['question'],identity)
                 answer['enrichment']={'status':task['status'],'task_id':task['id'],'note':'부족한 비교·반대 근거를 공개 검색하여 독립 검토합니다.'}
 
+            answer.setdefault('timing',{}).update(evidence_retrieval_ms=retrieval_ms,
+                completion_ms=round((time.monotonic()-begun)*1000,2))
             self._save(identity,'complete',answer)
         except Exception as error:
             if isinstance(error,sqlite3.OperationalError):

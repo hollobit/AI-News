@@ -177,6 +177,9 @@ class BulkBaselineService:
     def pause(self,run_id):
         run=self.get(run_id)
         if not run:raise ValueError('기본 분석 실행을 찾을 수 없습니다.')
+        with self.db() as db:
+            db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES (?,?,?,?)',
+                       (run_id,'user_pause_requested','{}',now()))
         if self.active==run_id:self.stop.set()
         self._status(run_id,'finishing' if run['metrics']['active_workers'] else 'paused')
         return self.get(run_id)

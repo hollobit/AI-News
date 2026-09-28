@@ -195,7 +195,7 @@ def read_observatory(db, window=14, expanded=False):
                 entry=entries.get(topic['id'],{});kid=(entry.get('metadata') or {}).get('keyword_id') or entry.get('keyword_id')
                 automatic=topic['id'].startswith(('dynamic:','dynamic-signal:')) and entry.get('origin')!='manual'
                 candidates=postings.get(kid,[]) if automatic and kid else corpus
-                found=select_strategy_items(db,{'lens':[topic['id']]},candidates,data['morph'],precomputed=True,registry=registry)
+                found=select_strategy_items(db,{'lens':[topic['id']]},candidates,data['morph'],precomputed=True,registry=registry,membership_only=True)
                 output[topic['id']]={(document_id(i),i['day']) for i in found}
             return output
         membership_key=(revision,registry_version,end.isoformat(),tuple(t['id'] for t in candidate_topics)) if revision else None
