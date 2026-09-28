@@ -58,6 +58,10 @@
     location.pathname === '/operations' ||
     ['baseline', 'workflow', 'improvement'].includes(location.hash.slice(1));
   document.documentElement.dataset.workspace = operationsMode ? 'operations' : 'reading';
+  const updateNavigation = () =>
+    Workspace.currentNavigation(operationsMode ? '/operations' : '/strategy');
+  updateNavigation();
+  addEventListener('hashchange', updateNavigation);
   if (operationsMode) {
     document.title = '수집·분석 운영 · 하루 뉴스';
     $('#overview h1').textContent = '수집·분석 운영';

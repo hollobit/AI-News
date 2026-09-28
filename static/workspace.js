@@ -99,6 +99,16 @@
       return '';
     }
   }
+  function currentNavigation(path = location.pathname) {
+    const hash = location.hash || '#overview';
+    for (const link of document.querySelectorAll('.sidebar nav a')) {
+      const target = new URL(link.href, location.origin);
+      const selected = target.pathname === path && (!target.hash || target.hash === hash);
+      if (selected) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+      link.classList.toggle('active', selected);
+    }
+  }
   const statusLabels = {
     pending: '대기',
     preparing: '준비 중',
@@ -113,5 +123,12 @@
     requires_review: '검토 필요',
     failed: '실패',
   };
-  window.Workspace = { request, poller, safeURL, statusLabels, questionTimeout: 210000 };
+  window.Workspace = {
+    request,
+    poller,
+    safeURL,
+    currentNavigation,
+    statusLabels,
+    questionTimeout: 210000,
+  };
 })();

@@ -2,6 +2,7 @@
 import argparse
 import base64
 import fcntl
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 from html.parser import HTMLParser
 import json
@@ -77,6 +78,19 @@ def api(path, method='GET', body=None):
         raise GitHubAPIError(f'GitHub API {method} {path} failed (HTTP {status or "unknown"})', retryable=transient)
     return json.loads(result.stdout) if result.stdout.strip() else {}
 
+def immutable_object(path, body):
+    """Blob/tree creation is content addressed; commit/ref updates are not."""
+    if path not in {'git/blobs', 'git/trees'}:
+        raise ValueError('Only immutable Git objects may be retried')
+    for attempt in range(3):
+        try:
+            return api(path, 'POST', body)
+        except GitHubAPIError as error:
+            if not error.retryable or attempt == 2:
+                raise
+            time.sleep(2 ** attempt)
+
+
 def fingerprint(files):
     normalized=dict(files)
     for name in ('knowledge.json','site.json','site-manifest.json'):
@@ -109,8 +123,9 @@ def sync(db, output):
             return hashlib.sha1(b'blob '+str(len(encoded)).encode()+b'\0'+encoded).hexdigest()
         # Immutable files already known locally are verified by their Git blob
         # digest. Unknown older generations must prove their content address.
-        for name,entry in existing.items():
-            if not DATA_NAME.fullmatch(name):continue
+        def verify_existing(item):
+            name,entry=item
+            if not DATA_NAME.fullmatch(name):return
             if name in files:
                 if entry['sha'] != git_hash(files[name]):
                     raise RuntimeError('Unexpected public data content; refusing to overwrite.')
@@ -119,6 +134,8 @@ def sync(db, output):
                 content=base64.b64decode(blob['content']).decode()
                 if hashlib.sha256(content.encode()).hexdigest() != name[12:-5]:
                     raise RuntimeError('Unexpected public data content; refusing to overwrite.')
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            list(pool.map(verify_existing, existing.items()))
         timed={'knowledge.json','site.json','site-manifest.json'}
         same=set(existing)==set(files) and all(existing[name]['sha']==git_hash(content) for name,content in files.items() if name not in timed)
         if same:
@@ -130,28 +147,19 @@ def sync(db, output):
                 return dict(summary,status='unchanged',commit=parent)
     # Only independent blob creation is parallel. Tree/commit/ref publication is
     # sequential and happens after every asset has been uploaded successfully.
-    from concurrent.futures import ThreadPoolExecutor
     def upload(item):
         name,content=item
         encoded=content.encode('utf-8')
         sha=hashlib.sha1(b'blob '+str(len(encoded)).encode()+b'\0'+encoded).hexdigest()
         if not parent or not any(e['path']==name and e['sha']==sha for e in tree['tree']):
-            for attempt in range(3):
-                try:
-                    sha=api('git/blobs','POST',{'content':base64.b64encode(encoded).decode('ascii'),'encoding':'base64'})['sha']
-                    break
-                except GitHubAPIError as error:
-                    # Identical blob content has the same SHA: this is safe to
-                    # retry. Never retry commit/ref publication automatically.
-                    if not error.retryable or attempt == 2:
-                        raise RuntimeError(f'{name}: {error}') from error
-                    time.sleep(2 ** attempt)
-                except RuntimeError as error:
-                    raise RuntimeError(f'{name}: {error}') from error
+            try:
+                sha=immutable_object('git/blobs',{'content':base64.b64encode(encoded).decode('ascii'),'encoding':'base64'})['sha']
+            except RuntimeError as error:
+                raise RuntimeError(f'{name}: {error}') from error
         return {'path':name,'mode':'100644','type':'blob','sha':sha}
     with ThreadPoolExecutor(max_workers=4) as pool:
         entries=list(pool.map(upload,files.items()))
-    tree=api('git/trees','POST',{'tree':entries})
+    tree=immutable_object('git/trees',{'tree':entries})
     commit=api('git/commits','POST',{'message':'Sync reviewed read-only wiki site','tree':tree['sha'],'parents':[parent] if parent else []})
     if parent:
         api('git/refs/heads/'+BRANCH,'PATCH',{'sha':commit['sha'],'force':False})

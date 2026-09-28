@@ -43,7 +43,8 @@ async def main():
         assert 'knowledge.json' not in requests
         results['public_graph'] = {'files': sorted(set(requests))}
 
-        await page.close()
+        await browser.close()
+        browser = await p.chromium.launch()
         page = await browser.new_page()
         page.on('pageerror', lambda error: errors.append(str(error)))
         live = os.environ.get('LIVE_SITE_URL', 'http://127.0.0.1:8001')
@@ -51,6 +52,8 @@ async def main():
             await page.set_viewport_size({'width': 1440, 'height': 1000})
             await page.goto(live + path)
             await expect(page.locator('html')).to_have_attribute('data-workspace', mode)
+            current = '/strategy#overview' if mode == 'reading' else '/operations'
+            await expect(page.locator(f'.sidebar a[href="{current}"]')).to_have_attribute('aria-current', 'page')
             expected = 'section[data-reading]' if mode == 'reading' else 'section[data-operations]'
             excluded = 'section[data-operations]' if mode == 'reading' else 'section[data-reading]'
             assert await page.locator(expected).first.is_visible()
