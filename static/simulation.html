@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko">
-<head>
+<head><link rel="stylesheet" href="/workspace.css"><script src="/workspace.js" defer></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
@@ -26,12 +26,12 @@
     .pill.stop_requested{color:var(--amber);background:var(--amber-soft)}
   </style>
 </head>
-<body>
+<body><a class="workspace-skip" href="#main">본문으로 이동</a>
   <header class="topbar">
     <a class="brand" href="/"><strong>텔레그램 데일리</strong><span>날짜별 채널 뉴스</span></a>
     <nav class="nav" aria-label="주요 화면"><a href="/">뉴스</a><a href="/?view=links&amp;date=all">링크별 분석</a><a href="/graph">관계 그래프</a><a href="/archive">URL 기록</a><a href="/research">종합 분석</a><a class="active" href="/simulation" aria-current="page">시뮬레이션</a></nav>
   </header>
-  <main class="page">
+  <main id="main" class="page">
     <header class="intro">
       <div><h1>MiroFish 전략 시뮬레이션</h1><p>수집한 뉴스를 고정된 자료 묶음으로 구성하고, MiroFish의 그래프·에이전트 시뮬레이션을 실행해 이해관계자의 반응과 전략 시나리오를 탐색합니다.</p></div>
       <div class="intro-note"><strong>공개 게시물이 만들어지지 않습니다.</strong>선택한 뉴스는 LLM과 Zep 그래프 구성에 전달되고, Twitter·Reddit 활동은 격리된 시뮬레이션 안에서만 생성됩니다.</div>

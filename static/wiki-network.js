@@ -64,7 +64,8 @@
   async function load(){
     const token=++request;
     try{
-      if(staticMode){if(!snapshot){const r=await fetch('./knowledge.json');if(!r.ok)throw Error('공개 스냅샷을 읽을 수 없습니다.');snapshot=await r.json();}await addArticleContext();if(token!==request)return;data=staticView();}
+      if(staticMode&&document.documentElement.dataset.split==='true'&&window.PublicData){const route=new URLSearchParams(location.hash.slice(1));data=await PublicData.graphView({id:selected,q:$('search').value,layer:$('layer').value,limit,articleId:route.get('article_id')||'',sourceUrl:route.get('source_url')||'',paperId:route.get('paper_id')||''});if(token!==request)return;selected=data.selectedId;snapshot=data;}
+      else if(staticMode){if(!snapshot){const r=await fetch('./knowledge.json');if(!r.ok)throw Error('공개 스냅샷을 읽을 수 없습니다.');snapshot=await r.json();}await addArticleContext();if(token!==request)return;data=staticView();}
       else{const p=new URLSearchParams({id:selected,q:$('search').value,layer:$('layer').value,limit:String(limit)});const hash=new URLSearchParams(location.hash.slice(1));if(!selected)for(const k of ['source_url','paper_id'])if(hash.has(k))p.set(k,hash.get(k));const r=await fetch('/api/wiki/network?'+p);const result=await r.json();if(!r.ok)throw Error(result.error||'조회 실패');if(token!==request)return;data=result;}
       if(token!==request)return;
       $('status').textContent=(staticMode?'읽기 전용 공개 스냅샷 · '+snapshot.exported_at+' · ':'')+data.method+(atlas3dFailureMessage?' · '+atlas3dFailureMessage:'');

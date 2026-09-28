@@ -1,6 +1,6 @@
 import json
 import pytest
-from public_site import observation,PUBLIC_FILES
+from public_site import observation,PUBLIC_FILES,published_files
 from export_wiki_site import export_site
 from sync_wiki_pages import validate_static_dependencies
 from test_knowledge_wiki import setup,Runner
@@ -30,7 +30,7 @@ def test_full_export_manifest_and_relative_assets(tmp_path):
     target=tmp_path/'site'
     export_site(path,target,full_site=True)
     validate_static_dependencies(target)
-    assert {p.name for p in target.iterdir()}==set(PUBLIC_FILES)
+    assert {p.name for p in target.iterdir()}==set(published_files(target))
     assert 'public.js' in (target/'index.html').read_text()
     assert 'data-mode="static"' in (target/'knowledge.html').read_text()
     html=(target/'observatory.html').read_text()

@@ -11,7 +11,8 @@ import subprocess
 import time
 from urllib.parse import urlsplit
 from export_wiki_site import export_site
-from public_site import PUBLIC_FILES
+from public_site import PUBLIC_FILES, published_files
+from public_data import DATA_NAME
 
 REPO = 'hollobit/AI-News'
 BRANCH = 'gh-pages'
@@ -64,7 +65,7 @@ def api(path, method='GET', body=None):
 
 def fingerprint(files):
     normalized=dict(files)
-    for name in ('knowledge.json','site.json'):
+    for name in ('knowledge.json','site.json','site-manifest.json'):
         if name not in normalized:continue
         data=json.loads(normalized[name]);data.pop('exported_at',None)
         normalized[name]=json.dumps(data,sort_keys=True,ensure_ascii=False)
@@ -72,8 +73,9 @@ def fingerprint(files):
 
 def sync(db, output):
     summary=export_site(db,output,full_site=True)
-    validate_static_dependencies(output)
-    files={name:(Path(output)/name).read_text() for name in FILES}
+    names=published_files(output)
+    validate_static_dependencies(output,names)
+    files={name:(Path(output)/name).read_text() for name in names}
     branches=api('branches?per_page=100')
     branch=next((b for b in branches if b['name']==BRANCH),None)
     parent=branch['commit']['sha'] if branch else None
@@ -84,18 +86,39 @@ def sync(db, output):
         # A previous Pages snapshot may not yet contain newly added allowlisted
         # assets. It is safe to add missing files, but never overwrite an
         # unexpected path or a tree without the expected site entry points.
-        if (not existing_paths <= set(FILES)
+        if (any(name not in set(FILES) and not DATA_NAME.fullmatch(name) for name in existing_paths)
                 or not {'index.html','knowledge.json'} <= existing_paths):
             raise RuntimeError('Unexpected files on gh-pages; refusing to overwrite.')
-        old={}
-        for entry in tree['tree']:
-            blob=api('git/blobs/'+entry['sha'])
-            old[entry['path']]=base64.b64decode(blob['content']).decode()
-        if fingerprint(old)==fingerprint(files):return dict(summary,status='unchanged',commit=parent)
-    # Upload bodies separately: embedding the complete metadata snapshot in a
-    # tree request can exceed the tree API's request-size limit.
-    entries=[]
-    for name,content in files.items():
+        existing={entry['path']:entry for entry in tree['tree']}
+        def git_hash(content):
+            encoded=content.encode('utf-8')
+            return hashlib.sha1(b'blob '+str(len(encoded)).encode()+b'\0'+encoded).hexdigest()
+        # Immutable files already known locally are verified by their Git blob
+        # digest. Unknown older generations must prove their content address.
+        for name,entry in existing.items():
+            if not DATA_NAME.fullmatch(name):continue
+            if name in files:
+                if entry['sha'] != git_hash(files[name]):
+                    raise RuntimeError('Unexpected public data content; refusing to overwrite.')
+            else:
+                blob=api('git/blobs/'+entry['sha'])
+                content=base64.b64decode(blob['content']).decode()
+                if hashlib.sha256(content.encode()).hexdigest() != name[12:-5]:
+                    raise RuntimeError('Unexpected public data content; refusing to overwrite.')
+        timed={'knowledge.json','site.json','site-manifest.json'}
+        same=set(existing)==set(files) and all(existing[name]['sha']==git_hash(content) for name,content in files.items() if name not in timed)
+        if same:
+            old={}
+            for name in timed:
+                blob=api('git/blobs/'+existing[name]['sha'])
+                old[name]=base64.b64decode(blob['content']).decode()
+            if fingerprint(old)==fingerprint({name:files[name] for name in timed}):
+                return dict(summary,status='unchanged',commit=parent)
+    # Only independent blob creation is parallel. Tree/commit/ref publication is
+    # sequential and happens after every asset has been uploaded successfully.
+    from concurrent.futures import ThreadPoolExecutor
+    def upload(item):
+        name,content=item
         encoded=content.encode('utf-8')
         sha=hashlib.sha1(b'blob '+str(len(encoded)).encode()+b'\0'+encoded).hexdigest()
         if not parent or not any(e['path']==name and e['sha']==sha for e in tree['tree']):
@@ -103,7 +126,9 @@ def sync(db, output):
                 sha=api('git/blobs','POST',{'content':base64.b64encode(encoded).decode('ascii'),'encoding':'base64'})['sha']
             except RuntimeError as error:
                 raise RuntimeError(f'{name}: {error}') from error
-        entries.append({'path':name,'mode':'100644','type':'blob','sha':sha})
+        return {'path':name,'mode':'100644','type':'blob','sha':sha}
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        entries=list(pool.map(upload,files.items()))
     tree=api('git/trees','POST',{'tree':entries})
     commit=api('git/commits','POST',{'message':'Sync reviewed read-only wiki site','tree':tree['sha'],'parents':[parent] if parent else []})
     if parent:

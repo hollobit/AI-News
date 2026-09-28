@@ -1,4 +1,5 @@
 """Revision-aware process-local projections; never caches network safety decisions."""
+from contextlib import contextmanager
 from collections import OrderedDict, Counter
 from concurrent.futures import Future
 from copy import deepcopy
@@ -16,6 +17,7 @@ _LOCK = threading.RLock()
 _CACHE = OrderedDict()
 _FLIGHTS = {}
 _SCHEMA = {}
+_REQUEST_CONTEXT = threading.local()
 _MAX_ENTRIES = 16384
 _MAX_BYTES = 384 * 1024 * 1024
 # Large independently loaded views cannot evict each other. Figures are bounded
@@ -121,6 +123,25 @@ def _setup(db, identity):
         _SCHEMA[identity] = schema
 
 
+def is_read_projection():
+    return getattr(_REQUEST_CONTEXT, 'read_only', False)
+
+
+@contextmanager
+def read_projections():
+    """HTTP readers may reuse prepared revisions but never install triggers.
+
+    A new schema safely bypasses caching until the background/CLI preparation
+    sees it; this preserves correctness without DDL on a reading request.
+    """
+    previous = getattr(_REQUEST_CONTEXT, 'read_only', False)
+    _REQUEST_CONTEXT.read_only = True
+    try:
+        yield
+    finally:
+        _REQUEST_CONTEXT.read_only = previous
+
+
 def revision_token(db, kinds=('source','analysis')):
     """Install change triggers once; transactions/memory/read-only safely bypass caching."""
     if db.in_transaction:
@@ -130,8 +151,14 @@ def revision_token(db, kinds=('source','analysis')):
         return None
     if any(kind not in {'source','analysis'} for kind in kinds):
         raise ValueError('Unknown projection revision kind')
+    if getattr(_REQUEST_CONTEXT, 'read_only', False):
+        with _LOCK:
+            prepared = _SCHEMA.get(identity)
+        if prepared != db.execute('PRAGMA schema_version').fetchone()[0]:
+            return None
     try:
-        _setup(db, identity)
+        if not getattr(_REQUEST_CONTEXT, 'read_only', False):
+            _setup(db, identity)
     except sqlite3.OperationalError as exc:
         if db.in_transaction:
             db.rollback()

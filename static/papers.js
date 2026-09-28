@@ -5,7 +5,7 @@
   const labels={not_analyzed:'미분석',pending:'미분석',queued:'대기',running:'분석 중',paused:'일시중지',complete:'분석 완료',needs_review:'검토 필요',failed:'실패',stale:'원문 변경 · 재분석 필요',fetched:'확보'};
   let current=null,page=1,request=0,poll;
   function link(label,url,cls='text-link'){const a=el('a',cls,label);try{const u=new URL(url,location.origin);if(!['http:','https:'].includes(u.protocol))return el('span',cls,label);a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';}catch(_){return el('span',cls,label);}return a;}
-  async function api(url,body){const r=await fetch(url,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw new Error(data.error||`요청 실패 ${r.status}`);return data;}
+  const api=(url,body)=>Workspace.request(url,{body});
   function notice(text,error=false){$('#paper-notice').hidden=false;$('#paper-notice').className='notice'+(error?' error':'');$('#paper-notice').textContent=text;}
   async function action(button,work){button.disabled=true;try{await work();}catch(e){notice(e.message,true);}finally{button.disabled=false;}}
   function query(){const p=new URLSearchParams({page:String(page),page_size:'20',window_days:$('#paper-window').value});[['q','paper-search'],['category','paper-category'],['sector','paper-sector'],['analysis_status','paper-status']].forEach(([k,id])=>{const v=$('#'+id).value.trim();if(v)p.set(k,v);});return p.toString();}

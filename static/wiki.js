@@ -11,10 +11,8 @@
   const href = id => '/wiki?id=' + encodeURIComponent(id);
   const safeURL = url => {try {const u=new URL(url);return ['https:','http:'].includes(u.protocol)?u.href:'';}catch{return '';}};
   const date = value => value ? new Date(value).toLocaleString('ko-KR') : '아직 없음';
-  async function api(url, body) {
-    const res=await fetch(url,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
-    const result=await res.json();if(!res.ok)throw new Error(result.error || '요청 실패');return result;
-  }
+  const api=(url,body)=>Workspace.request(url,{body});
+
   function references(ids) {return '<div class="refs">'+ids.map(id=>'<a href="#source-'+esc(id)+'">근거 '+esc(id.slice(-8))+'</a>').join('')+'</div>';}
   function renderDetail() {
     const p=data.page;

@@ -162,12 +162,12 @@ class BulkBaselineService:
 
     @staticmethod
     def _valid_cached(result,snapshot):
+        from evidence_contracts import reviewed_payload
         audit=result.get('verification') or {}
         record={k:result.get(k) for k in RECORD['required']}
         ids={e['id'] for e in snapshot['evidence']}
         return (record.get('document_id')==snapshot['document_id'] and isinstance(record.get('evidence_ids'),list) and bool(record['evidence_ids'])
-                and result.get('verified') is True and audit.get('accepted') is True and not audit.get('issues')
-                and audit.get('report_hash')==digest(record) and audit.get('evidence_hash')==digest(snapshot['evidence'])
+                and result.get('verified') is True and reviewed_payload(audit,record,snapshot['evidence'],digest)
                 and set(record.get('evidence_ids') or [])<=set(audit.get('checked_evidence_ids') or [])<=ids)
 
     def _launch(self,run_id):

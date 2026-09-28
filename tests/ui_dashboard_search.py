@@ -19,7 +19,8 @@ async def main():
         page.on('pageerror',lambda e:errors.append(str(e)))
         async def route(r):
             name=urlparse(r.request.url).path.rsplit('/',1)[-1]
-            if name=='site.json':await r.fulfill(json=site)
+            if name=='site-manifest.json':await r.fulfill(status=404,body='Missing legacy manifest')
+            elif name=='site.json':await r.fulfill(json=site)
             elif name=='knowledge.json':await r.fulfill(json={'pages':[],'nodes':[]})
             elif name=='observatory-14-default.json':await r.fulfill(json=obs)
             else:await r.fulfill(path=str(ROOT/'static'/('public.html' if name=='index.html' else name)))

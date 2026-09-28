@@ -24,7 +24,7 @@
   const pill = status => node('span',`pill ${text(status).toLowerCase()}`,STATUS[text(status).toLowerCase()]||text(status)||'상태 미상');
   const getRun = data => data?.run||data;
 
-  async function request(url,options={}){const response=await fetch(url,options);let data={};try{data=await response.json();}catch{}if(!response.ok){const message=text(data.error||data.detail||data.message)||'요청을 처리하지 못했습니다.';const error=new Error(message);error.status=response.status;throw error;}return data;}
+  async function request(url,options={}){return Workspace.request(url,{signal:options.signal,body:options.body===undefined?undefined:JSON.parse(options.body)});}
   function stopPolling(){if(state.timer)clearTimeout(state.timer);state.timer=null;}
   function setUrl(id,replace=true){const url=new URL(location.href);if(id)url.searchParams.set('run',id);else url.searchParams.delete('run');history[replace?'replaceState':'pushState']({},'',url);}
   function runtimeReady(){return state.runtime?.configured===true&&state.runtime?.backend?.running===true;}

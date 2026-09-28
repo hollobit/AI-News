@@ -30,7 +30,7 @@ def all_corpus_items(db, source_urls=None):
     normalized title/body. Repeated mentions remain in the archive. Queue items
     expose the latest representative, with a count of distinct mention contexts.
     """
-    from app import joined_articles, unindexed_link_rows, hidden_link_rows
+    from news_repository import joined_articles, unindexed_link_rows, hidden_link_rows
     from source_enrichment import attach_sources
     rows = [r for r in joined_articles(db) if r.get('source_origin')!='external_watch']
     rows.extend(unindexed_link_rows(db, rows))

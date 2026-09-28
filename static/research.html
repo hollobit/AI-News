@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko">
-<head>
+<head><link rel="stylesheet" href="/workspace.css"><script src="/workspace.js" defer></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
@@ -28,12 +28,12 @@
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.progress-track i{transition:none}}
   </style>
 </head>
-<body>
+<body><a class="workspace-skip" href="#main">본문으로 이동</a>
   <header class="topbar">
     <a class="brand" href="/"><strong>텔레그램 데일리</strong><span>날짜별 채널 뉴스</span></a>
     <nav class="nav" aria-label="주요 화면"><a href="/">뉴스</a><a href="/?view=links&date=all">링크별 분석</a><a href="/graph">관계 그래프</a><a href="/risks">위험 평가</a><a href="/archive">URL 기록</a><a class="active" href="/research" aria-current="page">종합 분석</a><a href="/simulation">시뮬레이션</a></nav>
   </header>
-  <main class="page">
+  <main id="main" class="page">
     <header class="intro">
       <div><h1>종합 전략 분석</h1><p>수집한 뉴스와 원문을 하나의 시점으로 묶어 주제 비중, 주요 플레이어의 관계, 국가·기업 전략 흐름과 조건부 전망을 분석합니다.</p></div>
       <button class="start" id="start" type="button" disabled>수집 완료 · 종합 분석</button>

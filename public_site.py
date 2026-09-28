@@ -3,9 +3,19 @@ import hashlib
 import json
 from pathlib import Path
 
-ASSETS=('public.html','public.js','public.css','news-network.js','news-network.css','risk-network.js','risk-network.css','observatory.html','observatory.js','observatory.css','observatory-search.js','public-navigation.js')
-DATA_FILES=('site.json',)+tuple(f'observatory-{days}-{mode}.json' for days in (14,30,90) for mode in ('default','expanded'))
-PUBLIC_FILES=('index.html','knowledge.html','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE','knowledge.json','.nojekyll','README.md','public.js','public.css','news-network.js','news-network.css','risk-network.js','risk-network.css','observatory.html','observatory.js','observatory.css','observatory-search.js','public-navigation.js')+DATA_FILES
+ASSETS=('public.html','public.js','public.css','public-data.js','workspace.js','workspace.css','news-network.js','news-network.css','risk-network.js','risk-network.css','observatory.html','observatory.js','observatory.css','observatory-search.js','public-navigation.js')
+DATA_FILES=('site.json','site-manifest.json')+tuple(f'observatory-{days}-{mode}.json' for days in (14,30,90) for mode in ('default','expanded'))
+PUBLIC_FILES=tuple(dict.fromkeys(
+    ('knowledge.html','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE','knowledge.json','.nojekyll','README.md')
+    +tuple('index.html' if name=='public.html' else name for name in ASSETS)+DATA_FILES))
+
+
+def published_files(root):
+    from public_data import data_files
+    names=PUBLIC_FILES+data_files(root)
+    if any((Path(root)/name).is_symlink() for name in names):
+        raise ValueError('Public assets must not be symlinks')
+    return names
 
 def pick(data,keys):return {k:data[k] for k in keys.split() if k in data}
 def identity(value):return hashlib.sha256(value.encode()).hexdigest()[:24]
@@ -137,7 +147,10 @@ def write_site(db_path,target,root,stamp,data=None):
             text=text.replace('href="index.html?view=graph"','href="knowledge.html"').replace('href="index.html?view=observatory"','href="observatory.html"')
             text=text.replace('라이브 관측 지도','공개 관측 지도').replace('>GraphRAG</a>','>지식 관계 탐색</a>')
             text=text.replace('<script src="/paper-context.js"></script>','').replace('<script src="paper-context.js"></script>','')
-        if dest.endswith('.html'):text=text.replace('</body>','<script src="public-navigation.js"></script></body>')
+        if dest.endswith('.html'):
+            from site_templates import public_html
+            text=public_html(text)
+            text=text.replace('</body>','<script src="public-navigation.js"></script></body>')
         (target/dest).write_text(text)
     for days in (14,30,90):
         for mode in ('default','expanded'):

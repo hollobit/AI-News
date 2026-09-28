@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import sqlite3
+
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -100,6 +102,9 @@ def ensure_keyword_index(db, rows_factory) -> bool:
     revision = _source_revision(db)
     if _is_current(db, revision):
         return False
+    from projection_cache import is_read_projection
+    if is_read_projection():
+        raise sqlite3.OperationalError('keyword index preparation pending')
     if db.in_transaction:
         # Respect a caller-owned transaction; its snapshot cannot be replaced.
         sync_keyword_index(db, rows_factory())

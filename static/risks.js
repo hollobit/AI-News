@@ -5,7 +5,7 @@
   let page=1,reviewPage=1,reviewOpen=false,controller,requestId=0,graphPromise;
   function text(v){if(v==null)return '';if(typeof v!=='object')return String(v);if(Array.isArray(v))return v.map(text).join(' · ');return v.explanation||v.description||v.text||v.detail||Object.entries(v).map(([k,x])=>k+': '+text(x)).join(' · ');}
   function link(label,url){try{const u=new URL(url,location.origin);if(!['http:','https:'].includes(u.protocol))return node('span','',label);const e=node('a','text-link',label);e.href=u.href;e.target='_blank';e.rel='noopener noreferrer';return e;}catch(_){return node('span','',label);}}
-  async function api(url,signal){const r=await fetch(url,{signal});const value=await r.json();if(!r.ok)throw new Error(value.error||`조회 실패 ${r.status}`);return value;}
+  async function api(url,signal){return Workspace.request(url,{signal});}
   function riskGraph(){
     if(!graphPromise)graphPromise=api('/api/risks/graph?risk_limit=2000&edge_limit=12000');
     return graphPromise;

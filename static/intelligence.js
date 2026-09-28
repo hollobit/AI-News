@@ -8,7 +8,7 @@ const states={proposed:'제안',active:'진행',revised:'수정',withdrawn:'철�
 const txt=v=>v==null?'미확인':v===''?'미상':typeof v==='boolean'?(v?'예':'아니오'):typeof v==='object'?JSON.stringify(v):states[v]||String(v);
 function link(text,url){try{const u=new URL(url,location.origin);if(!['http:','https:'].includes(u.protocol))return el('span','',text);const a=el('a','',text);a.href=u.href;if(u.origin!==location.origin){a.target='_blank';a.rel='noopener noreferrer';}return a;}catch(_){return el('span','',text);}}
 function notify(text){$('#notice').hidden=!text;$('#notice').textContent=text;}
-async function api(url,body,signal){const r=await fetch(url,{signal,...(body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{})});let data;try{data=await r.json();}catch(_){throw Error('응답을 읽지 못했습니다. 다시 시도하세요.');}if(!r.ok)throw Error(data.error||`요청 실패 (${r.status})`);return data;}
+const api=(url,body,signal)=>Workspace.request(url,{body:body??undefined,signal});
 function button(label,fn){const b=el('button','',label);b.type='button';b.addEventListener('click',fn);return b;}
 function title(item){return item.title||item.label||item.name||item.question||item.paper_id||'제목 미제공';}
 function scores(item){const n=el('div','scores');for(const k of ['importance','risk','evidence','opportunity']){const value=(item.scores||{})[k];n.append(el('div','score',`${labels[k]} · ${value==null?'미평가':typeof value==='object'?value.label||(value.score??'미평가'):value}`));}return n;}

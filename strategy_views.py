@@ -38,28 +38,33 @@ def _share_projection_strings(value):
 def dataset(db):
     revision = revision_token(db, ('source',))
     def build():
-        from app import read_news, joined_articles
+        from news_repository import read_news, joined_articles
         from keyword_index import ensure_keyword_index, _record_mappings
         from strategy import focused_items
         from morphology import keyword_records
         from sector_taxonomy import classify_sectors
         from strategic_value import evaluate_news
         ensure_keyword_index(db, lambda: joined_articles(db))
-        news = read_news(db, {'date':['all']})
+        # This projection supplies its own morphology/keyword views; avoid
+        # constructing the separate legacy discovery panel for the entire corpus.
+        news = read_news(db, {'date':['all']}, include_discovery=False)
         raw = news.pop('items')
         mappings = _record_mappings(db, [keyword_record_id(i) for i in raw])
         items = focused_items(raw)
         morph = keyword_records(db, items)
+        from document_features import cached_features, read as read_features
         projected = []
-        for original, item in zip(raw, items):
-            source = item.get('source_context') or {}
-            signature = hashlib.sha256(json.dumps([item.get(k) for k in ('title','text','excerpt','day')]+[source.get(k) for k in ('status','title','text')], ensure_ascii=False).encode()).hexdigest()
-            values = cached_read(db, 'strategy-record-v1', (revision[0] if revision else None,signature),
-                lambda: {'sectors':classify_sectors(item),'strategic_value':evaluate_news(item)}, copy_result=False) if revision else {'sectors':classify_sectors(item),'strategic_value':evaluate_news(item)}
-            rid = keyword_record_id(item)
-            projected.append(dict(item, **values, item_id=rid, strategic_keywords=morph.get(rid, []),
-                _search_text=original.get('text','').casefold(),
-                _all_keyword_ids=[r['keyword_id'] for r in mappings.get(keyword_record_id(original),[])]))
+        with cached_features(db) as feature_store:
+          for original, item in zip(raw, items):
+              source = item.get('source_context') or {}
+              signature = hashlib.sha256(json.dumps([item.get(k) for k in ('title','text','excerpt','day')]+[source.get(k) for k in ('status','title','text')], ensure_ascii=False).encode()).hexdigest()
+              stored_features=read_features(feature_store,item)
+              values = stored_features or (cached_read(db, 'strategy-record-v1', (revision[0] if revision else None,signature),
+                  lambda: {'sectors':classify_sectors(item),'strategic_value':evaluate_news(item)}, copy_result=False) if revision else {'sectors':classify_sectors(item),'strategic_value':evaluate_news(item)})
+              rid = keyword_record_id(item)
+              projected.append(dict(item, **values, item_id=rid, strategic_keywords=morph.get(rid, []),
+                  _search_text=original.get('text','').casefold(),
+                  _all_keyword_ids=[r['keyword_id'] for r in mappings.get(keyword_record_id(original),[])]))
         return _share_projection_strings({'news':news,'items':projected,'morph':morph,'revision':revision})
     return cached_read(db,'strategy-dataset-v1',revision,build,copy_result=False)
 

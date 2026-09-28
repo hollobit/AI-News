@@ -5,6 +5,7 @@ from projection_cache import cached_read, content_digest
 
 from arxiv_papers import _paper_rows, _rows, parse_arxiv_id
 from paper_analysis import analysis_input_hash, digest, validate_report
+from evidence_contracts import reviewed_payload
 
 
 def validated_paper_analysis(row, item):
@@ -20,9 +21,8 @@ def validated_paper_analysis(row, item):
     if result.get('input_hash') != row['input_hash'] or result.get('version') != item.get('metadata_version'):
         return {}
     report, audit, evidence = result.get('report'), result.get('verification'), result.get('evidence')
-    if (not isinstance(audit, dict) or audit.get('accepted') is not True or audit.get('issues') != []
-            or not isinstance(evidence, list) or not evidence or audit.get('report_hash') != digest(report)
-            or audit.get('evidence_hash') != digest(evidence)):
+    if (not isinstance(evidence, list) or not evidence
+            or not reviewed_payload(audit,report,evidence,digest,exact_issues=True)):
         return {}
     ids = set()
     for source in evidence:

@@ -13,7 +13,7 @@ def focused_items(items):
 
 def select_strategy_items(db, params, items=None, records=None, precomputed=False, registry=None, membership_only=False):
     """Use the same explainable priority and filters for display and actions."""
-    from app import read_news
+    from news_repository import read_news
     from strategy_trends import filter_lens, filter_strategic_keyword
     from strategic_value import DOMAINS, evaluate_news
     if items is None:
@@ -66,7 +66,7 @@ def select_strategy_items(db, params, items=None, records=None, precomputed=Fals
 
 def read_strategy(db, params, sources):
     """Return observed coverage and saved interpretations without fabricating insights."""
-    from app import read_news, link_groups_for
+    from news_repository import read_news, link_groups_for
     from graph_rag import load_integrated_graph
     params = dict(params)
     params.setdefault('date', ['all'])

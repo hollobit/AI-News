@@ -24,7 +24,7 @@ class CorpusStatus:
     def _build(self,key,run):
         try:
             from improvement_selection import all_corpus_items
-            from app import connect
+            from database import open_db as connect
             db=connect(self.path)
             try:
                 db.execute('BEGIN')

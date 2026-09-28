@@ -79,7 +79,7 @@ class StrategyTests(unittest.TestCase):
     def test_simulation_scope_respects_lens_and_limit(self):
         rows=[{'text':'robot','source_url':'https://example.com/a'},
               {'text':'robot','source_url':'https://example.com/b'}, {'text':'other'}]
-        with patch('app.read_news', return_value={'items':rows}):
+        with patch('news_repository.read_news', return_value={'items':rows}):
             selected=app.simulation_news(self.db, {'filters':{'lens':'physical'},'limit':1})
         self.assertEqual(len(selected),1)
         self.assertEqual(selected[0]['source_url'],'https://example.com/a')

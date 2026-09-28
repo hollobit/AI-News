@@ -56,8 +56,9 @@ async def main():
         assert await page.locator('#edges line, #edges path').count()>0
         await page.reload()
         await expect(page.locator('#detail h2')).to_have_text(context['graph_title'],timeout=30000)
+        selected_title=await page.locator('#detail .connection button').first.text_content()
         await page.locator('#detail .connection button').first.click()
-        selected_title=await page.locator('#detail h2').text_content()
+        await expect(page.locator('#detail h2')).to_have_text(selected_title,timeout=30000)
         await page.reload()
         await expect(page.locator('#detail h2')).to_have_text(selected_title)
         await page.goto(base+'observatory.html')
@@ -163,8 +164,9 @@ async def main():
         await page.locator('#mode2d').click()
         await expect(page.locator('#layer')).to_have_value('semantic')
         await expect(page.locator('#nodes g').first).to_be_visible()
+        title=(await page.locator('#node-list button').first.inner_text()).split(' · ',1)[1]
         await page.locator('#node-list button').first.click()
-        title=await page.locator('#detail h2').inner_text()
+        await expect(page.locator('#detail h2')).to_have_text(title,timeout=30000)
         await page.reload()
         await expect(page.locator('#detail h2')).to_have_text(title)
         await expect(page.locator('#color')).to_have_value('community')

@@ -12,6 +12,18 @@
 
 공개 읽기 전용 사이트: https://hollobit.github.io/AI-News/ . 뉴스·날짜별 아카이브·기본/심층 검토 분석·위험과 조건부 시나리오·논문·위키·출처 목록 및 기존 관측 지도/지식 관계 탐색을 제공합니다. 새 LLM 질문 생성·수집·설정 변경은 로컬 서버 전용입니다. 전체 공개본 생성은 `.venv/bin/python export_wiki_site.py --full-site --output .runtime/public-site`, 배포/동기화는 [PAGES_DEPLOYMENT.md](PAGES_DEPLOYMENT.md)를 참고하세요.
 
+## 리팩토링 후 구조와 운영
+
+`/`·`/strategy`는 최근 변화 읽기, `/operations`는 기본 분석·협업·누적 개선 관리 화면입니다. 기존 `#baseline`, `#workflow`, `#improvement` 직접 링크도 운영 화면으로 표시합니다. 뉴스 조회는 `news_repository.py`, DB 준비는 `database.py`, 서버 조립·종료는 `server_bootstrap.py`, HTTP 계약은 `server_http.py`로 분리했습니다. 읽기 요청은 마이그레이션·분류/키워드 색인 갱신·형태소 캐시 저장을 수행하지 않습니다. 준비되지 않은 색인은 503으로 안내하고 백그라운드에서 준비합니다.
+
+기본 분석은 `baseline_jobs.py`가 원장을 조회하고 `baseline_worker.py`가 별도 프로세스로 처리합니다. 서버 재시작은 worker를 종료하지 않습니다. 중지는 운영 화면/API의 pause 요청으로 기록하고 진행 중 문서의 체크포인트에서 적용합니다. 같은 DB의 worker 잠금과 실제 owner 확인으로 중복 실행을 막습니다. run·검토·재시도 이력은 그대로 유지합니다. 심층/논문 등 다른 작업의 기존 실행 정책은 유지합니다.
+
+분류·전략 점수는 정확한 입력 해시와 규칙 버전별로 `data/news.sqlite3.features.sqlite3`에 저장합니다. 이 파일은 재생성 가능한 계산 캐시이며 분석 검토 원장이 아닙니다. 원문 내용이나 규칙이 바뀌면 재사용하지 않습니다. 형태소의 기존 내용 해시 캐시도 유지합니다.
+
+공개본은 `site-manifest.json`과 내용 해시별 JSON을 사용합니다. 처음에는 작은 뉴스 목록과 현재 표시할 상세만 읽고, 전체 검색 색인은 검색 시, 지도는 최초 범위/선택 주변만 읽습니다. manifest는 한 탭에서 고정하며 직전 데이터 파일도 한 세대 보존합니다. `site.json`·`knowledge.json`은 이전 클라이언트와 완전성 점검을 위해 계속 생성하지만 새 첫 화면은 읽지 않습니다. 게시 파일의 허용 목록과 모듈 의존성 검증은 유지합니다.
+
+검증은 `.venv/bin/python -m pytest tests -q`, `node --test tests/*.test.cjs`를 사용합니다. `tests/ui_refactoring.py`는 실제 공개 생성본의 초기 JSON 2MiB 예산, 전체 그래프 미로딩, 로컬 읽기/운영 화면·모바일·본문 이동을 검사합니다. GitHub Actions는 프로젝트 테스트와 JavaScript 검사를 실행합니다. 구조 및 식별자/검토 계약은 [ARCHITECTURE.md](ARCHITECTURE.md), 개선 항목별 이행 범위는 [REFACTORING_GUIDE.md](REFACTORING_GUIDE.md)를 참고하세요.
+
 ## 지식 위키
 
 공개 관계 탐색은 현재 입력·독립 검토를 통과한 뉴스와 논문의 문서별 분석 전체를 연결합니다. 뉴스 문서 수, 종합 위키 페이지 수, 지도 노드 수는 서로 다릅니다. 종합 위키의 검토된 의미 관계와 90일 문서별 공동 관측(탐색 추천)을 구분하며, 전체 분석 연결이 모든 문서의 종합 위키 편찬 완료를 뜻하지는 않습니다. 신규·변경 자료는 다음 공개 스냅샷 생성에서 반영됩니다. 로컬 지식 API는 조회 지연 방지를 위해 종합 위키 범위를 유지합니다.

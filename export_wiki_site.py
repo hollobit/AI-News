@@ -53,10 +53,10 @@ def snapshot(db, include_excerpts=False):
 def export_site(db_path, output, include_excerpts=False, full_site=False):
     target = Path(output).resolve()
     marker = target/'knowledge.json'
-    allowed={'knowledge.json','index.html','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE','.nojekyll','README.md'}
+    allowed={'knowledge.json','index.html','public-data.js','workspace.js','workspace.css','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE','.nojekyll','README.md'}
     if full_site:
-        from public_site import PUBLIC_FILES
-        allowed=set(PUBLIC_FILES)
+        from public_site import published_files
+        allowed=set(published_files(target))
     if target.exists() and (any(p.is_symlink() or p.name not in allowed for p in target.iterdir()) or (any(target.iterdir()) and not marker.is_file())):
         raise ValueError('비어 있거나 이 도구가 만든 전용 출력 폴더를 사용하세요.')
     with sqlite3.connect(Path(db_path).resolve().as_uri()+'?mode=ro',uri=True,timeout=30) as db:
@@ -71,9 +71,12 @@ def export_site(db_path, output, include_excerpts=False, full_site=False):
             observed=observation(json.loads(observed_path.read_text())) if observed_path.exists() else {}
             expand(data,corpus,observed)
     target.mkdir(parents=True,exist_ok=True)
-    html=(ROOT/'static/wiki-network.html').read_text().replace('data-mode="live"','data-mode="static"')
+    from site_templates import public_html
+    html=public_html((ROOT/'static/wiki-network.html').read_text().replace('data-mode="live"','data-mode="static"'))
     (target/'index.html').write_text(html)
-    for name in ('wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE'):(target/name).write_bytes((ROOT/'static'/name).read_bytes())
+    if full_site:html=html.replace('data-mode="static"','data-mode="static" data-split="true"')
+    (target/'index.html').write_text(html)
+    for name in ('public-data.js','workspace.js','workspace.css','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE'):(target/name).write_bytes((ROOT/'static'/name).read_bytes())
     marker.write_text(json.dumps(data,ensure_ascii=False,indent=2))
     (target/'.nojekyll').write_text('')
     (target/'README.md').write_text('# 읽기 전용 지식 위키\n\n이 폴더만 Pages 전용 저장소에 게시합니다. 데이터는 게시 시점의 스냅샷입니다.\nDB·환경 설정·원격 인증 파일을 추가하지 마세요.\n')
@@ -81,6 +84,8 @@ def export_site(db_path, output, include_excerpts=False, full_site=False):
         from public_site import write_site
         (target/'knowledge.html').write_text(html.replace('<body>','<body><nav style="padding:12px"><a href="index.html">← 전체 메뉴 · 뉴스 분석</a> · <a href="observatory.html">관측 지도</a> · <a href="index.html?view=papers">논문</a></nav>').replace('</body>','<script src="public-navigation.js"></script></body>'))
         write_site(db_path,target,ROOT,data['exported_at'],data=corpus)
+        from public_data import write_data
+        write_data(target,corpus,data,json.loads((target/'observatory-14-default.json').read_text()))
     return dict(output=str(target),pages=len(data['pages']),nodes=len(data['nodes']),sources=data['coverage']['cited_sources'],raw_excerpts=include_excerpts)
 
 

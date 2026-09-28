@@ -191,17 +191,22 @@ def item_text(item):
 def keyword_records(db, items):
     """Cache linguistic results by content, not by article identity or current date."""
     from keyword_index import keyword_record_id
-    db.execute('CREATE TABLE IF NOT EXISTS morphology_cache (content_hash TEXT PRIMARY KEY, keywords_json TEXT NOT NULL)')
+    from projection_cache import is_read_projection
+    read_only = is_read_projection()
+    if not read_only:
+        db.execute('CREATE TABLE IF NOT EXISTS morphology_cache (content_hash TEXT PRIMARY KEY, keywords_json TEXT NOT NULL)')
+    has_cache = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='morphology_cache'").fetchone() is not None
     prepared = [(item, item_text(item)) for item in items]
     prepared = [(item, text, hashlib.sha256((ENGINE_VERSION+'\0'+text).encode()).hexdigest()) for item,text in prepared]
     fingerprints = list(dict.fromkeys(key for _,_,key in prepared))
     cached = {}
-    for start in range(0, len(fingerprints), 400):
+    for start in range(0, len(fingerprints) if has_cache else 0, 400):
         keys = fingerprints[start:start+400]
         cached.update(db.execute('SELECT content_hash,keywords_json FROM morphology_cache WHERE content_hash IN ('+','.join('?' for _ in keys)+')', keys))
     # Preserve the prior transaction boundary: expensive Kiwi work must not
     # keep a caller's SQLite writer lock alive.
-    db.commit()
+    if not read_only:
+        db.commit()
     pending = []
     records = {}
     for item, text, fingerprint in prepared:
@@ -212,7 +217,7 @@ def keyword_records(db, items):
         # The schema has scalar values plus one POS list. Copy that list too;
         # callers cannot mutate shared cache entries, without generic deepcopy.
         records[keyword_record_id(item)] = [dict(term, pos=list(term['pos'])) for term in value]
-    if pending:
+    if pending and not read_only:
         db.executemany('INSERT OR REPLACE INTO morphology_cache VALUES (?,?)', pending)
         db.commit()
     return records

@@ -8,11 +8,15 @@
   function safe(url) { try { const u = new URL(url, location.origin); return ['http:', 'https:'].includes(u.protocol) ? u.href : ''; } catch (_) { return ''; } }
   function link(text, url, cls = 'text-link') { const a = node('a', cls, text); a.href = safe(url) || '#'; if (a.href.startsWith('http') && !a.href.startsWith(location.origin + '/')) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } return a; }
   function notify(text, error = false) { $('#notice').hidden = false; $('#notice').className = 'notice' + (error ? ' error' : ''); $('#notice').textContent = text; }
-  const responseCache=new Map(),pollers=new Map();
-  async function api(url,body,signal){const cached=responseCache.get(url);const headers=body===undefined?{}:{'Content-Type':'application/json'};if(body===undefined&&cached?.etag)headers['If-None-Match']=cached.etag;const response=await fetch(url,{method:body===undefined?'GET':'POST',headers,body:body===undefined?undefined:JSON.stringify(body),signal});if(response.status===304&&cached)return cached.data;const data=await response.json();if(!response.ok)throw new Error(data.error||`요청 실패 (${response.status})`);if(body===undefined){responseCache.set(url,{etag:response.headers.get('ETag'),data});if(responseCache.size>40)responseCache.delete(responseCache.keys().next().value);}return data;}
-  function scheduleStatus(name,fn,delay=5000){const old=pollers.get(name);if(old)clearTimeout(old.timer);const entry={fn,delay};pollers.set(name,entry);if(!document.hidden)entry.timer=setTimeout(fn,delay);}
-  function stopStatus(name){clearTimeout(pollers.get(name)?.timer);pollers.delete(name);}
-  document.addEventListener('visibilitychange',()=>{for(const entry of pollers.values()){clearTimeout(entry.timer);if(!document.hidden)entry.timer=setTimeout(entry.fn,0);}});
+  const responseCache=new Map();
+  const statusPoller=Workspace.poller(error=>notify(error.message,true));
+  const api=(url,body,signal)=>Workspace.request(url,{body,signal,cache:responseCache});
+  const scheduleStatus=(name,fn,delay=5000)=>statusPoller.schedule(name,fn,delay);
+  const stopStatus=name=>statusPoller.stop(name);
+  const operationsMode=location.pathname==='/operations'||['baseline','workflow','improvement'].includes(location.hash.slice(1));
+  document.documentElement.dataset.workspace=operationsMode?'operations':'reading';
+  if(operationsMode){document.title='수집·분석 운영 · 하루 뉴스';$('#overview h1').textContent='수집·분석 운영';}
+
 
   async function loadCorpusStatus(){
     try{const data=await api('/api/corpus/status');if(data.status==='ready'){
@@ -258,7 +262,7 @@
   }
   async function ask(){const button=$('#ask-button');if(button.disabled)return;await action(button,async()=>{
     const controller=new AbortController(),started=Date.now();let timedOut=false;
-    const timeout=setTimeout(()=>{timedOut=true;controller.abort();},210000);
+    const timeout=setTimeout(()=>{timedOut=true;controller.abort();},Workspace.questionTimeout);
     const ticker=setInterval(()=>{button.textContent=`답변 작성 중 · ${Math.floor((Date.now()-started)/1000)}초`;},1000);
     $('#answer').textContent='저장된 근거를 검색하고 답변을 검토하고 있습니다…';
     try{const first=await api('/api/graph/ask',{question:$('#question').value,node_ids:state.selectedNodes},controller.signal);renderGraphAnswer(first);
@@ -389,5 +393,5 @@
 
   $('#workflow-details').addEventListener('click',()=>{if(activeWorkflow)loadWorkflow(activeWorkflow.id,true);});$('#improvement-details').addEventListener('click',()=>{if(activeImprovement)loadImprovement(activeImprovement.id,true);});
   async function loadStrategicChanges(){const area=$('#strategic-change-list');try{const data=await api('/api/intelligence?view=overview&page_size=8');area.replaceChildren();const changes=(data.changes||data.items||[]).slice(0,8);if(!changes.length)area.append(node('p','subtle','아직 우선 변화가 없습니다. 사건·주제별 검토 상태는 전략 검토실에서 확인하세요.'));changes.forEach(item=>{const row=node('div','strategic-change-row');row.append(link(item.title||item.label||'전략 변화',item.href||'/intelligence'),node('span','subtle',item.summary||item.description||''));area.append(row);});}catch(error){area.replaceChildren(node('p','subtle','전략 변화 조회: '+error.message));}}
-  loadCorpusStatus();loadChannelStatus();renderLensTabs();renderWatches();load();loadOverview();runtime();loadWorkflow();loadImprovement();loadBaseline();function observeSection(selector,loadSection){if(!('IntersectionObserver' in window)){loadSection();return;}const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){observer.disconnect();loadSection();}},{rootMargin:'250px'});observer.observe($(selector));}observeSection('#network',loadGraphPreview);observeSection('#risk-observatory',loadRisks);observeSection('#strategic-changes',loadStrategicChanges);
+  loadCorpusStatus();loadChannelStatus();renderLensTabs();renderWatches();if(operationsMode){runtime();loadWorkflow();loadImprovement();loadBaseline();}else{load();loadOverview();}function observeSection(selector,loadSection){if(!('IntersectionObserver' in window)){loadSection();return;}const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){observer.disconnect();loadSection();}},{rootMargin:'250px'});observer.observe($(selector));}if(!operationsMode){observeSection('#network',loadGraphPreview);observeSection('#risk-observatory',loadRisks);observeSection('#strategic-changes',loadStrategicChanges);}
 })();

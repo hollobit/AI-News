@@ -1,5 +1,13 @@
 # 작업 이력
 
+## 2026-09-29 — 사이트 구조·공개 로딩·독립 기본 worker
+
+- 공개 화면의 전체 site/knowledge 동시 로딩을 manifest와 화면별 불변 파일로 나눴다. 완전한 검색 색인·뉴스 상세·지도 최초 범위/인접 관계·딥링크를 보존한다. 실제 첫 JSON은 1,918,027 bytes(1.83MiB), 전체 그래프 요청 0이다. 공개 필드 제한·원문 제외·직전 데이터 세대 보존·원자 게시를 유지한다.
+- `database.py`, `news_repository.py`, `server_bootstrap.py`, `server_http.py`로 준비/읽기/서비스 조립/HTTP 경계를 분리했다. 요청 중 projection schema/keyword refresh/morphology persistence를 차단하고 준비 지연을 503으로 안내한다. 기존 URL·상태·Host/Origin·body 제한·ETag를 보존했다.
+- 기본 분석은 detached worker와 DB별 lease로 분리했다. durable pause 이벤트·기존 원장·내용 검토 이력을 유지한다. 실제 서버 재시작에서도 같은 run/worker PID 71373이 생존하고 verified 7,610→7,626으로 증가했다. 전수 분석 완료가 아니다.
+- 읽기 대시보드와 `/operations`를 분리하고 공통 JSON 요청/ETag/취소·polling/상태·본문 이동/focus 자산을 추가했다. 내용/규칙 해시별 분류·전략 점수를 별도 계산 DB에 저장한다. 기본/논문 검토 무결성 공통 helper와 export ID 충돌/관계 끝점 검사를 추가했다.
+- 632개 Python 테스트·56 subtest, JavaScript 계약 4개, 공개 12메뉴/전체 검색/딥링크/기간·확장/모바일, 로컬 운영/읽기·키보드·모바일 검증 통과. CI와 실행/계약 문서를 추가했다. 상세 범위와 아직 달성하지 않은 성능·추가 모듈화 목표는 REFACTORING_GUIDE.md에 남겼다.
+
 ## 2026-09-29 — 선택한 기본 재개·자동 복구·지도/GraphRAG 성능
 
 - 엔진 소규모 확인 뒤 기존 기본 run `7ef95c61617d4cb6bec2be842fc71b5f`를 같은 체크포인트로 재개했다. 서버 배포는 worker 완료와 owner 해제 후 정상 종료 방식으로 수행하며 수집기 PID 43236은 유지한다. 기존 7,871건 대상과 현재 Telegram 고유 7,900건을 구분하고 전수 완료로 표시하지 않는다.

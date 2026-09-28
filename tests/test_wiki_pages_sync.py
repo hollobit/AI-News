@@ -9,7 +9,7 @@ def test_fingerprint_ignores_only_export_time():
     assert publish.fingerprint(a)!=publish.fingerprint({**b,'index.html':'changed'})
 
 def test_new_branch_has_no_master_parent(tmp_path,monkeypatch):
-    for name in publish.FILES:(tmp_path/name).write_text('{}' if name=='knowledge.json' else '')
+    for name in publish.FILES:(tmp_path/name).write_text('{}' if name.endswith('.json') else '')
     monkeypatch.setattr(publish,'export_site',lambda *args,**kwargs:{})
     calls=[]
     def api(path,method='GET',body=None):

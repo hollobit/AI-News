@@ -18,7 +18,7 @@
 
   function stopPolling(){if(state.timer)clearTimeout(state.timer);state.timer=null;if(state.controller)state.controller.abort();state.controller=null;}
   function apiError(response,data,fallback){const message=data&&typeof data.error==='string'?data.error:fallback;const error=new Error(message);error.status=response.status;return error;}
-  async function request(url, options={}){const response=await fetch(url,options);let data={};try{data=await response.json();}catch{}if(!response.ok)throw apiError(response,data,'요청을 처리하지 못했습니다.');return data;}
+  async function request(url,options={}){return Workspace.request(url,{signal:options.signal,body:options.body===undefined?undefined:JSON.parse(options.body)});}
   function updateUrl(runId,documentId='',replace=true){const url=new URL(location.href);if(runId)url.searchParams.set('run',runId);else url.searchParams.delete('run');if(documentId)url.searchParams.set('document',documentId);else url.searchParams.delete('document');url.hash=documentId?'documents':'';history[replace?'replaceState':'pushState']({},'',url);}
   function currentActive(){return state.runs.some(run=>ACTIVE.has(run.status));}
   function updateStart(){els.start.disabled=!state.enabled||currentActive()||state.posting;els.start.textContent=state.posting?'분석 스냅샷 만드는 중':currentActive()?'종합 분석 진행 중':'수집 완료 · 종합 분석';els.start.title=!state.enabled?'종합 분석 서비스가 비활성화되어 있습니다.':currentActive()?'현재 분석이 끝난 뒤 새 스냅샷을 만들 수 있습니다.':'';}
