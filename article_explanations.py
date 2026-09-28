@@ -134,16 +134,19 @@ checks에 각 index를 정확히 한 번 반환한다.\n'''+json.dumps({'stateme
 
 
 class ArticleExplanations:
-    def __init__(self,path,observatory,reader=None,generator=None):
+    def __init__(self,path,observatory,reader=None,generator=None,start_worker=True):
         self.path=str(path);self.observatory=observatory;self.reader=reader;self.generator=generator or generate
-        self.lock=threading.RLock();self.pool=ThreadPoolExecutor(max_workers=1,thread_name_prefix='article-explanations')
+        self.lock=threading.RLock();self.pool=ThreadPoolExecutor(max_workers=1,thread_name_prefix='article-explanations') if start_worker else None
         with self.db() as db:
             init_store(db)
             db.execute('CREATE TABLE IF NOT EXISTS article_explanations(id TEXT PRIMARY KEY,url TEXT UNIQUE,status TEXT,result TEXT,error TEXT,updated_at TEXT,owner INTEGER)')
             rows=db.execute("SELECT id,owner FROM article_explanations WHERE status IN ('queued','reading','analyzing','reviewing')").fetchall()
             for row in rows:
+                if not row['owner']:continue
                 try:os.kill(row['owner'],0)
-                except ProcessLookupError:db.execute("UPDATE article_explanations SET status='interrupted',error='서버 중단: 다시 생성할 수 있습니다.' WHERE id=?",(row['id'],))
+                except ProcessLookupError:
+                    if start_worker:db.execute("UPDATE article_explanations SET status='interrupted',error='서버 중단: 다시 생성할 수 있습니다.' WHERE id=?",(row['id'],))
+                    else:db.execute("UPDATE article_explanations SET status='queued',owner=NULL WHERE id=?",(row['id'],))
 
     def db(self):
         db=sqlite3.connect(self.path,timeout=10);db.row_factory=sqlite3.Row;return db
@@ -179,8 +182,8 @@ class ArticleExplanations:
                 count=db.execute("SELECT count(*) FROM article_explanations WHERE status IN ('queued','reading','analyzing','reviewing')").fetchone()[0]
                 if count>=20:raise RuntimeError('해설 대기열이 가득 찼습니다. 잠시 후 요청해 주세요.')
                 identity=current.get('id') or uuid.uuid4().hex
-                db.execute("INSERT INTO article_explanations VALUES (?,?,'queued',NULL,'',?,?) ON CONFLICT(url) DO UPDATE SET status='queued',result=NULL,error='',updated_at=excluded.updated_at,owner=excluded.owner",(identity,url,now(),os.getpid()))
-            self.pool.submit(self._run,url)
+                db.execute("INSERT INTO article_explanations VALUES (?,?,'queued',NULL,'',?,?) ON CONFLICT(url) DO UPDATE SET status='queued',result=NULL,error='',updated_at=excluded.updated_at,owner=excluded.owner",(identity,url,now(),os.getpid() if self.pool else None))
+            if self.pool:self.pool.submit(self._run,url)
             return self.get(url)
 
     def _update(self,url,status,result=None,error=''):
@@ -223,4 +226,5 @@ class ArticleExplanations:
         finally:
             if source:source.close()
 
-    def close(self):self.pool.shutdown(wait=False,cancel_futures=True)
+    def close(self):
+        if self.pool:self.pool.shutdown(wait=False,cancel_futures=True)

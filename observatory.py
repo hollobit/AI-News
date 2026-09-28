@@ -186,17 +186,40 @@ def read_observatory(db, window=14, expanded=False):
         def match_memberships():
             earliest=(end-timedelta(days=179)).isoformat()
             corpus=[i for i in data['items'] if earliest<=i.get('day','')<=days[-1]]
-            entries={t['id']:t for t in registry};postings=defaultdict(list)
-            for item in corpus:
-                for kid in {t['id'] for t in data['morph'].get(keyword_record_id(item),[])}:
-                    postings[kid].append(item)
-            output={}
-            for topic in candidate_topics:
-                entry=entries.get(topic['id'],{});kid=(entry.get('metadata') or {}).get('keyword_id') or entry.get('keyword_id')
-                automatic=topic['id'].startswith(('dynamic:','dynamic-signal:')) and entry.get('origin')!='manual'
-                candidates=postings.get(kid,[]) if automatic and kid else corpus
-                found=select_strategy_items(db,{'lens':[topic['id']]},candidates,data['morph'],precomputed=True,registry=registry,membership_only=True)
-                output[topic['id']]={(document_id(i),i['day']) for i in found}
+            from projection_store import document_rows, rules_digest
+            rules = rules_digest(('strategy.py','strategy_trends.py','dynamic_strategy.py',
+                'dynamic_topics.py','monitoring_groups.py','observatory.py','strategy_monitoring.py','sector_taxonomy.py','dynamic_registry.py'))
+            topic_ids = tuple(t['id'] for t in candidate_topics)
+            originals = {keyword_record_id(i): i for i in corpus}
+            # Hash shared registry/policy once, rather than serializing the full
+            # topic registry again for every document.
+            policy = content_digest([rules, registry, topic_ids])
+            inputs = {rid: [policy, item, data['morph'].get(rid, [])]
+                      for rid, item in originals.items()}
+            def compute(missing):
+                changed = [originals[rid] for rid in missing]
+                entries = {t['id']: t for t in registry}
+                postings = defaultdict(list)
+                for item in changed:
+                    for kid in {t['id'] for t in data['morph'].get(keyword_record_id(item), [])}:
+                        postings[kid].append(item)
+                rows = {rid: {'topics': []} for rid in missing}
+                for topic in candidate_topics:
+                    entry = entries.get(topic['id'], {})
+                    kid = (entry.get('metadata') or {}).get('keyword_id') or entry.get('keyword_id')
+                    automatic = topic['id'].startswith(('dynamic:', 'dynamic-signal:')) and entry.get('origin') != 'manual'
+                    candidates = postings.get(kid, []) if automatic and kid else changed
+                    found = select_strategy_items(db, {'lens': [topic['id']]}, candidates,
+                        data['morph'], precomputed=True, registry=registry, membership_only=True)
+                    for item in found:
+                        rows[keyword_record_id(item)]['topics'].append(topic['id'])
+                return rows
+            rows = document_rows(db, 'observatory-memberships-v2', inputs, compute)
+            output = {identity: set() for identity in topic_ids}
+            for rid, row in rows.items():
+                item = originals[rid]
+                for identity in row['topics']:
+                    output[identity].add((document_id(item), item['day']))
             return output
         membership_key=(revision,registry_version,end.isoformat(),tuple(t['id'] for t in candidate_topics)) if revision else None
         memberships=cached_read(db,'observatory-memberships-v1',membership_key,match_memberships,copy_result=False)

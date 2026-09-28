@@ -4,8 +4,16 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import time
 
 MANIFEST = 'site-manifest.json'
+RETENTION_FILE = '.public-data-retention.json'
+
+def retention_path(root):
+    root = Path(root).resolve()
+    return root.with_name(root.name + RETENTION_FILE)
+RETENTION_SECONDS = 24 * 60 * 60
+
 DATA_NAME = re.compile(r'public-data-[0-9a-f]{64}\.json\Z')
 
 
@@ -27,12 +35,16 @@ def data_files(root):
         return ()
     manifest = json.loads(path.read_text())
     names = manifest.get('files', []) + manifest.get('previous_files', [])
+    ledger = retention_path(root)
+    generations = json.loads(ledger.read_text()) if ledger.exists() else manifest.get('retained_generations', [])
+    for generation in generations:
+        names += generation['files']
     if not isinstance(names, list) or any(not isinstance(n, str) or not DATA_NAME.fullmatch(n) for n in names):
         raise ValueError('Invalid public data manifest')
     return tuple(sorted(set(names)))
 
 
-def write_data(root, corpus, graph, observatory=None):
+def write_data(root, corpus, graph, observatory=None, *, now=None):
     news_ids = [row['id'] for row in corpus['news']]
     node_ids = [row['id'] for row in graph['nodes']]
     edge_ids = [row['id'] for row in graph['edges']]
@@ -42,7 +54,12 @@ def write_data(root, corpus, graph, observatory=None):
     if any(edge['source'] not in nodes or edge['target'] not in nodes for edge in graph['edges']):
         raise ValueError('Missing public graph endpoint')
     root = Path(root)
-    previous = json.loads((root / MANIFEST).read_text()).get('files', []) if (root / MANIFEST).exists() else []
+    stamp = time.time() if now is None else now
+    old = json.loads((root / MANIFEST).read_text()) if (root / MANIFEST).exists() else {}
+    previous = old.get('files', [])
+    ledger = retention_path(root)
+    generations = json.loads(ledger.read_text()) if ledger.exists() else old.get('retained_generations', [])
+    retained = [g for g in generations if g['expires_at'] > stamp]
     files = set()
 
     def put(value):
@@ -76,7 +93,15 @@ def write_data(root, corpus, graph, observatory=None):
             edge_groups[key].append(e)
     for position, n in enumerate(graph['nodes']):
         node_groups[bucket(n['id'])].append(dict(n, _order=position))
-    graph_parts = {key: put({'nodes': rows, 'edges': edge_groups[key]}) for key, rows in node_groups.items()}
+    order = {n['id']: i for i, n in enumerate(graph['nodes'])}
+    graph_parts = {}
+    for key, rows in node_groups.items():
+        # Compact endpoint labels/order let the client choose a page before
+        # hydrating neighbors. Full analyses remain in each node's own shard.
+        endpoints = {e[k] for e in edge_groups[key] for k in ('source', 'target')}
+        neighbors = {sid: dict(id=sid, title=nodes[sid]['title'], type=nodes[sid].get('type'),
+                              _order=order[sid]) for sid in endpoints}
+        graph_parts[key] = put({'nodes': rows, 'edges': edge_groups[key], 'neighbors': neighbors})
     meta = {k: v for k, v in graph.items() if k not in ('nodes', 'edges', 'pages', 'exported_at')}
     ordered = graph['nodes'][:500]
     ids = {n['id'] for n in ordered}
@@ -97,7 +122,16 @@ def write_data(root, corpus, graph, observatory=None):
     observed['nodes'] = [{k: v for k, v in n.items() if k != 'document_ids_by_day'} for n in observed.get('nodes', [])]
     manifest['observatory'] = put(observed)
     manifest['version'] = hashlib.sha256(encoded({k: v for k, v in manifest.items() if k != 'exported_at'})).hexdigest()
-    manifest.update(files=sorted(files), previous_files=sorted(set(previous) - files))
+    if old.get('version') and old['version'] != manifest['version']:
+        retained.append(dict(version=old['version'], expires_at=stamp + RETENTION_SECONDS, files=previous))
+    # Retention bookkeeping does not change the immutable content generation.
+    manifest.update(files=sorted(files), previous_files=sorted(set(previous) - files),
+                    retention_seconds=RETENTION_SECONDS)
+    # The retention ledger is local exporter bookkeeping, not a browser payload.
+    # published_files resolves its hashes but never publishes this ledger.
+    ledger_tmp = ledger.with_suffix('.tmp')
+    ledger_tmp.write_bytes(encoded(retained))
+    ledger_tmp.replace(ledger)
     temporary = root / (MANIFEST + '.tmp')
     temporary.write_bytes(encoded(manifest))
     temporary.replace(root / MANIFEST)

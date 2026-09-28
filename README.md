@@ -1,5 +1,7 @@
 # AI 전략 관측소 · 하루 뉴스
 
+상태 조회는 일시 통신 오류 후 자동 복구하며, 공개 그래프는 필터·표시 한도에 필요한 조각만 읽습니다. 공개 자료 세대는 최근 24시간 보존하고 오래 열린 탭은 검색 조건을 유지해 새 판으로 복구합니다. 문서별 전략 투영·관측 소속은 입력/규칙 해시로 증분 재사용합니다. 논문·위키·기사 해설은 별도 background worker가 실행하며 `/api/runtime/workers`에서 로컬 생존 상태를 확인합니다. HTTP 재시작은 이 worker 종료 요청이 아닙니다. 상세 구조와 잔여 성능 비용은 [ARCHITECTURE.md](ARCHITECTURE.md), 검증 범위는 [Plans.md](Plans.md)를 참고하세요.
+
 ## Telegram 정기 수집·기본 분석 스킬
 
 `skills/news-telegram-collect`는 이 프로젝트의 수집·기본 분석 스킬입니다. 개인 스킬 경로 `~/.codex/skills/news-telegram-collect`에도 설치할 수 있으며 `$news-telegram-collect`로 호출합니다. 실제 Telegram 수집기는 기존 감독기에서 약 30초 간격으로 신규 업데이트를 확인합니다.

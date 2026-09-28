@@ -27,9 +27,10 @@ jobs:
           done
           node --test tests/*.test.cjs
 
-      - name: Deterministic dashboard browser regression
+      - name: Deterministic browser regressions
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.runtime/browsers
         run: |
           python -m playwright install --with-deps chromium
           python tests/ui_dashboard_search.py
+          python tests/ui_followup.py

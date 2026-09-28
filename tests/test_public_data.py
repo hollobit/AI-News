@@ -51,3 +51,27 @@ def test_duplicate_ids_and_missing_graph_endpoints_are_rejected(tmp_path):
     corpus['news'].pop()
     graph['edges'][0]['target'] = 'missing'
     with pytest.raises(ValueError, match='endpoint'): write_data(tmp_path, corpus, graph)
+
+
+def test_multiple_generations_survive_a_day_then_expire(tmp_path):
+    corpus, graph = fixtures()
+    a = write_data(tmp_path, corpus, graph, now=1000)
+    old_part = a['news']['parts']['0']
+    for minute in (1, 2, 3):
+        corpus['news'][0]['analyses'][0]['text'] = str(minute)
+        current = write_data(tmp_path, corpus, graph, now=1000 + 60 * minute)
+    assert old_part in data_files(tmp_path)
+    assert (tmp_path / old_part).exists()
+    corpus['news'][0]['analyses'][0]['text'] = 'next day'
+    current = write_data(tmp_path, corpus, graph, now=1000 + 86400 + 200)
+    assert old_part not in data_files(tmp_path)
+    assert not (tmp_path / old_part).exists()
+
+
+def test_neighbor_labels_and_order_allow_paging_before_hydration(tmp_path):
+    corpus, graph = fixtures()
+    m = write_data(tmp_path, corpus, graph)
+    part = json.loads((tmp_path / m['graph']['parts'][bucket('source:news:0')]).read_text())
+    neighbor = part['neighbors']['source:news:200']
+    assert neighbor == dict(id='source:news:200', title='News 200', type='source', _order=200)
+    assert 'analyses' not in neighbor

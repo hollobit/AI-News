@@ -1,7 +1,7 @@
 /* Shared request and lifecycle primitives; POST requests are never retried. */
 (() => {
   'use strict';
-  async function request(url, { body, signal, timeout, cache } = {}) {
+  async function request(url, { body, signal, timeout = 90000, cache } = {}) {
     const cached = body === undefined ? cache?.get(url) : null;
     const headers = body === undefined ? {} : { 'Content-Type': 'application/json' };
     if (cached?.etag) headers['If-None-Match'] = cached.etag;
@@ -42,28 +42,29 @@
   function poller(onError = () => {}) {
     const tasks = new Map(),
       running = new Set();
-    let closed = false;
+    let closed = false,
+      suspended = false;
+    const retryable = (error) =>
+      !error.status || error.status === 408 || error.status === 429 || error.status >= 500;
+    const delayFor = (task) => Math.min(60000, task.delay * 2 ** Math.min(task.failures, 5));
+    function arm(name, task, delay) {
+      clearTimeout(task.timer);
+      if (!closed && !suspended && !document.hidden)
+        task.timer = setTimeout(() => run(name, task), delay);
+    }
     async function run(name, task) {
-      if (closed || document.hidden || running.has(name) || tasks.get(name) !== task) return;
+      if (closed || suspended || document.hidden || running.has(name) || tasks.get(name) !== task)
+        return;
       running.add(name);
       try {
         await task.fn();
-        task.failures = 0;
       } catch (error) {
-        task.failures++;
         onError(error);
-        if (tasks.get(name) === task)
-          task.timer = setTimeout(
-            () => run(name, task),
-            Math.min(60000, task.delay * 2 ** Math.min(task.failures, 5))
-          );
+        if (tasks.get(name) === task) retry(name, task.fn, error, task.delay);
       } finally {
         running.delete(name);
         const next = tasks.get(name);
-        if (next && next !== task && !closed && !document.hidden) {
-          clearTimeout(next.timer);
-          next.timer = setTimeout(() => run(name, next), next.delay);
-        }
+        if (next && next !== task) arm(name, next, delayFor(next));
       }
     }
     function stop(name) {
@@ -72,14 +73,23 @@
     }
     function schedule(name, fn, delay = 5000) {
       stop(name);
+      if (closed) return;
       const task = { fn, delay, failures: 0 };
       tasks.set(name, task);
-      if (!closed && !document.hidden) task.timer = setTimeout(() => run(name, task), delay);
+      arm(name, task, delay);
+    }
+    function retry(name, fn, error, delay = 5000) {
+      const failures = (tasks.get(name)?.failures || 0) + 1;
+      stop(name);
+      if (closed || !retryable(error)) return;
+      const task = { fn, delay, failures };
+      tasks.set(name, task);
+      arm(name, task, delayFor(task));
     }
     function visibility() {
       for (const [name, task] of tasks) {
         clearTimeout(task.timer);
-        if (!document.hidden) task.timer = setTimeout(() => run(name, task), 0);
+        arm(name, task, task.failures ? delayFor(task) : 0);
       }
     }
     document.addEventListener('visibilitychange', visibility);
@@ -87,9 +97,23 @@
       closed = true;
       for (const name of tasks.keys()) stop(name);
       document.removeEventListener('visibilitychange', visibility);
+      removeEventListener('pagehide', pagehide);
+      removeEventListener('pageshow', pageshow);
     }
-    addEventListener('pagehide', close, { once: true });
-    return { schedule, stop, close };
+    function pagehide(event) {
+      if (!event.persisted) return close();
+      suspended = true;
+      for (const task of tasks.values()) clearTimeout(task.timer);
+    }
+    function pageshow(event) {
+      if (event.persisted) {
+        suspended = false;
+        visibility();
+      }
+    }
+    addEventListener('pagehide', pagehide);
+    addEventListener('pageshow', pageshow);
+    return { schedule, retry, stop, close };
   }
   function safeURL(value, base = location.origin) {
     try {

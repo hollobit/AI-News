@@ -1,48 +1,110 @@
-/* Load one immutable generation; data shards contain sanitized public fields. */
+/* Read a coherent immutable generation, recover expired shards, bound memory. */
 (() => {
   'use strict';
-  const pending = new Map();
-  let manifestPromise;
-  const newsParts = new Map();
+  const inFlight = new Map(),
+    cache = new Map();
+  const maxBytes = 24 * 1024 * 1024,
+    maxEntries = 48;
+  let cacheBytes = 0,
+    manifestPromise,
+    current,
+    refreshPromise;
+  function remember(path, value) {
+    const bytes = new TextEncoder().encode(JSON.stringify(value)).byteLength;
+    if (bytes > maxBytes) return;
+    cache.set(path, { value, bytes });
+    cacheBytes += bytes;
+    while (cache.size > maxEntries || cacheBytes > maxBytes) {
+      const key = cache.keys().next().value;
+      cacheBytes -= cache.get(key).bytes;
+      cache.delete(key);
+    }
+  }
   async function json(path) {
-    if (!pending.has(path))
-      pending.set(
-        path,
-        (async () => {
-          const response = await fetch(path);
-          if (!response.ok) throw Error('공개 자료 조회 실패 · ' + response.status);
-          return response.json();
-        })().catch((error) => {
-          pending.delete(path);
+    if (cache.has(path)) {
+      const entry = cache.get(path);
+      cache.delete(path);
+      cache.set(path, entry);
+      return entry.value;
+    }
+    if (!inFlight.has(path)) {
+      const request = (async () => {
+        const response = await fetch(path);
+        if (!response.ok) {
+          const error = Error('공개 자료 조회 실패 · ' + response.status);
+          error.status = response.status;
+          error.path = path;
           throw error;
-        })
-      );
-    return pending.get(path);
+        }
+        const value = await response.json();
+        remember(path, value);
+        return value;
+      })().finally(() => inFlight.delete(path));
+      inFlight.set(path, request);
+    }
+    return inFlight.get(path);
+  }
+  async function readManifest() {
+    const response = await fetch('site-manifest.json', { cache: 'no-store' });
+    if (!response.ok) throw Error('공개 자료 목록 조회 실패 · ' + response.status);
+    const value = await response.json();
+    if (value.schema_version !== 1) throw Error('공개 데이터 형식을 확인해 주세요.');
+    const changed = current && current.version !== value.version;
+    current = value;
+    if (changed && typeof dispatchEvent === 'function')
+      dispatchEvent(new CustomEvent('public-data-updated'));
+    return value;
   }
   async function manifest() {
     if (!manifestPromise)
-      manifestPromise = json('site-manifest.json')
-        .then((value) => {
-          if (value.schema_version !== 1) throw Error('공개 데이터 형식을 확인해 주세요.');
-          return value;
-        })
-        .catch((error) => {
-          manifestPromise = null;
-          throw error;
-        });
+      manifestPromise = readManifest().catch((error) => {
+        manifestPromise = null;
+        throw error;
+      });
     return manifestPromise;
   }
-  async function bucket(id) {
+  async function refresh() {
+    if (!refreshPromise)
+      refreshPromise = readManifest()
+        .then((value) => {
+          manifestPromise = Promise.resolve(value);
+          return value;
+        })
+        .finally(() => {
+          refreshPromise = null;
+        });
+    return refreshPromise;
+  }
+  async function generation(fn) {
+    let m = await manifest();
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const value = await fn(m);
+        if (current.version === m.version) return value;
+        m = current;
+      } catch (error) {
+        if (
+          attempt ||
+          ![404, 410].includes(error.status) ||
+          !/^public-data-[a-f0-9]{64}\.json$/.test(error.path || '')
+        )
+          throw error;
+        const next = await refresh();
+        if (next.version === m.version) throw error;
+        m = next;
+      }
+    }
+    throw Error('공개 자료가 갱신되었습니다. 다시 조회해 주세요.');
+  }
+  function bucket(id) {
     let value = 2166136261;
     for (const byte of new TextEncoder().encode(id))
       value = Math.imul(value ^ byte, 16777619) >>> 0;
     return (value & 255).toString(16).padStart(2, '0');
   }
-  async function news() {
-    const m = await manifest();
-    return (await json(m.news.index)).map(([id, title, day, topic, url, count, part]) => {
-      newsParts.set(id, part);
-      return {
+  function news() {
+    return generation(async (m) =>
+      (await json(m.news.index)).map(([id, title, day, topic, url, count]) => ({
         id,
         title,
         day,
@@ -50,59 +112,61 @@
         url,
         analyses: Array.from({ length: count }, () => ({})),
         _compact: true,
-      };
+      }))
+    );
+  }
+  function articles(ids) {
+    return generation(async (m) => {
+      const index = await json(m.news.index),
+        wanted = new Set(ids);
+      const keys = [...new Set(index.filter((row) => wanted.has(row[0])).map((row) => row[6]))];
+      const rows = (await Promise.all(keys.map((key) => json(m.news.parts[key])))).flat();
+      return rows.filter((row) => wanted.has(row.id));
     });
   }
-  async function articles(ids) {
-    const m = await manifest();
-    if (!newsParts.size) await news();
-    const keys = ids.map((id) => newsParts.get(id));
-    const rows = (
-      await Promise.all(
-        [...new Set(keys)].map((key) => (m.news.parts[key] ? json(m.news.parts[key]) : []))
-      )
-    ).flat();
-    const wanted = new Set(ids);
-    return rows.filter((row) => wanted.has(row.id));
+  function searchNews() {
+    return generation((m) => json(m.news.search));
   }
-  async function searchNews() {
-    const m = await manifest();
-    return json(m.news.search);
-  }
-  async function section(name) {
-    const m = await manifest();
+  function section(name) {
     if (!['papers', 'risks', 'risk_graph', 'wiki', 'observatory'].includes(name))
       throw Error('알 수 없는 공개 자료');
-    return json(m[name]);
+    return generation((m) => json(m[name]));
   }
-  async function graphView({
-    id = '',
-    q = '',
-    layer = 'all',
-    limit = 100,
-    articleId = '',
-    sourceUrl = '',
-    paperId = '',
-  }) {
-    const m = await manifest(),
-      g = m.graph;
+  function graphView(options = {}) {
+    return generation((m) => graph(m, options));
+  }
+  async function graph(
+    m,
+    { id = '', q = '', layer = 'all', limit = 100, articleId = '', sourceUrl = '', paperId = '' }
+  ) {
+    const g = m.graph;
+    limit = Math.max(1, Math.min(500, Number(limit) || 100));
     if (!id && paperId) id = 'source:paper:' + paperId;
     if (!id && (articleId || sourceUrl)) {
       const lookup = await json(g.lookup);
       id = lookup.news[articleId] || lookup.urls[sourceUrl] || 'missing-source';
     }
     const loaded = new Map(),
-      edges = new Map();
+      edges = new Map(),
+      labels = new Map();
     async function collect(ids) {
-      const keys = await Promise.all(ids.map(bucket));
-      const parts = await Promise.all(
-        [...new Set(keys)].map((key) =>
-          g.parts[key] ? json(g.parts[key]) : { nodes: [], edges: [] }
-        )
-      );
-      for (const part of parts) {
-        for (const n of part.nodes) loaded.set(n.id, n);
-        for (const e of part.edges) edges.set(e.id, e);
+      const keys = [...new Set(ids.map(bucket))];
+      // Bound concurrent fetches even when a user asks for a large page.
+      for (let offset = 0; offset < keys.length; offset += 4) {
+        const parts = await Promise.all(
+          keys
+            .slice(offset, offset + 4)
+            .map((key) => (g.parts[key] ? json(g.parts[key]) : { nodes: [], edges: [] }))
+        );
+        for (const part of parts) {
+          for (const n of part.nodes) {
+            loaded.set(n.id, n);
+            labels.set(n.id, n);
+          }
+          for (const [key, n] of Object.entries(part.neighbors || {}))
+            if (!labels.has(key)) labels.set(key, n);
+          for (const e of part.edges) edges.set(e.id, e);
+        }
       }
     }
     let selectedIds,
@@ -110,23 +174,40 @@
       detail = null;
     if (id) {
       await collect([id]);
-      const incident = [...edges.values()].filter((e) => e.source === id || e.target === id);
-      await collect(incident.map((e) => (e.source === id ? e.target : e.source)));
-      const allowed = incident.filter((e) => layer === 'all' || e.layer === layer);
-      const ids = new Set([id, ...allowed.flatMap((e) => [e.source, e.target])]);
-      selectedIds = [...loaded.values()]
-        .filter((n) => ids.has(n.id))
-        .sort((a, b) => Number(b.id === id) - Number(a.id === id) || a._order - b._order)
-        .map((n) => n.id);
-      total = selectedIds.length;
+      const incident = [...edges.values()].filter(
+        (e) => (e.source === id || e.target === id) && (layer === 'all' || e.layer === layer)
+      );
+      const adjacent = [...new Set(incident.map((e) => (e.source === id ? e.target : e.source)))];
+      // Compatibility with the immediately preceding shard schema.
+      if (adjacent.some((key) => !labels.has(key))) {
+        const index = await json(g.index);
+        index.forEach((n, i) => {
+          if (!labels.has(n[0])) labels.set(n[0], { id: n[0], title: n[1], _order: i });
+        });
+      }
+      selectedIds = [
+        id,
+        ...adjacent
+          .filter((key) => key !== id)
+          .sort(
+            (a, b) => (labels.get(a)?._order ?? Infinity) - (labels.get(b)?._order ?? Infinity)
+          ),
+      ];
+      total = loaded.has(id) ? selectedIds.length : 0;
+      selectedIds = selectedIds.slice(0, limit);
+      await collect(selectedIds.filter((key) => !loaded.has(key)));
       const found = loaded.get(id);
       detail = found
         ? {
             ...found,
-            connections: incident.map((e) => ({
-              ...e,
-              other: loaded.get(e.source === id ? e.target : e.source),
-            })),
+            connections: incident
+              .map((e) => ({
+                ...e,
+                other:
+                  loaded.get(e.source === id ? e.target : e.source) ||
+                  labels.get(e.source === id ? e.target : e.source),
+              }))
+              .filter((e) => e.other),
           }
         : {
             id,
@@ -155,8 +236,8 @@
       total = g.total;
     }
     selectedIds = selectedIds.slice(0, limit);
-    const ids = new Set(selectedIds);
-    const nodes = selectedIds.map((key) => loaded.get(key)).filter(Boolean);
+    const ids = new Set(selectedIds),
+      nodes = selectedIds.map((key) => loaded.get(key)).filter(Boolean);
     return {
       ...g.meta,
       exported_at: m.exported_at,

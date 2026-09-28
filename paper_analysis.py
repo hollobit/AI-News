@@ -70,7 +70,7 @@ def validate_report(report, evidence, keywords):
 
 
 class PaperAnalysisService:
-    def __init__(self, path, analyzer=None, enabled=None, fetcher=None, extractor=None):
+    def __init__(self, path, analyzer=None, enabled=None, fetcher=None, extractor=None, start_worker=True):
         self.path = str(path)
         if analyzer is None:
             from semantic import run_structured
@@ -100,7 +100,8 @@ class PaperAnalysisService:
                 if not _owner_alive(row['owner_pid']):
                     db.execute("UPDATE arxiv_paper_analyses SET status='paused',owner_pid=NULL WHERE paper_id=?",(row['paper_id'],))
         self.thread = threading.Thread(target=self._worker, daemon=True, name='news-paper-analysis')
-        self.thread.start()
+        if start_worker:
+            self.thread.start()
 
     def db(self):
         db = sqlite3.connect(self.path, timeout=30)
@@ -177,7 +178,7 @@ class PaperAnalysisService:
     def _claim(self):
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
-            rows=db.execute("SELECT * FROM arxiv_paper_analyses WHERE status IN ('queued','paused') ORDER BY created_at").fetchall()
+            rows=db.execute("SELECT * FROM arxiv_paper_analyses WHERE status IN ('queued','paused','running') ORDER BY created_at").fetchall()
             row=next((r for r in rows if not _owner_alive(r['owner_pid'])),None)
             if row:
                 db.execute("UPDATE arxiv_paper_analyses SET status='running',owner_pid=?,updated_at=? WHERE paper_id=?",(os.getpid(),now(),row['paper_id']))
@@ -329,7 +330,8 @@ class PaperAnalysisService:
     def status(self):
         with self.db() as db:
             counts={r[0]:r[1] for r in db.execute('SELECT status,COUNT(*) FROM arxiv_paper_analyses GROUP BY status')}
-        return {'enabled':self.enabled,'pending':sum(counts.get(s,0) for s in ('queued','paused')),'running':self.active,
+            active = db.execute("SELECT paper_id FROM arxiv_paper_analyses WHERE status='running' LIMIT 1").fetchone()
+        return {'enabled':self.enabled,'pending':sum(counts.get(s,0) for s in ('queued','paused')),'running': active[0] if active else None,
                 'counts':counts,'workers':1,'max_per_action':10}
 
     def close(self):

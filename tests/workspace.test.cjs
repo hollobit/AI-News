@@ -6,7 +6,7 @@ const vm = require('node:vm');
 function setup(fetch, overrides = {}) {
   const context = {window: {}, fetch, AbortSignal, URL, Map, Set, Error,
     location: {origin: 'http://localhost'}, document: {hidden: false, addEventListener() {}, removeEventListener() {}},
-    addEventListener() {}, setTimeout, clearTimeout, ...overrides};
+    addEventListener() {}, removeEventListener() {}, setTimeout, clearTimeout, ...overrides};
   vm.runInNewContext(fs.readFileSync('static/workspace.js', 'utf8'), context);
   return context.window.Workspace;
 }
@@ -54,4 +54,41 @@ test('polling pauses when hidden, backs off and prevents concurrent work', async
   polling.close();
   assert.equal(timers.size, 0);
   assert.equal(listeners.visibilitychange, undefined);
+});
+
+test('handled transient failures keep exponential delay and success resets it; permanent errors stop', async () => {
+  let id = 0, failures = 3;
+  const timers = new Map();
+  const workspace = setup(undefined, {
+    setTimeout(fn, delay) {const key = ++id; timers.set(key, {fn: () => {timers.delete(key); return fn();}, delay}); return key;},
+    clearTimeout(key) {timers.delete(key);},
+  });
+  const polling = workspace.poller();
+  async function status() {
+    if (failures-- > 0) polling.retry('baseline', status, Object.assign(Error('busy'), {status: 503}), 100);
+    else polling.schedule('baseline', status, 100);
+  }
+  polling.schedule('baseline', status, 100);
+  for (const delay of [200, 400, 800, 100]) {
+    await [...timers.values()].at(-1).fn();
+    assert.equal([...timers.values()].at(-1).delay, delay);
+  }
+  polling.retry('baseline', status, Object.assign(Error('invalid'), {status: 400}), 100);
+  assert.equal(timers.size, 0);
+  polling.close();
+});
+
+test('bfcache suspension and restoration resume polling without overlapping work', async () => {
+  let id = 0, calls = 0;
+  const timers = new Map(), listeners = {};
+  const workspace = setup(undefined, {
+    addEventListener(name, fn) {listeners[name] = fn;}, removeEventListener(name) {delete listeners[name];},
+    setTimeout(fn, delay) {const key = ++id; timers.set(key, {fn, delay}); return key;}, clearTimeout(key) {timers.delete(key);},
+  });
+  const polling = workspace.poller();
+  polling.schedule('baseline', async () => {calls++;}, 100);
+  listeners.pagehide({persisted: true}); assert.equal(timers.size, 0);
+  listeners.pageshow({persisted: true});
+  await [...timers.values()][0].fn(); assert.equal(calls, 1);
+  polling.close();
 });

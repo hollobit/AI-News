@@ -54,6 +54,7 @@
   const api = (url, body, signal) => Workspace.request(url, { body, signal, cache: responseCache });
   const scheduleStatus = (name, fn, delay = 5000) => statusPoller.schedule(name, fn, delay);
   const stopStatus = (name) => statusPoller.stop(name);
+  const retryStatus = (name, fn, error, delay = 5000) => statusPoller.retry(name, fn, error, delay);
   const operationsMode =
     location.pathname === '/operations' ||
     ['baseline', 'workflow', 'improvement'].includes(location.hash.slice(1));
@@ -74,10 +75,10 @@
         $('#live-corpus-count').textContent =
           `현재 수집 고유 뉴스 ${num(data.total_unique)}건 · 기본 분석 대상 ${num(data.baseline_total)}건 · 분석 대상에 새로 추가할 뉴스 ${num(data.new_since_baseline)}건${data.refreshing ? ' · 최신 수집량 갱신 중' : ''}`;
       } else $('#live-corpus-count').textContent = data.error || '현재 수집량 집계 중…';
-    } catch (_) {
-      $('#live-corpus-count').textContent = '현재 수집량 확인 재시도 중…';
-    } finally {
       scheduleStatus('corpus-status', loadCorpusStatus, 10000);
+    } catch (error) {
+      $('#live-corpus-count').textContent = '현재 수집량 확인 재시도 중…';
+      retryStatus('corpus-status', loadCorpusStatus, error, 10000);
     }
   }
   function channelTime(value) {
@@ -136,12 +137,12 @@
           );
       }
       area.title = data.scope;
-    } catch (_) {
+      scheduleStatus('channel-status', loadChannelStatus, 30000);
+    } catch (error) {
       area.replaceChildren(
         node('span', '', '채널 수집 기록을 확인하지 못했습니다. 자동으로 다시 확인합니다.')
       );
-    } finally {
-      scheduleStatus('channel-status', loadChannelStatus, 30000);
+      retryStatus('channel-status', loadChannelStatus, error, 30000);
     }
   }
 
@@ -1091,17 +1092,18 @@
           overviewSignature = signature;
           renderTrends(data);
           renderMonitoring(data.trends?.monitoring);
-          renderDynamicEvidence(data);
+          topics.renderEvidence(data);
           renderOutlook({ ...data, runs: data.runs || [] });
-          if (registryData && $('#topic-management').open) renderRegistry(registryData);
+          if (topics.data && $('#topic-management').open) topics.render(topics.data);
         }
         if (state.data && !state.newsLoading) renderNews(state.data);
-        if ($('#topic-management').open) await loadRegistry(force);
+        if ($('#topic-management').open) await topics.load(force);
+        scheduleStatus('overview', () => loadOverview(), 60000);
       } catch (e) {
         notify(e.message, true);
+        retryStatus('overview', () => loadOverview(), e, 60000);
       } finally {
         overviewRequest = null;
-        scheduleStatus('overview', () => loadOverview(), 60000);
       }
     })();
     return overviewRequest;
@@ -1241,7 +1243,7 @@
           }
         } catch (e) {
           notify(e.message, true);
-          stopStatus('sources');
+          retryStatus('sources', pollSources, e, 4000);
         }
       },
       4000
@@ -1256,7 +1258,7 @@
         scheduleStatus(
           'meaning-' + id,
           () => {
-            if (area.isConnected) pollMeaning(id, area, attempt + 1);
+            if (area.isConnected) return pollMeaning(id, area, attempt + 1);
             else stopStatus('meaning-' + id);
           },
           4000
@@ -1271,6 +1273,8 @@
       } else area.append(node('p', '', a.error || '분석 결과를 확인할 수 없습니다.'));
     } catch (e) {
       area.textContent = e.message;
+      if (area.isConnected)
+        retryStatus('meaning-' + id, () => pollMeaning(id, area, attempt), e, 4000);
     }
   }
   function renderGraphAnswer(result) {
@@ -1540,206 +1544,6 @@
     }
   }
 
-  const workflowLabels = {
-    collection: '수집·스냅샷',
-    enrichment: '원문 보강',
-    source_repair: '원문 보완 조회',
-    repair_morphology: '보완 원문 형태소 분석',
-    morphology: '형태소 분석',
-    graph_retrieval: 'GraphRAG 근거 검색',
-    national: '국가·정책 분석',
-    technology: '기술·사업 분석',
-    synthesis: '전략 종합',
-    verification: '근거 대조',
-    risk_assessment: '위험 평가',
-    risk_verification: '위험 근거 검증',
-    risk_revision: '위험 평가 보완',
-    risk_reverification: '위험 재검증',
-    revision: '보완',
-    reverification: '재검토',
-    final: '결과 저장',
-  };
-  const workflowStatus = {
-    queued: '대기',
-    running: '진행 중',
-    complete: '완료',
-    failed: '실패',
-    paused: '일시 중지',
-    needs_review: '검토 필요',
-    skipped: '생략',
-  };
-  let activeWorkflow = null,
-    workflowTimer;
-  function renderWorkflow(run) {
-    activeWorkflow = run;
-    $('#workflow-state').textContent = workflowStatus[run.status] || run.status;
-    $('#workflow-state').className =
-      'pill ' +
-      (run.status === 'complete'
-        ? 'green'
-        : run.status === 'needs_review' || run.status === 'failed'
-          ? 'amber'
-          : '');
-    const stages = run.stages || {};
-    const groups = [
-      ['collection', 'enrichment'],
-      ['morphology', 'graph_retrieval'],
-      ['national', 'technology'],
-      ['verification', 'risk_assessment', 'risk_verification'],
-      [
-        'risk_revision',
-        'risk_reverification',
-        'source_repair',
-        'repair_morphology',
-        'revision',
-        'reverification',
-        'synthesis',
-        'final',
-      ],
-    ];
-    document.querySelectorAll('.agent-step').forEach((el, i) => {
-      const values = groups[i].map((k) => stages[k]).filter(Boolean);
-      el.classList.remove('running', 'complete', 'failed');
-      if (values.includes('running')) el.classList.add('running');
-      else if (values.includes('failed')) el.classList.add('failed');
-      else if (values.length && values.every((v) => v === 'complete' || v === 'skipped'))
-        el.classList.add('complete');
-    });
-    $('#workflow-events').replaceChildren(
-      ...(run.events || [])
-        .slice(-10)
-        .reverse()
-        .map((e) => {
-          const row = node('div', 'workflow-event');
-          row.append(
-            node('b', '', workflowLabels[e.stage] || e.stage),
-            document.createTextNode(
-              (workflowStatus[e.status] || e.status) +
-                ' · ' +
-                (e.created_at || '').slice(11, 19) +
-                ' UTC'
-            )
-          );
-          if (e.detail) row.append(node('div', 'subtle', e.detail));
-          return row;
-        })
-    );
-    const area = $('#workflow-results');
-    area.replaceChildren();
-    const result = run.results;
-    if (result?.report) {
-      area.append(node('p', 'workflow-result', result.report.summary));
-      if (!result.verified)
-        area.append(node('p', 'pill amber', '검토가 끝나지 않은 해석 · 의사결정 전 확인 필요'));
-      (result.report.claims || []).slice(0, 8).forEach((c) => {
-        const section = node('details', 'workflow-result');
-        section.append(node('summary', '', c.title), node('p', '', c.detail));
-        if (c.uncertainty) section.append(node('p', 'subtle', c.uncertainty));
-        const evidence = (result.evidence || []).filter((e) =>
-          (c.evidence_ids || []).includes(e.id)
-        );
-        evidence
-          .slice(0, 3)
-          .forEach((e) =>
-            section.append(link(e.title || e.url || '메시지 근거', e.url || '/news?date=all'))
-          );
-        area.append(section);
-      });
-      (result.verification?.issues || []).forEach((t) => area.append(node('p', 'subtle', t)));
-    } else {
-      const artifacts = run.artifacts || {};
-      for (const [role, value] of Object.entries(artifacts)) {
-        if (!['national', 'technology', 'verification', 'graph_retrieval'].includes(role)) continue;
-        const section = node('details', 'workflow-result');
-        section.append(
-          node('summary', '', workflowLabels[role] || role),
-          node(
-            'p',
-            'subtle',
-            value.summary || value.report?.summary || '중간 산출물 저장됨 · 최종 검토 전'
-          )
-        );
-        area.append(section);
-      }
-      if (!area.childElementCount)
-        area.textContent =
-          run.error ||
-          `${run.snapshot_count}개 뉴스 근거로 분석합니다. 역할별 산출물을 기다리고 있습니다.`;
-    }
-    $('#workflow-resume').hidden = !['paused', 'failed'].includes(run.status);
-    $('#workflow-start').disabled = ['queued', 'running'].includes(run.status);
-  }
-  function renderWorkflowStatus(run) {
-    activeWorkflow = run;
-    $('#workflow-state').textContent = workflowStatus[run.status] || run.status;
-    const groups = [
-      ['collection', 'enrichment'],
-      ['morphology', 'graph_retrieval'],
-      ['national', 'technology'],
-      ['verification', 'risk_assessment', 'risk_verification'],
-      ['revision', 'reverification', 'risk_revision', 'risk_reverification', 'final'],
-    ];
-    document.querySelectorAll('.agent-step').forEach((e, i) => {
-      const values = groups[i].map((k) => run.stages?.[k]).filter(Boolean);
-      e.classList.toggle('running', values.includes('running'));
-      e.classList.toggle(
-        'complete',
-        values.length > 0 && values.every((v) => ['complete', 'skipped'].includes(v))
-      );
-    });
-    if (run.last_event)
-      $('#workflow-events').textContent =
-        (workflowLabels[run.last_event.stage] || run.last_event.stage) +
-        ' · ' +
-        (workflowStatus[run.last_event.status] || run.last_event.status) +
-        ' · ' +
-        (run.last_event.detail || '');
-    $('#workflow-resume').hidden = !['paused', 'failed'].includes(run.status);
-    $('#workflow-start').disabled = ['queued', 'running'].includes(run.status);
-  }
-  async function loadWorkflow(id, detail = false) {
-    try {
-      if (detail) {
-        renderWorkflow(await api('/api/workflows/' + id));
-        return;
-      }
-      const data = await api('/api/workflows' + (id ? '/' + id : '') + '?view=status');
-      const run = id ? data : data.runs?.[0];
-      if (run) {
-        if (run.version !== activeWorkflow?.version) renderWorkflowStatus(run);
-        if (['queued', 'running'].includes(run.status))
-          scheduleStatus('workflow', () => loadWorkflow(run.id));
-        else stopStatus('workflow');
-      }
-    } catch (e) {
-      $('#workflow-events').textContent = e.message;
-      stopStatus('workflow');
-    }
-  }
-
-  $('#workflow-start').addEventListener('click', () =>
-    action($('#workflow-start'), async () => {
-      const r = await api('/api/workflows?' + query(), {
-        limit: 8,
-        question: $('#question').value || $('#hypothesis').value,
-      });
-      renderWorkflow(r.run);
-      loadWorkflow(r.run.id);
-      notify(
-        '최대 8개 뉴스로 역할별 분석·검토 사이클을 시작했습니다. 각 단계의 산출물을 확인할 수 있습니다.'
-      );
-    })
-  );
-  $('#workflow-refresh').addEventListener('click', () => loadWorkflow(activeWorkflow?.id));
-  $('#workflow-resume').addEventListener('click', () =>
-    action($('#workflow-resume'), async () => {
-      if (activeWorkflow) {
-        const r = await api('/api/workflows/' + activeWorkflow.id + '/resume', {});
-        renderWorkflow(r.run);
-        loadWorkflow(r.run.id);
-      }
-    })
-  );
   const menu = $('#menu-toggle');
   menu.addEventListener('click', () => {
     const open = $('#sidebar').classList.toggle('expanded');
@@ -1758,859 +1562,11 @@
     }
   });
 
-  let activeImprovement = null,
-    improvementTimer;
-  const improvementStates = {
-    running: '분석 중',
-    waiting: '새 근거 대기',
-    finishing: '현재 회차 마무리 중',
-    paused: '일시중지',
-    complete: '완료',
-    budget_exhausted: '설정 회차 종료',
-    stopped: '진행 변화 없어 종료',
-    error: '확인 필요',
-    planned: '회차 준비',
-    needs_review: '검토 필요',
-    failed: '실패',
-  };
-  const metricNames = {
-    round_count: '회차',
-    completed_rounds: '완료 회차',
-    no_progress_rounds: '변화 없는 회차',
-    seen_documents: '누적 근거',
-    source_count: '원문 근거',
-    new_document_count: '신규 근거',
-    verified_claims: '검토된 주장',
-    claims: '주장',
-    issues: '검토 지적',
-    rules: '개선 규칙',
-    concepts: '개념',
-    verified: '검토 통과',
-    cited_claims: '근거 인용 주장',
-    evidence_count: '근거 수',
-    audit_issues: '검토 지적',
-    failed_sources: '원문 조회 실패',
-    requested_sources: '원문 조회 요청',
-    fetched_sources: '확보 원문',
-    strategic_concepts: '전략 개념',
-    total_unique: '전체 고유 뉴스',
-    processed_unique: '처리 뉴스',
-    remaining: '남은 뉴스',
-    verified_unique: '검토 통과 뉴스',
-    needs_review_unique: '검토 필요 뉴스',
-    reused_verified: '기존 검토 결과 활용',
-    duplicates_excluded: '제외한 중복',
-    failed_unique: '분석 실패',
-    verification_pending: '검토 미완료',
-    all_processed: '전체 분석 처리 여부',
-    all_verified: '전체 검토 통과 여부',
-    risk_assessed_unique: '위험 평가 뉴스',
-    risk_unassessed_unique: '위험 미평가 뉴스',
-    risk_assessments: '위험 평가 수',
-    critical_risks: '심각 등급 평가',
-    risk_issues: '위험 검토 지적',
-    risk_verified: '위험 근거 검토 통과',
-  };
-  function improvementText(value) {
-    if (value == null) return '';
-    if (typeof value === 'boolean') return value ? '예' : '아니요';
-    if (typeof value === 'string' || typeof value === 'number') return String(value);
-    if (Array.isArray(value)) return value.map(improvementText).filter(Boolean).join(' · ');
-    return (
-      value.text ||
-      value.summary ||
-      value.assessment ||
-      value.description ||
-      Object.entries(value)
-        .map(([k, v]) => `${metricNames[k] || k}: ${improvementText(v)}`)
-        .join(' · ')
-    );
-  }
-  function improvementEvidence(el, records) {
-    (records || []).slice(0, 4).forEach((e) => {
-      if (typeof e === 'object' && (e.url || e.source_url))
-        el.append(link(e.title || e.url || '연결 근거', e.url || e.source_url));
-      else if (typeof e === 'string') el.append(node('small', 'subtle', '근거 ' + e));
-    });
-  }
-  function renderImprovement(run) {
-    activeImprovement = run;
-    clearTimeout(improvementTimer);
-    $('#improvement-state').textContent = improvementStates[run.status] || run.status;
-    $('#improvement-state').className =
-      'pill ' +
-      (run.status === 'complete'
-        ? 'green'
-        : ['error', 'stopped'].includes(run.status)
-          ? 'amber'
-          : '');
-    const busy = ['running', 'waiting', 'finishing'].includes(run.status);
-    $('#improvement-start').disabled = busy;
-    $('#improvement-pause').hidden = !busy;
-    $('#improvement-pause').disabled = run.pause_requested || run.status === 'finishing';
-    $('#improvement-resume').hidden = !['paused', 'error', 'stopped'].includes(run.status);
-    let summary = improvementText(run.metrics);
-    if (run.status === 'waiting')
-      summary += ' · 새로운 근거를 기다립니다. 동일 근거로 AI 분석을 반복하지 않습니다.';
-    if (run.pause_requested || run.status === 'finishing')
-      summary += ' · 일시중지를 요청했습니다. 진행 중인 회차를 마무리한 뒤 멈춥니다.';
-    if (run.next_run_at)
-      summary += ' · 다음 확인 ' + new Date(run.next_run_at).toLocaleString('ko-KR');
-    if (run.error) summary += ' · ' + run.error;
-    if (run.history_scope) summary += ' · ' + run.history_scope;
-    summary +=
-      ' · 미처리 0건은 모든 뉴스의 검증 완료를 뜻하지 않습니다. 검토 필요와 분석 실패를 따로 확인하세요.';
-    $('#improvement-summary').textContent = summary || '회차를 준비하고 있습니다.';
-    const metrics = run.metrics || {},
-      hasLedger = 'completion_total' in metrics;
-    const comparisonFields = [
-      ['total_unique', '전체 고유 뉴스'],
-      ['processed_unique', '분석 처리'],
-      ['verified_unique', '검토 통과'],
-      ['needs_review_unique', '검토 필요'],
-      ['remaining', '미처리 뉴스'],
-      ['failed_unique', '분석 실패'],
-      ['risk_assessed_unique', '위험 평가 뉴스'],
-      ['risk_unassessed_unique', '위험 미평가 뉴스'],
-      ['risk_reviewed_unique', '위험 독립 검토'],
-    ];
-    const primaryFields = hasLedger
-      ? [
-          ['completion_total', '전수 점검 대상'],
-          ['completion_complete', '심층·위험 검토 완료'],
-          ['completion_pending', '대기'],
-          ['completion_running', '분석 중'],
-          ['completion_needs_review', '보완 필요'],
-          ['completion_failed', '실패'],
-          ['active_workflows', '병렬 분석 작업'],
-          ['risk_information_insufficient', '위험 검토 · 판단 근거 부족'],
-        ]
-      : [
-          ...comparisonFields,
-          ['active_workflows', '병렬 분석 작업'],
-          ['risk_information_insufficient', '위험 검토 · 판단 근거 부족'],
-        ];
-    const metricCells = (fields) =>
-      fields
-        .filter(([key]) => key in metrics)
-        .map(([key, label]) => {
-          const cell = node('div');
-          cell.append(node('span', '', label), node('strong', '', num(metrics[key])));
-          return cell;
-        });
-    $('#improvement-progress').replaceChildren(...metricCells(primaryFields));
-    const metricDetails = $('#improvement-metric-details');
-    metricDetails.hidden = !hasLedger;
-    $('#improvement-secondary-progress').replaceChildren(
-      ...(hasLedger ? metricCells(comparisonFields) : [])
-    );
-    if (run.view === 'status') return;
-    const timeline = $('#improvement-timeline');
-    timeline.replaceChildren();
-    (run.rounds || [])
-      .slice()
-      .reverse()
-      .forEach((round) => {
-        const card = node('article', 'improvement-round');
-        card.append(
-          node('h4', '', `${round.number}회차 · ${improvementStates[round.status] || round.status}`)
-        );
-        const badges = node('div', 'improvement-meta');
-        badges.append(
-          node('span', 'pill', `신규 근거 ${num(round.new_document_count)}개`),
-          node('span', 'pill', `원문 근거 ${num(round.source_count)}개`),
-          node(
-            'span',
-            'pill',
-            `새 제안 개념 ${num((round.catalog?.added || []).filter((c) => c.kind === 'strategic_concept').length)}개`
-          )
-        );
-        card.append(badges);
-        if (round.comparison) {
-          card.append(
-            node('p', '', improvementText(round.comparison.assessment)),
-            node(
-              'p',
-              'subtle',
-              {
-                baseline: '첫 회차 · 비교 기준 설정',
-                same_news_scope: '동일 뉴스 범위의 전후 비교',
-                different_news_scope:
-                  '서로 다른 뉴스 범위 · 수치 변화가 품질 개선을 뜻하지 않습니다.',
-              }[round.comparison.comparability] || improvementText(round.comparison.comparability)
-            )
-          );
-          if (round.comparison.changes)
-            card.append(node('p', '', improvementText(round.comparison.changes)));
-        }
-        if (round.before || round.after) {
-          const detail = node('details');
-          detail.append(
-            node('summary', '', '회차 전후 지표'),
-            node('p', '', '이전: ' + improvementText(round.before)),
-            node('p', '', '이후: ' + improvementText(round.after))
-          );
-          card.append(detail);
-        }
-        const tasks = (run.tasks || []).filter((t) => t.source_run_id === round.workflow_run_id);
-        if (tasks.length) {
-          card.append(node('h4', '', '검토 지적과 후속 과제'));
-          tasks.forEach((t) => card.append(node('p', '', `${t.text} · ${t.status}`)));
-        }
-        const rules = (run.rules || []).filter((t) => t.source_run_id === round.workflow_run_id);
-        if (rules.length) {
-          card.append(node('h4', '', '누적 개선 규칙'));
-          rules.forEach((t) => card.append(node('p', '', t.text)));
-        }
-        if (round.error) card.append(node('p', 'subtle', round.error));
-        if (round.workflow_run_id) {
-          const inspect = node('button', 'button', '역할별 분석·검토 보기');
-          inspect.addEventListener('click', () => {
-            loadWorkflow(round.workflow_run_id, true);
-            $('#workflow').scrollIntoView({ behavior: 'smooth' });
-          });
-          card.append(inspect);
-        }
-        timeline.append(card);
-      });
-    if (!timeline.childElementCount) empty(timeline, '새 근거를 확인하면 첫 회차가 시작됩니다.');
-    renderImprovementCatalog(run);
-  }
-  function renderImprovementCatalog(run) {
-    const el = $('#improvement-catalog');
-    el.replaceChildren();
-    const catalogs = run.catalog
-      ? [run.catalog]
-      : (run.rounds || []).map((r) => r.catalog).filter(Boolean);
-    const byId = new Map();
-    catalogs.forEach((c) =>
-      (c.items || [...(c.added || []), ...(c.updated || [])]).forEach((item) =>
-        byId.set(item.id, item)
-      )
-    );
-    const kinds = {
-      observed_keyword: '관측 용어',
-      strategic_concept: '제안 개념',
-      claim_relation: '검토된 해석',
-    };
-    const statuses = {
-      observed_in_sources: '원문에서 관측',
-      proposed: '제안 · 추가 검토 필요',
-      reviewed_interpretation: '검토된 해석',
-    };
-    Array.from(byId.values())
-      .slice(-40)
-      .reverse()
-      .forEach((item) => {
-        const card = node('article', 'catalog-item');
-        card.append(
-          node('span', 'pill', kinds[item.kind] || '검토 기억'),
-          node('span', 'pill', statuses[item.epistemic_status] || item.status || '검토 대기'),
-          node('h4', '', item.label || item.name || '')
-        );
-        if (item.detail) card.append(node('p', '', item.detail));
-        if (item.uncertainty || item.caveat)
-          card.append(node('p', 'subtle', item.uncertainty || item.caveat));
-        improvementEvidence(card, item.evidence || item.evidence_ids);
-        el.append(card);
-      });
-    if (!el.childElementCount)
-      empty(el, '회차가 끝나면 관측 용어와 제안 개념을 근거와 함께 표시합니다.');
-  }
-  async function loadImprovement(id, detail = false) {
-    try {
-      const data = await api(
-        '/api/improvement' +
-          (id ? '/' + encodeURIComponent(id) : '') +
-          (detail ? '' : '?view=status')
-      );
-      const run = id ? data.run || data : data.runs?.[0];
-      if (run) {
-        if (detail || run.version !== activeImprovement?.version) renderImprovement(run);
-        if (['running', 'waiting', 'finishing'].includes(run.status))
-          scheduleStatus(
-            'improvement',
-            () => loadImprovement(run.id),
-            run.status === 'waiting' ? 15000 : 5000
-          );
-        else stopStatus('improvement');
-      }
-    } catch (e) {
-      $('#improvement-summary').textContent = e.message;
-      stopStatus('improvement');
-    }
-  }
-
-  $('#improvement-start').addEventListener('click', () =>
-    action($('#improvement-start'), async () => {
-      const data = await api('/api/improvement?' + query(), {
-        interval_seconds: Number($('#improvement-interval').value),
-        max_rounds: Number($('#improvement-rounds').value),
-        news_limit: Number($('#improvement-limit').value),
-        full_corpus: $('#improvement-scope').value === 'all',
-      });
-      renderImprovement(data.run || data);
-      loadImprovement((data.run || data).id);
-    })
-  );
-  $('#improvement-scope').addEventListener('change', () => {
-    $('#improvement-start').textContent =
-      $('#improvement-scope').value === 'all'
-        ? '전체 뉴스 분석·자기개선 시작'
-        : '현재 범위 분석·자기개선 시작';
-  });
-  $('#improvement-refresh').addEventListener('click', () => loadImprovement(activeImprovement?.id));
-  ['pause', 'resume'].forEach((actionName) =>
-    $('#improvement-' + actionName).addEventListener('click', () =>
-      action($('#improvement-' + actionName), async () => {
-        if (!activeImprovement) return;
-        const data = await api(
-          '/api/improvement/' + encodeURIComponent(activeImprovement.id) + '/' + actionName,
-          {}
-        );
-        renderImprovement(data.run || data);
-        loadImprovement((data.run || data).id);
-      })
-    )
-  );
-
-  let riskData = null;
-  const riskGrades = {
-    unknown: '미상',
-    low: '낮음',
-    moderate: '보통',
-    high: '높음',
-    critical: '심각',
-  };
-  const riskHorizons = {
-    '0-3mo': '향후 0–3개월',
-    '3-12mo': '향후 3–12개월',
-    '12-36mo': '향후 1–3년',
-  };
-  const riskDomains = {
-    economy: '국가경제',
-    security: '국가안보',
-    industry: '산업',
-    exports: '수출',
-    social: '사회적 문제',
-    life: '생활',
-    education: '교육',
-  };
-  function riskDetail(parent, title, value) {
-    if (value == null || (Array.isArray(value) && !value.length)) return;
-    const detail = node('details');
-    detail.append(node('summary', '', title));
-    (Array.isArray(value) ? value : [value]).forEach((v) =>
-      detail.append(node('p', '', improvementText(v)))
-    );
-    parent.append(detail);
-  }
-  function renderRisks(data) {
-    riskData = data;
-    const coverage = data.coverage || {};
-    $('#risk-counts').replaceChildren(
-      ...[
-        ['assessed', '근거 검토 완료 분석'],
-        ['needs_review', '검토 필요 분석'],
-        ['unassessed', '위험 미평가 분석'],
-        ['source_review_required', '현재 원문 재검토 항목'],
-      ].map(([key, label]) => {
-        const card = node('div');
-        const value =
-          key === 'needs_review'
-            ? (coverage.needs_review_workflows ?? coverage[key])
-            : coverage[key];
-        card.append(
-          node('span', '', label),
-          node('strong', '', value == null ? '집계 미제공' : num(value))
-        );
-        return card;
-      })
-    );
-    $('#risk-summary').textContent =
-      '검토 우선순위는 규칙 기반이며 발생 확률이 아닙니다. 미평가는 안전하거나 위험이 없다는 뜻이 아닙니다.';
-    $('#risk-cards').replaceChildren(
-      ...(data.items || []).slice(0, 3).map((r) => {
-        const card = node('article', 'risk-summary-card'),
-          p = r.priority || {};
-        const score =
-          p.status === 'partial' && p.range
-            ? p.range.join('–') + '점 · 부분 평가'
-            : p.status === 'needs_review'
-              ? p.range
-                ? p.range.join('–') + '점 · 재검토 필요'
-                : '재검토 필요'
-              : p.score == null
-                ? '미평가'
-                : p.score + ' / 100';
-        card.append(
-          node('span', 'pill', '검토 우선순위 ' + score),
-          node('h3', '', r.title),
-          node(
-            'p',
-            'subtle',
-            `현재 ${riskGrades[r.current_severity] || '미상'} · 미래 ${riskGrades[r.future_likelihood] || '미상'}`
-          ),
-          link('평가 상세 보기 ↗', '/risks?risk=' + encodeURIComponent(r.id))
-        );
-        return card;
-      })
-    );
-    if (!$('#risk-cards').childElementCount)
-      empty(
-        $('#risk-cards'),
-        '표시할 평가가 없습니다. 전체 위험 평가에서 미평가·검토 필요 상태를 확인하세요.'
-      );
-  }
-  async function loadRisks() {
-    try {
-      renderRisks(await api('/api/risks?view=page&page=1&page_size=3&sort=priority&status=all'));
-    } catch (e) {
-      $('#risk-summary').textContent = '위험 평가를 불러오지 못했습니다. ' + e.message;
-    }
-  }
-  $('#risks-refresh').addEventListener('click', loadRisks);
-  $('#risk-question').addEventListener('click', () => {
-    $('#question').value =
-      '현재 수집 근거에서 AI 안전·사이버·국가안보·산업의 현재 위협과 향후 위험을 구분하고, 위험 상승 신호·완화 조건·반대 근거·불확실성을 설명해 주세요.';
-    state.selectedNodes = [];
-    $('#network').scrollIntoView({ behavior: 'smooth' });
-    $('#question').focus();
-  });
-
-  let activeBaseline = null,
-    baselineTimer;
-  const baselineStates = {
-    preparing: '전체 뉴스 준비 중',
-    requires_review: '검토 필요 항목 확인',
-    queued: '대기',
-    running: '기본 분석 중',
-    finishing: '진행 작업 마무리 중',
-    paused: '일시중지',
-    complete: '기본 분석 처리 종료',
-    failed: '오류 확인 필요',
-    error: '오류 확인 필요',
-    waiting: '새 뉴스 대기',
-  };
-  function baselineDetail(analysis) {
-    const box = node('section', 'baseline-detail'),
-      value = analysis.result || analysis;
-    box.append(
-      node('h3', '', '전체 뉴스 기본 분석'),
-      node(
-        'span',
-        'pill',
-        analysis.verified ? '기본 분석 검토 통과' : '기본 분석 · 검토 상태 확인 필요'
-      )
-    );
-    if (value.summary) box.append(node('p', '', value.summary));
-    [
-      ['keywords', '키워드'],
-      ['sectors', '기술 분야'],
-      ['strategic_relevance', '전략 관련성'],
-      ['risk_signal', '기본 위험 신호'],
-      ['limitations', '분석 한계'],
-      ['strategic', '전략 단서'],
-      ['strategic_signals', '전략 단서'],
-      ['risk_flags', '기본 위험 신호'],
-    ].forEach(([key, label]) => {
-      if (
-        value[key] &&
-        (typeof value[key] !== 'object' || Array.isArray(value[key])
-          ? value[key].length
-          : Object.keys(value[key]).length)
-      )
-        box.append(
-          node(
-            'p',
-            '',
-            label +
-              ': ' +
-              (Array.isArray(value[key])
-                ? value[key]
-                    .map((v) =>
-                      typeof v === 'string' ? v : v.label || v.text || v.name || improvementText(v)
-                    )
-                    .join(' · ')
-                : improvementText(value[key]))
-          )
-        );
-    });
-    box.append(
-      node(
-        'p',
-        'subtle',
-        '기본 위험 신호는 후속 검토 대상이며 정밀 위험 등급·발생 확률을 뜻하지 않습니다.'
-      )
-    );
-    if (value.keywords?.some((k) => k.source_quote)) {
-      const sources = node('details');
-      sources.append(node('summary', '', '키워드의 원문 표현'));
-      value.keywords
-        .filter((k) => k.source_quote)
-        .forEach((k) => sources.append(node('p', '', k.label + ' · ' + k.source_quote)));
-      box.append(sources);
-    }
-    if (analysis.source_scope)
-      box.append(node('p', 'subtle', '기본 분석 근거 범위: ' + analysis.source_scope));
-    improvementEvidence(box, value.evidence || analysis.evidence || analysis.evidence_ids);
-    if (analysis.verification?.issues?.length)
-      box.append(node('p', 'subtle', improvementText(analysis.verification.issues)));
-    return box;
-  }
-  let baselineObserved = false,
-    baselineFingerprint = '';
-  function updateBaselineVisibility(run, metrics) {
-    const fields = {
-      id: run.id,
-      status: run.status,
-      error: run.error || '',
-      metrics: Object.fromEntries(
-        Object.keys(metrics)
-          .sort()
-          .filter((k) => !/(timestamp|updated_at|created_at)/.test(k))
-          .map((k) => [k, metrics[k]])
-      ),
-    };
-    const fingerprint = JSON.stringify(fields),
-      details = $('#baseline-content');
-    if (!baselineObserved) {
-      let saved = '';
-      try {
-        saved = localStorage.getItem('news.baseline.lastContent') || '';
-      } catch (_) {}
-      details.open = saved !== fingerprint;
-      baselineObserved = true;
-    } else if (fingerprint !== baselineFingerprint) details.open = true;
-    baselineFingerprint = fingerprint;
-    try {
-      localStorage.setItem('news.baseline.lastContent', fingerprint);
-    } catch (_) {}
-    details.querySelector('summary').textContent = details.open
-      ? '기본 데이터 내용 · 접기'
-      : '기본 데이터 내용 · 새 변경 없음 / 펼치기';
-  }
-  $('#baseline-content').addEventListener('toggle', () => {
-    const d = $('#baseline-content');
-    d.querySelector('summary').textContent = d.open
-      ? '기본 데이터 내용 · 접기'
-      : '기본 데이터 내용 · 펼치기';
-  });
-  function renderBaseline(run) {
-    activeBaseline = run;
-    clearTimeout(baselineTimer);
-    const status = run.status;
-    $('#baseline-state').textContent = baselineStates[status] || status;
-    const busy = ['preparing', 'queued', 'running', 'finishing', 'waiting'].includes(status);
-    $('#baseline-start').disabled = busy;
-    $('#baseline-pause').hidden = !busy;
-    $('#baseline-pause').disabled = Boolean(run.pause_requested) || status === 'finishing';
-    $('#baseline-resume').hidden = !['paused', 'failed', 'error', 'requires_review'].includes(
-      status
-    );
-    const metrics = run.metrics || run.progress || {};
-    updateBaselineVisibility(run, metrics);
-    const fields = [
-      ['total', '이 분석의 고정 대상'],
-      ['preprocessed', '전처리'],
-      ['analyzed', 'AI 분석'],
-      ['verified', '검토 통과'],
-      ['pending', '분석 대기'],
-      ['failed', '실패'],
-      ['needs_review', '검토 필요'],
-      ['active_workers', '진행 중인 작업자'],
-    ];
-    $('#baseline-progress').replaceChildren(
-      ...fields.map(([key, label]) => {
-        const box = node('div');
-        box.append(
-          node('span', '', label),
-          node('strong', '', metrics[key] == null ? '집계 중' : num(metrics[key]))
-        );
-        return box;
-      })
-    );
-    $('#baseline-summary').textContent =
-      (run.error || run.message || '전체 뉴스의 기본 데이터를 누적하고 있습니다.') +
-      ' 전처리 수는 AI 분석 완료 수와 다릅니다. 분석된 뉴스도 검토 통과·검토 필요·실패를 나누어 확인하세요.';
-  }
-  async function loadBaseline(id) {
-    try {
-      const data = await api(
-        '/api/baseline' + (id ? '/' + encodeURIComponent(id) : '') + '?view=status'
-      );
-      const run = id ? data.run || data : data.runs?.[0];
-      if (run) {
-        if (run.version !== activeBaseline?.version) renderBaseline(run);
-        if (['preparing', 'running', 'finishing', 'queued', 'waiting'].includes(run.status))
-          scheduleStatus('baseline', () => loadBaseline(run.id));
-        else stopStatus('baseline');
-      } else {
-        $('#baseline-state').textContent = '시작 전';
-        if (data.enabled === false) $('#baseline-start').disabled = true;
-      }
-    } catch (e) {
-      $('#baseline-summary').textContent = e.message;
-      stopStatus('baseline');
-    }
-  }
-
-  $('#baseline-start').addEventListener('click', () =>
-    action($('#baseline-start'), async () => {
-      const data = await api('/api/baseline', { batch_size: 12, workers: 6 });
-      renderBaseline(data.run || data);
-      loadBaseline((data.run || data).id);
-    })
-  );
-  $('#baseline-refresh').addEventListener('click', () => loadBaseline(activeBaseline?.id));
-  ['pause', 'resume'].forEach((name) =>
-    $('#baseline-' + name).addEventListener('click', () =>
-      action($('#baseline-' + name), async () => {
-        if (!activeBaseline) return;
-        const data = await api(
-          '/api/baseline/' + encodeURIComponent(activeBaseline.id) + '/' + name,
-          {}
-        );
-        renderBaseline(data.run || data);
-        loadBaseline((data.run || data).id);
-      })
-    )
-  );
-
-  const topicStates = {
-    emerging: '새롭게 관측',
-    growing: '증가',
-    cooling: '둔화',
-    stable: '유지',
-    dormant: '미관측',
-    needs_review: '검토 필요',
-  };
-  let registryData = null,
-    registrySignature = '',
-    registryVisible = 30;
-  function topicBadges(item) {
-    const area = node('div', 'dynamic-badges');
-    area.append(
-      node(
-        'span',
-        'pill',
-        item.origin === 'builtin' ? '기본' : item.origin === 'manual' ? '수동 등록' : '자동 제안'
-      )
-    );
-    if (item.status) area.append(node('span', 'pill', topicStates[item.status] || item.status));
-    return area;
-  }
-  function topicEvidence(parent, item) {
-    const details = node('details');
-    details.append(node('summary', '', '관측 표현과 근거 확인'));
-    if (item.terms?.length) details.append(node('p', '', '관측 표현: ' + item.terms.join(', ')));
-    details.append(
-      node(
-        'p',
-        'subtle',
-        item.verification_label ||
-          '수집 근거의 표현을 규칙으로 검토한 관측 항목입니다. 인과관계의 확정을 뜻하지 않습니다.'
-      )
-    );
-    const evidence = item.evidence || [];
-    if (!evidence.length)
-      details.append(
-        node(
-          'p',
-          'subtle',
-          '현재 표시할 연결 근거가 없습니다. 0건은 해당 주제가 존재하지 않는다는 뜻이 아닙니다.'
-        )
-      );
-    evidence.slice(0, 4).forEach((e) => {
-      details.append(
-        link(e.title || e.label || '관측 근거', e.source_url || e.url || '/news?date=all')
-      );
-      const quote = e.source_quotes || e.source_quote || e.quotes || e.quote;
-      if (quote) details.append(node('p', 'subtle', improvementText(quote)));
-      if (e.caution) details.append(node('p', 'subtle', e.caution));
-    });
-    parent.append(details);
-  }
-  function renderDynamicEvidence(data) {
-    if (!$('#dynamic-evidence-panel').open) return;
-    const area = $('#dynamic-topic-evidence');
-    area.replaceChildren();
-    visibleLenses(data.trends?.lenses || [])
-      .filter((t) => t.dynamic)
-      .forEach((item) => {
-        const card = node('article', 'dynamic-evidence-card');
-        card.append(
-          topicBadges(item),
-          node('h4', '', item.label || item.name),
-          node('p', '', item.description || item.subtitle || ''),
-          node(
-            'p',
-            'subtle',
-            `최근 ${num(item.current)}건 · 직전 ${num(item.previous)}건${item.current === 0 ? ' · 미관측' : ''}`
-          )
-        );
-        topicEvidence(card, item);
-        const actions = node('div', 'heading-actions'),
-          select = node('button', 'button', '이 주제의 뉴스 보기'),
-          exclude = node('button', 'button', '관측 제외');
-        select.addEventListener('click', () => selectLens(item.id));
-        exclude.addEventListener('click', () => changeTopic(exclude, item.id, 'exclude'));
-        actions.append(select, exclude);
-        card.append(actions);
-        area.append(card);
-      });
-  }
-  function renderRegistry(data) {
-    if (!$('#topic-management').open) return;
-    const area = $('#topic-registry');
-    area.replaceChildren();
-    const live = [
-      ...(state.overview?.trends?.lenses || []),
-      ...(state.overview?.trends?.monitoring?.topics || []),
-      ...(state.overview?.trends?.monitoring?.candidates || []),
-    ];
-    const search = $('#topic-registry-search').value.trim().toLocaleLowerCase();
-    const filtered = (data.items || [])
-      .filter(
-        (r) =>
-          !search ||
-          [r.label, r.name, ...(r.terms || r.metadata?.terms || [])]
-            .filter(Boolean)
-            .join(' ')
-            .toLocaleLowerCase()
-            .includes(search)
-      )
-      .slice()
-      .sort((a, b) => (b.origin === 'manual') - (a.origin === 'manual'));
-    $('#topic-registry-count').textContent =
-      `${num(filtered.length)}개 중 ${num(Math.min(registryVisible, filtered.length))}개 표시`;
-    $('#topic-registry-more').hidden = registryVisible >= filtered.length;
-    filtered.slice(0, registryVisible).forEach((record) => {
-      const item = {
-          ...(record.metadata || {}),
-          ...record,
-          ...live.find((i) => i.id === record.id),
-        },
-        excluded = Boolean(record.excluded);
-      const card = node('article', 'topic-registry-item' + (excluded ? ' excluded' : ''));
-      card.append(
-        topicBadges(item),
-        node('h4', '', item.label || item.name || item.id),
-        node(
-          'p',
-          'subtle',
-          `${['signal', 'signals'].includes(record.kind || item.kind) ? '변화 신호' : '전략 주제'} · ${excluded ? '자동 재등장 제외 중' : '관측 중'}`
-        )
-      );
-      if (item.description) card.append(node('p', '', item.description));
-      topicEvidence(card, item);
-      const button = node('button', 'button', excluded ? '복원' : '제외');
-      button.addEventListener('click', () =>
-        changeTopic(button, item.id, excluded ? 'restore' : 'exclude')
-      );
-      card.append(button);
-      area.append(card);
-    });
-    if (!area.childElementCount)
-      empty(
-        area,
-        search
-          ? '검색 조건에 맞는 관리 항목이 없습니다.'
-          : '추가된 자동·수동 주제가 아직 없습니다. 직접 등록하거나 새 근거가 쌓이면 관측할 수 있습니다.'
-      );
-  }
-  async function loadRegistry(force = false) {
-    if (!$('#topic-management').open) return;
-    try {
-      const data = await api('/api/strategy/topics');
-      registryData = data;
-      const signature = String(data.version || JSON.stringify(data.items || []));
-      if (force || signature !== registrySignature) {
-        registrySignature = signature;
-        renderRegistry(data);
-      }
-    } catch (e) {
-      $('#topic-registry').textContent = e.message;
-    }
-  }
-  async function changeTopic(button, id, change) {
-    await action(button, async () => {
-      await api('/api/strategy/topics/' + encodeURIComponent(id) + '/' + change, {});
-      if (change === 'exclude' && state.lens === id) state.lens = '';
-      await Promise.all([loadOverview(true), load()]);
-      notify(
-        change === 'exclude'
-          ? '주제를 제외했습니다. 자동 재등장을 막으며 관리 목록에서 복원할 수 있습니다.'
-          : '주제를 복원했습니다.'
-      );
-    });
-  }
-  $('#signals-more').addEventListener('click', () => {
-    showAllSignals = !showAllSignals;
-    if (monitoringData) renderMonitoring(monitoringData);
-  });
-  $('#candidates-more').addEventListener('click', () => {
-    showAllCandidates = !showAllCandidates;
-    if (monitoringData) renderMonitoring(monitoringData);
-  });
-  $('#dynamic-evidence-panel').addEventListener('toggle', () => {
-    if ($('#dynamic-evidence-panel').open && state.overview) renderDynamicEvidence(state.overview);
-  });
-  $('#topics-more').addEventListener('click', () => {
-    showAllTopics = !showAllTopics;
-    if (state.overview) {
-      renderTrends(state.overview);
-      renderDynamicEvidence(state.overview);
-      if (state.data && !state.newsLoading) renderNews(state.data);
-    }
-  });
-  $('#topic-management').addEventListener('toggle', () => {
-    if ($('#topic-management').open) loadRegistry(true);
-  });
-  $('#topic-registry-search').addEventListener('input', () => {
-    registryVisible = 30;
-    if (registryData) renderRegistry(registryData);
-  });
-  $('#topic-registry-more').addEventListener('click', () => {
-    registryVisible += 30;
-    if (registryData) renderRegistry(registryData);
-  });
-  $('#topic-add').addEventListener('click', () => $('#topic-dialog').showModal());
-  $('#topic-close').addEventListener('click', () => $('#topic-dialog').close());
-  $('#topic-registry-refresh').addEventListener('click', () => loadRegistry(true));
-  $('#topic-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    action($('#topic-save'), async () => {
-      const terms = [
-        ...new Set(
-          $('#topic-terms')
-            .value.split(',')
-            .map((t) => t.trim())
-            .filter(Boolean)
-        ),
-      ];
-      if (!terms.length) throw new Error('관측할 표현을 하나 이상 입력해 주세요.');
-      await api('/api/strategy/topics', {
-        kind: $('#topic-kind').value,
-        label: $('#topic-label').value.trim(),
-        terms,
-        description: $('#topic-description').value.trim(),
-      });
-      const addedName = $('#topic-label').value.trim();
-      $('#topic-dialog').close();
-      $('#topic-form').reset();
-      $('#topic-registry-search').value = addedName;
-      registryVisible = 30;
-      await Promise.all([loadOverview(true), load()]);
-      notify('주제·신호를 등록했습니다. 실제 관측 건수와 근거를 확인하세요.');
-    });
-  });
-
   $('#workflow-details').addEventListener('click', () => {
-    if (activeWorkflow) loadWorkflow(activeWorkflow.id, true);
+    workflow.details();
   });
   $('#improvement-details').addEventListener('click', () => {
-    if (activeImprovement) loadImprovement(activeImprovement.id, true);
+    improvement.details();
   });
   async function loadStrategicChanges() {
     const area = $('#strategic-change-list');
@@ -2638,15 +1594,82 @@
       area.replaceChildren(node('p', 'subtle', '전략 변화 조회: ' + error.message));
     }
   }
+  const { improvementText, improvementEvidence } = StrategyPanels.evidence({ node, link });
+  function baselineDetail(analysis) {
+    return baseline.detail(analysis);
+  }
+  const reading = {
+    get showAllTopics() {
+      return showAllTopics;
+    },
+    set showAllTopics(v) {
+      showAllTopics = v;
+    },
+    get showAllCandidates() {
+      return showAllCandidates;
+    },
+    set showAllCandidates(v) {
+      showAllCandidates = v;
+    },
+    get showAllSignals() {
+      return showAllSignals;
+    },
+    set showAllSignals(v) {
+      showAllSignals = v;
+    },
+    get monitoringData() {
+      return monitoringData;
+    },
+    set monitoringData(v) {
+      monitoringData = v;
+    },
+  };
+  const panelContext = {
+    $,
+    node,
+    num,
+    safe,
+    link,
+    notify,
+    api,
+    action,
+    query,
+    state,
+    scheduleStatus,
+    stopStatus,
+    retryStatus,
+    load,
+    loadOverview,
+    selectLens,
+    selectedScope,
+    empty,
+    spark,
+    svgEl,
+    openStory,
+    growth,
+    improvementText,
+    improvementEvidence,
+    reading,
+    renderMonitoring,
+    renderTrends,
+    renderNews,
+    visibleLenses,
+    loadWorkflow: (...args) => workflow.load(...args),
+  };
+  const workflow = StrategyPanels.workflow(panelContext);
+  const improvement = StrategyPanels.improvement(panelContext);
+  const baseline = StrategyPanels.baseline(panelContext);
+  const topics = StrategyPanels.topics(panelContext);
+  const risks = StrategyPanels.risks(panelContext);
   loadCorpusStatus();
   loadChannelStatus();
   renderLensTabs();
   renderWatches();
   if (operationsMode) {
     runtime();
-    loadWorkflow();
-    loadImprovement();
-    loadBaseline();
+    workflow.load();
+    improvement.load();
+    baseline.load();
   } else {
     load();
     loadOverview();
@@ -2669,7 +1692,7 @@
   }
   if (!operationsMode) {
     observeSection('#network', loadGraphPreview);
-    observeSection('#risk-observatory', loadRisks);
+    observeSection('#risk-observatory', risks.load);
     observeSection('#strategic-changes', loadStrategicChanges);
   }
 })();

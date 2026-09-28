@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  addEventListener('public-data-updated', () => location.reload());
   const $ = (id) => document.getElementById(id),
     el = (tag, text, cls) => {
       const n = document.createElement(tag);

@@ -146,22 +146,27 @@ def fetch_metadata(ids):
 
 
 class PaperService:
-    def __init__(self, path, fetcher=None):
+    def __init__(self, path, fetcher=None, start_worker=True):
         self.path = str(path)
         self.fetcher = fetcher or fetch_metadata
-        self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix='arxiv-metadata')
+        self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix='arxiv-metadata') if start_worker else None
         self.lock = threading.Lock()
         self.active = None
         self.closed = False
         with self.db() as db:
             init_papers(db)
             for job, pid in db.execute("SELECT id,owner_pid FROM arxiv_metadata_jobs WHERE status IN ('queued','running')").fetchall():
+                if not pid:
+                    continue
                 try:
                     if not pid:
                         raise ProcessLookupError
                     os.kill(int(pid), 0)
                 except ProcessLookupError:
-                    db.execute("UPDATE arxiv_metadata_jobs SET status='interrupted',error='프로세스 재시작 후 재요청 필요' WHERE id=?", (job,))
+                    if start_worker:
+                        db.execute("UPDATE arxiv_metadata_jobs SET status='interrupted',error='프로세스 재시작 후 재요청 필요' WHERE id=?", (job,))
+                    else:
+                        db.execute("UPDATE arxiv_metadata_jobs SET status='queued',owner_pid=NULL WHERE id=?", (job,))
                 except PermissionError:
                     pass
 
@@ -180,6 +185,9 @@ class PaperService:
             if self.closed or self.active:
                 raise RuntimeError('arXiv 메타데이터 조회가 실행 중이거나 종료되었습니다.')
             with self.db() as db:
+                db.execute('BEGIN IMMEDIATE')
+                if db.execute("SELECT 1 FROM arxiv_metadata_jobs WHERE status IN ('queued','running') LIMIT 1").fetchone():
+                    raise RuntimeError('arXiv 메타데이터 조회가 실행 중입니다.')
                 retry_at = self.cooldown_until(db)
                 if retry_at > time.time():
                     return {'id': '', 'status': 'rate_limited', 'paper_ids': [], 'count': 0,
@@ -207,9 +215,10 @@ class PaperService:
                 if not selected:
                     return {'id': '', 'status': 'cached', 'paper_ids': [], 'count': 0}
                 job = uuid.uuid4().hex
-                db.execute('INSERT INTO arxiv_metadata_jobs VALUES (?,?,?,?,?,?)', (job, 'queued', json.dumps(selected), datetime.now(timezone.utc).isoformat(), '', os.getpid()))
-            self.active = job
-            self.pool.submit(self._run, job, selected)
+                db.execute('INSERT INTO arxiv_metadata_jobs VALUES (?,?,?,?,?,?)', (job, 'queued', json.dumps(selected), datetime.now(timezone.utc).isoformat(), '', os.getpid() if self.pool else None))
+            if self.pool:
+                self.active = job
+                self.pool.submit(self._run, job, selected)
             return {'id': job, 'status': 'queued', 'paper_ids': selected, 'count': len(selected)}
 
     def _run(self, job, ids):
@@ -277,13 +286,15 @@ class PaperService:
             counts = dict(db.execute('SELECT status,COUNT(*) FROM arxiv_papers GROUP BY status'))
             jobs = _rows(db, 'arxiv_metadata_jobs')[-12:]
             retry_at = self.cooldown_until(db)
-        return {'active': self.active, 'pending': int(bool(self.active)), 'counts': counts, 'jobs': jobs,
+        active = next((r['id'] for r in jobs if r['status'] in ('queued','running')), None)
+        return {'active': active, 'pending': int(bool(active)), 'counts': counts, 'jobs': jobs,
                 'retry_at': datetime.fromtimestamp(retry_at, timezone.utc).isoformat() if retry_at > time.time() else None}
 
     def close(self):
         with self.lock:
             self.closed = True
-        self.pool.shutdown(wait=False, cancel_futures=True)
+        if self.pool:
+            self.pool.shutdown(wait=False, cancel_futures=True)
 
 
 def _paper_rows(db):
