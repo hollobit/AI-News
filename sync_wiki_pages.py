@@ -54,13 +54,27 @@ def validate_static_dependencies(output, files=FILES):
             if dependency and (dependency not in listed or not (root/dependency).is_file()):
                 raise RuntimeError(f'{name}: missing published asset {dependency}')
 
+class GitHubAPIError(RuntimeError):
+    def __init__(self, message, *, retryable=False):
+        super().__init__(message)
+        self.retryable = retryable
+
+
 def api(path, method='GET', body=None):
     command = ['gh', 'api', f'repos/{REPO}/{path}', '--method', method]
     if body is not None:command += ['--input', '-']
-    result = subprocess.run(command, input=json.dumps(body) if body is not None else None,
-                            text=True, capture_output=True, timeout=120)
+    try:
+        result = subprocess.run(command, input=json.dumps(body) if body is not None else None,
+                                text=True, capture_output=True, timeout=120)
+    except subprocess.TimeoutExpired as error:
+        raise GitHubAPIError(f'GitHub API {method} {path} timed out', retryable=True) from error
     if result.returncode:
-        raise RuntimeError(f'GitHub API {method} {path} failed (exit {result.returncode})')
+        code = re.search(r'HTTP (\d{3})', result.stderr)
+        status = int(code.group(1)) if code else None
+        transient = status in {408, 500, 502, 503, 504} or bool(re.search(
+            r'connection reset|TLS handshake timeout|i/o timeout|unexpected EOF', result.stderr, re.I))
+        # Print only controlled status metadata, never subprocess/provider inputs.
+        raise GitHubAPIError(f'GitHub API {method} {path} failed (HTTP {status or "unknown"})', retryable=transient)
     return json.loads(result.stdout) if result.stdout.strip() else {}
 
 def fingerprint(files):
@@ -122,10 +136,18 @@ def sync(db, output):
         encoded=content.encode('utf-8')
         sha=hashlib.sha1(b'blob '+str(len(encoded)).encode()+b'\0'+encoded).hexdigest()
         if not parent or not any(e['path']==name and e['sha']==sha for e in tree['tree']):
-            try:
-                sha=api('git/blobs','POST',{'content':base64.b64encode(encoded).decode('ascii'),'encoding':'base64'})['sha']
-            except RuntimeError as error:
-                raise RuntimeError(f'{name}: {error}') from error
+            for attempt in range(3):
+                try:
+                    sha=api('git/blobs','POST',{'content':base64.b64encode(encoded).decode('ascii'),'encoding':'base64'})['sha']
+                    break
+                except GitHubAPIError as error:
+                    # Identical blob content has the same SHA: this is safe to
+                    # retry. Never retry commit/ref publication automatically.
+                    if not error.retryable or attempt == 2:
+                        raise RuntimeError(f'{name}: {error}') from error
+                    time.sleep(2 ** attempt)
+                except RuntimeError as error:
+                    raise RuntimeError(f'{name}: {error}') from error
         return {'path':name,'mode':'100644','type':'blob','sha':sha}
     with ThreadPoolExecutor(max_workers=4) as pool:
         entries=list(pool.map(upload,files.items()))

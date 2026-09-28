@@ -30,6 +30,6 @@ export는 공개 뉴스/노드/관계 ID의 중복과 없는 관계 끝점을 �
 
 ## 계산 캐시와 공개본
 
-`document_features.py`는 정확한 title/text/excerpt와 source status/title/text 및 규칙 파일 hash로 분류·전략 점수만 저장한다. 별도 `.features.sqlite3`은 폐기·재생성할 수 있는 계산 캐시다. 모델 분석과 승인 상태를 저장하지 않으며 원장의 검토를 대체하지 않는다. source 입력 변경·규칙 변경·캐시 손상 시 기존 계산 경로를 사용한다. 기존 형태소 내용 캐시와 process-local single-flight/메모리 예산도 보존한다.
+`document_features.py`는 정확한 title/text/excerpt/abstract와 source status/title/text 및 규칙 파일 hash로 분류·전략 점수만 저장한다. 별도 `.features.sqlite3`은 폐기·재생성할 수 있는 계산 캐시다. 모델 분석과 승인 상태를 저장하지 않으며 원장의 검토를 대체하지 않는다. source 입력 변경·규칙 변경·캐시 손상 시 기존 계산 경로를 사용한다. 기존 형태소 내용 캐시와 process-local single-flight/메모리 예산도 보존한다.
 
 공개 export는 먼저 기존 allowlist로 자료를 정제하고 그 결과를 분할한다. 한 탭은 하나의 manifest를 사용하며 검색 시에는 완전한 검색 색인을 읽는다. 첫 지도는 bootstrap, 선택 지도는 인접 관계만 읽는다. 현재 파일과 직전 세대 파일을 보존한다. Git tree/commit/ref를 순서대로 게시하므로 manifest와 자산이 한 판으로 배포된다. 원문 발췌·owner PID·운영 로그·인증은 공개 파일에 추가하지 않는다.

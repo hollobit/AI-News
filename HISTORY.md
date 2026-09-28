@@ -2,11 +2,13 @@
 
 ## 2026-09-29 — 사이트 구조·공개 로딩·독립 기본 worker
 
-- 공개 화면의 전체 site/knowledge 동시 로딩을 manifest와 화면별 불변 파일로 나눴다. 완전한 검색 색인·뉴스 상세·지도 최초 범위/인접 관계·딥링크를 보존한다. 실제 첫 JSON은 1,918,027 bytes(1.83MiB), 전체 그래프 요청 0이다. 공개 필드 제한·원문 제외·직전 데이터 세대 보존·원자 게시를 유지한다.
+- 공개 화면의 전체 site/knowledge 동시 로딩을 manifest와 화면별 불변 파일로 나눴다. 완전한 검색 색인·뉴스 상세·지도 최초 범위/인접 관계·딥링크를 보존한다. 실제 첫 JSON은 1,918,783 bytes(1.83MiB), 전체 그래프 요청 0이다. 공개 필드 제한·원문 제외·직전 데이터 세대 보존·원자 게시를 유지한다.
 - `database.py`, `news_repository.py`, `server_bootstrap.py`, `server_http.py`로 준비/읽기/서비스 조립/HTTP 경계를 분리했다. 요청 중 projection schema/keyword refresh/morphology persistence를 차단하고 준비 지연을 503으로 안내한다. 기존 URL·상태·Host/Origin·body 제한·ETag를 보존했다.
 - 기본 분석은 detached worker와 DB별 lease로 분리했다. durable pause 이벤트·기존 원장·내용 검토 이력을 유지한다. 실제 서버 재시작에서도 같은 run/worker PID 71373이 생존하고 verified 7,610→7,626으로 증가했다. 전수 분석 완료가 아니다.
 - 읽기 대시보드와 `/operations`를 분리하고 공통 JSON 요청/ETag/취소·polling/상태·본문 이동/focus 자산을 추가했다. 내용/규칙 해시별 분류·전략 점수를 별도 계산 DB에 저장한다. 기본/논문 검토 무결성 공통 helper와 export ID 충돌/관계 끝점 검사를 추가했다.
-- 632개 Python 테스트·56 subtest, JavaScript 계약 4개, 공개 12메뉴/전체 검색/딥링크/기간·확장/모바일, 로컬 운영/읽기·키보드·모바일 검증 통과. CI와 실행/계약 문서를 추가했다. 상세 범위와 아직 달성하지 않은 성능·추가 모듈화 목표는 REFACTORING_GUIDE.md에 남겼다.
+- 프런트엔드 포맷은 기능 변경과 별도 커밋으로 분리했다. 직접 작성한 JavaScript 22개 파일의 포맷 전후 AST가 일치하며, three.js 원본은 제외했다. 공개 분류 select 닫는 태그 누락도 별도 수정했다. CI에 결정적인 대시보드 브라우저 회귀를 포함했다.
+- 실제 게시 중 대용량 호환 knowledge 파일의 일시적 GitHub 업로드 실패를 확인했다. 같은 내용의 blob은 같은 SHA이므로 해당 업로드만 최대 3회 재시도하고 commit/ref 게시에는 자동 재시도를 추가하지 않았다. 인증/권한 오류는 재시도하지 않는다.
+- 633개 Python 테스트·56 subtest, JavaScript 계약 4개, 공개 12메뉴/전체 검색/딥링크/기간·확장/모바일, 로컬 운영/읽기·키보드·모바일 검증 통과. CI와 실행/계약 문서를 추가했다. 상세 범위와 아직 달성하지 않은 성능·추가 모듈화 목표는 REFACTORING_GUIDE.md에 남겼다.
 
 ## 2026-09-29 — 선택한 기본 재개·자동 복구·지도/GraphRAG 성능
 

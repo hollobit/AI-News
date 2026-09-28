@@ -43,6 +43,9 @@ async def main():
         assert 'knowledge.json' not in requests
         results['public_graph'] = {'files': sorted(set(requests))}
 
+        await page.close()
+        page = await browser.new_page()
+        page.on('pageerror', lambda error: errors.append(str(error)))
         live = os.environ.get('LIVE_SITE_URL', 'http://127.0.0.1:8001')
         for path, mode in [('/', 'reading'), ('/operations', 'operations')]:
             await page.set_viewport_size({'width': 1440, 'height': 1000})

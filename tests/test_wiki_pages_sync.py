@@ -33,3 +33,25 @@ def test_unexpected_remote_files_are_preserved(tmp_path,monkeypatch):
         return {'tree':[{'path':'user-file'}]}
     monkeypatch.setattr(publish,'api',api)
     with pytest.raises(RuntimeError,match='Unexpected files'):publish.sync('unused',tmp_path)
+
+
+def test_only_immutable_blob_upload_has_bounded_transient_retries(tmp_path, monkeypatch):
+    for name in publish.FILES:
+        (tmp_path/name).write_text('{}' if name.endswith('.json') else '')
+    monkeypatch.setattr(publish, 'export_site', lambda *args, **kwargs: {})
+    monkeypatch.setattr(publish.time, 'sleep', lambda _: None)
+    calls = []
+    failed = False
+    def api(path, method='GET', body=None):
+        nonlocal failed
+        calls.append(path)
+        if path.startswith('branches'): return []
+        if path == 'git/blobs' and not failed:
+            failed = True
+            raise publish.GitHubAPIError('HTTP 502', retryable=True)
+        return {'sha': 'test'}
+    monkeypatch.setattr(publish, 'api', api)
+    assert publish.sync('unused', tmp_path)['status'] == 'published'
+    assert calls.count('git/blobs') == len(publish.FILES) + 1
+    assert calls.count('git/commits') == 1
+    assert calls.count('git/refs') == 1

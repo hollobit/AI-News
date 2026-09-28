@@ -16,7 +16,7 @@ def rule_version():
 def feature_key(item):
     source=item.get('source_context') or {}
     # Exactly the evidence fields used by the two lexical classifiers.
-    value=[item.get(k) for k in ('title','text','excerpt')]+[source.get(k) for k in ('status','title','text')]
+    value=[item.get(k) for k in ('title','text','excerpt','abstract')]+[source.get(k) for k in ('status','title','text')]
     return hashlib.sha256(json.dumps(value,ensure_ascii=False).encode()).hexdigest()
 
 

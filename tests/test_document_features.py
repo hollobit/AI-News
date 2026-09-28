@@ -14,6 +14,7 @@ def test_persistent_features_reuse_exact_inputs_and_invalidate_source_or_rules(t
         with features.cached_features(db) as store:
             assert features.read(store,item)=={'sectors':prepared['sectors'],'strategic_value':prepared['strategic_value']}
             assert features.read(store,dict(item,text='Changed')) is None
+            assert features.read(store,dict(item,abstract='New medical evidence')) is None
             assert features.read(store,dict(item,source_context={'status':'fetched','text':'New evidence'})) is None
             monkeypatch.setattr(features,'rule_version',lambda:'next-rule')
             assert features.read(store,item) is None
