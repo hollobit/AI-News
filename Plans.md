@@ -5,6 +5,7 @@
 - 공개 데이터 분할·불변 manifest, DB 준비/HTTP 읽기 분리, 뉴스 repository·서버 bootstrap/HTTP 경계, `/operations`, 공통 요청/폴링/접근성 자산, 내용/규칙별 계산 캐시, 검토 무결성/ID 계약, CI와 게시 파일 검증을 반영했다. 범위와 후속 확장은 [REFACTORING_GUIDE.md](REFACTORING_GUIDE.md)에 구분한다.
 - 실제 공개 첫 JSON 합계 **1,918,783 bytes / 1.83MiB**, 관련 없는 전체 그래프 요청 0. 12메뉴·전체 검색·기사 연결·모든 검토 문서 그래프 연결·14/30/90·확장·모바일 회귀 통과. 로컬 읽기/운영 구분·키보드 본문 이동·모바일/JS 오류 0.
 - 기본 run `7ef95c61617d4cb6bec2be842fc71b5f`를 안전하게 pause/drain 후 detached worker PID 71373으로 같은 체크포인트 재개했다. 서버 71341→91482 재시작에도 같은 worker가 생존하고 verified 7,610→7,626으로 증가했다(검증 시점 기록). 고정 대상 7,871건의 전체 완료가 아니다. 심층 사용자 중지와 기존 수집기를 유지한다.
+- Pages 새 구조 게시 및 빌드 완료: `ce0fde318698d4580245d14a7413f063dcb18634`. 원격 UI 전체 회귀 통과, 상세 목록 완성 후 초기 JSON 1,918,615 bytes(1.83MiB)·전체 site/knowledge 요청 0. 실제 서버 PID 97047 정상 응답 및 같은 baseline worker PID 98561 진행 유지(배포 검증 시점). 원격 CI 전체 검사도 통과했다.
 - 전체 검사 **633 passed, 56 subtests passed** 및 JavaScript 계약 4개 통과. 실데이터 검증은 `.runtime/verification/refactoring-ui.json`, `refactoring-worker.json`에 별도 보관한다. 소스 변경과 전수 처리 진행 상태를 혼동하지 않는다.
 
 

@@ -29,6 +29,7 @@ async def main():
         await page.goto('http://public.test/AI-News/index.html?view=strategy')
         await expect(page.locator('#content .card').first).to_be_visible(timeout=60000)
         await expect(page.locator('#dashboard-topics .card').first).to_be_visible()
+        await expect(page.locator('#result-count')).to_contain_text('개 표시', timeout=60000)
         json_files = sorted({name for name in requests if name.endswith('.json')})
         total = sum((folder / name).stat().st_size for name in json_files)
         assert total <= 2 * 1024 * 1024, total

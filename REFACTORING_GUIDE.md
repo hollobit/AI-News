@@ -1,6 +1,6 @@
 # 전체 사이트 리팩토링 가이드
 
-검토일: 2026-09-29. 기준 소스: `5e66465`. 이 문서는 개선 제안이며 구현 완료 보고가 아니다.
+검토일: 2026-09-29. 기준 소스: `5e66465`. 본문은 이 소스의 검토·개선 제안이며, 실제 구현과 검증 결과는 마지막 이행표에 별도로 기록했다.
 
 ## 검토 범위와 결론
 
@@ -155,4 +155,4 @@ GraphRAG는 직전 재시도 기준 첫 근거 0.102초·독립 검토 완료 35
 
 이 표는 위 구현 범위의 완료 기록입니다. 전체 작업 종류의 worker 독립화, 기능별 HTTP 하위 라우터의 추가 분할, 공통 뉴스 카드/인용 패널의 완전한 교체, 문서-주제 membership의 영속 증분화는 후속 확장으로 남습니다. 최종 LLM 답변 5초, 저속 모바일 파싱 시간·부하 p95·스크린리더 전수 검증은 달성했다고 표시하지 않습니다. 지도 기간·공동 관측/고유 문서 의미와 논문/뉴스 수 분리는 그대로 유지합니다.
 
-검증 산출물: `.runtime/verification/refactoring-ui.json`, `refactoring-worker.json`, 기존 공개 UI 및 검색 검사. 장기 분석 전체 완료와 소스 리팩토링 완료는 구분합니다.
+검증 산출물: `.runtime/verification/refactoring-ui.json`, `refactoring-worker.json`, `refactoring-remote-loading.json`, `refactoring-pages-publish.json`, 기존 공개 UI 및 검색 검사. 원격 Pages의 상세 목록 완성 후 초기 JSON도 1,918,615 bytes(1.83MiB)·전체 site/knowledge 요청 0이며 전체 원격 UI 회귀를 통과했다. 장기 분석 전체 완료와 소스 리팩토링 완료는 구분합니다.
