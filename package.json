@@ -1,0 +1,12 @@
+{
+  "name": "ai-news-workspace",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write static",
+    "check:format": "prettier --check static",
+    "test:js": "node --test tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}

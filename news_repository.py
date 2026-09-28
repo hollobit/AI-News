@@ -168,5 +168,3 @@ def hidden_link_rows(db, existing_rows):
         known.setdefault(key, set()).add(url)
         result.append(row)
     return result
-
-

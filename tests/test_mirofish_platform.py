@@ -11,6 +11,7 @@ def test_runner_exits_after_final_round_instead_of_entering_ipc_wait_mode():
 
 def test_public_simulation_form_exposes_reddit_fallback_and_parallel_mode():
     source = (ROOT / 'static/simulation.js').read_text()
-    assert "['reddit','Reddit (권장)']" in source
+    source = ''.join(source.split()).replace('"', "'")
+    assert "['reddit','Reddit(권장)']" in source
     assert "['twitter','Twitter']" in source
-    assert "['parallel','Twitter + Reddit']" in source
+    assert "['parallel','Twitter+Reddit']" in source

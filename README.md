@@ -22,7 +22,7 @@
 
 공개본은 `site-manifest.json`과 내용 해시별 JSON을 사용합니다. 처음에는 작은 뉴스 목록과 현재 표시할 상세만 읽고, 전체 검색 색인은 검색 시, 지도는 최초 범위/선택 주변만 읽습니다. manifest는 한 탭에서 고정하며 직전 데이터 파일도 한 세대 보존합니다. `site.json`·`knowledge.json`은 이전 클라이언트와 완전성 점검을 위해 계속 생성하지만 새 첫 화면은 읽지 않습니다. 게시 파일의 허용 목록과 모듈 의존성 검증은 유지합니다.
 
-검증은 `.venv/bin/python -m pytest tests -q`, `node --test tests/*.test.cjs`를 사용합니다. `tests/ui_refactoring.py`는 실제 공개 생성본의 초기 JSON 2MiB 예산, 전체 그래프 미로딩, 로컬 읽기/운영 화면·모바일·본문 이동을 검사합니다. GitHub Actions는 프로젝트 테스트와 JavaScript 검사를 실행합니다. 구조 및 식별자/검토 계약은 [ARCHITECTURE.md](ARCHITECTURE.md), 개선 항목별 이행 범위는 [REFACTORING_GUIDE.md](REFACTORING_GUIDE.md)를 참고하세요.
+검증은 `.venv/bin/python -m pytest tests -q`, `node --test tests/*.test.cjs`를 사용합니다. `tests/ui_refactoring.py`는 실제 공개 생성본의 초기 JSON 2MiB 예산, 전체 그래프 미로딩, 로컬 읽기/운영 화면·모바일·본문 이동을 검사합니다. `npm ci` 후 `npm run format`으로 직접 작성한 정적 자산을 정리하고 `npm run check:format`으로 확인합니다. 포함된 three.js 원본은 제외합니다. GitHub Actions는 프로젝트 테스트·JavaScript·포맷 검사를 실행합니다. 구조 및 식별자/검토 계약은 [ARCHITECTURE.md](ARCHITECTURE.md), 개선 항목별 이행 범위는 [REFACTORING_GUIDE.md](REFACTORING_GUIDE.md)를 참고하세요.
 
 ## 지식 위키
 

@@ -10,3 +10,5 @@ log/
 *.swp
 *.log
 config.json
+
+node_modules/

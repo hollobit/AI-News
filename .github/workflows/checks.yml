@@ -18,6 +18,8 @@ jobs:
           node-version: '22'
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m pytest tests -q
+      - run: npm ci --ignore-scripts
+      - run: npm run check:format
       - name: JavaScript syntax and contracts
         run: |
           for file in static/*.js; do

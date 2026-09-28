@@ -192,4 +192,3 @@ def bootstrap(path, port, queries):
         paper_service.close()
         source_service.close()
         simulation_service.close()
-
