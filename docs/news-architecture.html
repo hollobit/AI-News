@@ -29,11 +29,12 @@
         [['ingestion','입력 정리','뉴스 중복 제거 · 논문 ID·버전',1]],
         [['ledger','SQLite 원장','원자료 · 분석 · 검토 · 실행 이력',2],['ops','실행 감독','owner · checkpoint · heartbeat',3]],
         [['projections','증분 투영·캐시','변경 원장 · 입력/규칙 해시',2],['workers','독립 분석 worker','기본 · 논문 · 위키 · 기사',3],['web','Python 웹 서버','API · 심층 · GraphRAG · 시뮬레이션',3]],
+        [['model','모델 실행·독립 검토','Codex CLI · 공유 예산 · 재시도 제한',3]],
         [['review','출처·검토 상태 구분','현재 입력 · 인용 대조 · 독립 검토',4]],
         [['local','로컬 브라우저','뉴스 · 지도 · 지식 · 운영',5],['export','공개본 생성','staging · 해시 조각 · manifest',5]],
         [['pages','GitHub Pages','검증된 정적 자료 · 읽기 전용',5]]
       ],
-      edges: [['telegram','ingestion'],['sources','ingestion'],['papers','ingestion'],['ingestion','ledger'],['ledger','projections'],['ledger','workers'],['ledger','web'],['ops','workers'],['ops','web'],['projections','review'],['workers','review'],['web','review'],['review','local'],['review','export'],['export','pages']],
+      edges: [['telegram','ingestion'],['sources','ingestion'],['papers','ingestion'],['ingestion','ledger'],['ledger','projections'],['ledger','workers'],['ledger','web'],['ops','workers'],['ops','web'],['projections','review'],['workers','model'],['web','model'],['model','review'],['review','local'],['review','export'],['export','pages']],
       detail: '관측 지도: 같은 문서·날짜의 공동 관측. 분석 공개: 현재 입력과 독립 검토 일치. 논문과 Telegram 뉴스는 별도 집계.'
     },
     collection: {
@@ -100,7 +101,8 @@
       const a=positions.get(from),b=positions.get(to);
       const ax=a.x+a.width/2,ay=a.y+a.height,bx=b.x+b.width/2,by=b.y;
       const middle=(ay+by)/2;
-      const path = compact && by-ay>step ? `M${ax} ${ay+2} L${ax} ${ay+9} L5 ${ay+9} L5 ${by-12} L${bx} ${by-12} L${bx} ${by-4}` : `M${ax} ${ay+2} C${ax} ${middle} ${bx} ${middle} ${bx} ${by-4}`;
+      const rail = compact ? 5 : 1;
+      const path = by-ay>step ? `M${ax} ${ay+2} L${ax} ${ay+9} L${rail} ${ay+9} L${rail} ${by-12} L${bx} ${by-12} L${bx} ${by-4}` : `M${ax} ${ay+2} C${ax} ${middle} ${bx} ${middle} ${bx} ${by-4}`;
       svg.append(element('path',{class:'connector',d:path,'marker-end':'url(#news-architecture-arrow)'}));
     }
     for (const {node,x,y,width:w,height:h} of positions.values()) {
