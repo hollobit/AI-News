@@ -1,5 +1,15 @@
 # 작업 이력
 
+## 2026-09-30 정기 수집 후 기본 분석 (08:54 KST 확인)
+
+- 기존 수집기·서버를 유지했다. 마지막 Telegram 확인 08:54:13, 최신 기사 추출 08:24:36. 누적 고유 뉴스 8,093건으로 이전 점검 8,058건보다 35건 증가했다. 최근 추출 배치 자체는 12건(8,081→8,093)이며 전체 증가량과 구분한다.
+- 이전 run `6143826cfe964f94a48e7a8da533c2c1`의 owner PID 10096 부재, active_workers=0, 사용자 중지 이벤트 부재 및 엔진 probe 성공 확인 후 같은 실행을 재개했다. 남았던 4건을 검증해 고정 대상 8,058건 전부 complete. worker 로그에 `sqlite3.OperationalError: unable to open database file`이 남아 있었으나 근본 원인까지 확정한 것은 아니다.
+- 최신 입력 대조 후 run `cb516c5d7ae24cd2a25aa5b359f9e9c2` 시작. 대상 8,093건 중 현재 입력과 검토가 맞는 8,049건 재사용, 신규·변경 입력 44건 처리(43건 verified, 1건 needs_review). timeout 중지는 정기 복구 예산·대기를 유지하며 동일 run으로 재개했다.
+- 최종 상태 `requires_review`: analyzed 8,093, verified 8,092, needs_review 1, pending/failed/active_workers 0. 검토 보류 사유는 limitations에 제공된 근거에 없는 ‘이전 DB 접근 오류’ 문구를 포함한 것. 결과를 통과시키려고 검토 기준이나 시도 이력을 초기화하지 않았다.
+- 별도 최신 입력·인용·독립 검토 캐시 감사도 현재 고유 8,093 / 유효 검증 8,092 / 미검증 1로 일치했다. 전체 검증 완료로 보고하지 않는다. 정기 수집과 5분 스케줄러 등록은 유지되지만, 현재 requires_review가 해소되기 전 후속 기본 run을 자동으로 우회 시작하지 않는다.
+- 근거: `.runtime/verification/collection-analysis-20260930-morning.json`, `collection-current-inputs-20260930.json`. 심층·논문·MiroFish·Pages 작업을 추가 실행하지 않았다.
+
+
 ## 2026-09-30 정기 수집·기본 분석 점검 (00:25 KST)
 
 - 기존 수집기 PID 43236과 웹 PID 92491을 유지했다. Telegram 마지막 확인 00:25:18, 최근 추출 완료 00:01:38. 누적 고유 뉴스 8,058건이며 요청 시작의 8,032건보다 26건 증가했다. 마지막 추출 배치 자체의 신규 수는 8건(8,050→8,058)으로 구분한다.
