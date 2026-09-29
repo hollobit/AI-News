@@ -85,13 +85,212 @@
         }
       }
     </style>
+    <style>
+      body {
+        background:
+          radial-gradient(ellipse at 5% 0%, #7468f51c, transparent 48%),
+          radial-gradient(ellipse at 100% 20%, #13b9ab1a, transparent 46%), var(--background);
+      }
+      main {
+        max-width: 1180px;
+      }
+      h1 {
+        font-size: clamp(27px, 4vw, 44px);
+        letter-spacing: -1.5px;
+        margin-bottom: 8px;
+      }
+      .hero-kicker {
+        color: var(--viz-series-3);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        margin: 0 0 10px;
+      }
+      .hero-description {
+        margin: 0 0 28px;
+        opacity: 0.8;
+      }
+      .viz-controls {
+        padding: 7px;
+        border: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+        border-radius: 16px;
+        width: fit-content;
+        background: color-mix(in srgb, var(--background) 80%, transparent);
+      }
+      .btn {
+        border-color: transparent;
+        border-radius: 10px;
+      }
+      .btn[aria-pressed='true'] {
+        background: linear-gradient(120deg, #5141a0, #176e76);
+        color: #fff;
+        box-shadow: 0 5px 14px #5141a025;
+      }
+      .architecture-figure {
+        padding: 18px 0;
+      }
+      .cycle-board {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-rows: repeat(3, minmax(180px, auto));
+        gap: 34px;
+        position: relative;
+        isolation: isolate;
+      }
+      .cycle-step {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        padding: 20px;
+        border-radius: 18px;
+        border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--background));
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--tone) 12%, var(--background)),
+          var(--background)
+        );
+        box-shadow: 0 10px 28px #1020300c;
+        color: var(--foreground);
+        font: inherit;
+        cursor: pointer;
+        min-width: 0;
+      }
+      .cycle-step[aria-pressed='true'] {
+        outline: 3px solid var(--tone);
+        outline-offset: 3px;
+      }
+      .cycle-step:hover {
+        box-shadow: 0 12px 32px color-mix(in srgb, var(--tone) 20%, transparent);
+      }
+      .cycle-step:focus-visible {
+        outline: 3px solid var(--foreground);
+        outline-offset: 4px;
+      }
+      .cycle-number {
+        font-size: 12px;
+        font-weight: 750;
+        color: var(--tone);
+        letter-spacing: 2px;
+      }
+      .cycle-step strong {
+        font-size: 19px;
+        margin: 8px 0;
+        letter-spacing: -0.5px;
+      }
+      .cycle-step small {
+        font-size: 13px;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+      }
+      .cycle-time {
+        margin-top: auto;
+        padding-top: 12px;
+        font-size: 11px;
+        font-weight: 650;
+        color: var(--tone);
+      }
+      .cycle-core {
+        grid-area: 2/2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+        border-radius: 50%;
+        background: radial-gradient(ellipse, #7567ed20, transparent 70%);
+      }
+      .cycle-core b {
+        font-size: clamp(20px, 2.9vw, 36px);
+        letter-spacing: -2px;
+        background: linear-gradient(110deg, var(--viz-series-2), var(--viz-series-3));
+        background-clip: text;
+        color: transparent;
+      }
+      .cycle-core span {
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      .cycle-wires {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: visible;
+        pointer-events: none;
+      }
+      .cycle-note {
+        margin: 26px 0 0;
+        border-left: 4px solid var(--viz-series-3);
+        padding: 14px 18px;
+        background: color-mix(in srgb, var(--viz-series-3) 7%, var(--background));
+        border-radius: 0 12px 12px 0;
+      }
+      .cycle-note strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+      [data-detail] {
+        border-top: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+        padding-top: 18px;
+      }
+      @media (max-width: 760px) {
+        .cycle-board {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto;
+          gap: 30px;
+        }
+        .cycle-step {
+          grid-area: auto !important;
+          min-height: 150px;
+        }
+        .cycle-core {
+          grid-area: auto;
+          grid-row: 1;
+          border-radius: 20px;
+          padding: 16px;
+        }
+        .cycle-core b {
+          font-size: 28px;
+        }
+        .cycle-core span {
+          margin: 0;
+        }
+        .cycle-step strong {
+          font-size: 19px;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .cycle-step {
+          transition:
+            box-shadow 0.2s,
+            outline-color 0.2s;
+        }
+      }
+      @media print {
+        .cycle-step {
+          break-inside: avoid;
+        }
+        body {
+          background: var(--background);
+        }
+      }
+    </style>
   </head>
   <body>
     <main>
       <div id="news-architecture">
-        <h1>뉴스 분석 시스템</h1>
+        <p class="hero-kicker">AI NEWS · SYSTEM ATLAS</p>
+        <h1>뉴스가 지식이 되는 순환</h1>
+        <p class="hero-description">
+          계속 수집하고, 근거를 검토하고, 새로운 변화로 다시 연결합니다.
+        </p>
         <div class="viz-controls" role="group" aria-label="아키텍처와 동작 흐름">
-          <button class="btn" type="button" data-view="architecture" aria-pressed="true">
+          <button class="btn" type="button" data-view="cycle" aria-pressed="true">전체 순환</button>
+          <button class="btn" type="button" data-view="architecture" aria-pressed="false">
             전체 구조
           </button>
           <button class="btn" type="button" data-view="collection" aria-pressed="false">
@@ -136,6 +335,7 @@
           const figure = root.querySelector('.architecture-figure');
           const detail = root.querySelector('[data-detail]');
           const views = {
+            cycle: { title: '정기 수집·분석 전체 순환' },
             architecture: {
               title: '수집·원장·실행·조회·공개본의 연결 구조',
               rows: [
@@ -254,7 +454,7 @@
                 '공개본에는 원문 발췌·운영 원장·인증 정보를 넣지 않음. 수집·분석 실행과 새 질문 생성은 로컬에서 수행.',
             },
           };
-          let selected = 'architecture';
+          let selected = 'cycle';
           const ns = 'http://www.w3.org/2000/svg';
           function element(name, attributes = {}, text = '') {
             const node = document.createElementNS(ns, name);
@@ -263,7 +463,165 @@
             if (text) node.textContent = text;
             return node;
           }
+          const cycleSteps = [
+            [
+              '신규 메시지 확인',
+              'Telegram 신규·수정 메시지 수신',
+              '상시 · 최대 30초 long polling',
+              1,
+              '마지막 확인 시각과 기사 추출 완료 시각을 별도로 기록합니다. API 429는 Retry-After에 따라 기다린 뒤 다시 확인합니다.',
+            ],
+            [
+              '기사 추출·중복 제거',
+              '정규 URL · 내용 중복 → 고유 뉴스',
+              '변경 메시지 발생 시',
+              1,
+              '메시지에서 기사를 추출하고 중복 그룹과 대표 문서를 정리합니다. 논문 메타데이터는 별도 집계하며 뉴스 수에 더하지 않습니다.',
+            ],
+            [
+              '원장 저장·변경 감지',
+              'SQLite · 입력 해시 · 증분 투영',
+              '변경된 범위만 재계산',
+              2,
+              '원자료와 변경 이력을 저장하고 영향받은 문서·중복 그룹만 갱신합니다. 이미 분석된 문서도 입력이 바뀌면 다시 검토할 대상이 됩니다.',
+            ],
+            [
+              '분석 대상 배정',
+              '추출 완료 · 신규/변경 · owner 확인',
+              '기본 분석: 5분 단위 점검',
+              3,
+              '수집 상태와 추출 완료를 확인합니다. 살아 있는 실행이 있으면 중복 시작하지 않고, 신규·변경 대상과 실행 범위를 고정합니다. 5분은 점검 주기이며 분석 완료 시간은 아닙니다.',
+            ],
+            [
+              '분석·자료 보강',
+              '기본 분석 · 조건별 심층/논문/위키',
+              '작업 큐 · 실행 가능 조건',
+              3,
+              '기본 분석 뒤 모든 작업이 무조건 실행되는 것은 아닙니다. 심층 분석은 별도 cycle과 사용자 중지를 따릅니다. 논문은 별도 파이프라인에서 제공자 대기와 일일 한도를 지킵니다.',
+            ],
+            [
+              '독립 검토·유효성 확인',
+              '현재 입력 · 인용 · 검토 결과 대조',
+              '통과 / 검토 대기 / stale 분리',
+              4,
+              '입력 해시·인용·독립 검토를 만족하는 결과만 재사용합니다. 검토 대기와 stale은 보존하고 적격 작업을 다시 처리하며, 기준을 낮춰 통과시키지 않습니다.',
+            ],
+            [
+              '조회·공개 동기화',
+              '로컬 API · 검증된 읽기 전용 Pages',
+              '공개본: 실행 후 5분 대기',
+              5,
+              '로컬은 현재 검토 결과를 조회합니다. 공개 동기화는 staging과 자산·해시 검증 후 정상 세대를 게시하고, 변화가 없으면 커밋하지 않습니다. 실패하면 마지막 정상본을 유지합니다.',
+            ],
+            [
+              '운영 점검·다음 순환',
+              'heartbeat · 체크포인트 · 재시도',
+              '상태 점검 5분 · 감독은 별도',
+              2,
+              '운영 점검과 감독은 수집·분석 옆에서 병행됩니다. 복구 가능한 오류만 제한된 예산으로 재시도하고 사용자 일시중지는 자동 해제하지 않습니다. 다음 메시지 수신으로 순환이 이어집니다.',
+            ],
+          ];
+          let cycleSelection = 0;
+          function drawCycle() {
+            const board = document.createElement('div');
+            board.className = 'cycle-board';
+            const core = document.createElement('div');
+            core.className = 'cycle-core';
+            core.innerHTML =
+              '<b>CONTINUOUS<br>INTELLIGENCE</b><span>수집 → 분석 → 검토 → 공개<br>독립 작업이 함께 이어지는 순환</span>';
+            const areas = ['1 / 2', '1 / 3', '2 / 3', '3 / 3', '3 / 2', '3 / 1', '2 / 1', '1 / 1'];
+            const note = document.createElement('div');
+            note.className = 'cycle-note';
+            note.setAttribute('aria-live', 'polite');
+            function select(index) {
+              cycleSelection = index;
+              board
+                .querySelectorAll('.cycle-step')
+                .forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
+              note.replaceChildren();
+              const title = document.createElement('strong');
+              title.textContent = String(index + 1).padStart(2, '0') + ' · ' + cycleSteps[index][0];
+              note.append(title, document.createTextNode(cycleSteps[index][4]));
+            }
+            cycleSteps.forEach(([title, description, timing, color], index) => {
+              const button = document.createElement('button');
+              button.type = 'button';
+              button.className = 'cycle-step';
+              button.style.gridArea = areas[index];
+              button.style.setProperty('--tone', `var(--viz-series-${color})`);
+              for (const [tag, cls, text] of [
+                ['span', 'cycle-number', 'STEP ' + String(index + 1).padStart(2, '0')],
+                ['strong', '', title],
+                ['small', '', description],
+                ['span', 'cycle-time', timing],
+              ]) {
+                const label = document.createElement(tag);
+                label.className = cls;
+                label.textContent = text;
+                button.append(label);
+              }
+              button.addEventListener('click', () => select(index));
+              board.append(button);
+            });
+            board.append(core);
+            figure.replaceChildren(board, note);
+            select(cycleSelection);
+            const svg = element('svg', { class: 'cycle-wires', 'aria-hidden': 'true' });
+            board.prepend(svg);
+            const defs = element('defs');
+            const marker = element('marker', {
+              id: 'cycle-arrow',
+              markerWidth: 8,
+              markerHeight: 8,
+              refX: 7,
+              refY: 4,
+              orient: 'auto',
+            });
+            marker.append(element('path', { d: 'M0 0 L8 4 L0 8 Z', fill: 'var(--viz-series-3)' }));
+            defs.append(marker);
+            svg.append(defs);
+            const bounds = board.getBoundingClientRect();
+            const cards = [...board.querySelectorAll('.cycle-step')].map((e) =>
+              e.getBoundingClientRect()
+            );
+            const mobile = innerWidth <= 760;
+            cards.forEach((a, i) => {
+              const b = cards[(i + 1) % cards.length];
+              if (mobile && i === cards.length - 1) return;
+              const dx = b.left + b.width / 2 - (a.left + a.width / 2),
+                dy = b.top + b.height / 2 - (a.top + a.height / 2);
+              const scaleA = Math.min(
+                dx ? (a.width / 2 + 6) / Math.abs(dx) : Infinity,
+                dy ? (a.height / 2 + 6) / Math.abs(dy) : Infinity
+              );
+              const scaleB = Math.min(
+                dx ? (b.width / 2 + 8) / Math.abs(dx) : Infinity,
+                dy ? (b.height / 2 + 8) / Math.abs(dy) : Infinity
+              );
+              svg.append(
+                element('path', {
+                  d: `M${a.left + a.width / 2 - bounds.left + dx * scaleA} ${a.top + a.height / 2 - bounds.top + dy * scaleA} L${b.left + b.width / 2 - bounds.left - dx * scaleB} ${b.top + b.height / 2 - bounds.top - dy * scaleB}`,
+                  fill: 'none',
+                  stroke: 'var(--viz-series-3)',
+                  'stroke-width': 1.7,
+                  'marker-end': 'url(#cycle-arrow)',
+                })
+              );
+            });
+            detail.textContent =
+              '08 → 01 반복 · 운영 구조 설명이며 실시간 실행 상태가 아닙니다. 컴퓨터·로그인 세션·서비스가 실행 중일 때 동작합니다. 사용자 중지와 제공자 대기는 별도로 유지합니다.';
+          }
+
           function draw() {
+            root
+              .querySelectorAll('[data-view]')
+              .forEach((button) =>
+                button.setAttribute('aria-pressed', String(button.dataset.view === selected))
+              );
+            if (selected === 'cycle') {
+              drawCycle();
+              return;
+            }
             const model = views[selected];
             const width = Math.max(280, figure.clientWidth);
             const compact = width < 820;

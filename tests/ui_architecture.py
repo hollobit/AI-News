@@ -18,14 +18,24 @@ async def main():
             await page.emulate_media(color_scheme=theme)
             for width in (1440, 820, 540, 390, 320):
                 await page.set_viewport_size({'width': width, 'height': 1000})
-                for view in ('architecture', 'collection', 'publication'):
+                for view in ('cycle', 'architecture', 'collection', 'publication'):
                     button = page.locator(f'[data-view="{view}"]')
                     await button.click()
                     await expect(button).to_have_attribute('aria-pressed', 'true')
                     await page.wait_for_timeout(80)
+                    if view == 'cycle':
+                        await expect(page.locator('.cycle-step')).to_have_count(8)
+                        await expect(page.locator('.cycle-wires > path')).to_have_count(7 if width <= 760 else 8)
+                        await page.locator('.cycle-step').nth(5).click()
+                        await expect(page.locator('.cycle-note')).to_contain_text('독립 검토')
                     failures = await page.evaluate('''() => {
                       const failures = [];
                       if(document.documentElement.scrollWidth > innerWidth) failures.push('overflow');
+                      for(const label of document.querySelectorAll('.cycle-step strong,.cycle-step small,.cycle-core b')) {
+                        const parent=label.parentElement.getBoundingClientRect();
+                        const range=document.createRange();range.selectNodeContents(label);
+                        for(const r of range.getClientRects()) if(r.left<parent.left || r.right>parent.right || r.bottom>parent.bottom) failures.push(label.textContent);
+                      }
                       for(const group of document.querySelectorAll('svg g')) {
                         const r=group.querySelector('rect').getBBox();
                         if(getComputedStyle(group.querySelector('rect')).fill==='rgb(0, 0, 0)') failures.push('missing fill');
@@ -39,12 +49,12 @@ async def main():
                     assert not failures, (theme, width, view, failures)
         await page.set_viewport_size({'width': 1080, 'height': 1280})
         await page.emulate_media(color_scheme='light')
-        await page.locator('[data-view="architecture"]').click()
+        await page.locator('[data-view="cycle"]').click()
         output=ROOT/'.runtime/verification/architecture-fixed.png'
         output.parent.mkdir(parents=True,exist_ok=True)
         await page.screenshot(path=str(output),full_page=True)
         assert not errors, errors
         await browser.close()
-        print('Standalone diagram: 3 views x 5 widths x 2 themes passed; JS errors 0')
+        print('Standalone diagram: 4 views x 5 widths x 2 themes passed; JS errors 0')
 
 asyncio.run(main())
