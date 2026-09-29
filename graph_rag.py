@@ -1,6 +1,8 @@
 """Integrated, evidence-grounded graph retrieval across saved analyses."""
 
 from __future__ import annotations
+from task_lifecycle import checkpoint
+from verified_cache import scoped as verification_scope
 
 from projection_cache import cached_read, revision_token, content_digest
 from evidence_corrections import correction_token, withdrawn_refs
@@ -154,6 +156,7 @@ def _workflow_graph(payload: dict, run_id: str, corrections=()) -> dict:
     # Match the engine's persisted audit fingerprint without importing the engine
     # (it uses this module for retrieval before producing a new final artifact).
     for key, value in (("report_hash", report), ("evidence_hash", payload["evidence"])):
+        checkpoint()
         digest = hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if audit.get(key) != digest:
             return {}
@@ -176,6 +179,7 @@ def _workflow_graph(payload: dict, run_id: str, corrections=()) -> dict:
     allowed_origins = {"telegram_excerpt", "fetched_url_excerpt"}
     evidence = {}
     for item in payload.get("evidence", []):
+        checkpoint()
         if (not isinstance(item, dict) or not isinstance(item.get("id"), str)
                 or item.get("origin") not in allowed_origins or not _clean(item.get("text"))
                 or item.get("status", "fetched") in {"failed", "blocked", "needs_review"}):
@@ -184,6 +188,7 @@ def _workflow_graph(payload: dict, run_id: str, corrections=()) -> dict:
     withdrawn = withdrawn_refs(payload, run_id, corrections)
     nodes, edges, used = [], [], set()
     for claim in report.get("claims", []):
+        checkpoint()
         if (not isinstance(claim, dict) or not _clean(claim.get("title"))
                 or not _clean(claim.get("detail")) or not _clean(claim.get("uncertainty"))
                 or claim.get("status", "complete") in {"needs_review", "failed"}):
@@ -198,6 +203,7 @@ def _workflow_graph(payload: dict, run_id: str, corrections=()) -> dict:
         nodes.append({"id": claim_id, "name": claim["title"], "type": "StrategicClaim",
                       "summary": meaning, "evidence_ids": refs})
         for ref in set(refs):
+            checkpoint()
             item = evidence[ref]
             doc_id = _source_document_id(item, ref)
             url = canonical_url(_clean(item.get("source_url")))
@@ -222,6 +228,7 @@ def validated_workflow_content(payload: dict, run_id: str) -> dict:
     source_ids = {item['id'] for item in graph['evidence']}
     claims = []
     for claim in payload['report']['claims']:
+        checkpoint()
         if (not isinstance(claim, dict) or claim.get('status', 'complete') in {'needs_review', 'failed'}
                 or not _clean(claim.get('uncertainty')) or not isinstance(claim.get('evidence_ids'), list)
                 or not claim['evidence_ids'] or not all(isinstance(ref, str) and ref in source_ids for ref in claim['evidence_ids'])
@@ -235,6 +242,7 @@ def validated_workflow_content(payload: dict, run_id: str) -> dict:
             'evidence_map': {item['source_record_id']: item['id'] for item in evidence}}
 
 
+@verification_scope
 def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dict[str, int]]:
     sources: list[dict[str, Any]] = []
     current_sources = None
@@ -244,6 +252,7 @@ def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dic
     graph_rows = _table_rows(db, "graph_analysis")
     completed_graphs = 0
     for row in graph_rows:
+        checkpoint()
         result = _json(row.get("result"))
         if row.get("error") or not isinstance(result, dict):
             continue
@@ -254,6 +263,7 @@ def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dic
     research_rows = _table_rows(db, "research_documents")
     completed_documents = 0
     for index, row in enumerate(research_rows):
+        checkpoint()
         result = next((_json(row.get(key)) for key in
                        ("analysis", "analysis_json", "result", "result_json")
                        if isinstance(_json(row.get(key)), dict)), None)
@@ -278,6 +288,7 @@ def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dic
     stale_workflow_claims = 0
     corrections = correction_token(db)
     for row in workflow_rows:
+        checkpoint()
         payload = finals.get(row.get("id"))
         if row.get("status") != "complete" or row.get("error") or not isinstance(payload, dict):
             continue
@@ -298,6 +309,7 @@ def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dic
     # Public reads are raw source observations, never pre-verified analytical claims.
     if current_sources:
         for url, excerpt in current_sources.items():
+            checkpoint()
             if excerpt.get('status')!='fetched' or not excerpt.get('reader') or not excerpt.get('text'):continue
             identity='reach:'+hashlib.sha256(url.encode()).hexdigest()[:24]
             evidence=dict(id=identity,title=excerpt.get('title') or url,text=excerpt['text'],
@@ -325,6 +337,7 @@ def current_workflow_graph(graph, current_sources):
     """Exclude whole claims whose fetched citation changed, failed or disappeared."""
     stale = set()
     for e in graph.get('evidence',[]):
+        checkpoint()
         if e.get('origin')!='fetched_url_excerpt':continue
         current=current_sources.get(canonical_url(e.get('source_url') or e.get('url') or '')) or {}
         if current.get('status')!='fetched' or not _clean(current.get('text')) or _clean(current.get('text'))!=_clean(e.get('text')):
@@ -347,6 +360,7 @@ def _result_graph(source: dict[str, Any]) -> tuple[list[dict], list[dict], list[
         nodes = []
         known = set()
         for player in result.get("players", []):
+            checkpoint()
             if not isinstance(player, dict) or not _clean(player.get("name")):
                 continue
             name = _clean(player["name"])
@@ -356,12 +370,14 @@ def _result_graph(source: dict[str, Any]) -> tuple[list[dict], list[dict], list[
                           "summary": _clean(player.get("role")), "aliases": [],
                           "evidence_ids": player.get("evidence_doc_ids") or [source["id"]]})
         for country in result.get("countries", []):
+            checkpoint()
             name = _clean(country)
             if name and _norm(name) not in known:
                 known.add(_norm(name))
                 nodes.append({"id": name, "name": name, "type": "Country", "summary": "",
                               "aliases": [], "evidence_ids": [source["id"]]})
         for topic in result.get("topics", []):
+            checkpoint()
             name = _clean(topic)
             if name and _norm(name) not in known:
                 known.add(_norm(name))
@@ -369,6 +385,7 @@ def _result_graph(source: dict[str, Any]) -> tuple[list[dict], list[dict], list[
                               "aliases": [], "evidence_ids": [source["id"]]})
         edges = []
         for relation in result.get("relations", []):
+            checkpoint()
             if not isinstance(relation, dict):
                 continue
             edges.append({"source": _clean(relation.get("source")),
@@ -477,12 +494,14 @@ def _build_integrated_graph(db: sqlite3.Connection, params: dict[str, Any]) -> G
     edges: dict[tuple[str, str, str], dict] = {}
 
     for source in sources:
+        checkpoint()
         raw_nodes, raw_edges, raw_evidence = _result_graph(source)
         namespace = "telegram" if source["kind"] == "graph" else source["kind"]
         id_map: dict[str, str] = {}
         evidence_map: dict[str, str] = {}
         default_evidence_ids: list[str] = []
         for index, raw in enumerate(raw_evidence):
+            checkpoint()
             original = _clean(raw.get("id") or raw.get("evidence_id") or index)
             merged = _global_evidence(raw, namespace, f"{source['id']}:{index}", source["kind"])
             evidence_map[original] = merged["id"]
@@ -496,6 +515,7 @@ def _build_integrated_graph(db: sqlite3.Connection, params: dict[str, Any]) -> G
                 evidence_by_id[merged["id"]] = merged
 
         for index, raw in enumerate(raw_nodes):
+            checkpoint()
             name = _clean(raw.get("name") or raw.get("label"))
             if not name:
                 continue
@@ -529,9 +549,11 @@ def _build_integrated_graph(db: sqlite3.Connection, params: dict[str, Any]) -> G
             target["evidence_ids"] = sorted(set(target["evidence_ids"]) | set(mapped))
             target["source_records"].append(f"{source['kind']}:{source['id']}:{raw_id}")
             for alias in [target["name"], *target["aliases"]]:
+                checkpoint()
                 alias_index[(target["type"].casefold(), _norm(alias))].add(match)
 
         for raw in raw_edges:
+            checkpoint()
             raw_source = _clean(raw.get("source") or raw.get("from"))
             raw_target = _clean(raw.get("target") or raw.get("to"))
             source_id = id_map.get(raw_source) or id_map.get(_norm(raw_source))
@@ -569,10 +591,12 @@ def _build_integrated_graph(db: sqlite3.Connection, params: dict[str, Any]) -> G
     allowed_evidence = {item_id for item_id, item in evidence_by_id.items()
                         if _filters_evidence(item, date, topic)}
     for node in nodes.values():
+        checkpoint()
         node["evidence_ids"] = [item for item in node["evidence_ids"] if item in allowed_evidence]
         node["document_ids"] = sorted({evidence_by_id[item]["document_id"] for item in node["evidence_ids"]})
         node["support_count"] = len(node["document_ids"])
     for edge in edges.values():
+        checkpoint()
         edge["evidence_ids"] = [item for item in edge["evidence_ids"] if item in allowed_evidence]
         edge["document_ids"] = sorted({evidence_by_id[item]["document_id"] for item in edge["evidence_ids"]})
         edge["support_count"] = len(edge["document_ids"])
@@ -604,10 +628,12 @@ def _build_integrated_graph(db: sqlite3.Connection, params: dict[str, Any]) -> G
             raise ValueError("hops는 0부터 4 사이의 정수여야 합니다.") from None
         adjacency: dict[str, set[str]] = defaultdict(set)
         for edge in full_edges:
+            checkpoint()
             adjacency[edge["source"]].add(edge["target"])
             adjacency[edge["target"]].add(edge["source"])
         selected, frontier = focus & set(nodes), focus & set(nodes)
         for _ in range(hops):
+            checkpoint()
             frontier = {neighbor for current in frontier for neighbor in adjacency[current]} - selected
             selected |= frontier
         full_nodes = [item for item in full_nodes if item["id"] in selected]
@@ -743,6 +769,7 @@ DATA:
     if analysis_plan:
         claim_schema=schema['properties']['claims']['items']
         for field in ('premises','assumptions','counterevidence','uncertainty'):
+            checkpoint()
             claim_schema['properties'][field]={'type':'string'}
             claim_schema['required'].append(field)
         prompt += ('\n각 주장의 premises에는 원문에 있는 전제와 결론 사이의 추론 경로를 적는다. '
@@ -821,6 +848,7 @@ def validate_answer(result, evidence):
     if not isinstance(result["claims"], list) or not result['claims'] or len(result['claims'])>8 or not isinstance(result["limitations"], list):
         raise RuntimeError("질문 답변 형식이 올바르지 않습니다.")
     for claim in result["claims"]:
+        checkpoint()
         fields={'text','evidence_ids'}
         extended=fields|{'premises','assumptions','counterevidence','uncertainty'}
         if (not isinstance(claim, dict) or set(claim) not in (fields,extended)

@@ -3,6 +3,7 @@
 A current input/rule hash is required for every reuse. This cache is never a
 publication or model-review gate; removing it only causes recomputation.
 """
+from task_lifecycle import checkpoint
 from contextlib import contextmanager
 from functools import lru_cache
 from pathlib import Path
@@ -44,6 +45,7 @@ def document_rows(db, namespace, inputs, build):
             try:
                 for key, signature, body in store.execute(
                         'SELECT document_id,input_hash,value FROM document_projections WHERE namespace=?', (namespace,)):
+                    checkpoint()
                     if keys.get(key) == signature:
                         value = json.loads(body)
                         if isinstance(value, dict):
@@ -64,6 +66,7 @@ def document_rows(db, namespace, inputs, build):
             store.execute('''CREATE TABLE IF NOT EXISTS document_projection_changes (
                 seq INTEGER PRIMARY KEY,namespace TEXT,document_id TEXT,input_hash TEXT,kind TEXT)''')
             for key, value in computed.items():
+                checkpoint()
                 store.execute('''INSERT INTO document_projections VALUES(?,?,?,?)
                     ON CONFLICT(namespace,document_id) DO UPDATE SET input_hash=excluded.input_hash,value=excluded.value''',
                     (namespace, key, keys[key], json.dumps(value, ensure_ascii=False)))
@@ -71,6 +74,7 @@ def document_rows(db, namespace, inputs, build):
                               (namespace, key, keys[key], 'upsert'))
             removed = [r[0] for r in store.execute('SELECT document_id FROM document_projections WHERE namespace=?', (namespace,)) if r[0] not in inputs]
             for key in removed:
+                checkpoint()
                 store.execute('DELETE FROM document_projections WHERE namespace=? AND document_id=?', (namespace, key))
                 store.execute('INSERT INTO document_projection_changes(namespace,document_id,kind) VALUES(?,?,?)', (namespace, key, 'delete'))
             store.execute('DELETE FROM document_projection_changes WHERE seq < (SELECT COALESCE(MAX(seq),0)-10000 FROM document_projection_changes)')

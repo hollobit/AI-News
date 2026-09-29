@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 ASSETS=('public.html','public.js','public.css','public-data.js','workspace.js','workspace.css','news-network.js','news-network.css','risk-network.js','risk-network.css','observatory.html','observatory.js','observatory.css','observatory-search.js','public-navigation.js')
-DATA_FILES=('site.json','site-manifest.json')+tuple(f'observatory-{days}-{mode}.json' for days in (14,30,90) for mode in ('default','expanded'))
+DATA_FILES=('site.json','site-manifest.json','build.json')+tuple(f'observatory-{days}-{mode}.json' for days in (14,30,90) for mode in ('default','expanded'))
 PUBLIC_FILES=tuple(dict.fromkeys(
     ('knowledge.html','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE','knowledge.json','.nojekyll','README.md')
     +tuple('index.html' if name=='public.html' else name for name in ASSETS)+DATA_FILES))
@@ -130,7 +130,7 @@ def content(db):
     return dict(news=articles,papers=papers,risks=risks,risk_graph=risk_graph,coverage=dict(news=len(articles),reviewed_news=sum(bool(a['analyses']) for a in articles),
         papers=len(papers),reviewed_papers=sum(p['status']=='검토 완료' for p in papers)))
 
-def write_site(db_path,target,root,stamp,data=None):
+def write_site(db_path,target,root,stamp,data=None,*,assets=None,observations=None):
     import sqlite3
     if data is None:
         with sqlite3.connect(Path(db_path).resolve().as_uri()+'?mode=ro',uri=True,timeout=30) as db:
@@ -139,7 +139,7 @@ def write_site(db_path,target,root,stamp,data=None):
     (target/'site.json').write_text(json.dumps(data,ensure_ascii=False))
     for name in ASSETS:
         dest='index.html' if name=='public.html' else name
-        text=(root/'static'/name).read_text()
+        text=assets[name].decode() if assets is not None else (root/'static'/name).read_text()
         if name=='observatory.html':
             import re
             text=text.replace('<html lang="ko">','<html lang="ko" data-public="true">')
@@ -155,6 +155,6 @@ def write_site(db_path,target,root,stamp,data=None):
     for days in (14,30,90):
         for mode in ('default','expanded'):
             path=Path(str(db_path)+'.observatory')/f'{days}-{mode}-v2.json'
-            raw=json.loads(path.read_text()) if path.exists() else {}
+            raw=observations[f'observatory-{days}-{mode}.json'] if observations is not None else (json.loads(path.read_text()) if path.exists() else {})
             (target/f'observatory-{days}-{mode}.json').write_text(json.dumps(observation(raw),ensure_ascii=False))
     return data['coverage']

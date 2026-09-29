@@ -4,7 +4,7 @@ Snapshots are JSON (never executable pickle), bound to the database revision and
 correction ledger. An obsolete snapshot is not served while a replacement builds.
 """
 from collections import OrderedDict, defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from task_lifecycle import PreparationExecutor as ThreadPoolExecutor, checkpoint, cancellable_db
 import gzip
 import json
 import os
@@ -108,11 +108,14 @@ class GraphSnapshots:
         if graph is None:
             with sqlite3.connect(self.path,timeout=15) as db:
                 db.row_factory=sqlite3.Row
+                cancellable_db(db)
                 graph=self.builder(db,params,for_retrieval=True)
+                checkpoint()
             # Own a separate wrapper; shared projection caches must remain immutable.
             graph=GraphResult(dict(graph),full_nodes=graph.full_nodes,full_edges=graph.full_edges,full_evidence=graph.full_evidence)
             graph.search_key=key;graph.prepared_index=RetrievalIndex(graph)
             if self.key(params)!=key:raise RuntimeError('준비 중 근거 변경')
+            checkpoint()
             temp=file.with_suffix(f'.{os.getpid()}.tmp')
             with gzip.open(temp,'wt',encoding='utf-8',compresslevel=1) as handle:
                 json.dump({'format':FORMAT,'key':key,'data':export_graph(graph)},handle,ensure_ascii=False,separators=(',',':'))

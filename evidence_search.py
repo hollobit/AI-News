@@ -1,4 +1,5 @@
 """Deterministic Korean/English lexical retrieval over existing, admitted evidence."""
+from task_lifecycle import checkpoint
 from collections import Counter, defaultdict
 from math import log1p
 from functools import lru_cache
@@ -54,6 +55,7 @@ def terms(value):
     value = unicodedata.normalize('NFKC', str(value or '')).casefold()
     tokens = []
     for word in re.findall(r'[a-z][a-z0-9_.+-]*|[가-힣]{2,}|\d{4}',value):
+        checkpoint()
         if re.fullmatch('[가-힣]+',word):
             stem = SUFFIX.sub('',word)
             if len(stem)>=2:
@@ -62,6 +64,7 @@ def terms(value):
     for canonical, pattern, literals in alias_rules():
         # Every regex alternative is an escaped literal. Absence of all literals
         # proves a miss; actual matches still use the exact boundary expression.
+        checkpoint()
         if any(literal in value for literal in literals) and pattern.search(value):
             tokens.append('concept:'+canonical)
     return [token for token in tokens if token not in STOP]
@@ -74,12 +77,16 @@ class LexicalIndex:
         self.postings = defaultdict(dict)
         self.lengths = {}
         for identity, fields in rows.items():
+            checkpoint()
             counts = Counter()
             for text, boost in fields:
+                checkpoint()
                 for token, count in Counter(terms(text)).items():
+                    checkpoint()
                     counts[token] += min(count, 4)*boost
             self.lengths[identity] = sum(counts.values())
             for token,count in counts.items():
+                checkpoint()
                 self.postings[token][identity] = count
         self.average = sum(self.lengths.values()) / max(1,len(rows)) or 1
 
@@ -87,9 +94,11 @@ class LexicalIndex:
         scores = defaultdict(float)
         count = len(self.rows)
         for term in set(terms(question)):
+            checkpoint()
             posting = self.postings.get(term,{})
             weight = log1p((count-len(posting)+.5)/(len(posting)+.5))
             for identity, frequency in posting.items():
+                checkpoint()
                 normalizer = 1.2*(.25+.75*self.lengths[identity]/self.average)
                 scores[identity] += weight*frequency*2.2/(frequency+normalizer)
         return dict(scores)

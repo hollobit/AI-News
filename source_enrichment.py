@@ -52,17 +52,24 @@ def init_sources(db):
         updated_at TEXT NOT NULL)""")
 
 
-def source_map(db):
+def source_map(db, urls=None):
     """Read locally stored excerpts without causing network requests."""
     if not db.execute("SELECT 1 FROM sqlite_master WHERE name='source_excerpts'").fetchone():
         return {}
-    return {row[0]: json.loads(row[1]) for row in db.execute(
-        "SELECT canonical_url,result_json FROM source_excerpts")}
+    if urls is None:
+        return {row[0]: json.loads(row[1]) for row in db.execute("SELECT canonical_url,result_json FROM source_excerpts")}
+    values=list(set(urls));result={}
+    for offset in range(0,len(values),400):
+        batch=values[offset:offset+400]
+        result.update((row[0],json.loads(row[1])) for row in db.execute(
+            'SELECT canonical_url,result_json FROM source_excerpts WHERE canonical_url IN ('+','.join('?' for _ in batch)+')',batch))
+    return result
 
 
 def attach_sources(db, items):
     """Attach only an article's primary URL to avoid mixing sibling news."""
-    saved = source_map(db)
+    items = list(items)
+    saved = source_map(db, [canonical_url(item.get('source_url') or '') for item in items])
     return [dict(item, source_context=saved.get(canonical_url(item.get('source_url') or ''), {}))
             for item in items]
 

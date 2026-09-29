@@ -1,0 +1,135 @@
+<div id="news-architecture">
+  <h2>뉴스 분석 시스템</h2>
+  <div class="viz-controls" role="group" aria-label="아키텍처와 동작 흐름">
+    <button class="btn" type="button" data-view="architecture" aria-pressed="true">전체 구조</button>
+    <button class="btn" type="button" data-view="collection" aria-pressed="false">신규 뉴스 처리</button>
+    <button class="btn" type="button" data-view="publication" aria-pressed="false">조회·공개 배포</button>
+  </div>
+  <div class="architecture-figure"></div>
+  <div class="text-small" aria-live="polite" data-detail></div>
+</div>
+<style>
+#news-architecture .architecture-figure { margin: 16px 0; }
+#news-architecture .architecture-diagram { display: block; width: 100%; overflow: visible; }
+#news-architecture .architecture-diagram text { fill: var(--foreground); font-size: 12px; }
+#news-architecture .architecture-diagram .node-title { font-weight: 500; }
+#news-architecture .architecture-diagram .connector { fill: none; stroke: var(--border); stroke-width: 1.5; }
+#news-architecture .architecture-diagram .flow-node { stroke: var(--border); stroke-width: 1; }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('news-architecture');
+  const figure = root.querySelector('.architecture-figure');
+  const detail = root.querySelector('[data-detail]');
+  const views = {
+    architecture: {
+      title: '수집·원장·실행·조회·공개본의 연결 구조',
+      rows: [
+        [['telegram','Telegram','신규·수정 메시지',1],['sources','외부 원문','Agent-Reach · 출처 보강',1],['papers','논문 자료','공식 초록 · 학술 색인',1]],
+        [['ingestion','입력 정리','뉴스 중복 제거 · 논문 ID·버전',1]],
+        [['ledger','SQLite 원장','원자료 · 분석 · 검토 · 실행 이력',2],['ops','실행 감독','owner · checkpoint · heartbeat',3]],
+        [['projections','증분 투영·캐시','변경 원장 · 입력/규칙 해시',2],['workers','독립 분석 worker','기본 · 논문 · 위키 · 기사',3],['web','Python 웹 서버','API · 심층 · GraphRAG · 시뮬레이션',3]],
+        [['review','출처·검토 상태 구분','현재 입력 · 인용 대조 · 독립 검토',4]],
+        [['local','로컬 브라우저','뉴스 · 지도 · 지식 · 운영',5],['export','공개본 생성','staging · 해시 조각 · manifest',5]],
+        [['pages','GitHub Pages','검증된 정적 자료 · 읽기 전용',5]]
+      ],
+      edges: [['telegram','ingestion'],['sources','ingestion'],['papers','ingestion'],['ingestion','ledger'],['ledger','projections'],['ledger','workers'],['ledger','web'],['ops','workers'],['ops','web'],['projections','review'],['workers','review'],['web','review'],['review','local'],['review','export'],['export','pages']],
+      detail: '관측 지도: 같은 문서·날짜의 공동 관측. 분석 공개: 현재 입력과 독립 검토 일치. 논문과 Telegram 뉴스는 별도 집계.'
+    },
+    collection: {
+      title: '메시지 한 건이 변경됐을 때의 처리 흐름',
+      rows: [
+        [['receive','01  신규·수정 메시지 확인','Telegram 수신 · 마지막 확인 시각',1]],
+        [['extract','02  기사 추출·정규화','메시지 → 기사 → URL/내용 중복 제거',1]],
+        [['commit','03  원자료 + 변경 원장 저장','같은 DB 트랜잭션 · 순서 번호',2]],
+        [['delta','04  영향받는 자료만 재계산','수정 메시지 · 중복 그룹 · 대표 문서',2]],
+        [['request','05  영속 분석 작업','실행 대상 고정 · 입력 해시 · owner',3]],
+        [['analysis','06  근거 분석','기본 / 심층 / 논문 / 위키 / 기사',3]],
+        [['gate','07  입력·인용·독립 검토','현재 입력과 일치한 결과만 사용',4]],
+        [['ready','검토 통과','조회 · 지식 연결 · 공개본',5],['pending','검토 대기·stale','변경 근거 확인 · 재검토 대상',4]]
+      ],
+      edges: [['receive','extract'],['extract','commit'],['commit','delta'],['delta','request'],['request','analysis'],['analysis','gate'],['gate','ready'],['gate','pending']],
+      detail: '신규·변경 확인과 분석 완료는 별도 상태. 사용자 pause, 제공자 cooldown, 실패·검토 이력은 각각 보존.'
+    },
+    publication: {
+      title: '조회와 공개 배포의 분리된 실행 흐름',
+      rows: [
+        [['archive','현재 원장·관측 자료','뉴스 / 논문 / 검토 판 / 기간별 관측',2]],
+        [['api','로컬 조회','기능별 API · 현재 입력 검증',3],['build','공개 세대 생성','DB 읽기 스냅샷 · 자산/관측 버전 고정',3]],
+        [['cache','조회 계산 재사용','문서 투영 · 검증 캐시 · 그래프 스냅샷',2],['stage','staging 검증','출처 정제 · ID · 해시 · 의존성',4]],
+        [['browser','로컬 화면','탐색 · 질문 · 분석/운영 요청',5],['switch','정상 세대 전환','마지막 정상본 유지 · 중단 복구',4]],
+        [['jobs','작업 원장 → worker','장기 작업은 상태·체크포인트로 추적',3],['git','Pages 게시','검증 파일 → Git tree → 비강제 ref 갱신',5]],
+        [['supervision','재시작·복구','웹 종료 · 독립 worker 생존 · 감독 상태',3],['reader','공개 브라우저','manifest → 필요한 조각만 지연 로딩',5]],
+        [['retention','이전 세대·열린 탭','최근 24시간 보존 · 404/410 세대 복구',2]]
+      ],
+      edges: [['archive','api'],['archive','build'],['api','cache'],['cache','browser'],['browser','jobs'],['jobs','supervision'],['build','stage'],['stage','switch'],['switch','git'],['git','reader'],['reader','retention']],
+      detail: '공개본에는 원문 발췌·운영 원장·인증 정보를 넣지 않음. 수집·분석 실행과 새 질문 생성은 로컬에서 수행.'
+    }
+  };
+  let selected = 'architecture';
+  const ns = 'http://www.w3.org/2000/svg';
+  function element(name, attributes = {}, text = '') {
+    const node = document.createElementNS(ns, name);
+    for (const [key,value] of Object.entries(attributes)) node.setAttribute(key, String(value));
+    if (text) node.textContent = text;
+    return node;
+  }
+  function draw() {
+    const model = views[selected];
+    const width = Math.max(280, figure.clientWidth);
+    const compact = width < 540;
+    const rows = compact ? model.rows.flatMap(row => row.map(node => [node])) : model.rows;
+    const step = 105, nodeHeight = 72, top = 10;
+    const positions = new Map();
+    rows.forEach((row, index) => {
+      const gap = 14;
+      const cellWidth = (width - gap * (row.length - 1)) / row.length;
+      row.forEach((node, column) => positions.set(node[0], {
+        node, x:column*(cellWidth+gap)+(compact?18:2), y:top+index*step, width:cellWidth-(compact?36:4), height:nodeHeight
+      }));
+    });
+    const height = top + (rows.length-1)*step + nodeHeight + 5;
+    const svg = element('svg', {class:'architecture-diagram',viewBox:`0 0 ${width} ${height}`,width,height,role:'img','aria-label':model.title});
+    svg.append(element('title',{},model.title));
+    svg.append(element('desc',{},model.rows.map(row=>row.map(n=>n[1]+' — '+n[2]).join(' / ')).join(' → ')));
+    const defs = element('defs');
+    const marker = element('marker',{id:'news-architecture-arrow',markerWidth:7,markerHeight:7,refX:6,refY:3.5,orient:'auto',markerUnits:'userSpaceOnUse'});
+    marker.append(element('path',{d:'M0 0 L7 3.5 L0 7 Z',fill:'var(--border)'}));
+    defs.append(marker);svg.append(defs);
+    for (const [from,to] of model.edges) {
+      const a=positions.get(from),b=positions.get(to);
+      const ax=a.x+a.width/2,ay=a.y+a.height,bx=b.x+b.width/2,by=b.y;
+      const middle=(ay+by)/2;
+      const path = compact && by-ay>step ? `M${ax} ${ay+2} L${ax} ${ay+9} L5 ${ay+9} L5 ${by-12} L${bx} ${by-12} L${bx} ${by-4}` : `M${ax} ${ay+2} C${ax} ${middle} ${bx} ${middle} ${bx} ${by-4}`;
+      svg.append(element('path',{class:'connector',d:path,'marker-end':'url(#news-architecture-arrow)'}));
+    }
+    for (const {node,x,y,width:w,height:h} of positions.values()) {
+      const group=element('g',{'aria-label':node[1]+' · '+node[2]});
+      group.append(element('rect',{class:'flow-node',x,y,width:w,height:h,rx:7,fill:`color-mix(in srgb, var(--viz-series-${node[3]}) 10%, var(--background))`}));
+      group.append(element('rect',{x:x+1,y:y+14,width:3,height:h-28,rx:1,fill:`var(--viz-series-${node[3]})`}));
+      group.append(element('text',{class:'node-title',x:x+w/2,y:y+27,'text-anchor':'middle'},node[1]));
+      // Wrap subtitle at separators when the actual cell is narrow.
+      const segments = node[2].split(' · ');
+      const split = Math.ceil(segments.length/2);
+      const parts = w < 300 && segments.length > 1 ? [segments.slice(0,split).join(' · '),segments.slice(split).join(' · ')] : [node[2]];
+      parts.slice(0,2).forEach((line,index)=>group.append(element('text',{x:x+w/2,y:y+47+index*15,'text-anchor':'middle'},line)));
+      svg.append(group);
+    }
+    figure.replaceChildren(svg);
+    detail.textContent=model.detail;
+    root.querySelectorAll('[data-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.view===selected)));
+  }
+  function restore(state) {
+    const value=state?.privateContent?.view;
+    if (views[value]) selected=value;
+    draw();
+  }
+  root.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{
+    selected=button.dataset.view;draw();
+    window.openai?.setWidgetState?.({modelContent:{architectureView:selected},privateContent:{view:selected}})?.catch(()=>{});
+  }));
+  window.addEventListener('openai:set_globals',event=>restore(event.detail?.globals?.widgetState));
+  new ResizeObserver(draw).observe(figure);
+  restore(window.openai?.widgetState);
+})();
+</script>

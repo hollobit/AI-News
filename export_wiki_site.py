@@ -51,32 +51,57 @@ def snapshot(db, include_excerpts=False):
 
 
 def export_site(db_path, output, include_excerpts=False, full_site=False):
-    target = Path(output).resolve()
+    from export_staging import generation, output_lock, logical_path
+    from public_site import PUBLIC_FILES, published_files
+    from public_data import data_files
+    from static_dependencies import validate_static_dependencies
+    legacy = {'knowledge.json','index.html','public-data.js','workspace.js','workspace.css',
+        'wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js',
+        'three.LICENSE','.nojekyll','README.md'}
+    allowed = published_files if full_site else lambda root: legacy
+    with output_lock(output):
+        with generation(output, allowed) as target:
+            result = _export_site(db_path, target, include_excerpts, full_site)
+            names = published_files(target) if full_site else legacy
+            validate_static_dependencies(target, names)
+        result['output'] = str(logical_path(output))
+        result['snapshot_directory'] = str(logical_path(output).resolve())
+        return result
+
+
+def _export_site(db_path, target, include_excerpts=False, full_site=False):
+    import hashlib
+    from public_site import ASSETS
+    # Read each asset and observation once. Every generated page in this build
+    # uses these exact bytes even when the source checkout/views change later.
+    asset_names = set(ASSETS) | {'wiki-network.html','wiki-network.js','wiki-network-3d.js',
+        'wiki-network.css','three.module.js','three.core.js','three.LICENSE'}
+    assets = {name: (ROOT/'static'/name).read_bytes() for name in asset_names}
+    observations = {}
+    for days in (14,30,90):
+        for mode in ('default','expanded'):
+            name=f'observatory-{days}-{mode}.json'
+            path=Path(str(db_path)+'.observatory')/f'{days}-{mode}-v2.json'
+            observations[name]=json.loads(path.read_text()) if path.exists() else {}
     marker = target/'knowledge.json'
-    allowed={'knowledge.json','index.html','public-data.js','workspace.js','workspace.css','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE','.nojekyll','README.md'}
-    if full_site:
-        from public_site import published_files
-        allowed=set(published_files(target))
-    if target.exists() and (any(p.is_symlink() or p.name not in allowed for p in target.iterdir()) or (any(target.iterdir()) and not marker.is_file())):
-        raise ValueError('비어 있거나 이 도구가 만든 전용 출력 폴더를 사용하세요.')
     with sqlite3.connect(Path(db_path).resolve().as_uri()+'?mode=ro',uri=True,timeout=30) as db:
         db.row_factory=sqlite3.Row
         db.execute('BEGIN')
+        revisions = dict(db.execute('SELECT kind,value FROM projection_revisions')) if db.execute("SELECT 1 FROM sqlite_master WHERE name='projection_revisions'").fetchone() else {}
         data=snapshot(db,include_excerpts)
         if full_site:
             from public_site import content, observation
             from corpus_knowledge import expand
             corpus=content(db)
-            observed_path=Path(str(db_path)+'.observatory')/'90-expanded-v2.json'
-            observed=observation(json.loads(observed_path.read_text())) if observed_path.exists() else {}
+            observed=observation(observations['observatory-90-expanded.json'])
             expand(data,corpus,observed)
     target.mkdir(parents=True,exist_ok=True)
     from site_templates import public_html
-    html=public_html((ROOT/'static/wiki-network.html').read_text().replace('data-mode="live"','data-mode="static"'))
+    html=public_html(assets['wiki-network.html'].decode().replace('data-mode="live"','data-mode="static"'))
     (target/'index.html').write_text(html)
     if full_site:html=html.replace('data-mode="static"','data-mode="static" data-split="true"')
     (target/'index.html').write_text(html)
-    for name in ('public-data.js','workspace.js','workspace.css','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE'):(target/name).write_bytes((ROOT/'static'/name).read_bytes())
+    for name in ('public-data.js','workspace.js','workspace.css','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE'):(target/name).write_bytes(assets[name])
     # The compatibility graph retains every field but avoids tens of MiB of
     # pretty-print padding in full-site blob uploads.
     format_options = {'separators': (',', ':')} if full_site else {'indent': 2}
@@ -86,7 +111,11 @@ def export_site(db_path, output, include_excerpts=False, full_site=False):
     if full_site:
         from public_site import write_site
         (target/'knowledge.html').write_text(html.replace('<body>','<body><nav style="padding:12px"><a href="index.html">← 전체 메뉴 · 뉴스 분석</a> · <a href="observatory.html">관측 지도</a> · <a href="index.html?view=papers">논문</a></nav>').replace('</body>','<script src="public-navigation.js"></script></body>'))
-        write_site(db_path,target,ROOT,data['exported_at'],data=corpus)
+        write_site(db_path,target,ROOT,data['exported_at'],data=corpus,assets=assets,observations=observations)
+        descriptor = {'schema_version':1,'db_revisions':revisions,
+            'assets':{name:hashlib.sha256(body).hexdigest() for name,body in sorted(assets.items())},
+            'observations':{name:{key:raw.get('data',{}).get(key) for key in ('version','computed_at','days','comparison','selection_version')} for name,raw in observations.items()}}
+        (target/'build.json').write_text(json.dumps(descriptor,ensure_ascii=False,separators=(',',':')))
         from public_data import write_data
         write_data(target,corpus,data,json.loads((target/'observatory-14-default.json').read_text()))
     return dict(output=str(target),pages=len(data['pages']),nodes=len(data['nodes']),sources=data['coverage']['cited_sources'],raw_excerpts=include_excerpts)

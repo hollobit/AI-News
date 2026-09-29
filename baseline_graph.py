@@ -1,10 +1,13 @@
 """Reviewed baseline summaries and observed keywords, linked only to source excerpts."""
+from task_lifecycle import checkpoint
+from verified_cache import scoped as verification_scope
 import json
 from projection_cache import cached_read, revision_token, content_digest
 
 from bulk_baseline import BulkBaselineService, freeze_item, validate_record, RECORD
 
 
+@verification_scope
 def baseline_sources(db, items=None):
     coverage = {'baseline_cached_analyses': 0, 'completed_verified_baselines': 0,
                 'baseline_stale_or_invalid': 0}
@@ -21,6 +24,7 @@ def baseline_sources(db, items=None):
                           copy_result=False) if items is None else snapshots()
     sources = []
     for row in db.execute('SELECT input_hash,result_json,prepared_json FROM bulk_baseline_cache'):
+        checkpoint()
         coverage['baseline_cached_analyses'] += 1
         snapshot = current.get(row[0])
         if snapshot is None:
@@ -56,6 +60,7 @@ def baseline_sources(db, items=None):
                       meaning='독립 검토를 통과한 발췌 요약; 외부 사실 확인이나 전체 본문 분석을 뜻하지 않음',
                       confidence='reviewed_interpretation', evidence_ids=refs)]
         for index, keyword in enumerate(result['keywords']):
+            checkpoint()
             supported = [e['id'] for e in evidence if keyword['source_quote'] in e['text']]
             if not supported:
                 continue

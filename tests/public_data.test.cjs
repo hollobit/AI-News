@@ -56,3 +56,15 @@ test('completed shard cache is bounded and in-flight requests are deduplicated',
   for(const n of nodes.slice(1))await api.articles([n.id]);
   await api.articles(['n0']);assert.equal(requests,71);
 });
+
+test('initial article bootstrap avoids unrelated detail buckets', async () => {
+  const calls=[];
+  const api=setup(async path=>({ok:true,json:async()=>{
+    calls.push(path);
+    if(path==='site-manifest.json')return {schema_version:1,version:'v',news:{bootstrap:hashed(1),bootstrap_ids:['first','second']}};
+    if(path===hashed(1))return [{id:'first'},{id:'second'}];
+    throw Error('Unexpected detail bucket');
+  }}));
+  assert.deepEqual(JSON.parse(JSON.stringify(await api.articles(['second']))),[{id:'second'}]);
+  assert.deepEqual(calls,['site-manifest.json',hashed(1)]);
+});

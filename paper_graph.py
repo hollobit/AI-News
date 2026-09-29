@@ -1,4 +1,6 @@
 """Reviewed paper-claim citations for GraphRAG, with current-metadata checks."""
+from task_lifecycle import checkpoint
+from verified_cache import scoped as verification_scope
 import hashlib
 import json
 from projection_cache import cached_read, content_digest
@@ -26,6 +28,7 @@ def validated_paper_analysis(row, item):
         return {}
     ids = set()
     for source in evidence:
+        checkpoint()
         if (not isinstance(source, dict) or not isinstance(source.get('id'), str) or not source['id']
                 or source['id'] in ids or source.get('paper_id') != item['paper_id']
                 or source.get('origin') not in {'arxiv_abstract', 'arxiv_metadata', 'arxiv_html_excerpt','scholarly_index_abstract','scholarly_index_metadata'}
@@ -65,6 +68,7 @@ def _graph(result, item):
     evidence = []
     refs = {ref for claim in result['report']['claims'] for ref in claim['evidence_ids']}
     for source in result['evidence']:
+        checkpoint()
         if source['id'] in refs:
             evidence.append(dict(source, published_at=source.get('published') or item.get('published'),
                                  topic=item.get('primary_category') or 'paper', topics=item.get('categories') or ['paper']))
@@ -72,6 +76,7 @@ def _graph(result, item):
               'summary': item['title'], 'evidence_ids': sorted(refs)}]
     edges = []
     for claim in result['report']['claims']:
+        checkpoint()
         identity = 'paper-claim:'+hashlib.sha256((item['paper_id']+'\0'+claim['title']+'\0'+claim['detail']).encode()).hexdigest()[:24]
         meaning = claim['detail']+' / 불확실성: '+claim['uncertainty']
         nodes.append({'id': identity, 'name': item['paper_id']+' · '+claim['title'], 'type': 'PaperClaim',
@@ -81,6 +86,7 @@ def _graph(result, item):
     return {'nodes': nodes, 'edges': edges, 'evidence': evidence}
 
 
+@verification_scope
 def paper_sources(db):
     items = _paper_rows(db)
     rows = {row['paper_id']: row for row in _rows(db, 'arxiv_paper_analyses')}
@@ -88,6 +94,7 @@ def paper_sources(db):
     coverage['total'] = len(items)
     sources = []
     for item in items:
+        checkpoint()
         coverage['metadata_fetched'] += item['metadata_status'] == 'fetched'
         row = rows.get(item['paper_id'])
         if row is None:

@@ -1,13 +1,16 @@
 """Revision-aware process-local projections; never caches network safety decisions."""
 from contextlib import contextmanager
 from collections import OrderedDict, Counter
-from concurrent.futures import Future
+from concurrent.futures import Future, TimeoutError
+from task_lifecycle import checkpoint
 from copy import deepcopy
 from pathlib import Path
 import hashlib
 import sqlite3
 import threading
 import uuid
+import time
+from verified_cache import NAMESPACES as VERIFIED_NAMESPACES
 
 _SOURCE = {'news','articles','archived_urls','source_excerpts'}
 _ANALYSIS = {'bulk_baseline_cache','strategic_workflow_runs','strategic_workflow_artifacts',
@@ -27,6 +30,7 @@ _BUCKET_LIMITS = {name: mib*1024*1024 for name,mib in {
     'dataset':256,'graph':64,'graph_sources':96,'validated':64,'records':24,'strategy':48,'observatory':24,'other':8}.items()}
 _BUCKET_BYTES = Counter()
 _STATS = Counter()
+_COSTS = {}
 
 
 def _bucket(namespace):
@@ -44,7 +48,7 @@ def cache_info():
     with _LOCK:
         return {'entries':len(_CACHE),'estimated_bytes':_CACHE_BYTES,'budget_bytes':_MAX_BYTES,
                 'buckets':{name:{'estimated_bytes':_BUCKET_BYTES[name],'budget_bytes':limit} for name,limit in _BUCKET_LIMITS.items()},
-                'counters':dict(_STATS),'inflight':len(_FLIGHTS)}
+                'counters':dict(_STATS),'costs':dict(_COSTS),'inflight':len(_FLIGHTS)}
 
 
 def _remove(key):
@@ -117,6 +121,8 @@ def _setup(db, identity):
                 trigger = f'projection_v2_{table}_{event.lower()}'
             db.execute(f'''CREATE TRIGGER IF NOT EXISTS "{trigger}" AFTER {event} ON "{table}"{condition}
                 BEGIN UPDATE projection_revisions SET value=value+1 WHERE kind='{kind}'; END''')
+    from source_changes import install
+    install(db)
     db.commit()
     schema = db.execute('PRAGMA schema_version').fetchone()[0]
     with _LOCK:
@@ -178,6 +184,12 @@ def cached_read(db, namespace, revision, builder, *, copy_result=True):
     """Return an isolated copy; a shared Future prevents duplicate concurrent builds."""
     global _CACHE_BYTES
     clone = deepcopy if copy_result else lambda value: value
+    if namespace in VERIFIED_NAMESPACES and revision is not None:
+        from verified_cache import read
+        value, hit = read(db, namespace, revision, builder)
+        with _LOCK:
+            _STATS[namespace + (':persistent_hit' if hit else ':persistent_miss')] += 1
+        return clone(value)
     if revision is None:
         return builder()
     identity = _identity(db)
@@ -197,12 +209,37 @@ def cached_read(db, namespace, revision, builder, *, copy_result=True):
     if hit:
         return clone(value)
     if not owner:
-        return clone(future.result())
+        while True:
+            checkpoint()
+            try:
+                return clone(future.result(timeout=.1))
+            except TimeoutError:
+                continue
     try:
-        value = builder()
-        stored = deepcopy(value)
+        checkpoint()
+        started = time.perf_counter()
+        from projection_snapshots import NAMESPACES as SPILL_NAMESPACES, read as disk_read, write as disk_write
+        value, disk_hit = disk_read(db, namespace, revision) if namespace in SPILL_NAMESPACES else (None, False)
+        if not disk_hit:
+            value = builder()
+        checkpoint()
+        built = time.perf_counter()
+        # Internal readers explicitly accept immutable shared projections. Avoid
+        # a second full graph/dataset copy on their initial cache miss.
+        stored = deepcopy(value) if copy_result else value
         import pickle
-        size = len(pickle.dumps(stored,protocol=5)) * 3
+        class SizeCounter:
+            size = 0
+            def write(self, chunk):
+                checkpoint()
+                self.size += len(chunk)
+        counter = SizeCounter()
+        pickle.dump(stored, counter, protocol=5)
+        size = counter.size * 3
+        with _LOCK:
+            _COSTS[namespace] = {'build_seconds':round(built-started,4),
+                'admission_seconds':round(time.perf_counter()-built,4),'candidate_bytes':size}
+            if disk_hit: _STATS[namespace+':disk_hit'] += 1
         with _LOCK:
             bucket = _bucket(namespace)
             limit = min(_MAX_BYTES,_BUCKET_LIMITS[bucket])
@@ -226,6 +263,11 @@ def cached_read(db, namespace, revision, builder, *, copy_result=True):
                     _remove(removed)
             else:
                 _STATS[namespace+':oversized'] += 1
+        if size > limit and namespace in SPILL_NAMESPACES and not disk_hit:
+            try:
+                disk_write(db, namespace, revision, stored)
+            except (OSError, ValueError):
+                with _LOCK: _STATS[namespace+':disk_error'] += 1
         future.set_result(stored)
         return value
     except BaseException as exc:

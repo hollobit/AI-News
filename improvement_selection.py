@@ -1,4 +1,5 @@
 """Archive-wide, duplicate-free scheduling and source-backed topic expansion."""
+from task_lifecycle import checkpoint
 import hashlib
 import json
 import re
@@ -30,6 +31,9 @@ def all_corpus_items(db, source_urls=None):
     normalized title/body. Repeated mentions remain in the archive. Queue items
     expose the latest representative, with a count of distinct mention contexts.
     """
+    from source_projection import corpus
+    prepared=corpus(db, source_urls)
+    if prepared is not None:return prepared
     from news_repository import joined_articles, unindexed_link_rows, hidden_link_rows
     from source_enrichment import attach_sources
     rows = [r for r in joined_articles(db) if r.get('source_origin')!='external_watch']
@@ -37,9 +41,11 @@ def all_corpus_items(db, source_urls=None):
     rows.extend(hidden_link_rows(db, rows))
     grouped, contexts, source_rows = {}, {}, 0
     for row in rows:
+        checkpoint()
         urls = list(dict.fromkeys(canonical_url(url) for url in
                     [row.get('source_url') or '', *extract_links(row.get('text') or '')] if canonical_url(url)))
         for url in urls or ['']:
+            checkpoint()
             if source_urls is not None and url not in source_urls:
                 continue
             item = focus_url_context(row, url) if url else dict(row, source_url=url)
@@ -53,6 +59,7 @@ def all_corpus_items(db, source_urls=None):
                 grouped[identity] = item
     items = attach_sources(db, list(grouped.values()))
     for item in items:
+        checkpoint()
         identity = content_identity(item)
         item['corpus_identity'] = identity
         # One parsed article can contain several URLs with distinct fetched texts.
@@ -92,6 +99,7 @@ def select_improvement_news(db, settings, tasks, seen_ids):
         from keyword_index import keyword_record_id
         records = keyword_records(db, batch)
         for item in batch:
+            checkpoint()
             observed = records.get(keyword_record_id(item), [])
             matched = [k['label'] for k in observed if k['label'].casefold() in terms or k['surface'].casefold() in terms]
             item['expansion_terms'] = list(dict.fromkeys(matched))[:6]
@@ -102,6 +110,7 @@ def select_improvement_news(db, settings, tasks, seen_ids):
         rest = [item for item in batch if not item.get('expansion_terms')]
         interleaved = []
         for i in range(max(len(related), len(rest))):
+            checkpoint()
             if i < len(related): interleaved.append(related[i])
             if i < len(rest): interleaved.append(rest[i])
         batch[:] = interleaved

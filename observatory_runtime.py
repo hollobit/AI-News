@@ -1,5 +1,5 @@
 """Background view preparation and replay of actual persisted processing events."""
-from concurrent.futures import ThreadPoolExecutor
+from task_lifecycle import PreparationExecutor as ThreadPoolExecutor, checkpoint, cancellable_db
 from pathlib import Path
 import json
 import sqlite3
@@ -64,7 +64,9 @@ class ObservatoryRuntime:
                 except (ValueError,OSError):pass
             with sqlite3.connect(self.path,timeout=2) as db:
                 db.row_factory=sqlite3.Row
+                cancellable_db(db)
                 result=read_observatory(db,window,expanded)
+            checkpoint()
             temp=file.with_suffix('.tmp');temp.write_text(json.dumps({'window':window,'expanded':expanded,'data':result},ensure_ascii=False));temp.replace(file)
             with self.lock:self.views[view_key]=result;self.errors.pop(view_key,None)
         except Exception as error:

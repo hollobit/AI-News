@@ -1,4 +1,5 @@
 """Small independently loaded views over revisioned, immutable news projections."""
+from task_lifecycle import checkpoint
 from collections import Counter
 from datetime import datetime
 import json
@@ -79,6 +80,7 @@ def enrich(db, items):
     has_research = db.execute("SELECT 1 FROM sqlite_master WHERE name='research_documents'").fetchone()
     result=[]
     for item in items:
+        checkpoint()
         url=canonical_url(item.get('source_url') or '')
         analysis=None
         if url and has_research:
@@ -98,6 +100,7 @@ def card(item):
     for key in ('title','excerpt'): result[key]=str(result.get(key) or '')[:300]
     result['strategic_keywords']=[{k:t[k] for k in ('id','label','kind') if k in t} for t in item.get('strategic_keywords',[])[:6]]
     for key in ('base_analysis','strategic_analysis'):
+        checkpoint()
         value=item.get(key)
         if value:
             compact={k:value[k] for k in ('status','verified','summary','run_id','doc_id','freshness') if k in value}
@@ -132,6 +135,7 @@ def read_view(db, params, sources):
         runs=[]
         if db.execute("SELECT 1 FROM sqlite_master WHERE name='research_runs'").fetchone():
             for row in db.execute('SELECT id,status,processed_documents,total_documents,error,report_json FROM research_runs ORDER BY created_at DESC LIMIT 12'):
+                checkpoint()
                 run=dict(row); report=json.loads(run.pop('report_json') or 'null')
                 run['report']={k:report[k] for k in ('summary','outlooks','major_topics') if k in report} if report else None
                 runs.append(run)

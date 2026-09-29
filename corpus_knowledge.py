@@ -1,4 +1,5 @@
 """Connect already validated public analyses without inventing semantic relations."""
+from task_lifecycle import checkpoint
 import json
 from public_site import identity
 
@@ -11,6 +12,7 @@ def expand(graph, corpus, observations=None):
 
     def analysis(sid, values):
         for value in values:
+            checkpoint()
             text = value.get('text') or value.get('detail') or ''
             if not text:
                 continue
@@ -24,6 +26,7 @@ def expand(graph, corpus, observations=None):
 
     document_sources = {}
     for article in corpus['news']:
+        checkpoint()
         if not article.get('analyses'):
             continue
         sid = news_sources.get(article['id'], 'source:news:' + article['id'])
@@ -34,6 +37,7 @@ def expand(graph, corpus, observations=None):
         document_sources[article.get('observation_document_id')] = sid
         linked_news += 1
     for paper in corpus['papers']:
+        checkpoint()
         if paper.get('status') != '검토 완료':
             continue
         sid = 'source:paper:' + paper['id']
@@ -45,6 +49,7 @@ def expand(graph, corpus, observations=None):
     observed = observations or {}
     documents = observed.get('documents', {})
     for node in observed.get('nodes', []):
+        checkpoint()
         sources = {document_sources.get(documents.get(key, {}).get('document_id'))
                    for day in node.get('document_ids_by_day', []) for key in day}
         sources.discard(None)
@@ -55,6 +60,7 @@ def expand(graph, corpus, observations=None):
             title=node['label'], source_ids=sorted(sources),
             scope='90일 문서별 공동 관측 · 의미 관계·인과관계 검증 아님')
         for sid in sorted(sources):
+            checkpoint()
             eid = 'observation-link:' + identity(sid + nid)
             edges[eid] = dict(id=eid, source=sid, target=nid, kind='observed_in_document',
                 layer='recommendation', text='같은 문서에 관측된 표현 · 인과관계 아님', source_ids=[sid])

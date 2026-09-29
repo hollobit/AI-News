@@ -3,6 +3,7 @@
 This strategic index is separate from the lossless all-word search index.
 No character fragments or arbitrary n-grams are used as strategic keywords.
 """
+from task_lifecycle import checkpoint
 import hashlib
 import json
 import re
@@ -35,6 +36,7 @@ def _decoded_keywords(fingerprint, text, payload=None):
         with _RESULT_LOCK:
             _RESULTS[fingerprint] = value
             while len(_RESULTS) > _RESULT_LIMIT:
+                checkpoint()
                 _RESULTS.popitem(last=False)
         future.set_result(value)
         return value
@@ -97,6 +99,7 @@ def analyzer():
                 raise RuntimeError('전략 키워드에는 Kiwi 형태소 분석기가 필요합니다. .venv/bin/python으로 실행해 주세요.') from None
             _KIWI = Kiwi(num_workers=2)
             for word in USER_WORDS:
+                checkpoint()
                 _KIWI.add_user_word(word, 'NNP')
     return _KIWI
 
@@ -126,23 +129,29 @@ def extract_keywords(text):
                                'pos': tags, 'count': 0}
         candidates[key]['count'] += 1
     for label, variants in PHRASES.items():
+        checkpoint()
         matched_spans = set()
         for value in variants:
+            checkpoint()
             pattern = re.escape(value.casefold())
             if value.isascii():
                 pattern = r'(?<![a-z0-9])'+pattern+r'(?![a-z0-9])'
             for match in re.finditer(pattern, text, re.IGNORECASE):
+                checkpoint()
                 matched_spans.add(match.span())
         accepted_spans = []
         for start, end in sorted(matched_spans, key=lambda span: (-(span[1]-span[0]), span[0])):
+            checkpoint()
             if any(start < b and end > a for a, b in accepted_spans):
                 continue
             accepted_spans.append((start, end))
         for start, end in sorted(accepted_spans):
+            checkpoint()
             protected.append((start, end))
             add(label, start, end, 'technical_dictionary', ['TERM'])
     # ASCII boundaries allow Korean particles directly after complete versions.
     for match in re.finditer(r'(?<![A-Za-z0-9_.-])[A-Za-z][A-Za-z0-9]*(?:[-.][A-Za-z0-9]+)+(?![A-Za-z0-9_-]|\.[A-Za-z0-9])', text):
+        checkpoint()
         if any(char.isdigit() for char in match[0]) and not any(match.start() < b and match.end() > a for a,b in protected):
             protected.append((match.start(), match.end()))
             add(match[0], match.start(), match.end(), 'model_identifier', ['SL', 'SN'])
@@ -160,6 +169,7 @@ def extract_keywords(text):
                     add(surface, start, end, 'noun_phrase', [t.tag for t in chunk])
         chunk.clear()
     for token in tokens:
+        checkpoint()
         start, end = token.start, token.start+token.len
         if any(start < b and end > a for a,b in protected):
             flush(); continue
@@ -201,6 +211,7 @@ def keyword_records(db, items):
     fingerprints = list(dict.fromkeys(key for _,_,key in prepared))
     cached = {}
     for start in range(0, len(fingerprints) if has_cache else 0, 400):
+        checkpoint()
         keys = fingerprints[start:start+400]
         cached.update(db.execute('SELECT content_hash,keywords_json FROM morphology_cache WHERE content_hash IN ('+','.join('?' for _ in keys)+')', keys))
     # Preserve the prior transaction boundary: expensive Kiwi work must not
@@ -210,6 +221,7 @@ def keyword_records(db, items):
     pending = []
     records = {}
     for item, text, fingerprint in prepared:
+        checkpoint()
         value = _decoded_keywords(fingerprint, text, cached.get(fingerprint))
         if fingerprint not in cached:
             cached[fingerprint] = json.dumps(value,ensure_ascii=False)

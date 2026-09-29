@@ -1,5 +1,5 @@
 """Live collection coverage distinct from a frozen baseline run."""
-from concurrent.futures import ThreadPoolExecutor
+from task_lifecycle import PreparationExecutor as ThreadPoolExecutor, checkpoint, cancellable_db
 from datetime import datetime,timezone
 import sqlite3
 import threading
@@ -25,10 +25,11 @@ class CorpusStatus:
         try:
             from improvement_selection import all_corpus_items
             from database import open_db as connect
-            db=connect(self.path)
+            db=cancellable_db(connect(self.path))
             try:
                 db.execute('BEGIN')
                 items=all_corpus_items(db)
+                checkpoint()
                 ids={i['corpus_identity'] for i in items}
                 frozen={r[0] for r in db.execute('SELECT document_id FROM bulk_baseline_documents WHERE run_id=?',(run[0],))} if run else set()
             finally:db.close()

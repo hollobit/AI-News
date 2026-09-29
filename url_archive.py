@@ -418,16 +418,18 @@ def archived_rows(db, params=None):
             "page_size": page_size, "total_pages": total_pages}
 
 
-def archived_link_rows(db, hidden_only=False, active_only=True):
+def archived_link_rows(db, hidden_only=False, active_only=True, *, message=None):
     """Return build_link_groups-compatible rows, including hidden text_link URLs."""
     where = []
     if hidden_only:
         where.append("entity_type='text_link'")
     if active_only:
         where.append("active=1")
+    if message is not None:
+        where.append("chat_id=? AND message_id=?")
     clause = " WHERE " + " AND ".join(where) if where else ""
     rows = db.execute("SELECT * FROM archived_urls" + clause +
-                      " ORDER BY published_at,message_id,occurrence").fetchall()
+                      " ORDER BY published_at,message_id,occurrence", message or ()).fetchall()
     return [{
         "chat_id": row["chat_id"], "message_id": row["message_id"],
         "item_index": 1_000_000 + row["occurrence"], "title": row["title"] or "링크 제목 미상",

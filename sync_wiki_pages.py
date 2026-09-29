@@ -21,39 +21,7 @@ FILES = ('index.html', 'wiki-network.js', 'wiki-network-3d.js', 'wiki-network.cs
 LEGACY_FILES=FILES
 FILES=PUBLIC_FILES
 
-class _AssetLinks(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.paths=[]
-
-    def handle_starttag(self, tag, attrs):
-        values=dict(attrs)
-        if tag=='script' and values.get('src'):
-            self.paths.append(values['src'])
-        elif tag=='link' and 'stylesheet' in values.get('rel','').split() and values.get('href'):
-            self.paths.append(values['href'])
-
-
-def validate_static_dependencies(output, files=FILES):
-    """Refuse to publish HTML or modules whose local assets are absent from the manifest."""
-    root=Path(output)
-    listed=set(files)
-    for name in files:
-        if name.endswith('.html'):
-            parser=_AssetLinks()
-            parser.feed((root/name).read_text())
-            references=parser.paths
-        elif name.endswith('.js'):
-            references=re.findall(r'\b(?:from\s*|import\s*)[\'\"]\./([^\'\"]+)[\'\"]', (root/name).read_text())
-        else:
-            continue
-        for reference in references:
-            uri=urlsplit(reference)
-            if uri.scheme or uri.netloc or uri.path.startswith('/'):
-                continue
-            dependency=uri.path.removeprefix('./')
-            if dependency and (dependency not in listed or not (root/dependency).is_file()):
-                raise RuntimeError(f'{name}: missing published asset {dependency}')
+from static_dependencies import validate_static_dependencies
 
 class GitHubAPIError(RuntimeError):
     def __init__(self, message, *, retryable=False):
@@ -125,13 +93,21 @@ def git_publish(files, parent, *, root=None, expected_remote=None):
         exists = subprocess.run(['git','cat-file','-e',parent+'^{commit}'],cwd=root,capture_output=True)
         if exists.returncode:
             command(['fetch','--no-tags','--depth=1','origin',parent])
+    import tempfile
     entries = []
-    for name, content in sorted(files.items()):
-        # Callers already enforce published_files/dependency/content validation.
-        # The tree primitive additionally refuses paths/modes outside flat assets.
-        if '/' in name or '\t' in name or '\n' in name or name in ('.','..'):
-            raise ValueError('Invalid Pages Git asset path')
-        sha = command(['hash-object','-w','--stdin'], content.encode())
+    ordered = sorted(files.items())
+    with tempfile.TemporaryDirectory(prefix='news-pages-') as temporary:
+        paths = []
+        for name, content in ordered:
+            if '/' in name or '\t' in name or '\n' in name or name in ('.','..'):
+                raise ValueError('Invalid Pages Git asset path')
+            path = Path(temporary) / name
+            path.write_bytes(content.encode())
+            paths.append(str(path))
+        hashes = command(['hash-object','-w','--stdin-paths'], ('\n'.join(paths)+'\n').encode()).splitlines()
+    if len(hashes) != len(ordered):
+        raise RuntimeError('Incomplete Pages Git objects')
+    for (name, _), sha in zip(ordered, hashes):
         entries.append('100644 blob ' + sha + '\t' + name + '\n')
     tree = command(['mktree'], ''.join(entries).encode())
     arguments = ['commit-tree',tree]
@@ -143,7 +119,14 @@ def git_publish(files, parent, *, root=None, expected_remote=None):
 
 
 def sync(db, output):
+    from export_staging import output_lock
+    with output_lock(output):
+        return _sync(db, output)
+
+
+def _sync(db, output):
     summary=export_site(db,output,full_site=True)
+    output=summary.pop('snapshot_directory', output)
     names=published_files(output)
     validate_static_dependencies(output,names)
     files={name:(Path(output)/name).read_text() for name in names}

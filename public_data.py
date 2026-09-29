@@ -21,12 +21,12 @@ def encoded(value):
     return json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode()
 
 
-def bucket(identity):
+def bucket(identity, bits=8):
     # Partition routing is not an integrity/security hash. FNV permits the same
     # public files to work on ordinary HTTP preview origins without WebCrypto.
     value=2166136261
     for byte in identity.encode():value=((value^byte)*16777619)&0xffffffff
-    return f'{value&255:02x}'
+    return format(value & ((1 << bits) - 1), f'0{(bits + 3) // 4}x')
 
 
 def data_files(root):
@@ -65,15 +65,18 @@ def write_data(root, corpus, graph, observatory=None, *, now=None):
     def put(value):
         body = encoded(value)
         name = 'public-data-' + hashlib.sha256(body).hexdigest() + '.json'
-        (root / name).write_bytes(body)
+        if not (root / name).exists():
+            (root / name).write_bytes(body)
+        elif (root / name).read_bytes() != body:
+            raise ValueError('Invalid retained content-addressed file')
         files.add(name)
         return name
 
     groups = defaultdict(list)
-    for position, row in enumerate(corpus['news']):
-        groups[str(position // 100)].append(row)
-    news_parts = {key: put(rows) for key, rows in groups.items()}
-    news_index = put([[n['id'], n['title'], n['day'], n['topic'], n['url'], len(n['analyses']), str(i // 100)] for i, n in enumerate(corpus['news'])])
+    for row in corpus['news']:
+        groups[bucket(row['id'], 10)].append(row)
+    news_parts = {key: put(sorted(rows, key=lambda n: n['id'])) for key, rows in groups.items()}
+    news_index = put([[n['id'], n['title'], n['day'], n['topic'], n['url'], len(n['analyses']), bucket(n['id'], 10)] for n in corpus['news']])
     # Keep all fields searched by the old UI; load this complete index only when
     # a query is entered. No partial-shard search is presented as global search.
     search = {}
@@ -91,17 +94,17 @@ def write_data(root, corpus, graph, observatory=None, *, now=None):
         adjacency[e['target']].append(e)
         for key in {bucket(e['source']), bucket(e['target'])}:
             edge_groups[key].append(e)
-    for position, n in enumerate(graph['nodes']):
-        node_groups[bucket(n['id'])].append(dict(n, _order=position))
-    order = {n['id']: i for i, n in enumerate(graph['nodes'])}
+    for n in graph['nodes']:
+        node_groups[bucket(n['id'])].append(n)
     graph_parts = {}
     for key, rows in node_groups.items():
         # Compact endpoint labels/order let the client choose a page before
         # hydrating neighbors. Full analyses remain in each node's own shard.
         endpoints = {e[k] for e in edge_groups[key] for k in ('source', 'target')}
-        neighbors = {sid: dict(id=sid, title=nodes[sid]['title'], type=nodes[sid].get('type'),
-                              _order=order[sid]) for sid in endpoints}
-        graph_parts[key] = put({'nodes': rows, 'edges': edge_groups[key], 'neighbors': neighbors})
+        neighbors = {sid: dict(id=sid, title=nodes[sid]['title'], type=nodes[sid].get('type'))
+                     for sid in sorted(endpoints)}
+        graph_parts[key] = put({'nodes': sorted(rows, key=lambda n: n['id']),
+            'edges': sorted(edge_groups[key], key=lambda e: e['id']), 'neighbors': neighbors})
     meta = {k: v for k, v in graph.items() if k not in ('nodes', 'edges', 'pages', 'exported_at')}
     ordered = graph['nodes'][:500]
     ids = {n['id'] for n in ordered}
@@ -111,10 +114,12 @@ def write_data(root, corpus, graph, observatory=None, *, now=None):
     wiki_sources = {sid for p in graph['pages'] for c in p['claims'] for sid in c['evidence_ids']}
     wiki_nodes = [n for n in graph['nodes'] if n['id'] in wiki_sources or n.get('page_ids')]
     manifest = dict(schema_version=1, exported_at=corpus['exported_at'], coverage=corpus['coverage'],
-        news=dict(index=news_index, search=put(search), parts=news_parts),
+        news=dict(index=news_index, search=put(search), parts=news_parts,
+            bootstrap=put(corpus['news'][:40]), bootstrap_ids=news_ids[:40]),
         papers=put(corpus['papers']), risks=put(corpus['risks']), risk_graph=put(corpus.get('risk_graph', {})),
         wiki=put({'pages': graph['pages'], 'nodes': wiki_nodes}),
         graph=dict(meta=meta, total=len(nodes), bootstrap=bootstrap, index=graph_index, parts=graph_parts,
+            order=put(node_ids),
             lookup=put({'news': {n['news_id']: n['id'] for n in graph['nodes'] if n.get('news_id')},
                         'urls': {n['url']: n['id'] for n in graph['nodes'] if n.get('url') and n.get('type') == 'source'}})))
     observed = dict(observatory or {'nodes': [], 'edges': [], 'days': []})
@@ -125,7 +130,7 @@ def write_data(root, corpus, graph, observatory=None, *, now=None):
     if old.get('version') and old['version'] != manifest['version']:
         retained.append(dict(version=old['version'], expires_at=stamp + RETENTION_SECONDS, files=previous))
     # Retention bookkeeping does not change the immutable content generation.
-    manifest.update(files=sorted(files), previous_files=sorted(set(previous) - files),
+    manifest.update(files=sorted(files), previous_files=[],
                     retention_seconds=RETENTION_SECONDS)
     # The retention ledger is local exporter bookkeeping, not a browser payload.
     # published_files resolves its hashes but never publishes this ledger.

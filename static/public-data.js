@@ -117,10 +117,20 @@
   }
   function articles(ids) {
     return generation(async (m) => {
+      if (m.news.bootstrap && ids.every((id) => m.news.bootstrap_ids.includes(id))) {
+        const wanted = new Set(ids);
+        return (await json(m.news.bootstrap)).filter((row) => wanted.has(row.id));
+      }
       const index = await json(m.news.index),
         wanted = new Set(ids);
       const keys = [...new Set(index.filter((row) => wanted.has(row[0])).map((row) => row[6]))];
-      const rows = (await Promise.all(keys.map((key) => json(m.news.parts[key])))).flat();
+      const rows = [];
+      for (let offset = 0; offset < keys.length; offset += 4)
+        rows.push(
+          ...(
+            await Promise.all(keys.slice(offset, offset + 4).map((key) => json(m.news.parts[key])))
+          ).flat()
+        );
       return rows.filter((row) => wanted.has(row.id));
     });
   }
@@ -178,6 +188,10 @@
         (e) => (e.source === id || e.target === id) && (layer === 'all' || e.layer === layer)
       );
       const adjacent = [...new Set(incident.map((e) => (e.source === id ? e.target : e.source)))];
+      const order =
+        g.order && adjacent.length && limit > 1
+          ? new Map((await json(g.order)).map((key, i) => [key, i]))
+          : null;
       // Compatibility with the immediately preceding shard schema.
       if (adjacent.some((key) => !labels.has(key))) {
         const index = await json(g.index);
@@ -190,7 +204,9 @@
         ...adjacent
           .filter((key) => key !== id)
           .sort(
-            (a, b) => (labels.get(a)?._order ?? Infinity) - (labels.get(b)?._order ?? Infinity)
+            (a, b) =>
+              (order?.get(a) ?? labels.get(a)?._order ?? Infinity) -
+              (order?.get(b) ?? labels.get(b)?._order ?? Infinity)
           ),
       ];
       total = loaded.has(id) ? selectedIds.length : 0;

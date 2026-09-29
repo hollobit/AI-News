@@ -17,7 +17,7 @@ def test_complete_index_details_and_incident_edges_are_preserved(tmp_path):
     read=lambda name:json.loads((tmp_path/name).read_text())
     assert len(read(m['news']['index']))==201
     assert read(m['news']['search'])['200'].endswith('Unique detail 200 Unknown')
-    assert read(m['news']['parts']['2'])==corpus['news'][200:]
+    assert corpus['news'][200] in read(m['news']['parts'][bucket('200',10)])
     for sid in ('source:news:0','source:news:200'):
         part=read(m['graph']['parts'][bucket(sid)])
         assert graph['edges'][0] in part['edges']
@@ -36,7 +36,8 @@ def test_immutable_generation_preserves_previous_and_does_not_depend_on_time(tmp
     c=write_data(tmp_path,corpus,graph)
     assert c['version']!=b['version']
     assert all((tmp_path/n).exists() for n in b['files'])
-    assert set(c['previous_files'])==set(b['files'])-set(c['files'])
+    assert set(b['files']) <= set(data_files(tmp_path))
+    assert c['previous_files']==[]  # Local retention ledger owns older inventories.
 
 
 def test_manifest_rejects_traversal(tmp_path):
@@ -56,7 +57,7 @@ def test_duplicate_ids_and_missing_graph_endpoints_are_rejected(tmp_path):
 def test_multiple_generations_survive_a_day_then_expire(tmp_path):
     corpus, graph = fixtures()
     a = write_data(tmp_path, corpus, graph, now=1000)
-    old_part = a['news']['parts']['0']
+    old_part = a['news']['parts'][bucket('0',10)]
     for minute in (1, 2, 3):
         corpus['news'][0]['analyses'][0]['text'] = str(minute)
         current = write_data(tmp_path, corpus, graph, now=1000 + 60 * minute)
@@ -73,5 +74,24 @@ def test_neighbor_labels_and_order_allow_paging_before_hydration(tmp_path):
     m = write_data(tmp_path, corpus, graph)
     part = json.loads((tmp_path / m['graph']['parts'][bucket('source:news:0')]).read_text())
     neighbor = part['neighbors']['source:news:200']
-    assert neighbor == dict(id='source:news:200', title='News 200', type='source', _order=200)
+    assert neighbor == dict(id='source:news:200', title='News 200', type='source')
     assert 'analyses' not in neighbor
+
+
+def test_insert_reorder_edit_delete_keep_unaffected_details_stable(tmp_path):
+    corpus,graph=fixtures()
+    a=write_data(tmp_path,corpus,graph)
+    fresh=dict(corpus['news'][0],id='new',title='New',analyses=[])
+    corpus['news'].insert(0,fresh)
+    graph['nodes'].insert(0,dict(id='new-node',type='source',title='New'))
+    b=write_data(tmp_path,corpus,graph)
+    assert sum(a['news']['parts'].get(k)!=v for k,v in b['news']['parts'].items())==1
+    assert sum(a['graph']['parts'].get(k)!=v for k,v in b['graph']['parts'].items())==1
+    corpus['news'].reverse();graph['nodes'].reverse()
+    c=write_data(tmp_path,corpus,graph)
+    assert c['news']['parts']==b['news']['parts'] and c['graph']['parts']==b['graph']['parts']
+    assert c['graph']['order']!=b['graph']['order']
+    corpus['news']=[n for n in corpus['news'] if n['id']!='new']
+    graph['nodes']=[n for n in graph['nodes'] if n['id']!='new-node']
+    d=write_data(tmp_path,corpus,graph)
+    assert d['news']['parts']==a['news']['parts'] and d['graph']['parts']==a['graph']['parts']

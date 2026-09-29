@@ -14,7 +14,7 @@ def paths(db):
     return Path(base + '.lock'), Path(base + '.json')
 
 
-def worker_status(db):
+def _worker_status(db):
     lock, state = paths(db)
     if not lock.exists():
         return {'status': 'stopped'}
@@ -30,10 +30,25 @@ def worker_status(db):
                 os.kill(result['pid'], 0)
             except ProcessLookupError:
                 return {'status': 'preparing'}
-            return dict(result, status='running')
+            age = time.time() - result.get('heartbeat_at', time.time())
+            return dict(result, status='running', heartbeat_age_seconds=round(age,1),
+                        health='unresponsive' if age > 15 else 'observed' if 'heartbeat_at' in result else 'legacy')
         else:
             fcntl.flock(handle, fcntl.LOCK_UN)
             return {'status': 'stopped'}
+
+
+def worker_status(db):
+    value = _worker_status(db)
+    monitor_file = Path(str(paths(db)[1]) + '.monitor.json')
+    try:
+        monitor = json.loads(monitor_file.read_text())
+        try: os.kill(monitor['pid'], 0)
+        except ProcessLookupError: monitor = dict(monitor, state='stopped')
+        value['monitor'] = monitor
+    except (OSError, ValueError, KeyError):
+        pass
+    return value
 
 
 class BackgroundJobs:
@@ -41,7 +56,15 @@ class BackgroundJobs:
         self.db = str(Path(db).resolve())
         self.stop = threading.Event()
         self.thread = None
-        self.ensure()
+        self.monitor_file = Path(str(paths(self.db)[1]) + '.monitor.json')
+        self.monitor_state = {'pid':os.getpid(),'state':'starting','failures':0}
+        self._record_monitor()
+        try:
+            self.ensure()
+        except Exception as error:
+            self._record_monitor(state='failed', error_type=type(error).__name__)
+            raise
+        self._record_monitor(state='running' if monitor else 'disabled')
         if monitor:
             self.thread = threading.Thread(target=self._monitor, daemon=True, name='background-worker-monitor')
             self.thread.start()
@@ -70,22 +93,34 @@ class BackgroundJobs:
             # Do not kill/relaunch a process that may already own durable jobs.
             raise RuntimeError('백그라운드 worker 준비 지연; 소유 상태 확인 필요')
 
+    def _record_monitor(self, **fields):
+        from worker_health import write_state
+        self.monitor_state.update(fields, checked_at=time.time())
+        write_state(self.monitor_file,self.monitor_state)
+
     def _monitor(self):
         failures = 0
         while not self.stop.wait(min(60, 10 * 2 ** failures)):
             try:
                 self.ensure()
                 failures = 0
-            except Exception:
+                self._record_monitor(state='running', failures=0, error_type=None)
+            except Exception as error:
                 failures += 1
+                self._record_monitor(state='failed' if failures>=3 else 'retrying',
+                    failures=failures,error_type=type(error).__name__)
                 if failures >= 3:
                     return
 
     def status(self):
-        return worker_status(self.db)
+        return dict(worker_status(self.db), monitor=dict(self.monitor_state))
 
     def close(self):
         # The worker and its model calls survive HTTP shutdown.
         self.stop.set()
         if self.thread:
             self.thread.join(timeout=2)
+        try:
+            current=json.loads(self.monitor_file.read_text())
+            if current.get('pid')==os.getpid():self._record_monitor(state='stopped')
+        except (OSError,ValueError):pass

@@ -1,4 +1,5 @@
 """Incremental document preparation over the repository's canonical dedup view."""
+from task_lifecycle import checkpoint
 from keyword_index import keyword_record_id
 from projection_store import document_rows, rules_digest
 
@@ -21,6 +22,7 @@ def prepare_documents(db, raw, mappings):
         output = {}
         with cached_features(db) as features:
             for rid, item in zip(missing, items):
+                checkpoint()
                 original = originals[rid]
                 values = read_features(features, item) or {'sectors': classify_sectors(item), 'strategic_value': evaluate_news(item)}
                 output[rid] = dict(item, **values, item_id=rid, strategic_keywords=morph.get(rid, []),

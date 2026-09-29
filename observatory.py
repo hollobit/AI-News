@@ -1,4 +1,5 @@
 """Bounded, source-backed temporal topic/keyword graph; no model or network calls."""
+from task_lifecycle import checkpoint
 import re
 import time
 from collections import defaultdict
@@ -32,7 +33,9 @@ def select_topics(trends, limit=MAX_TOPICS):
               sorted(auto,key=lambda t:-t['current'])]
     chosen=list(groups)+[t for t in eligible if t['id'] in ('medical','public_ax') and t['id'] not in {g['id'] for g in groups}];seen={t['id'] for t in chosen}
     for index in range(max((len(r) for r in rankings),default=0)):
+        checkpoint()
         for ranking in rankings:
+            checkpoint()
             if index>=len(ranking):continue
             topic=ranking[index]
             if topic['id'] not in seen:chosen.append(topic);seen.add(topic['id'])
@@ -45,10 +48,12 @@ def build_projection(items,morph,topics,memberships,days,previous_items=None,
     """Edges join exact (canonical document, date) observations, never cross dates."""
     valid=set(days); observations={}; keyword_docs=defaultdict(set); labels={}
     for item in items:
+        checkpoint()
         if item.get('day') not in valid:continue
         key=(document_id(item),item['day'])
         observations.setdefault(key,item)
         for term in morph.get(keyword_record_id(item),[]):
+            checkpoint()
             if term.get('kind')=='noun' or not meaningful_label(term['label']):continue
             identity='keyword:'+term['id'];labels[identity]=term['label'];keyword_docs[identity].add(key)
     # Show repeated, explicit phrases; scope limits are exposed in the response.
@@ -56,6 +61,7 @@ def build_projection(items,morph,topics,memberships,days,previous_items=None,
     eligible=[k for k in ranked if len({d for d,_ in keyword_docs[k]})>=2]
     selected=[]
     for topic in topics:
+        checkpoint()
         docs=set(memberships.get(topic['id'],()))&observations.keys()
         related=sorted(eligible,key=lambda k:(-len(keyword_docs[k]&docs)/max(1,len(keyword_docs[k])),-len(keyword_docs[k]&docs),k))
         candidate=next((k for k in related if k not in selected and len({d for d,_ in keyword_docs[k]&docs})>=2),None)
@@ -64,6 +70,7 @@ def build_projection(items,morph,topics,memberships,days,previous_items=None,
     selected=(selected+[k for k in eligible if k not in selected])[:keyword_limit]
     supports={k:keyword_docs[k] for k in selected};meta={k:dict(id=k,label=labels[k],kind='keyword',keyword_id=k[8:]) for k in selected}
     for topic in topics:
+        checkpoint()
         identity=topic['id'];supports[identity]=set(memberships.get(identity,()))&observations.keys()
         meta[identity]=dict(id=identity,label=topic.get('label') or topic['name'],kind='topic',lens=identity,
                             origin='grouped' if topic.get('grouped') else topic.get('origin','builtin'))
@@ -71,7 +78,9 @@ def build_projection(items,morph,topics,memberships,days,previous_items=None,
     if previous_items is not None:
         prior_keys={(document_id(i),i['day']) for i in previous_items}
         for item in previous_items:
+            checkpoint()
             for term in morph.get(keyword_record_id(item),[]):
+                checkpoint()
                 if term.get('kind')!='noun':prior_supports['keyword:'+term['id']].add((document_id(item),item['day']))
         for topic in topics:prior_supports[topic['id']]=set(memberships.get(topic['id'],()))&prior_keys
     evidence={};documents={}
@@ -81,8 +90,10 @@ def build_projection(items,morph,topics,memberships,days,previous_items=None,
         for key in ordered:by_day[key[1]].append(key)
         daily=[];samples=[];all_ids=[]
         for day in days:
+            checkpoint()
             matches=by_day[day];daily.append(len({k[0] for k in matches}));ids=[]
             for key in matches[:3]:
+                checkpoint()
                 eid=content_digest(key)[:20];item=observations[key]
                 evidence[eid]=dict(id=eid,document_id=key[0],day=key[1],title=str(item.get('title') or '수집 뉴스')[:200],
                     url=item.get('source_url') or '',item_id=item.get('item_id') or keyword_record_id(item),
@@ -92,6 +103,7 @@ def build_projection(items,morph,topics,memberships,days,previous_items=None,
             if complete:
                 full=[]
                 for key in matches:
+                    checkpoint()
                     eid=content_digest(key)[:20];item=observations[key]
                     documents[eid]=dict(id=eid,document_id=key[0],day=key[1],title=str(item.get('title') or '수집 뉴스')[:200],url=item.get('source_url') or '')
                     full.append(eid)
@@ -103,6 +115,7 @@ def build_projection(items,morph,topics,memberships,days,previous_items=None,
     nodes=[dict(meta[k],**summary(supports[k],prior_supports[k],complete=True)) for k in supports if supports[k]]
     candidates=[]
     for a,b in combinations([n['id'] for n in nodes],2):
+        checkpoint()
         if meta[a]['kind']==meta[b]['kind']=='topic':continue
         shared=supports[a]&supports[b]
         if len({d for d,_ in shared})>=2:candidates.append((a,b,shared))
@@ -113,6 +126,7 @@ def build_projection(items,morph,topics,memberships,days,previous_items=None,
         pair=entry[:2]
         if pair not in seen and len(chosen)<edge_limit:chosen.append(entry);seen.add(pair)
     for topic in topics:
+        checkpoint()
         for entry in [e for e in candidates if topic['id'] in e[:2]][:3]:include(entry)
     for entry in [e for e in candidates if meta[e[0]]['kind']==meta[e[1]]['kind']][:36]:include(entry)
     for entry in candidates:include(entry)
@@ -121,7 +135,9 @@ def build_projection(items,morph,topics,memberships,days,previous_items=None,
     from link_groups import canonical_url
     article_nodes={}
     for identity,keys in supports.items():
+        checkpoint()
         for key in keys:
+            checkpoint()
             url=canonical_url(observations[key].get('source_url') or '')
             if url:article_nodes.setdefault(url,set()).add(identity)
     article_nodes={url:sorted(ids) for url,ids in article_nodes.items()}
@@ -143,6 +159,7 @@ def candidate_context(db, data):
     excluded = {r['id'] for r in list_registry(db)['items'] if r.get('excluded')}
     valid_days = []
     for item in data['items']:
+        checkpoint()
         try:valid_days.append(date.fromisoformat(item['day']))
         except (ValueError, KeyError):pass
     return {'end': max(valid_days, default=date.today()).isoformat(),
@@ -176,6 +193,7 @@ def read_observatory(db, window=14, expanded=False):
         excluded={t['id'] for t in registry if t.get('excluded')}
         groups={t['id']:t for t in trends['monitoring']['topics']}
         for entry in list(WATCH_LENSES)+[t for t in registry if t.get('kind')=='signal' and t.get('origin')!='builtin']:
+            checkpoint()
             if entry['id'] in excluded:continue
             identity,label=family_for(entry)
             groups.setdefault(identity,dict(id=identity,label=label,grouped=True))
@@ -201,10 +219,13 @@ def read_observatory(db, window=14, expanded=False):
                 entries = {t['id']: t for t in registry}
                 postings = defaultdict(list)
                 for item in changed:
+                    checkpoint()
                     for kid in {t['id'] for t in data['morph'].get(keyword_record_id(item), [])}:
+                        checkpoint()
                         postings[kid].append(item)
                 rows = {rid: {'topics': []} for rid in missing}
                 for topic in candidate_topics:
+                    checkpoint()
                     entry = entries.get(topic['id'], {})
                     kid = (entry.get('metadata') or {}).get('keyword_id') or entry.get('keyword_id')
                     automatic = topic['id'].startswith(('dynamic:', 'dynamic-signal:')) and entry.get('origin') != 'manual'
@@ -212,13 +233,16 @@ def read_observatory(db, window=14, expanded=False):
                     found = select_strategy_items(db, {'lens': [topic['id']]}, candidates,
                         data['morph'], precomputed=True, registry=registry, membership_only=True)
                     for item in found:
+                        checkpoint()
                         rows[keyword_record_id(item)]['topics'].append(topic['id'])
                 return rows
             rows = document_rows(db, 'observatory-memberships-v2', inputs, compute)
             output = {identity: set() for identity in topic_ids}
             for rid, row in rows.items():
+                checkpoint()
                 item = originals[rid]
                 for identity in row['topics']:
+                    checkpoint()
                     output[identity].add((document_id(item), item['day']))
             return output
         membership_key=(revision,registry_version,end.isoformat(),tuple(t['id'] for t in candidate_topics)) if revision else None
@@ -226,7 +250,9 @@ def read_observatory(db, window=14, expanded=False):
         timing['memberships_seconds']=round(time.perf_counter()-stage,3);stage=time.perf_counter()
         ranked={'lenses':[],'monitoring':{'topics':[]}}
         for kind,candidates in [('lenses',trends['lenses']),('groups',list(groups.values()))]:
+            checkpoint()
             for topic in candidates:
+                checkpoint()
                 keys=memberships[topic['id']]
                 current=len({d for d,day in keys if days[0]<=day<=days[-1]})
                 previous=len({d for d,day in keys if previous_start<=day<=previous_end})

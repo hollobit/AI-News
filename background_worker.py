@@ -60,13 +60,13 @@ def run(db):
         wiki = KnowledgeWiki(db)
         articles = ArticleExplanations(db, SavedObservatory(db), start_worker=False)
         pool = __import__('concurrent.futures', fromlist=['ThreadPoolExecutor']).ThreadPoolExecutor(2, thread_name_prefix='durable-background')
-        temporary = state.with_suffix('.tmp')
-        temporary.write_text(json.dumps({'pid': os.getpid(), 'tasks': ['paper_metadata','paper_analysis','paper_pipeline','wiki','article_explanations']}))
-        temporary.replace(state)
+        from worker_health import WorkerHealth
+        health = WorkerHealth(db, state, ['paper_metadata','paper_analysis','paper_pipeline','wiki','article_explanations'])
         pending = {}
         wiki_request = None
         try:
             while not stop.wait(2):
+                health.tick("claiming")
                 for kind, future in list(pending.items()):
                     if future.done():
                         try: future.result()
@@ -85,7 +85,9 @@ def run(db):
                 if requested != wiki_request:
                     wiki_request = requested
                     wiki.wake.set()
+                health.tick("working" if pending else "idle")
         finally:
+            health.tick('draining')
             wiki.close(); analysis.close(); pipeline.close()
             # Finish/checkpoint existing work before releasing the ownership lock.
             pool.shutdown(wait=True)
@@ -93,6 +95,7 @@ def run(db):
             if analysis.thread.is_alive(): analysis.thread.join()
             if pipeline.thread.is_alive(): pipeline.thread.join()
             metadata.close(); articles.close()
+            health.close()
             state.unlink(missing_ok=True)
 
 

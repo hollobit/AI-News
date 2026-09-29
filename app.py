@@ -319,7 +319,8 @@ def warm_strategy_views(path, stop, source_status):
     while not stop.is_set():
         db = None
         try:
-            db = sqlite3.connect(db_path, timeout=15)
+            from task_lifecycle import cancellable_db
+            db = cancellable_db(sqlite3.connect(db_path, timeout=15))
             db.row_factory = sqlite3.Row
             source_revision = revision_token(db, ('source',))
             from dynamic_registry import list_registry

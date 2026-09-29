@@ -558,3 +558,7 @@ API: GET/POST `/api/papers/pipeline` (`enabled` boolean), GET `/api/papers/strat
 
 
 논문 메타데이터 대체 수집: `import_arxiv_snapshot.py`는 arXiv 공식 Kaggle 배포본을 내려받아 기존 등록 논문 ID에 해당하는 제목·초록만 저장합니다. 약 5.5GB JSONL 배포본이며 중단 시 Range 재개를 지원합니다. 상시 파이프라인은 OAI-PMH 증분 및 OpenAlex/Semantic Scholar 색인을 제한된 빈도로 확인합니다. 429/Retry-After·일일 요청 한도·제공자별 대기를 지키며 API 키는 선택 설정입니다. 출처·버전·입력 변경을 보존하고 오래된 정보나 외부 색인이 확보된 공식 정보를 덮어쓰지 않도록 합니다. 외부 색인 분석은 공식 원문 분석과 표시·인용을 구별하며, 현재 입력과 독립 검토 결과가 일치하는 논문만 기사 해설·GraphRAG·전략 연구 패널에 반영합니다. 배포본 확보가 논문 전문 확보나 분석 검토 완료를 뜻하지는 않습니다.
+
+## 아키텍처와 실행 흐름
+
+실행 경계·자료 식별자·검토·캐시·공개 배포 계약은 [ARCHITECTURE.md](ARCHITECTURE.md)에 정리했습니다. `docs/news-architecture.html`은 전체 구조, 신규 뉴스 처리, 조회·공개 배포를 전환하는 인포그래픽 원본입니다. 후속 리팩토링의 검증 결과와 남은 성능 목표는 [Plans.md](Plans.md)를 참고하세요.

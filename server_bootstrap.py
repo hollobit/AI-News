@@ -19,6 +19,12 @@ class NewsHTTPServer(ThreadingHTTPServer):
 
 
 def bootstrap(path, port, queries):
+    from task_lifecycle import ServiceScope
+    with ServiceScope() as scope:
+        return _bootstrap(path, port, queries, scope)
+
+
+def _bootstrap(path, port, queries, scope):
     rebuild_articles = queries['rebuild_articles']
     CLASSIFICATION_VERSION = queries['CLASSIFICATION_VERSION']
     ROOT = queries['ROOT']
@@ -36,12 +42,12 @@ def bootstrap(path, port, queries):
     connect = open_db
     from automation_runtime import interrupted_runs
     recovery_candidates = interrupted_runs(path)
-    analysis_service = AnalysisService(path)
-    graph_service = AnalysisService(path, analyzer=analyze_graph, table='graph_analysis')
-    research_service = ResearchService(path)
-    source_service = SourceService(path)
+    analysis_service = scope.register(AnalysisService(path))
+    graph_service = scope.register(AnalysisService(path, analyzer=analyze_graph, table='graph_analysis'))
+    research_service = scope.register(ResearchService(path))
+    source_service = scope.register(SourceService(path))
     from strategic_workflow import WorkflowService
-    workflow_service = WorkflowService(path, sources=source_service)
+    workflow_service = scope.register(WorkflowService(path, sources=source_service))
     from recursive_improvement import RecursiveImprovementService
     from improvement_selection import select_improvement_news
 
@@ -52,7 +58,7 @@ def bootstrap(path, port, queries):
             return select_improvement_news(db, settings, list(tasks) + discovery_followups(db), seen_ids)
         finally:
             db.close()
-    improvement_service = RecursiveImprovementService(path, workflow_service, improvement_selector)
+    improvement_service = scope.register(RecursiveImprovementService(path, workflow_service, improvement_selector))
 
     def public_improvement(run):
         if not run:
@@ -74,10 +80,10 @@ def bootstrap(path, port, queries):
             db.close()
     from arxiv_papers import PaperService, read_papers, paper
     from paper_analysis import PaperAnalysisService
-    paper_service = PaperService(path, start_worker=False)
-    paper_analysis_service = PaperAnalysisService(path, start_worker=False)
+    paper_service = scope.register(PaperService(path, start_worker=False))
+    paper_analysis_service = scope.register(PaperAnalysisService(path, start_worker=False))
     from paper_pipeline import PaperPipeline
-    paper_pipeline = PaperPipeline(path, paper_service, paper_analysis_service, autostart=False)
+    paper_pipeline = scope.register(PaperPipeline(path, paper_service, paper_analysis_service, autostart=False))
     from baseline_jobs import BaselineJobs
 
     def baseline_selector():
@@ -87,20 +93,20 @@ def bootstrap(path, port, queries):
             return all_corpus_items(db)
         finally:
             db.close()
-    baseline_service = BaselineJobs(path, baseline_selector)
-    simulation_service = MiroFishService(path, readiness=runtime_status)
+    baseline_service = scope.register(BaselineJobs(path, baseline_selector))
+    simulation_service = scope.register(MiroFishService(path, readiness=runtime_status))
     from strategic_hub import StrategicHub
-    intelligence_service = StrategicHub(path, simulation=simulation_service)
+    intelligence_service = scope.register(StrategicHub(path, simulation=simulation_service))
     from reach_pipeline import ReachPipeline
-    reach_pipeline = ReachPipeline(path)
+    reach_pipeline = scope.register(ReachPipeline(path))
     from graph_questions import GraphQuestions
-    question_service = GraphQuestions(path, enabled=graph_service.enabled, enricher=reach_pipeline)
+    question_service = scope.register(GraphQuestions(path, enabled=graph_service.enabled, enricher=reach_pipeline))
     question_service.warm()
     from observatory_runtime import ObservatoryRuntime
     from agent_reach_service import AgentReachService
-    reach_service = AgentReachService(path)
+    reach_service = scope.register(AgentReachService(path))
     from corpus_status import CorpusStatus
-    corpus_status = CorpusStatus(path)
+    corpus_status = scope.register(CorpusStatus(path))
     corpus_status.get()
 
     def observatory_status():
@@ -112,47 +118,39 @@ def bootstrap(path, port, queries):
             base = status_response(db, 'baseline', limit=1)
             deep = status_response(db, 'improvement', limit=1)
         return dict(collector=collector, base=base, deep=deep, corpus=corpus_status.get(), sources=source_service.status())
-    observatory_service = ObservatoryRuntime(path, status_loader=observatory_status)
+    observatory_service = scope.register(ObservatoryRuntime(path, status_loader=observatory_status))
     observatory_service.request()
     observatory_service.status()
     from article_explanations import ArticleExplanations
-    article_service = ArticleExplanations(path, observatory_service, start_worker=False)
+    article_service = scope.register(ArticleExplanations(path, observatory_service, start_worker=False))
     from knowledge_wiki import KnowledgeWiki
-    wiki_service = KnowledgeWiki(path, start_worker=False)
+    wiki_service = scope.register(KnowledgeWiki(path, start_worker=False))
     from background_jobs import BackgroundJobs
-    background_jobs = BackgroundJobs(path)
+    background_jobs = scope.register(BackgroundJobs(path))
     from server_http import make_handler
     Handler = make_handler(ServerContext(analysis_service=analysis_service, article_service=article_service, baseline_service=baseline_service, connect=connect, corpus_status=corpus_status, graph_service=graph_service, improvement_catalog=improvement_catalog, improvement_service=improvement_service, intelligence_service=intelligence_service, observatory_service=observatory_service, paper=paper, paper_analysis_service=paper_analysis_service, paper_pipeline=paper_pipeline, paper_service=paper_service, path=path, port=port, public_improvement=public_improvement, question_service=question_service, reach_pipeline=reach_pipeline, reach_service=reach_service, read_papers=read_papers, research_service=research_service, simulation_service=simulation_service, source_service=source_service, wiki_service=wiki_service, workflow_service=workflow_service, ROOT=ROOT, configured_channels=configured_channels, find_link_group=find_link_group, graph_input=graph_input, hidden_link_rows=hidden_link_rows, read_briefing=read_briefing, read_links=read_links, simulation_news=simulation_news, source_bundle=source_bundle, unindexed_link_rows=unindexed_link_rows))
     server = NewsHTTPServer(('127.0.0.1', port), Handler)
     warm_stop = threading.Event()
-    warm_thread = threading.Thread(target=warm_strategy_views, args=(path, warm_stop, source_service.status), daemon=True, name='news-view-warmup')
-    warm_thread.start()
+    def warm_views(*args):
+        from task_lifecycle import cancellation_scope
+        from concurrent.futures import CancelledError
+        try:
+            with cancellation_scope(warm_stop):
+                warm_strategy_views(*args)
+        except CancelledError:
+            pass
+    warm_thread = threading.Thread(target=warm_views, args=(path, warm_stop, source_service.status), daemon=True, name='news-view-warmup')
     from automation_runtime import recover
-    recover(recovery_candidates, {'baseline': baseline_service, 'improvement': improvement_service, 'workflows': workflow_service})
-    print(f'뉴스 페이지: http://127.0.0.1:{port}', flush=True)
     try:
+        warm_thread.start()
+        recover(recovery_candidates, {'baseline': baseline_service, 'improvement': improvement_service, 'workflows': workflow_service})
+        print(f'뉴스 페이지: http://127.0.0.1:{port}', flush=True)
         server.serve_forever()
     finally:
         warm_stop.set()
-        background_jobs.close()
-        wiki_service.close()
-        article_service.close()
-        question_service.close()
-        observatory_service.close()
-        reach_service.close()
-        reach_pipeline.close()
-        corpus_status.close()
+        errors = scope.close()
         server.server_close()
-        warm_thread.join(timeout=2)
-        intelligence_service.close()
-        analysis_service.close()
-        graph_service.close()
-        research_service.close()
-        baseline_service.close()
-        improvement_service.close()
-        workflow_service.close()
-        paper_pipeline.close()
-        paper_analysis_service.close()
-        paper_service.close()
-        source_service.close()
-        simulation_service.close()
+        if warm_thread.ident is not None:
+            warm_thread.join(timeout=3)
+        if errors:
+            print(json.dumps({'shutdown_errors': errors}), flush=True)

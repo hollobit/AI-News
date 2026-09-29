@@ -1,4 +1,5 @@
 """Evidence-first retrieval with query relevance, graph context and source diversity."""
+from task_lifecycle import checkpoint
 from collections import defaultdict, OrderedDict
 from copy import deepcopy
 import threading
@@ -20,13 +21,17 @@ class RetrievalIndex:
         self.adjacency = defaultdict(list)
         rows = {}
         for identity,e in self.evidence.items():
+            checkpoint()
             rows[('e',identity)] = [(e.get('title',''),3),(e.get('text',''),1)]
         for identity,n in self.nodes.items():
+            checkpoint()
             rows[('n',identity)] = [(n.get('name','')+' '+' '.join(n.get('aliases',[])),3),
                                   (n.get('summary','')[:1600],1)]
             for ref in n.get('evidence_ids',[]):
+                checkpoint()
                 if ref in self.evidence:self.refs[ref].add(identity)
         for e in self.edges:
+            checkpoint()
             self.adjacency[e['source']].append(e)
             self.adjacency[e['target']].append(e)
         self.lexical = LexicalIndex(rows)
@@ -64,6 +69,7 @@ def retrieve(graph, question, node_ids=None):
         scope = set(requested)
         frontier = set(requested)
         for _ in range(2):
+            checkpoint()
             frontier = {edge[k] for i in frontier for edge in index.adjacency[i]
                         for k in ('source','target')} - scope
             scope |= frontier
@@ -71,14 +77,18 @@ def retrieve(graph, question, node_ids=None):
         es = {i:s for i,s in es.items() if i in allowed}
         ns = {i:s for i,s in ns.items() if i in scope}
         for i in requested:
+            checkpoint()
             for ref in index.nodes[i].get('evidence_ids',[]):
+                checkpoint()
                 if ref in index.evidence:es[ref] = es.get(ref,0)+2
     # Node matches bring their actual supporting documents into retrieval, while
     # high-degree generic hubs cannot win solely through support_count.
     for identity,score in sorted(ns.items(),key=lambda p:(-p[1],p[0]))[:24]:
+        checkpoint()
         refs = index.nodes[identity].get('evidence_ids',[])
         contribution = score/(1+len(refs)**.5)
         for ref in refs:
+            checkpoint()
             if ref in index.evidence:es[ref] = es.get(ref,0)+contribution
     candidates = sorted(es,key=lambda i:(-es[i],i))[:160]
     chosen = []
@@ -117,6 +127,7 @@ def retrieve(graph, question, node_ids=None):
         # Date breaks equal relevance only; a newer irrelevant article never wins.
         return relevance,e.get('day',''),i
     while candidates and len(chosen)<RETRIEVAL_EVIDENCE_LIMIT:
+        checkpoint()
         identity=max(candidates,key=rank)
         candidates.remove(identity)
         if doc_id(identity) in documents:continue
@@ -126,7 +137,9 @@ def retrieve(graph, question, node_ids=None):
     refs=set(chosen)
     node_scores=dict(ns)
     for ref in chosen:
+        checkpoint()
         for identity in index.refs[ref]:
+            checkpoint()
             if scope is None or identity in scope:
                 node_scores[identity]=node_scores.get(identity,0)+es[ref]/max(1,len(index.refs[ref]))
     eligible = {i for ref in chosen for i in index.refs[ref] if scope is None or i in scope}
@@ -134,10 +147,12 @@ def retrieve(graph, question, node_ids=None):
     selected_set=set(selected)
     nodes = []
     for identity in selected:
+        checkpoint()
         n=deepcopy(index.nodes[identity]);n['evidence_ids']=[r for r in n.get('evidence_ids',[]) if r in refs]
         nodes.append(n)
     edges=[]
     for edge in index.edges:
+        checkpoint()
         attached=[r for r in edge.get('evidence_ids',[]) if r in refs]
         if edge['source'] in selected_set and edge['target'] in selected_set and attached:
             e=deepcopy(edge);e['evidence_ids']=attached;edges.append(e)

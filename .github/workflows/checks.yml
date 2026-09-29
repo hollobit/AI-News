@@ -34,3 +34,4 @@ jobs:
           python -m playwright install --with-deps chromium
           python tests/ui_dashboard_search.py
           python tests/ui_followup.py
+          python tests/ui_graph_race.py

@@ -1,5 +1,7 @@
 """News read projections and stable article/message deduplication."""
+from task_lifecycle import checkpoint
 import hashlib
+import json
 import re
 import unicodedata
 from collections import Counter
@@ -23,8 +25,10 @@ def duplicate_message_keys(db):
     seen, duplicates = set(), set()
     hidden = {}
     for url in db.execute("SELECT chat_id,message_id,original_url,title FROM archived_urls WHERE active=1 AND entity_type='text_link'"):
+        checkpoint()
         hidden.setdefault((url["chat_id"], url["message_id"]), set()).add((url["original_url"], url["title"]))
     for row in db.execute("SELECT chat_id,message_id,text FROM news ORDER BY published_at,message_id,chat_id"):
+        checkpoint()
         key = (row["chat_id"], normalized_message(row["text"]),
                tuple(sorted(hidden.get((row["chat_id"], row["message_id"]), set()))))
         if key in seen:
@@ -36,17 +40,22 @@ def duplicate_message_keys(db):
 
 def article_key(item):
     """Merge identical same-day descriptions, never URL-only updates."""
+    if item.get("_repository_key"):
+        return item["_repository_key"]
     text = item["text"]
     for url in sorted(extract_links(text), key=len, reverse=True):
+        checkpoint()
         text = text.replace(url, canonical_url(url) or url)
-    return item["day"], normalized_message(text), tuple(item.get("embedded_urls", []))
+    return hashlib.sha256(json.dumps([item["day"], normalized_message(text), item.get("embedded_urls", [])],ensure_ascii=False).encode()).hexdigest()
 
 
 def unique_articles(rows):
     grouped = {}
     for row in rows:
+        checkpoint()
         item = dict(row)
         key = article_key(item)
+        item.pop("_repository_key", None)
         source = {name: item[name] for name in ("chat_id", "message_id", "channel", "url")}
         if key not in grouped:
             item.update(classify_link(item["source_url"], item["title"], item["text"]))
@@ -56,22 +65,29 @@ def unique_articles(rows):
         elif source not in grouped[key]["sources"]:
             grouped[key]["sources"].append(source)
     for item in grouped.values():
+        checkpoint()
         item["source_count"] = len(item["sources"])
     return list(grouped.values())
 
 
-def joined_articles(db):
-    duplicates = duplicate_message_keys(db)
+def joined_articles(db, *, _message=None, _duplicates=None):
+    if _message is None:
+        from source_projection import joined
+        prepared=joined(db)
+        if prepared is not None:return prepared
+    duplicates = duplicate_message_keys(db) if _duplicates is None else _duplicates
     rows = db.execute("""SELECT a.*, n.channel, n.url, n.published_at,
         n.day AS telegram_day FROM articles a JOIN news n
         ON a.chat_id=n.chat_id AND a.message_id=n.message_id
-        ORDER BY a.day DESC, n.published_at DESC, a.message_id DESC, a.item_index""").fetchall()
+        """ + (' WHERE a.chat_id=? AND a.message_id=?' if _message is not None else '') +
+        ' ORDER BY a.day DESC, n.published_at DESC, a.message_id DESC, a.item_index', _message or ()).fetchall()
     hidden = {}
-    for url in db.execute("SELECT chat_id,message_id,original_url FROM archived_urls WHERE active=1 AND entity_type='text_link'"):
+    for url in db.execute("SELECT chat_id,message_id,original_url FROM archived_urls WHERE active=1 AND entity_type='text_link'" + (" AND chat_id=? AND message_id=?" if _message is not None else ""), _message or ()):
+        checkpoint()
         hidden.setdefault((url["chat_id"], url["message_id"]), set()).add(url["original_url"])
     from reach_pipeline import external_rows
     return attach_sources(db, [dict(row, embedded_urls=sorted(hidden.get((row["chat_id"], row["message_id"]), set())))
-            for row in rows if (row["chat_id"], row["message_id"]) not in duplicates]+external_rows(db))
+            for row in rows if (row["chat_id"], row["message_id"]) not in duplicates]+(external_rows(db) if _message is None else []))
 
 
 def read_news(db, params, *, include_discovery=True):
@@ -116,21 +132,24 @@ def read_news(db, params, *, include_discovery=True):
             "demo": db.execute("SELECT 1 FROM state WHERE key='demo'").fetchone() is not None}
 
 
-def unindexed_link_rows(db, indexed_rows):
+def unindexed_link_rows(db, indexed_rows, *, _message=None, _duplicates=None):
     """Keep source-only fragments that Telegram message splitting left outside articles."""
     represented = {}
     for row in indexed_rows:
+        checkpoint()
         key = (str(row["chat_id"]), row["message_id"])
         represented.setdefault(key, set()).update(canonical_url(url) for url in
                                                  extract_links(row["text"]) + [row["source_url"]] if url)
     extras = []
-    duplicates = duplicate_message_keys(db)
-    for raw in db.execute("SELECT * FROM news"):
+    duplicates = duplicate_message_keys(db) if _duplicates is None else _duplicates
+    for raw in db.execute("SELECT * FROM news" + (" WHERE chat_id=? AND message_id=?" if _message is not None else ""), _message or ()):
+        checkpoint()
         key = (str(raw["chat_id"]), raw["message_id"])
         if key in duplicates:
             continue
         known = represented.setdefault(key, set())
         for url in extract_links(raw["text"]):
+            checkpoint()
             canonical = canonical_url(url)
             if not canonical or canonical in known:
                 continue
@@ -152,15 +171,17 @@ def unindexed_link_rows(db, indexed_rows):
     return extras
 
 
-def hidden_link_rows(db, existing_rows):
-    duplicates = duplicate_message_keys(db)
+def hidden_link_rows(db, existing_rows, *, _message=None, _duplicates=None):
+    duplicates = duplicate_message_keys(db) if _duplicates is None else _duplicates
     known = {}
     for row in existing_rows:
+        checkpoint()
         key = (str(row["chat_id"]), row["message_id"])
         known.setdefault(key, set()).update(canonical_url(url) for url in
             extract_links(row["text"]) + [row["source_url"]] if url)
     result = []
-    for row in archived_link_rows(db, hidden_only=True):
+    for row in archived_link_rows(db, hidden_only=True, message=_message):
+        checkpoint()
         key = (str(row["chat_id"]), row["message_id"])
         url = canonical_url(row["source_url"])
         if key in duplicates or url in known.get(key, set()):
