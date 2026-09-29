@@ -3,23 +3,17 @@
   <head>
     <link rel="stylesheet" href="/workspace.css" />
     <script src="/workspace.js" defer></script>
+    <script src="/workspace-navigation.js" defer></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>논문·연구동향 · 하루 뉴스</title>
-    <link rel="stylesheet" href="/strategy.css" />
-    <link rel="stylesheet" href="/papers.css" />
+    <link rel="stylesheet" href="/research-layout.css" />
     <script src="/papers.js" defer></script>
+    <link rel="stylesheet" href="/workspace-ui.css" />
   </head>
   <body>
     <a class="skip" href="#main">본문으로 이동</a>
-    <header class="paper-header">
-      <a class="paper-brand" href="/strategy">◈ AI OBSERVATORY</a>
-      <nav aria-label="연구 메뉴">
-        <a href="/intelligence">전략 검토실</a><a href="/strategy">전략 관측소</a
-        ><a href="/papers" aria-current="page">논문·연구동향</a><a href="/risks">위험 평가</a
-        ><a href="/research">분석 보고서</a><a href="/news">전체 뉴스</a>
-      </nav>
-    </header>
+
     <main id="main" class="paper-main">
       <section class="page-heading">
         <div>
@@ -27,22 +21,25 @@
           <h1>논문·연구동향</h1>
           <p>논문의 근거를 읽고, 기술 분야의 연구 변화를 관측합니다.</p>
         </div>
-        <div class="heading-actions">
-          <button id="paper-refresh" class="button">논문 정보 갱신</button
-          ><button id="paper-analyze" class="button primary">주요 논문 3개 분석</button>
-        </div>
       </section>
-      <div class="panel">
-        <h2>논문 자동 수집·분석</h2>
-        <p id="paper-pipeline-state" role="status">상태 확인 중</p>
-        <div id="paper-providers"></div>
-        <button id="paper-pipeline-toggle" class="button">수집·분석 재개</button>
-      </div>
       <div id="paper-notice" class="notice" role="status" aria-live="polite" hidden></div>
       <p class="subtle">
         수집 뉴스에서 발견한 arXiv 논문을 식별자로 묶습니다. 버전별 링크와 발표·갱신일을 구분하며,
         분야 분류나 arXiv 게재가 동료 심사 완료를 뜻하지 않습니다.
       </p>
+      <details class="ws-management" id="paper-management">
+        <summary>논문 수집·분석 관리</summary>
+        <div class="heading-actions">
+          <button id="paper-refresh" class="button">논문 정보 갱신</button
+          ><button id="paper-analyze" class="button primary">주요 논문 3개 분석</button>
+        </div>
+        <div class="panel">
+          <h2>논문 자동 수집·분석</h2>
+          <p id="paper-pipeline-state" role="status">상태 확인 중</p>
+          <div id="paper-providers"></div>
+          <button id="paper-pipeline-toggle" class="button" disabled>상태 확인 중</button>
+        </div>
+      </details>
       <section id="paper-metrics" class="metrics" aria-label="논문 보관과 분석 현황"></section>
       <section class="section">
         <div class="section-head">

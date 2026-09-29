@@ -15,7 +15,7 @@ def get(self, route, params):
             db.close()
         content = json.dumps(result, ensure_ascii=False).encode()
         mime = 'application/json; charset=utf-8'
-    elif route.path in {'/workspace.js', '/workspace.css', '/public-data.js', '/observatory-search.js', '/observatory.js', '/observatory.css', '/strategy.js', '/strategy-evidence.js', '/strategy-workflow.js', '/strategy-improvement.js', '/strategy-baseline.js', '/strategy-topics.js', '/strategy-risks.js', '/strategy.css', '/news-network.js', '/news-network.css', '/papers.js', '/papers.css', '/risks.js', '/risks.css', '/risk-network.js', '/risk-network.css', '/intelligence.js', '/intelligence.css'}:
+    elif route.path in {'/research-layout.css', '/workspace-navigation.js', '/workspace-ui.css', '/workspace.js', '/workspace.css', '/public-data.js', '/observatory-search.js', '/observatory.js', '/observatory.css', '/strategy.js', '/strategy-evidence.js', '/strategy-workflow.js', '/strategy-improvement.js', '/strategy-baseline.js', '/strategy-topics.js', '/strategy-risks.js', '/strategy.css', '/news-network.js', '/news-network.css', '/papers.js', '/papers.css', '/risks.js', '/risks.css', '/risk-network.js', '/risk-network.css', '/intelligence.js', '/intelligence.css'}:
         content = (self.services.ROOT / 'static' / route.path[1:]).read_bytes()
         if route.path == '/risks.js':
             content += b'\n' + (self.services.ROOT / 'static/risk-network-bootstrap.js').read_bytes()

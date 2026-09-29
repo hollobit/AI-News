@@ -8,20 +8,7 @@
       if (cls) n.className = cls;
       return n;
     };
-  const names = {
-    strategy: '전략 대시보드',
-    news: '뉴스',
-    archive: '날짜별 아카이브',
-    observatory: '관측 지도',
-    research: '뉴스 분석',
-    risks: '위험·조건부 시나리오',
-    papers: '논문',
-    wiki: '지식 위키',
-    graph: '관계 탐색',
-    sources: '출처 목록',
-    simulation: 'MiroFish 분석',
-    services: '서비스 안내',
-  };
+  const names = WorkspaceNavigation.publicNames;
   let view = new URLSearchParams(location.search).get('view') || 'strategy',
     site,
     wiki,
@@ -63,22 +50,12 @@
   }
   if (!names[view]) view = 'services';
   $('search').value = new URLSearchParams(location.search).get('q') || '';
-  const url = (v) =>
-    v === 'observatory'
-      ? 'observatory.html'
-      : v === 'graph'
-        ? 'knowledge.html'
-        : 'index.html?view=' + v;
+  const url = WorkspaceNavigation.publicURL;
   const link = (text, href) => {
     const a = el('a', text);
     a.href = href;
     return a;
   };
-  for (const [key, name] of Object.entries(names)) {
-    const a = link(name, url(key));
-    if (view === key) a.setAttribute('aria-current', 'page');
-    $('menu').append(a);
-  }
   $('title').textContent = names[view];
   document.title = names[view] + ' · AI 뉴스';
   function safe(value) {

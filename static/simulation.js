@@ -673,7 +673,7 @@
       state.runtime = { ready: false, message: error.message };
       state.runs = [];
       renderRuntime();
-      renderRuns();
+      Workspace.renderState(els.runs, 'error', '실행 목록 조회 실패', () => loadIndex());
       showError(error.message, () => loadIndex());
     }
   }

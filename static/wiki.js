@@ -36,7 +36,14 @@
     timer;
   let lastRender = '';
   const sourceFilter = new URL(location.href).searchParams.get('source_url') || '';
-  const href = (id) => '/wiki?id=' + encodeURIComponent(id);
+  const route = Workspace.routeState({ q: 'search' });
+  route.read();
+  const href = (id) => {
+    const u = new URL(location.href);
+    u.pathname = '/wiki';
+    u.searchParams.set('id', id);
+    return u.pathname + u.search;
+  };
   const safeURL = (url) => {
     try {
       const u = new URL(url);
@@ -318,9 +325,13 @@
   }
   addEventListener('popstate', () => {
     selected = new URL(location.href).searchParams.get('id') || '';
+    route.read();
     load();
   });
-  $('search').addEventListener('input', () => data && renderPages());
+  $('search').addEventListener('input', () => {
+    route.write();
+    if (data) renderPages();
+  });
   for (const [id, action] of [
     ['topic-form', 'configure'],
     ['alias-form', 'alias'],

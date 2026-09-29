@@ -491,7 +491,24 @@
     }
     if (data.active_rules) renderObject($('#items'), '현재 적용 규칙', data.active_rules);
   }
+  const route = Workspace.routeState({ q: 'search', window_days: 'window' }, { page: 1, id: '' });
+  function restoreRoute() {
+    const saved = route.read();
+    page = Math.max(1, Number(saved.page) || 1);
+    return saved;
+  }
+  restoreRoute();
+  let restoring = false;
+  addEventListener('popstate', () => {
+    restoring = true;
+    const saved = restoreRoute();
+    load();
+    if (saved.id) detail({ id: saved.id, title: '상세 조회' });
+    else $('#detail-dialog').close();
+    restoring = false;
+  });
   async function load() {
+    route.write({ page });
     const seq = ++loadId;
     listAbort?.abort();
     listAbort = new AbortController();
@@ -519,6 +536,7 @@
     scenarios: 'scenario',
   };
   async function detail(item) {
+    if (!restoring) route.write({ id: item.id }, 'push');
     if (view === 'overview' && item.href) {
       try {
         const target = new URL(item.href, location.origin);
@@ -1425,7 +1443,7 @@
 
   for (const [key, [label]] of Object.entries(views)) {
     const a = link(label, key === 'overview' ? '/intelligence' : '/intelligence/' + key);
-    if (key === view) a.setAttribute('aria-current', 'page');
+    if (key === view) a.setAttribute('aria-current', 'location');
     $('#sections').append(a);
   }
   $('#heading').textContent = views[view][0];
@@ -1457,19 +1475,25 @@
   $('#filters').addEventListener('submit', (e) => {
     e.preventDefault();
     page = 1;
+    route.write({ page }, 'push');
     load();
   });
   $('#refresh').addEventListener('click', load);
   $('#previous').addEventListener('click', () => {
     page--;
+    route.write({ page }, 'push');
     load();
   });
   $('#next').addEventListener('click', () => {
     page++;
+    route.write({ page }, 'push');
     load();
   });
   $('#detail-close').addEventListener('click', () => $('#detail-dialog').close());
-  $('#detail-dialog').addEventListener('close', () => returnFocus?.focus());
+  $('#detail-dialog').addEventListener('close', () => {
+    if (!restoring) route.write({ id: '' });
+    returnFocus?.focus();
+  });
   $('#form-close').addEventListener('click', () => $('#form-dialog').close());
   initProfiles();
   load();

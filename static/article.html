@@ -3,6 +3,7 @@
   <head>
     <link rel="stylesheet" href="/workspace.css" />
     <script src="/workspace.js" defer></script>
+    <script src="/workspace-navigation.js" defer></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>기사 상세 해설</title>
@@ -62,14 +63,11 @@
         font-size: 13px;
       }
     </style>
+    <link rel="stylesheet" href="/workspace-ui.css" />
   </head>
   <body>
     <a class="workspace-skip" href="#main">본문으로 이동</a>
     <main id="main">
-      <nav>
-        <a href="/">뉴스</a> · <a href="/strategy">전략 주제</a> ·
-        <a href="/observatory">관측 지도</a> · <a href="/sources">원문 수집</a>
-      </nav>
       <h1>기사 상세 해설</h1>
       <p>무엇이 달라졌고, 누구에게 어떤 의미가 있는지 원문에 근거해 설명합니다.</p>
       <a id="source" rel="noopener noreferrer" target="_blank">원문 보기</a>
@@ -77,6 +75,6 @@
       <button id="generate">상세 해설 생성</button>
       <div id="result"></div>
     </main>
-    <script src="/article.js"></script>
+    <script src="/article.js" defer></script>
   </body>
 </html>

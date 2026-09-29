@@ -92,3 +92,18 @@ test('bfcache suspension and restoration resume polling without overlapping work
   await [...timers.values()][0].fn(); assert.equal(calls, 1);
   polling.close();
 });
+
+test('route state restores defaults, preserves unrelated deep links and canonicalizes dashboard', () => {
+  const nodes={search:{value:'',tagName:'INPUT'},sort:{value:'priority',tagName:'SELECT',options:[{value:'priority'},{value:'recent'}]}};
+  const location={href:'http://localhost/?id=keep',origin:'http://localhost',search:'?id=keep'};
+  const calls=[];
+  const commit=(mode,url)=>{calls.push(mode);location.href=String(url);location.search=new URL(url).search;};
+  const workspace=setup(undefined,{URLSearchParams,location,history:{replaceState:(s,t,u)=>commit('replace',u),pushState:(s,t,u)=>commit('push',u)},document:{hidden:false,getElementById:id=>nodes[id],querySelector:()=>({})}});
+  const route=workspace.routeState({q:'search',sort:'sort'},{page:1});
+  nodes.search.value='의료';route.write({page:2});
+  assert.equal(new URL(location.href).pathname,'/strategy');
+  assert.equal(new URL(location.href).searchParams.get('id'),'keep');
+  nodes.sort.value='recent';route.write({page:1},'push');assert.deepEqual(calls,['replace','push']);
+  location.search='?q=복원&page=3';const restored=route.read();
+  assert.equal(nodes.search.value,'복원');assert.equal(nodes.sort.value,'priority');assert.equal(restored.page,'3');
+});

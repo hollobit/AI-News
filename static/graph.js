@@ -104,6 +104,19 @@
     }
   };
 
+  const route = Workspace.routeState({
+    q: 'q',
+    date: 'date',
+    topic: 'topic',
+    content_type: 'content-type',
+    channel: 'channel',
+  });
+  route.read();
+  addEventListener('popstate', () => {
+    route.read();
+    state.selected = null;
+    load();
+  });
   function queryString() {
     const params = new URLSearchParams({ date: els.date.value || 'all' });
     if (els.q.value.trim()) params.set('q', els.q.value.trim());
@@ -294,6 +307,7 @@
     updateAskState();
   }
   async function load(options = {}) {
+    route.write();
     stopPolling();
     if (!options.poll) {
       state.integrated = null;
@@ -973,6 +987,7 @@
   els.form.addEventListener('change', () => {
     clearTimeout(debounce);
     state.selected = null;
+    route.write({}, 'push');
     load();
   });
   const initial = new URLSearchParams(location.search);

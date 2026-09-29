@@ -24,6 +24,23 @@
     page = 1,
     request = 0,
     poll;
+  const route = Workspace.routeState(
+    {
+      q: 'paper-search',
+      category: 'paper-category',
+      sector: 'paper-sector',
+      status: 'paper-status',
+      window_days: 'paper-window',
+    },
+    { page: 1, paper: '' }
+  );
+  const restore = () => {
+    const saved = route.read();
+    page = Math.max(1, Math.min(1000, Number(saved.page) || 1));
+    return saved;
+  };
+  const initialRoute = restore();
+  let restoring = false;
   function link(label, url, cls = 'text-link') {
     const a = el('a', cls, label);
     try {
@@ -99,9 +116,13 @@
         )
       )
     );
-    $('#paper-pipeline-toggle').textContent = pipeline.enabled
-      ? '자동 수집·분석 일시중지'
-      : '자동 수집·분석 재개';
+    $('#paper-pipeline-toggle').disabled = typeof pipeline.enabled !== 'boolean';
+    $('#paper-pipeline-toggle').textContent =
+      typeof pipeline.enabled !== 'boolean'
+        ? '상태 확인 불가'
+        : pipeline.enabled
+          ? '자동 수집·분석 일시중지'
+          : '자동 수집·분석 재개';
     if (pipeline.enabled) schedulePoll(15000);
     $('#paper-count').textContent = num(data.total);
     const c = data.coverage || {};
@@ -225,12 +246,33 @@
     return box;
   }
   async function load(append = false) {
+    route.write({ page });
     const id = ++request;
     try {
       const data = await api('/api/papers?' + query());
-      if (id === request) render(data, append);
+      if (id === request) {
+        if (!append && page > 1) {
+          const previous = [];
+          for (let n = 1; n < page; n++) {
+            const params = query();
+            params.set('page', n);
+            const part = await api('/api/papers?' + params);
+            previous.push(...part.items);
+            if (id !== request) return;
+          }
+          data.items = [...previous, ...data.items];
+        }
+        $('#paper-notice').hidden = true;
+        render(data, append);
+      }
     } catch (e) {
-      notice(e.message, true);
+      if (id !== request) return;
+      Workspace.renderState(
+        '#paper-list',
+        'error',
+        '논문 목록을 불러오지 못했습니다. ' + e.message,
+        () => load()
+      );
     }
   }
   function text(value) {
@@ -325,6 +367,7 @@
     }
   }
   async function openPaper(item) {
+    if (!restoring) route.write({ paper: item.paper_id || item.id }, 'push');
     const dialog = $('#paper-dialog'),
       area = $('#paper-detail');
     area.replaceChildren(el('p', '', '논문 정보를 불러오는 중입니다.'));
@@ -436,6 +479,7 @@
   ['paper-category', 'paper-sector', 'paper-status', 'paper-window'].forEach((id) =>
     $('#' + id).addEventListener('change', () => {
       page = 1;
+      route.write({ page }, 'push');
       load();
     })
   );
@@ -456,8 +500,25 @@
   });
   $('#paper-more').addEventListener('click', () => {
     page++;
+    route.write({ page }, 'push');
     load(true);
   });
   $('#paper-close').addEventListener('click', () => $('#paper-dialog').close());
+  $('#paper-dialog').addEventListener('close', () => {
+    if (!restoring) route.write({ paper: '' });
+  });
+  addEventListener('popstate', () => {
+    restoring = true;
+    const saved = restore();
+    load();
+    if (saved.paper) openPaper({ paper_id: saved.paper });
+    else $('#paper-dialog').close();
+    restoring = false;
+  });
   load();
+  if (initialRoute.paper) {
+    restoring = true;
+    openPaper({ paper_id: initialRoute.paper });
+    restoring = false;
+  }
 })();

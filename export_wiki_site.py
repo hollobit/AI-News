@@ -55,7 +55,7 @@ def export_site(db_path, output, include_excerpts=False, full_site=False):
     from public_site import PUBLIC_FILES, published_files
     from public_data import data_files
     from static_dependencies import validate_static_dependencies
-    legacy = {'knowledge.json','index.html','public-data.js','workspace.js','workspace.css',
+    legacy = {'knowledge.json','index.html','workspace-navigation.js','workspace-ui.css','public-data.js','workspace.js','workspace.css',
         'wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js',
         'three.LICENSE','.nojekyll','README.md'}
     allowed = published_files if full_site else lambda root: legacy
@@ -97,11 +97,11 @@ def _export_site(db_path, target, include_excerpts=False, full_site=False):
             expand(data,corpus,observed)
     target.mkdir(parents=True,exist_ok=True)
     from site_templates import public_html
-    html=public_html(assets['wiki-network.html'].decode().replace('data-mode="live"','data-mode="static"'))
+    html=public_html(assets['wiki-network.html'].decode().replace('data-mode="live"','data-mode="static" data-public="true"'))
     (target/'index.html').write_text(html)
     if full_site:html=html.replace('data-mode="static"','data-mode="static" data-split="true"')
     (target/'index.html').write_text(html)
-    for name in ('public-data.js','workspace.js','workspace.css','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE'):(target/name).write_bytes(assets[name])
+    for name in ('workspace-navigation.js','workspace-ui.css','public-data.js','workspace.js','workspace.css','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE'):(target/name).write_bytes(assets[name])
     # The compatibility graph retains every field but avoids tens of MiB of
     # pretty-print padding in full-site blob uploads.
     format_options = {'separators': (',', ':')} if full_site else {'indent': 2}
@@ -110,7 +110,7 @@ def _export_site(db_path, target, include_excerpts=False, full_site=False):
     (target/'README.md').write_text('# 읽기 전용 지식 위키\n\n이 폴더만 Pages 전용 저장소에 게시합니다. 데이터는 게시 시점의 스냅샷입니다.\nDB·환경 설정·원격 인증 파일을 추가하지 마세요.\n')
     if full_site:
         from public_site import write_site
-        (target/'knowledge.html').write_text(html.replace('<body>','<body><nav style="padding:12px"><a href="index.html">← 전체 메뉴 · 뉴스 분석</a> · <a href="observatory.html">관측 지도</a> · <a href="index.html?view=papers">논문</a></nav>').replace('</body>','<script src="public-navigation.js"></script></body>'))
+        (target/'knowledge.html').write_text(html.replace('</body>','<script src="public-navigation.js"></script></body>'))
         write_site(db_path,target,ROOT,data['exported_at'],data=corpus,assets=assets,observations=observations)
         descriptor = {'schema_version':1,'db_revisions':revisions,
             'assets':{name:hashlib.sha256(body).hexdigest() for name,body in sorted(assets.items())},

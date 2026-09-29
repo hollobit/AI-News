@@ -3,7 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 
-ASSETS=('public.html','public.js','public.css','public-data.js','workspace.js','workspace.css','news-network.js','news-network.css','risk-network.js','risk-network.css','observatory.html','observatory.js','observatory.css','observatory-search.js','public-navigation.js')
+ASSETS=('workspace-navigation.js','workspace-ui.css','public.html','public.js','public.css','public-data.js','workspace.js','workspace.css','news-network.js','news-network.css','risk-network.js','risk-network.css','observatory.html','observatory.js','observatory.css','observatory-search.js','public-navigation.js')
 DATA_FILES=('site.json','site-manifest.json','build.json')+tuple(f'observatory-{days}-{mode}.json' for days in (14,30,90) for mode in ('default','expanded'))
 PUBLIC_FILES=tuple(dict.fromkeys(
     ('knowledge.html','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE','knowledge.json','.nojekyll','README.md')

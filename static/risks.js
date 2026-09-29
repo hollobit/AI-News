@@ -98,6 +98,25 @@
     );
     return box;
   }
+  const route = Workspace.routeState(
+    {
+      q: 'risk-search',
+      sort: 'risk-sort',
+      status: 'risk-status',
+      domain: 'risk-domain',
+      severity: 'risk-severity',
+      likelihood: 'risk-likelihood',
+    },
+    { page: 1, pending_page: 1, risk: '' }
+  );
+  function restoreRoute() {
+    const saved = route.read();
+    page = Math.max(1, Number(saved.page) || 1);
+    reviewPage = Math.max(1, Number(saved.pending_page) || 1);
+    return saved;
+  }
+  restoreRoute();
+  let restoring = false;
   function query() {
     const q = new URLSearchParams({
       view: 'page',
@@ -293,12 +312,16 @@
   }
 
   async function load() {
+    route.write({ page, pending_page: reviewPage });
     const id = ++requestId;
     controller?.abort();
     controller = new AbortController();
     try {
       const data = await api('/api/risks?' + query(), controller.signal);
-      if (id === requestId) render(data);
+      if (id === requestId) {
+        $('#risk-notice').hidden = true;
+        render(data);
+      }
     } catch (e) {
       if (e.name === 'AbortError') return;
       $('#risk-notice').hidden = false;
@@ -389,6 +412,7 @@
     area.append(block);
   }
   async function detail(id) {
+    if (!restoring) route.write({ risk: id }, 'push');
     const dialog = $('#risk-dialog'),
       area = $('#risk-detail');
     area.replaceChildren(node('p', '', '위험 상세를 불러오는 중입니다.'));
@@ -469,12 +493,24 @@
       area.replaceChildren(node('p', '', e.message));
     }
   }
+  $('#risk-dialog').addEventListener('close', () => {
+    if (!restoring) route.write({ risk: '' });
+  });
+  addEventListener('popstate', () => {
+    restoring = true;
+    const saved = restoreRoute();
+    load();
+    if (saved.risk) detail(saved.risk);
+    else $('#risk-dialog').close();
+    restoring = false;
+  });
   $('#risk-close').addEventListener('click', () => $('#risk-dialog').close());
   $('#risk-refresh').addEventListener('click', load);
   ['risk-sort', 'risk-domain', 'risk-severity', 'risk-likelihood', 'risk-status'].forEach((id) =>
     $('#' + id).addEventListener('change', () => {
       page = 1;
       reviewPage = 1;
+      route.write({ page, pending_page: reviewPage }, 'push');
       load();
     })
   );
@@ -499,10 +535,12 @@
   });
   $('#risk-prev').addEventListener('click', () => {
     page--;
+    route.write({ page }, 'push');
     load();
   });
   $('#risk-next').addEventListener('click', () => {
     page++;
+    route.write({ page }, 'push');
     load();
   });
   load();

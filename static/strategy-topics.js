@@ -267,6 +267,7 @@
 
     return {
       load: loadRegistry,
+      badges: topicBadges,
       render: renderRegistry,
       renderEvidence: renderDynamicEvidence,
       get data() {

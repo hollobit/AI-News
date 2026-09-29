@@ -1,262 +1,274 @@
 <!doctype html>
 <html lang="ko">
-  <meta charset="utf-8" /><meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  /><title>URL·제목 보관함 — 텔레그램 데일리</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      margin: 0;
-      background: #f4f7fb;
-      color: #14243b;
-      font:
-        16px/1.6 system-ui,
-        sans-serif;
-    }
-    header {
-      background: #0e233c;
-      padding: 18px 5%;
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-    header a {
-      color: white;
-    }
-    main {
-      max-width: 1050px;
-      margin: 36px auto;
-      padding: 0 22px;
-    }
-    h1 {
-      font-size: 30px;
-      margin-bottom: 8px;
-    }
-    p {
-      color: #596579;
-    }
-    form {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin: 24px 0;
-    }
-    input,
-    select,
-    button,
-    .export {
-      font: inherit;
-      border: 1px solid #c7d2e1;
-      border-radius: 8px;
-      padding: 10px 14px;
-      background: white;
-      color: #183250;
-    }
-    input {
-      flex: 1;
-      min-width: 180px;
-    }
-    button {
-      cursor: pointer;
-    }
-    button:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-    article {
-      background: white;
-      border: 1px solid #d7e1ed;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 14px 0;
-    }
-    article h2 {
-      font-size: 19px;
-      margin: 8px 0;
-    }
-    article a {
-      overflow-wrap: anywhere;
-      color: #175bb7;
-    }
-    small {
-      color: #58687c;
-    }
-    details {
-      margin-top: 12px;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-    footer {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      margin: 28px 0;
-    }
-    .meta {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .badge {
-      background: #eaf0f9;
-      padding: 2px 8px;
-      border-radius: 5px;
-    }
-    a:focus-visible,
-    button:focus-visible,
-    input:focus-visible,
-    select:focus-visible {
-      outline: 3px solid #418dff;
-      outline-offset: 3px;
-    }
-  </style>
-  <header>
+  <head>
     <link rel="stylesheet" href="/workspace.css" />
     <script src="/workspace.js" defer></script>
-    <a href="/">날짜·주제별 뉴스</a><a href="/?view=links&date=all">링크별 분석</a
-    ><a href="/graph">관계 그래프</a><a href="/research">종합 분석</a
-    ><a href="/simulation">시뮬레이션</a><a href="/archive" aria-current="page">URL·제목 보관함</a>
-  </header>
-  <main id="main">
-    <h1>URL·제목 보관함</h1>
-    <p>
-      채널 메시지에서 발견한 주소와 표시 제목을 기록합니다. 중복 메시지도 보관하며, 수정 전 기록은
-      이력에서 확인할 수 있습니다. 제목은 메시지의 표현이며 기사 본문에서 검증한 제목은 아닙니다.
-    </p>
-    <form id="filters">
-      <input
-        id="query"
-        type="search"
-        aria-label="URL 또는 제목 검색"
-        placeholder="URL·제목·문맥 검색"
-      /><select id="active" aria-label="기록 범위">
-        <option value="1">현재 메시지의 URL</option>
-        <option value="all">전체 수정 이력 포함</option>
-        <option value="0">이전 기록만</option></select
-      ><button>검색</button>
-    </form>
-    <div class="meta">
-      <span id="status" role="status" aria-live="polite">불러오는 중…</span
-      ><a class="export" id="export" download="news-urls.json">선택 범위 JSON 내려받기</a>
-    </div>
-    <section id="items" aria-label="URL 기록"></section>
-    <footer>
-      <button id="previous">이전</button><span id="page"></span><button id="next">다음</button>
-    </footer>
-    <p>
-      본문에 주소가 없는 숨김 하이퍼링크는 수집기 업데이트 이후 받은 메시지부터 보관합니다. 이전
-      자료는 저장된 원문 텍스트에서 복원했습니다.
-    </p>
-  </main>
-  <script>
-    const $ = (id) => document.getElementById(id);
-    let page = 1,
-      pages = 1,
-      request = 0;
-    const titles = {
-      telegram_anchor: 'Telegram 표시 제목',
-      markdown_anchor: '마크다운 표시 제목',
-      nearby_context: '주변 문맥에서 추정',
-      anchor: '링크 표시 제목',
-      context: '주변 문맥',
-      message: '메시지 제목',
-      url: 'URL',
-      markdown: '마크다운 제목',
-    };
-    function node(tag, text) {
-      const e = document.createElement(tag);
-      if (text !== undefined) e.textContent = String(text);
-      return e;
-    }
-    function link(url, text) {
-      const a = node('a', text);
-      try {
-        const u = new URL(url);
-        if (['http:', 'https:'].includes(u.protocol)) {
-          a.href = u.href;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-        }
-      } catch {}
-      return a;
-    }
-    function parameters() {
-      const p = new URLSearchParams({ page: String(page), active: $('active').value });
-      if ($('query').value.trim()) p.set('q', $('query').value.trim());
-      return p;
-    }
-    async function load() {
-      const current = ++request,
-        p = parameters();
-      $('status').textContent = '불러오는 중…';
-      $('export').href = '/api/urls/export.json?' + p;
-      try {
-        const r = await fetch('/api/urls?' + p);
-        const d = await r.json();
-        if (!r.ok) throw Error(d.error || '기록 조회 실패');
-        if (current !== request) return;
-        page = d.page;
-        pages = d.total_pages;
-        $('items').replaceChildren();
-        $('status').textContent = `${d.total.toLocaleString()}개 URL 기록 · 중복본 포함`;
-        $('page').textContent = `${page} / ${Math.max(1, pages)}`;
-        $('previous').disabled = page <= 1;
-        $('next').disabled = page >= pages;
-        for (const item of d.items) {
-          const card = node('article'),
-            meta = node('div');
-          meta.className = 'meta';
-          meta.append(node('small', `${item.day} · ${item.channel} · 메시지 ${item.message_id}`));
-          const badge = node('small', item.active ? '현재 기록' : '수정 전 기록');
-          badge.className = 'badge';
-          meta.append(badge);
-          card.append(
-            meta,
-            node('h2', item.title || item.original_url),
-            link(item.original_url, item.original_url)
-          );
-          card.append(
-            node(
-              'p',
-              `제목 근거: ${titles[item.title_source] || item.title_source || '메시지 표현'} · URL 출처: ${item.origin || item.entity_type || '본문'}`
-            )
-          );
-          if (item.telegram_url) card.append(link(item.telegram_url, 'Telegram 메시지 열기 ↗'));
-          if (item.nearby_context) {
-            const details = node('details');
-            details.append(node('summary', '저장한 문맥 확인'), node('div', item.nearby_context));
-            card.append(details);
-          }
-          $('items').append(card);
-        }
-        if (!d.items.length) $('items').append(node('p', '조건에 맞는 기록이 없습니다.'));
-        history.replaceState(null, '', '/archive?' + p);
-      } catch (e) {
-        if (current === request) $('status').textContent = e.message;
+    <script src="/workspace-navigation.js" defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>URL·제목 보관함 — 텔레그램 데일리</title>
+    <style>
+      * {
+        box-sizing: border-box;
       }
-    }
-    const initial = new URLSearchParams(location.search);
-    $('query').value = initial.get('q') || '';
-    $('active').value = ['1', '0', 'all'].includes(initial.get('active'))
-      ? initial.get('active')
-      : '1';
-    page = Math.max(1, Number(initial.get('page')) || 1);
-    $('filters').addEventListener('submit', (e) => {
-      e.preventDefault();
-      page = 1;
+      body {
+        margin: 0;
+        background: #f4f7fb;
+        color: #14243b;
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+      }
+      header {
+        background: #0e233c;
+        padding: 18px 5%;
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      header a {
+        color: white;
+      }
+      main {
+        max-width: 1050px;
+        margin: 36px auto;
+        padding: 0 22px;
+      }
+      h1 {
+        font-size: 30px;
+        margin-bottom: 8px;
+      }
+      p {
+        color: #596579;
+      }
+      form {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 24px 0;
+      }
+      input,
+      select,
+      button,
+      .export {
+        font: inherit;
+        border: 1px solid #c7d2e1;
+        border-radius: 8px;
+        padding: 10px 14px;
+        background: white;
+        color: #183250;
+      }
+      input {
+        flex: 1;
+        min-width: 180px;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      article {
+        background: white;
+        border: 1px solid #d7e1ed;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 14px 0;
+      }
+      article h2 {
+        font-size: 19px;
+        margin: 8px 0;
+      }
+      article a {
+        overflow-wrap: anywhere;
+        color: #175bb7;
+      }
+      small {
+        color: #58687c;
+      }
+      details {
+        margin-top: 12px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      footer {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin: 28px 0;
+      }
+      .meta {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .badge {
+        background: #eaf0f9;
+        padding: 2px 8px;
+        border-radius: 5px;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline: 3px solid #418dff;
+        outline-offset: 3px;
+      }
+    </style>
+    <link rel="stylesheet" href="/workspace-ui.css" />
+  </head>
+  <body>
+    <main id="main">
+      <h1>URL·제목 보관함</h1>
+      <p>
+        채널 메시지에서 발견한 주소와 표시 제목을 기록합니다. 중복 메시지도 보관하며, 수정 전 기록은
+        이력에서 확인할 수 있습니다. 제목은 메시지의 표현이며 기사 본문에서 검증한 제목은 아닙니다.
+      </p>
+      <form id="filters">
+        <input
+          id="query"
+          type="search"
+          aria-label="URL 또는 제목 검색"
+          placeholder="URL·제목·문맥 검색"
+        /><select id="active" aria-label="기록 범위">
+          <option value="1">현재 메시지의 URL</option>
+          <option value="all">전체 수정 이력 포함</option>
+          <option value="0">이전 기록만</option></select
+        ><button>검색</button>
+      </form>
+      <div class="meta">
+        <span id="status" role="status" aria-live="polite">불러오는 중…</span
+        ><a class="export" id="export" download="news-urls.json">선택 범위 JSON 내려받기</a>
+      </div>
+      <section id="items" aria-label="URL 기록"></section>
+      <footer>
+        <button id="previous">이전</button><span id="page"></span><button id="next">다음</button>
+      </footer>
+      <p>
+        본문에 주소가 없는 숨김 하이퍼링크는 수집기 업데이트 이후 받은 메시지부터 보관합니다. 이전
+        자료는 저장된 원문 텍스트에서 복원했습니다.
+      </p>
+    </main>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      let page = 1,
+        pages = 1,
+        request = 0;
+      const titles = {
+        telegram_anchor: 'Telegram 표시 제목',
+        markdown_anchor: '마크다운 표시 제목',
+        nearby_context: '주변 문맥에서 추정',
+        anchor: '링크 표시 제목',
+        context: '주변 문맥',
+        message: '메시지 제목',
+        url: 'URL',
+        markdown: '마크다운 제목',
+      };
+      function node(tag, text) {
+        const e = document.createElement(tag);
+        if (text !== undefined) e.textContent = String(text);
+        return e;
+      }
+      function link(url, text) {
+        const a = node('a', text);
+        try {
+          const u = new URL(url);
+          if (['http:', 'https:'].includes(u.protocol)) {
+            a.href = u.href;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+          }
+        } catch {}
+        return a;
+      }
+      function parameters() {
+        const p = new URLSearchParams({ page: String(page), active: $('active').value });
+        if ($('query').value.trim()) p.set('q', $('query').value.trim());
+        return p;
+      }
+      async function load(historyMode = 'replace') {
+        const current = ++request,
+          p = parameters();
+        $('status').textContent = '불러오는 중…';
+        $('export').href = '/api/urls/export.json?' + p;
+        try {
+          const r = await fetch('/api/urls?' + p);
+          const d = await r.json();
+          if (!r.ok) throw Error(d.error || '기록 조회 실패');
+          if (current !== request) return;
+          page = d.page;
+          pages = d.total_pages;
+          $('items').replaceChildren();
+          $('status').textContent = `${d.total.toLocaleString()}개 URL 기록 · 중복본 포함`;
+          $('page').textContent = `${page} / ${Math.max(1, pages)}`;
+          $('previous').disabled = page <= 1;
+          $('next').disabled = page >= pages;
+          for (const item of d.items) {
+            const card = node('article'),
+              meta = node('div');
+            meta.className = 'meta';
+            meta.append(node('small', `${item.day} · ${item.channel} · 메시지 ${item.message_id}`));
+            const badge = node('small', item.active ? '현재 기록' : '수정 전 기록');
+            badge.className = 'badge';
+            meta.append(badge);
+            card.append(
+              meta,
+              node('h2', item.title || item.original_url),
+              link(item.original_url, item.original_url)
+            );
+            card.append(
+              node(
+                'p',
+                `제목 근거: ${titles[item.title_source] || item.title_source || '메시지 표현'} · URL 출처: ${item.origin || item.entity_type || '본문'}`
+              )
+            );
+            if (item.telegram_url) card.append(link(item.telegram_url, 'Telegram 메시지 열기 ↗'));
+            if (item.nearby_context) {
+              const details = node('details');
+              details.append(node('summary', '저장한 문맥 확인'), node('div', item.nearby_context));
+              card.append(details);
+            }
+            $('items').append(card);
+          }
+          if (!d.items.length) $('items').append(node('p', '조건에 맞는 기록이 없습니다.'));
+          if (location.search !== '?' + p)
+            history[historyMode === 'push' ? 'pushState' : 'replaceState'](
+              null,
+              '',
+              '/archive?' + p
+            );
+        } catch (e) {
+          if (current === request) $('status').textContent = e.message;
+        }
+      }
+      const initial = new URLSearchParams(location.search);
+      $('query').value = initial.get('q') || '';
+      $('active').value = ['1', '0', 'all'].includes(initial.get('active'))
+        ? initial.get('active')
+        : '1';
+      page = Math.max(1, Number(initial.get('page')) || 1);
+      addEventListener('popstate', () => {
+        const p = new URLSearchParams(location.search);
+        $('query').value = p.get('q') || '';
+        $('active').value = p.get('active') || '1';
+        page = Math.max(1, Number(p.get('page')) || 1);
+        load();
+      });
+      $('filters').addEventListener('submit', (e) => {
+        e.preventDefault();
+        page = 1;
+        load('push');
+      });
+      $('previous').onclick = () => {
+        page--;
+        load('push');
+      };
+      $('next').onclick = () => {
+        page++;
+        load('push');
+      };
       load();
-    });
-    $('previous').onclick = () => {
-      page--;
-      load();
-    };
-    $('next').onclick = () => {
-      page++;
-      load();
-    };
-    load();
-  </script>
+    </script>
+  </body>
 </html>

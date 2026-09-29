@@ -66,6 +66,8 @@
   if (operationsMode) {
     document.title = '수집·분석 운영 · 하루 뉴스';
     $('#overview h1').textContent = '수집·분석 운영';
+    $('#reading-actions').open = true;
+    $('#overview p').textContent = '수집과 분석 대기열, 검토 상태, 중지·재개를 관리합니다.';
   }
 
   async function loadCorpusStatus() {
@@ -146,6 +148,29 @@
     }
   }
 
+  const route = Workspace.routeState(
+    {
+      q: 'search',
+      date: 'date-filter',
+      topic: 'topic-filter',
+      sector: 'sector-filter',
+      impact: 'impact-filter',
+      sort: 'sort-filter',
+    },
+    { page: 1, lens: '', terms: '', keyword: '', strategic_keyword: '' }
+  );
+  let restoredPage = 1;
+  function restoreRoute() {
+    const saved = route.read();
+    for (const key of ['lens', 'terms', 'keyword']) state[key] = saved[key];
+    state.morph = saved.strategic_keyword;
+    restoredPage = Math.max(1, Math.min(1000, Number(saved.page) || 1));
+  }
+  restoreRoute();
+  addEventListener('popstate', () => {
+    restoreRoute();
+    load();
+  });
   function query() {
     const p = new URLSearchParams({ date: $('#date-filter').value || 'all' });
     if ($('#search').value.trim()) p.set('q', $('#search').value.trim());
@@ -426,7 +451,7 @@
         );
         if (lens.dynamic) {
           b.append(
-            topicBadges(lens),
+            topics.badges(lens),
             node(
               'p',
               'dynamic-note',
@@ -576,7 +601,7 @@
     function card(signal, candidate = false) {
       const el = node('article', candidate ? 'monitoring-candidate' : 'monitoring-signal');
       if (signal.grouped) el.append(node('span', 'pill', '통합 관측 신호'));
-      else if (signal.dynamic) el.append(topicBadges(signal));
+      else if (signal.dynamic) el.append(topics.badges(signal));
       else if (!candidate) el.append(node('span', 'pill', '통제 주제 언급'));
       el.append(
         node('h4', '', signal.label || signal.name),
@@ -998,7 +1023,17 @@
   async function load(append = false) {
     const id = ++state.request;
     clearTimeout(searchTimer);
-    if (!append) state.page = 1;
+    if (!append) {
+      state.page = restoredPage;
+      restoredPage = 1;
+    }
+    route.write({
+      page: state.page,
+      lens: state.lens,
+      terms: state.terms,
+      keyword: state.keyword,
+      strategic_keyword: state.morph,
+    });
     newsAbort?.abort();
     const controller = new AbortController();
     newsAbort = controller;
@@ -1027,6 +1062,19 @@
         controller.signal
       );
       if (id !== state.request) return;
+      if (!append && state.page > 1) {
+        const items = [];
+        for (let n = 1; n < state.page; n++) {
+          const part = await api(
+            '/api/strategy?view=news&page=' + n + '&page_size=12&' + query(),
+            undefined,
+            controller.signal
+          );
+          if (id !== state.request) return;
+          items.push(...part.items);
+        }
+        data.items = [...items, ...data.items];
+      }
       if (append && state.data) data.items = [...state.data.items, ...data.items];
       state.data = data;
       const dateValue = $('#date-filter').value,
@@ -1434,6 +1482,7 @@
   });
   $('#more-news').addEventListener('click', () => {
     state.page++;
+    route.write({ page: state.page }, 'push');
     load(true);
   });
   let searchTimer;
@@ -1447,6 +1496,7 @@
   ['date-filter', 'topic-filter', 'impact-filter', 'sort-filter', 'sector-filter'].forEach((id) =>
     $('#' + id).addEventListener('change', () => {
       state.visible = 9;
+      route.write({ page: 1 }, 'push');
       load();
     })
   );

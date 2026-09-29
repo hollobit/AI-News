@@ -176,10 +176,11 @@ async def main():
         await expect(page.locator('#detail h2')).to_have_text('현재 연결된 검토 지식 없음')
         await page.goto(base+'index.html?view=strategy&q=AI')
         await expect(page.locator('#search')).to_have_value('AI')
+        await page.set_viewport_size({'width':1440,'height':1000})
         await page.locator('#menu').get_by_role('link',name='관계 탐색',exact=True).click()
         await expect(page.locator('#search')).to_have_value('AI')
         assert 'q=AI' in page.url
-        await page.get_by_role('link',name='← 전체 메뉴 · 뉴스 분석',exact=True).click()
+        await page.locator('#menu').get_by_role('link',name='전략 대시보드',exact=True).click()
         await expect(page.locator('#search')).to_have_value('AI')
         await page.locator('#menu').get_by_role('link',name='논문',exact=True).click()
         await expect(page.locator('#search')).to_have_value('AI')

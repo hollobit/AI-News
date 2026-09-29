@@ -769,7 +769,7 @@
       state.enabled = false;
       state.runs = [];
       updateStart();
-      renderRuns();
+      Workspace.renderState(els.runs, 'error', '실행 목록 조회 실패', () => loadRuns());
       errorView(error.message, () => loadRuns());
     }
   }
