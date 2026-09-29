@@ -117,6 +117,10 @@
   }
   function articles(ids) {
     return generation(async (m) => {
+      if (m.news.bootstrap && ids.every((id) => m.news.bootstrap_ids.includes(id))) {
+        const wanted = new Set(ids);
+        return (await json(m.news.bootstrap)).filter((row) => wanted.has(row.id));
+      }
       const index = await json(m.news.index),
         wanted = new Set(ids);
       const keys = [...new Set(index.filter((row) => wanted.has(row[0])).map((row) => row[6]))];
