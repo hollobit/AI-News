@@ -25,7 +25,7 @@ async def main():
                     await page.wait_for_timeout(80)
                     if view == 'cycle':
                         await expect(page.locator('.cycle-step')).to_have_count(8)
-                        await expect(page.locator('.cycle-wires > path')).to_have_count(7 if width <= 760 else 8)
+                        await expect(page.locator('.cycle-wires > path')).to_have_count(6 if width <= 760 else 8)
                         await page.locator('.cycle-step').nth(5).click()
                         await expect(page.locator('.cycle-note')).to_contain_text('독립 검토')
                     failures = await page.evaluate('''() => {
