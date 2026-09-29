@@ -122,7 +122,11 @@
       const keys = [...new Set(index.filter((row) => wanted.has(row[0])).map((row) => row[6]))];
       const rows = [];
       for (let offset = 0; offset < keys.length; offset += 4)
-        rows.push(...(await Promise.all(keys.slice(offset, offset + 4).map((key) => json(m.news.parts[key])))).flat());
+        rows.push(
+          ...(
+            await Promise.all(keys.slice(offset, offset + 4).map((key) => json(m.news.parts[key])))
+          ).flat()
+        );
       return rows.filter((row) => wanted.has(row.id));
     });
   }
@@ -180,9 +184,10 @@
         (e) => (e.source === id || e.target === id) && (layer === 'all' || e.layer === layer)
       );
       const adjacent = [...new Set(incident.map((e) => (e.source === id ? e.target : e.source)))];
-      const order = g.order && adjacent.length && limit > 1
-        ? new Map((await json(g.order)).map((key, i) => [key, i]))
-        : null;
+      const order =
+        g.order && adjacent.length && limit > 1
+          ? new Map((await json(g.order)).map((key, i) => [key, i]))
+          : null;
       // Compatibility with the immediately preceding shard schema.
       if (adjacent.some((key) => !labels.has(key))) {
         const index = await json(g.index);
@@ -195,7 +200,9 @@
         ...adjacent
           .filter((key) => key !== id)
           .sort(
-            (a, b) => (order?.get(a) ?? labels.get(a)?._order ?? Infinity) - (order?.get(b) ?? labels.get(b)?._order ?? Infinity)
+            (a, b) =>
+              (order?.get(a) ?? labels.get(a)?._order ?? Infinity) -
+              (order?.get(b) ?? labels.get(b)?._order ?? Infinity)
           ),
       ];
       total = loaded.has(id) ? selectedIds.length : 0;
