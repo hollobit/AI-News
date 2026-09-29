@@ -306,7 +306,7 @@
     try {
       if (staticMode && document.documentElement.dataset.split === 'true' && window.PublicData) {
         const route = new URLSearchParams(location.hash.slice(1));
-        data = await PublicData.graphView({
+        const result = await PublicData.graphView({
           id: selected,
           q: $('search').value,
           layer: $('layer').value,
@@ -316,6 +316,7 @@
           paperId: route.get('paper_id') || '',
         });
         if (token !== request) return;
+        data = result;
         selected = data.selectedId;
         snapshot = data;
       } else if (staticMode) {
