@@ -126,15 +126,74 @@
       return '';
     }
   }
-  function currentNavigation(path = location.pathname) {
+  function currentNavigation() {
     const hash = location.hash || '#overview';
     for (const link of document.querySelectorAll('.sidebar nav a')) {
-      const target = new URL(link.href, location.origin);
-      const selected = target.pathname === path && (!target.hash || target.hash === hash);
-      if (selected) link.setAttribute('aria-current', 'page');
+      const selected = new URL(link.href, location.origin).hash === hash;
+      if (selected) link.setAttribute('aria-current', 'location');
       else link.removeAttribute('aria-current');
       link.classList.toggle('active', selected);
     }
+  }
+  function routeState(fields, extras = {}) {
+    const defaults = { ...extras };
+    for (const [key, id] of Object.entries(fields))
+      defaults[key] = document.getElementById(id).value;
+    function read() {
+      const params = new URLSearchParams(location.search);
+      const values = Object.fromEntries(
+        Object.entries(defaults).map(([key, value]) => [key, params.get(key) ?? String(value)])
+      );
+      for (const [key, id] of Object.entries(fields)) {
+        const input = document.getElementById(id),
+          value = values[key];
+        if (
+          input.tagName === 'SELECT' &&
+          value &&
+          ![...input.options].some((o) => o.value === value)
+        )
+          input.add(new Option(value, value));
+        input.value = value;
+      }
+      return values;
+    }
+    function write(values = {}, mode = 'replace') {
+      const url = new URL(location.href);
+      if (url.pathname === '/' && document.querySelector('.sidebar')) url.pathname = '/strategy';
+      const all = {
+        ...Object.fromEntries(
+          Object.entries(fields).map(([key, id]) => [key, document.getElementById(id).value])
+        ),
+        ...values,
+      };
+      for (const [key, value] of Object.entries(all)) {
+        if (value == null || String(value) === String(defaults[key]) || value === '')
+          url.searchParams.delete(key);
+        else url.searchParams.set(key, String(value));
+      }
+      if (url.href !== location.href)
+        history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', url);
+    }
+    return { read, write };
+  }
+  function renderState(target, state, text, retry) {
+    const area = typeof target === 'string' ? document.querySelector(target) : target;
+    const box = document.createElement('div');
+    box.className = 'ws-state';
+    box.dataset.state = state;
+    box.setAttribute('role', state === 'error' ? 'alert' : 'status');
+    const message = document.createElement('p');
+    message.textContent = text;
+    box.append(message);
+    if (retry) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'button';
+      button.textContent = '다시 시도';
+      button.addEventListener('click', retry);
+      box.append(button);
+    }
+    area.replaceChildren(box);
   }
   const statusLabels = {
     pending: '대기',
@@ -152,6 +211,8 @@
   };
   window.Workspace = {
     request,
+    routeState,
+    renderState,
     poller,
     safeURL,
     currentNavigation,
