@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import threading
 import time
 import uuid
 from bulk_baseline import BulkBaselineService, now
@@ -40,6 +41,9 @@ class BaselineJobs:
         command=[sys.executable,str(root/'baseline_worker.py'),'--db',self.path,'--action',action,'--run-id',run_id,'--settings',json.dumps(settings or {}),'--ready',str(ready)]
         with (directory/'worker.log').open('ab') as log:
             process=subprocess.Popen(command,cwd=root,stdout=log,stderr=log,start_new_session=True)
+        # Reap detached children after completion so a zombie cannot retain a
+        # durable run's apparent ownership. Web shutdown still leaves them alive.
+        threading.Thread(target=process.wait,daemon=True,name='baseline-worker-reaper').start()
         deadline=time.monotonic()+120
         while time.monotonic()<deadline:
             if ready.exists():

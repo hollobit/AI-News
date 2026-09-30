@@ -1,5 +1,6 @@
 """Persistent parallel baseline analysis of every frozen, deduplicated news item."""
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -119,8 +120,14 @@ class BulkBaselineService:
                     db.execute("UPDATE bulk_baseline_runs SET status='paused',owner_pid=NULL WHERE id=?",(row['id'],))
                     db.execute("UPDATE bulk_baseline_documents SET status='pending' WHERE run_id=? AND status='running'",(row['id'],))
 
+    @contextmanager
     def db(self):
-        db=sqlite3.connect(self.path,timeout=30);db.row_factory=sqlite3.Row;return db
+        db=sqlite3.connect(self.path,timeout=30);db.row_factory=sqlite3.Row
+        try:
+            with db:
+                yield db
+        finally:
+            db.close()
 
     def _available(self):
         if self.closed or not self.enabled or self.active:
