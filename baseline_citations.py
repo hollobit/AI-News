@@ -4,14 +4,31 @@ import hashlib
 import re
 
 
+# Attached Korean particles are allowed; lexical continuations are not.
+PARTICLES = {'은', '는', '이', '가', '을', '를', '의', '에', '에서', '에게', '와', '과',
+             '로', '으로', '도', '만', '부터', '까지', '에는', '에서는', '으로는', '로는', '보다'}
+
+
+def complete_surface(surface, text):
+    pattern = re.escape(surface)
+    if surface.isascii():
+        pattern = r'(?<![A-Za-z0-9_-])' + pattern + r'(?![A-Za-z0-9_-])'
+    for match in re.finditer(pattern, text):
+        if re.search(r'[가-힣]', surface):
+            if match.start() and re.match(r'[가-힣A-Za-z0-9_]', text[match.start()-1]):
+                continue
+            tail = re.match(r'[가-힣A-Za-z0-9_]+', text[match.end():])
+            if tail and tail[0] not in PARTICLES:
+                continue
+        return True
+    return False
+
+
 def candidates(snapshot, prepared):
     found = {}
     for term in prepared['keywords'][:8]:
         label, surface = term['label'], term.get('surface') or term['label']
-        pattern = re.escape(surface)
-        if surface.isascii():
-            pattern = r'(?<![A-Za-z0-9_])' + pattern + r'(?![A-Za-z0-9_])'
-        if any(re.search(pattern, e['text']) for e in snapshot['evidence']):
+        if any(complete_surface(surface, e['text']) for e in snapshot['evidence']):
             key = 'kw_' + hashlib.sha256((label + '\0' + surface).encode()).hexdigest()[:16]
             found[key] = {'label': label, 'source_quote': surface}
     return found

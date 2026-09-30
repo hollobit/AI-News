@@ -1,3 +1,12 @@
+## 2026-10-01 기본 분석 보류 해소·수집 사이클 계속 (08:52 KST)
+
+- 기존 run 8948d4103100421090a6bc30c0fc8bf1은 8181 verified/13 needs_review였다. 생성용 citation_id 지시가 검토용 최종 label/source_quote 형식과 혼동되는 문제를 수정했다. 검토 입력 후보 전달만으로 충분하지 않았음을 실제 검토 이력에서 확인했다.
+- ASCII 하이픈 명칭 및 한국어 단어 일부를 후보로 인용하지 않도록 경계를 보강했다. 한국어 조사 결합은 허용하되 법제화→법제 같은 잘림은 제외한다. 단어 의미·요약의 근거 검토는 기존 독립 검토에서 유지한다.
+- 13건 원본 행을 baseline_citation_repairs에 보존하고 attempts 2→3으로 제한 재처리했다. 11건 통과, 실제 내용 지적 2건은 별도 이력 baseline_lexical_repairs/baseline_risk_wording_repairs에 보존하고 attempts 3→4로 보완했다. 중국 유출 차단 요약/잘린 키워드를 수정하고, Unsloth 위험은 실행 가능성과 실제 악용 미확인을 구분해 해당 필드만 수정 후 독립 검토했다. 후자는 생성 모델을 다시 호출하지 않았다. 최종 기존 고정 대상 8194/8194 완료.
+- 전체 706 tests + 56 subtests 통과. 검토 기준·과거 거절·시도 횟수를 초기화하지 않았다. 기본 분석 스케줄러의 내용 검토 실패 자동 해제 정책은 변경하지 않았다.
+- Telegram 확인 08:52:07, 마지막 기사 추출 08:02:09. 고유 8208(+14). 최신 입력 대조 후 run bd2b697c040b41b0a117ae2572a09e04 시작, 유효 8168 재사용 및 신규·변경 40건 처리 중. owner 66146 생존과 active_workers=2 확인. 전체 최신 입력 완료는 아직 아니며 수집/정기 점검/운영 알림 유지. 심층·논문·공개 게시를 추가 실행하지 않았다.
+- 근거 .runtime/verification/collection-analysis-20261001-0852.json 및 repair_review_format.py, repair_korean_surface.py, repair_risk_wording.py.
+
 ## 2026-10-01 정기 수집·변경 입력 기본 분석 재개 (07:29 KST)
 
 - 기존 collector/server 및 등록된 5분 baseline 예약을 유지하고 정기 dispatch 실행. Telegram 확인 07:29:15, 마지막 기사 추출 06:32:58. 고유 뉴스 8194건(직전 추출 8185 대비 +9, 이전 고정 기본 대상 8159 대비 +35). 메시지 확인과 기사 추출 시각을 구분한다.

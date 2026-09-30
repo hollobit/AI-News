@@ -61,6 +61,8 @@ class BaselineTests(unittest.TestCase):
         for prompt in self.calls:
             if prompt.startswith('ROLE: baseline_verification'):
                 for document in json.loads(prompt.split('DATA:\n')[1]):
+                    self.assertIn('최종 저장 형식',prompt)
+                    self.assertNotIn('citation_id만 넣는다',prompt.split('DATA:')[0])
                     self.assertEqual(document['keyword_citations'],generated[document['document_id']])
                     self.assertTrue(document['keyword_citations'])
                     for keyword in document['analysis']['keywords']:

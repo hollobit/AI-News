@@ -140,3 +140,16 @@ def test_announcement_routing_preserves_findings_and_risk_exclusions(text,expect
 def test_fetched_findings_override_short_announcement():
     from workflow_compact import content_route
     assert content_route([{'text':'논문과 코드를 공개했다.'}, {'text':'실험 결과 정확도가 향상됐다.'}]) == 'complex_evidence'
+
+
+def test_keyword_candidate_must_not_split_hyphenated_model_name():
+    allowed=candidates({'evidence':[{'text':'SMCL-DTA 모델'}]}, {'keywords':[{'label':'SMCL','surface':'SMCL'},{'label':'SMCL-DTA','surface':'SMCL-DTA'}]})
+    assert list(allowed.values())==[{'label':'SMCL-DTA','source_quote':'SMCL-DTA'}]
+
+
+def test_keyword_candidate_korean_suffix_is_not_a_particle():
+    from baseline_citations import complete_surface
+    assert not complete_surface('출국 통제 법제','출국 통제 법제화를 시행했다.')
+    assert complete_surface('출국 통제 법제화','출국 통제 법제화를 시행했다.')
+    assert complete_surface('소버린AI','소버린AI와 GPU')
+    assert not complete_surface('국','출국 통제')
