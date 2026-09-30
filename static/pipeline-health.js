@@ -21,30 +21,40 @@
     pending: '대기',
     failed: '실패',
   };
+  let refreshing = false;
+  let stagesSignature = null;
   async function refresh() {
+    if (refreshing) return;
+    refreshing = true;
     try {
       const data = await Workspace.request('/api/operations/health', { timeout: 15000 });
-      status.textContent = data.monitor_stale
-        ? '모니터 기록 지연 · 정기 점검 실행을 확인하세요'
-        : `마지막 점검 ${date(data.checked_at)} · 5분 간격`;
+      status.textContent =
+        data.monitor_stale || !data.checked_at || Date.now() - Date.parse(data.checked_at) > 15000
+          ? '모니터 기록 지연 · 정기 점검 실행을 확인하세요'
+          : `마지막 점검 ${date(data.checked_at)} · 실시간 연결 · 2초 자동 갱신`;
       const stages = host.querySelector('[data-pipeline-stages]');
-      stages.replaceChildren();
-      for (const stage of data.stages) {
-        const card = el('article', '', stages);
-        el('h3', stage.name, card);
-        el('strong', labels[stage.status] || stage.status, card);
-        el('p', stage.model, card);
-        el('p', `갱신 ${date(stage.updated_at)}`, card);
-        if (stage.last_progress_at) el('p', `최근 단계 진행 ${date(stage.last_progress_at)}`, card);
-        if (stage.count != null) el('p', `고유 뉴스 ${stage.count.toLocaleString()}건`, card);
-        if (stage.counts)
-          el(
-            'p',
-            Object.entries(stage.counts)
-              .map(([key, value]) => `${labels[key] || key} ${value.toLocaleString()}`)
-              .join(' · '),
-            card
-          );
+      const signature = JSON.stringify(data.stages);
+      if (signature !== stagesSignature) {
+        stagesSignature = signature;
+        stages.replaceChildren();
+        for (const stage of data.stages) {
+          const card = el('article', '', stages);
+          el('h3', stage.name, card);
+          el('strong', labels[stage.status] || stage.status, card);
+          el('p', stage.model, card);
+          el('p', `갱신 ${date(stage.updated_at)}`, card);
+          if (stage.last_progress_at)
+            el('p', `최근 단계 진행 ${date(stage.last_progress_at)}`, card);
+          if (stage.count != null) el('p', `고유 뉴스 ${stage.count.toLocaleString()}건`, card);
+          if (stage.counts)
+            el(
+              'p',
+              Object.entries(stage.counts)
+                .map(([key, value]) => `${labels[key] || key} ${value.toLocaleString()}`)
+                .join(' · '),
+              card
+            );
+        }
       }
       host.querySelector('[data-pipeline-models]').textContent = Object.entries(data.models || {})
         .map(([key, value]) => `${key}: ${value}`)
@@ -71,6 +81,7 @@
         host.querySelector('[data-pipeline-calls]').textContent = '실제 모델 호출 기록 조회 실패';
       }
       const incidents = host.querySelector('[data-pipeline-incidents]');
+      const focusedIncident = document.activeElement?.dataset.incident;
       incidents.replaceChildren();
       if (!data.incidents.length) el('p', '감지된 문제가 없습니다.', incidents);
       for (const incident of data.incidents) {
@@ -99,6 +110,8 @@
         if (!incident.acknowledged_at && !incident.resolved_at) {
           const button = el('button', '확인했습니다', item);
           button.className = 'button';
+          button.dataset.incident = String(incident.id);
+          if (focusedIncident === String(incident.id)) button.focus({ preventScroll: true });
           button.onclick = async () => {
             button.disabled = true;
             try {
@@ -117,7 +130,8 @@
     } catch (error) {
       status.textContent = `상태 조회 실패: ${error.message}`;
     } finally {
-      poller.schedule('pipeline', refresh, 30000);
+      refreshing = false;
+      poller.schedule('pipeline', refresh, 2000);
     }
   }
   const poller = Workspace.poller();

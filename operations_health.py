@@ -38,5 +38,9 @@ def audit(path,stamp=None):
     return result
 
 if __name__ == '__main__':
-    from pipeline_health import run
-    run()
+    import argparse
+    from pipeline_health import run, watch
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--watch', action='store_true')
+    args = parser.parse_args()
+    watch() if args.watch else run()

@@ -154,14 +154,39 @@ def acknowledge(incident_id, store=STORE):
         return bool(db.execute('UPDATE incidents SET acknowledged_at=coalesce(acknowledged_at,?) WHERE id=?', (datetime.now(timezone.utc).isoformat(), incident_id)).rowcount)
 
 
-def run():
+def run(*, export=True, log=True):
     try:
         report = snapshot(ROOT / 'data/news.sqlite3')
     except Exception:
         # Do not persist exception text: third-party errors can contain private inputs.
         report = dict(checked_at=datetime.now(timezone.utc).isoformat(), stages=[], models=MODELS, problems=[dict(code='monitor_error', message='운영 상태 수집에 실패했습니다.', action='DB 접근과 운영 모니터 프로세스를 확인하세요.')])
     record(report)
-    target = ROOT / '.runtime/verification/operations-health.json'
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(view(), ensure_ascii=False, indent=2))
-    print(json.dumps({'checked_at': report['checked_at'], 'problem_count': len(report['problems'])}))
+    if export:
+        target = ROOT / '.runtime/verification/operations-health.json'
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(view(), ensure_ascii=False, indent=2))
+    if log:
+        print(json.dumps({'checked_at': report['checked_at'], 'problem_count': len(report['problems'])}), flush=True)
+
+
+def watch(interval=2):
+    """One bounded local monitor; no LLM calls or analysis dispatch."""
+    import fcntl
+    import signal
+    import threading
+    stop = threading.Event()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(sig, lambda *_: stop.set())
+    with (ROOT / '.runtime/operations-health-watch.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return
+        next_export = 0
+        while not stop.is_set():
+            started = time.monotonic()
+            export = started >= next_export
+            run(export=export, log=export)
+            if export:
+                next_export = started + 30
+            stop.wait(max(0.1, interval - (time.monotonic() - started)))

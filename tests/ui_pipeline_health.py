@@ -12,6 +12,9 @@ async def main():
   await expect(page.locator('[data-pipeline-stages] article')).to_have_count(4,timeout=30000)
   await expect(page.locator('[data-pipeline-models]')).to_contain_text('gpt-6.1-sol')
   await expect(page.locator('[data-pipeline-calls]')).to_contain_text('gpt-6.1-sol',timeout=30000)
+  await expect(page.locator('#pipeline-health-state')).to_contain_text('2초 자동 갱신')
+  before=await page.locator('#pipeline-health-state').text_content()
+  await page.wait_for_function('(before) => document.querySelector("#pipeline-health-state").textContent !== before', arg=before, timeout=12000)
   await page.locator('#pipeline-health').screenshot(path='.runtime/verification/pipeline-health-desktop.png')
   for width in [390,320]:
    await page.set_viewport_size({'width':width,'height':844})
@@ -30,6 +33,6 @@ async def main():
   await page.get_by_role('button',name='확인했습니다').click()
   await expect(page.locator('[data-pipeline-incidents]')).to_contain_text('확인함 · 미해소')
   assert not errors,errors
-  print(json.dumps({'stages':4,'models_visible':True,'mobile':[390,320],'errors':errors}))
+  print(json.dumps({'stages':4,'models_visible':True,'automatic_refresh':True,'mobile':[390,320],'errors':errors}))
   await browser.close()
 asyncio.run(main())
