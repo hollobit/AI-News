@@ -137,3 +137,26 @@ def test_nested_transaction_helper_does_not_close_callers_connection(tmp_path):
     with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
     with sqlite3.connect(tmp_path/'nested.db') as read:
         assert read.execute('SELECT COUNT(*) FROM rows').fetchone()[0]==2
+
+
+def test_detail_priority_preserves_baseline_interactive_and_background_aging():
+    from llm_priority import queue_key
+    from llm_runtime import INTERACTIVE_ROLES
+    rows=[{'id':i,'role':role,'queued_at':99} for i,role in enumerate(
+        ['wiki_compile','paper_analysis','national','baseline_analysis','graph_answer'],1)]
+    ordered=sorted(rows,key=lambda row:queue_key(row,100,INTERACTIVE_ROLES))
+    assert [r['role'] for r in ordered]==['graph_answer','national','baseline_analysis','wiki_compile','paper_analysis']
+    rows[0]['queued_at']=30
+    assert sorted(rows,key=lambda row:queue_key(row,100,INTERACTIVE_ROLES))[0]['role']=='wiki_compile'
+
+
+def test_detail_admitted_ahead_of_earlier_background_ticket(tmp_path):
+    import os
+    runtime=LLMRuntime(tmp_path/'priority.db',limit=1,poll_seconds=.005,queue_timeout=.05)
+    with runtime.db() as db:
+        db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,input_chars,schema_chars) VALUES ('wiki_compile','queued',?,?,1,1)",(os.getpid(),time.time()))
+    with runtime.slot('integrated_analysis',1,1):
+        with runtime.db() as db:
+            assert db.execute("SELECT status FROM llm_calls WHERE role='wiki_compile'").fetchone()[0]=='queued'
+    with runtime.db() as db:
+        db.execute("DELETE FROM llm_calls WHERE status='queued'")

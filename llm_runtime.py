@@ -139,9 +139,9 @@ class LLMRuntime:
                     bulk_active = db.execute("SELECT COUNT(*) FROM llm_calls WHERE status='running' AND role NOT IN (?,?,?,?)",
                                              INTERACTIVE_ROLES).fetchone()[0]
                     analysis_active = db.execute("SELECT COUNT(*) FROM llm_calls WHERE status='running' AND role NOT LIKE '%verification' AND role NOT IN (?,?,?,?)", INTERACTIVE_ROLES).fetchone()[0]
-                    waiting = db.execute("""SELECT id,role FROM llm_calls WHERE status='queued'
-                        ORDER BY CASE WHEN role IN (?,?,?,?) OR queued_at<? THEN 0 ELSE 1 END,id""",
-                        (*INTERACTIVE_ROLES, stamp-60)).fetchall()
+                    from llm_priority import queue_key
+                    waiting = sorted(db.execute("SELECT id,role,queued_at FROM llm_calls WHERE status='queued'").fetchall(),
+                                     key=lambda row: queue_key(row, stamp, INTERACTIVE_ROLES))
                     eligible=[]
                     for pending in waiting:
                         if len(eligible)>=max(0,limit-active):break
@@ -195,4 +195,5 @@ def runtime_status(path=None):
             output_chars,wait_ms,run_ms,error_code,model,reasoning_effort FROM llm_calls ORDER BY id DESC LIMIT 40''')]
     return {'limit': limit, 'active': counts.get('running', 0), 'waiting': counts.get('queued', 0),
             'counts': counts, 'roles': roles, 'recent': recent, 'scope': 'all_local_processes_using_shared_runtime',
+            'queue_policy': __import__('llm_priority').POLICY,
             'privacy': '길이·시간·역할·모델·오류코드를 기록하며 프롬프트·결과 본문·인증정보는 저장하지 않습니다.'}

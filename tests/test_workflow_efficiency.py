@@ -121,3 +121,22 @@ def test_model_policy_change_invalidates_cache(tmp_path,monkeypatch):
         assert run(s)['status']=='complete'
         assert len(m.calls)==4
     finally:s.close()
+
+
+@pytest.mark.parametrize('text,expected',[
+    ('논문 검색 도구를 공개했다. 이용자는 제목으로 문서를 찾을 수 있다.', 'simple_publication_announcement'),
+    ('새 모델의 기술 논문과 코드를 공개했다.', 'simple_publication_announcement'),
+    ('논문 공개. 벤치마크 평가 데이터 오염으로 모델 선택이 왜곡될 수 있다.', 'complex_evidence'),
+    ('새 논문 공개: 모델의 실험 성능이 향상됐다.', 'research_findings_or_unclear'),
+    ('Paper published on arxiv: experiments show improved accuracy.', 'research_findings_or_unclear'),
+    ('논문 공개: 환자 치료 임상 결과', 'sensitive'),
+    ('논문 내용을 소개한다.', 'research_findings_or_unclear'),
+])
+def test_announcement_routing_preserves_findings_and_risk_exclusions(text,expected):
+    from workflow_compact import content_route
+    assert content_route([{'text':text}]) == expected
+
+
+def test_fetched_findings_override_short_announcement():
+    from workflow_compact import content_route
+    assert content_route([{'text':'논문과 코드를 공개했다.'}, {'text':'실험 결과 정확도가 향상됐다.'}]) == 'complex_evidence'

@@ -10,6 +10,28 @@ COMPLEX = re.compile(r'벤치마크|benchmark|contaminat|오염|상충|논문|�
 SENSITIVE = re.compile(r'의료|임상|환자|전쟁|군사|핵무기|사망|인명|취약점|랜섬|해킹|개인정보|국가안보|clinical|patient|warfare|vulnerability', re.I)
 
 
+# Publication nouns alone do not imply comparative scientific findings.
+PUBLICATION = re.compile(r'논문|초록|arxiv', re.I)
+ANNOUNCEMENT = re.compile(r'공개|출시|배포|출간|발표|출판|release|launch|publish|available', re.I)
+FINDINGS = re.compile(r'실험|평가|성능|정확|비교|능가|향상|개선|효과|입증|증명|한계|실패|위험|편향|결과|제안|실증|효율|\d\s*%|experiment|evaluat|performance|accuracy|compar|outperform|improv|result|finding|risk|bias|limitation|propos|efficien|sota', re.I)
+
+
+def content_route(evidence):
+    text = ' '.join(e.get('text', '') for e in evidence)
+    if SENSITIVE.search(text):
+        return 'sensitive'
+    if not COMPLEX.search(text):
+        return 'simple_document'
+    # Only relax publication nouns; every other existing exclusion still wins.
+    without_publication = PUBLICATION.sub('', text)
+    if COMPLEX.search(without_publication):
+        return 'complex_evidence'
+    prose = re.sub(r'https?://\S+', '', text)
+    if len(text) <= 3000 and ANNOUNCEMENT.search(prose) and not FINDINGS.search(prose):
+        return 'simple_publication_announcement'
+    return 'research_findings_or_unclear'
+
+
 def eligible(snapshot, request, enrichment):
     return (request.get('analysis_mode') == VERSION and len(snapshot) == 1
             and request.get('completion_attempt', 1) <= 1
@@ -20,8 +42,7 @@ def eligible(snapshot, request, enrichment):
             and not enrichment['coverage'].get('failed_urls')
             and all(e.get('origin') in ('telegram_excerpt', 'fetched_url_excerpt') for e in enrichment['evidence'])
             and sum(len(e.get('text', '')) for e in enrichment['evidence']) <= 8000
-            and not SENSITIVE.search(' '.join(e.get('text', '') for e in enrichment['evidence']))
-            and not COMPLEX.search(' '.join(e.get('text', '') for e in enrichment['evidence'])))
+            and content_route(enrichment['evidence']) in ('simple_document', 'simple_publication_announcement'))
 
 
 def prompt(service, role, evidence, payload):

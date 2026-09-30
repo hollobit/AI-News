@@ -567,10 +567,11 @@ class WorkflowService:
                 snapshot, request = json.loads(row[0]), json.loads(row[1])
             enrichment = self._stage(run_id, 'enrichment', lambda: self._enrich(snapshot))
             evidence = enrichment['evidence']
-            from workflow_compact import eligible, execute
+            from workflow_compact import eligible, execute, content_route
             use_compact = eligible(snapshot, request, enrichment)
             self._save(run_id, 'execution_plan', {'path':'compact-v1' if use_compact else 'multi-role',
-                'reason':'single_simple_document' if use_compact else 'sensitive_complex_retry_or_legacy_request'})
+                'reason':content_route(evidence) if use_compact else 'sensitive_complex_retry_or_legacy_request',
+                'content_route':content_route(evidence), 'routing_version':'announcement-v2'})
             if use_compact:
                 execute(self, run_id, evidence, request, enrichment)
                 return
