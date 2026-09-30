@@ -54,6 +54,7 @@ def make_handler(context):
             route = urlparse(self.path)
             intelligence_action = re.fullmatch('/api/intelligence/(events|concepts|decisions|scenarios|profiles|experiments|research|query)', route.path)
             match = re.fullmatch('/api/links/([0-9a-f]{24})/analyze', route.path)
+            incident_ack = re.fullmatch('/api/operations/incidents/([0-9]+)/ack', route.path)
             is_graph = route.path == '/api/graph/analyze'
             is_question = route.path == '/api/graph/ask'
             is_research = route.path == '/api/research'
@@ -74,7 +75,7 @@ def make_handler(context):
             is_runtime_start = route.path == '/api/simulation/runtime/start'
             simulation_action = re.fullmatch('/api/simulation/([a-zA-Z0-9_-]+)/(start|stop|resume|interview|chat)', route.path)
             resume_match = re.fullmatch('/api/research/([a-zA-Z0-9_-]+)/resume', route.path)
-            if not is_reach and (not intelligence_action) and (not match) and (not is_graph) and (not is_question) and (not is_research) and (not resume_match) and (not is_simulation) and (not simulation_action) and (not is_runtime_start) and (not is_source) and (not is_workflow) and (not workflow_resume) and (not is_improvement) and (not improvement_action) and (not is_paper_refresh) and (not is_paper_analysis) and (not paper_action) and (not is_baseline) and (not baseline_action) and (not is_topic) and (not topic_action):
+            if not incident_ack and not is_reach and (not intelligence_action) and (not match) and (not is_graph) and (not is_question) and (not is_research) and (not resume_match) and (not is_simulation) and (not simulation_action) and (not is_runtime_start) and (not is_source) and (not is_workflow) and (not workflow_resume) and (not is_improvement) and (not improvement_action) and (not is_paper_refresh) and (not is_paper_analysis) and (not paper_action) and (not is_baseline) and (not baseline_action) and (not is_topic) and (not topic_action):
                 self.send_json({'error': 'Not found'}, 404)
                 return
             host = self.headers.get('Host', '')

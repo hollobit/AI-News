@@ -53,3 +53,17 @@ def test_external_workflow_owner_is_not_resumed_by_web_server(tmp_path):
         db.execute('INSERT INTO strategic_workflow_runs VALUES(?,?,?,?)',
                    ('external', 'running', 'today', json.dumps({'owner_pid': os.getpid()})))
     assert interrupted_runs(path) == {}
+
+
+def test_managed_cycle_is_not_adopted_or_marked_user_paused_by_web(tmp_path):
+    from recursive_improvement import RecursiveImprovementService
+    path = tmp_path/'news.sqlite'
+    service = RecursiveImprovementService(path, None, lambda *_: [])
+    with sqlite3.connect(path) as db:
+        db.execute("CREATE TABLE risk_schedule(enabled INTEGER,cycle_id TEXT)")
+        db.execute("INSERT INTO risk_schedule VALUES(1,'managed')")
+        db.execute("INSERT INTO rsi_cycles(id,status,settings_json,created_at,updated_at) VALUES('managed','waiting','{}','2026-09-30','2026-09-30')")
+    assert interrupted_runs(path) == {}
+    RecursiveImprovementService(path, None, lambda *_: [])
+    with sqlite3.connect(path) as db:
+        assert db.execute("SELECT status,pause_requested FROM rsi_cycles WHERE id='managed'").fetchone() == ('waiting',0)

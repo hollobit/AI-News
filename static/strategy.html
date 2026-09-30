@@ -17,6 +17,8 @@
     <script src="/strategy-baseline.js" defer></script>
     <script src="/strategy-topics.js" defer></script>
     <script src="/strategy.js" defer></script>
+    <script src="/pipeline-health.js" defer></script>
+    <link rel="stylesheet" href="/pipeline-health.css" />
     <link rel="stylesheet" href="/workspace-ui.css" />
   </head>
   <body>
@@ -33,6 +35,7 @@
         <a href="#intelligence" data-reading>뉴스 근거</a>
         <a href="#network" data-reading>대시보드 관계 요약</a>
         <a href="#outlook" data-reading>전략과 시나리오</a>
+        <a href="#pipeline-health" data-operations>수집·분석 순환과 알림</a>
         <a href="#baseline" data-operations>기본 분석</a>
         <a href="#workflow" data-operations>협업 분석</a>
         <a href="#improvement" data-operations>누적 개선</a>
@@ -95,6 +98,35 @@
           </div>
           <div id="strategic-change-list" class="panel">
             <p class="subtle">검토할 변화를 조회합니다.</p>
+          </div>
+        </section>
+        <section class="section" id="pipeline-health" data-operations>
+          <div class="section-head">
+            <h2>수집부터 상세 분석까지</h2>
+            <button class="button" data-pipeline-refresh>상태 갱신</button>
+          </div>
+          <div class="panel">
+            <p id="pipeline-health-state" role="status">운영 상태 확인 중…</p>
+            <div class="pipeline-stages" data-pipeline-stages></div>
+            <p class="subtle" data-pipeline-models></p>
+            <p class="subtle">
+              현재 입력이 일치하고 독립 검토를 통과한 결과만 재사용합니다. 기본 분석 건수는 실행
+              당시 고정 대상이며, 상세 분석 건수는 원장 상태입니다. 전체 최신 입력의 검증 완료와
+              구분합니다.
+            </p>
+            <details>
+              <summary>실제 모델 호출 · 최근 8건</summary>
+              <div data-pipeline-calls></div>
+            </details>
+            <p data-pipeline-schedulers class="subtle"></p>
+            <h3>문제와 확인 이력</h3>
+            <p class="subtle">
+              새 문제는 macOS 알림으로 요청합니다. 실제 배너는 macOS 알림 권한·집중 모드에 따릅니다.
+              확인 버튼은 읽음만 표시하며 분석 재개나 문제 해소를 대신하지 않습니다.
+            </p>
+            <div data-pipeline-incidents></div>
+            <a class="button" href="#baseline">기본 분석 상세</a>
+            <a class="button" href="#improvement">상세 분석 이력</a>
           </div>
         </section>
         <section class="section" id="baseline" data-operations>

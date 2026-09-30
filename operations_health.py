@@ -29,7 +29,7 @@ def audit(path,stamp=None):
                 result[kind]=dict(status=row['status'],owner_alive=alive(row['owner_pid']),updated_at=row['updated_at'])
                 if row['status'] in ('paused','error','failed','requires_review','needs_review'):
                     alerts.append(kind+' 분석이 중단 또는 검토 대기 상태입니다. 자동으로 사용자 일시중지를 해제하지 않습니다.')
-                elif row['status'] in ('running','preparing','finishing','waiting') and not alive(row['owner_pid']):
+                elif row['status'] in ('running','preparing','finishing') and not alive(row['owner_pid']):
                     alerts.append(kind+' 실행 기록의 소유 프로세스가 없습니다.')
         result['paper_counts']=dict(db.execute('SELECT status,count(*) FROM arxiv_paper_analyses GROUP BY status'))
         if result['paper_counts'].get('failed',0) or result['paper_counts'].get('needs_review',0):
@@ -37,11 +37,6 @@ def audit(path,stamp=None):
     result.update(checked_at=datetime.fromtimestamp(stamp,timezone.utc).isoformat(),alerts=alerts)
     return result
 
-if __name__=='__main__':
-    result=audit(ROOT/'data/news.sqlite3')
-    public=ROOT/'.runtime/public-site/site.json'
-    if not public.exists() or datetime.now(timezone.utc).timestamp()-public.stat().st_mtime>1800:
-        result['alerts'].append('공개 사이트 로컬 생성본이 30분 이상 갱신되지 않았습니다. 원격 게시 성공 여부는 별도 확인해야 합니다.')
-    target=ROOT/'.runtime/verification/operations-health.json'
-    target.write_text(json.dumps(result,ensure_ascii=False,indent=2))
-    print(json.dumps(result,ensure_ascii=False))
+if __name__ == '__main__':
+    from pipeline_health import run
+    run()

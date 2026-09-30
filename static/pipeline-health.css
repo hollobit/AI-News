@@ -1,0 +1,30 @@
+.pipeline-stages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+.pipeline-stages article {
+  padding: 18px;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #f8fafc, #eef2ff);
+  color: #172554;
+  overflow-wrap: anywhere;
+}
+.pipeline-stages p,
+.pipeline-incident p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.pipeline-incident {
+  padding: 16px 0;
+  border-top: 1px solid #cbd5e1;
+  overflow-wrap: anywhere;
+}
+#pipeline-health-state {
+  margin: 12px 0;
+}
+[data-pipeline-models] {
+  overflow-wrap: anywhere;
+}

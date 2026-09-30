@@ -32,7 +32,7 @@
 
 `model_policy.py`는 기본 분석을 `gpt-6-luna`, 일반 위험 분석과 독립 검토를 `gpt-6.1-sol`, 중요한 위험의 검토 및 반복 보완을 `gpt-6-astra`로 고정합니다. 구버전으로 자동 대체하지 않습니다. 유효한 과거 검토 결과는 그대로 재사용하며 새 호출의 모델·역할·입력 해시를 기록합니다.
 
-`.venv/bin/python model_access.py --refresh`로 실제 로그인에서 세 모델의 접근을 확인합니다. 모델명 설정만으로 사용 권한이 생기지 않습니다. 현재 로그인에서는 최신 Luna·Sol이 거절돼 활성화가 보류돼 있습니다. 사전 점검 실패는 새로운 분석 실행을 차단합니다.
+`.venv/bin/python model_access.py --refresh`로 실제 로그인에서 세 모델의 접근을 확인합니다. 모델명 설정만으로 사용 권한이 생기지 않습니다. 프로젝트 CLI 0.154.0에서는 최신 Luna·Sol이 거절됐지만 0.159.2로 갱신 후 같은 로그인에서 세 모델 모두 동작했습니다. `sh ops/install-analysis-cli.sh`로 검증된 프로젝트 전용 CLI를 설치하고 접근을 점검합니다. CLI 변경 시 과거 접근 실패 캐시를 다시 검사하며, 사전 점검 실패는 새로운 분석 실행을 차단합니다.
 
 `scheduled_risks.py`는 수집 완료 후 심층 위험 분석을 소량씩 이어가는 별도 스케줄러입니다. 최근 기사 우선과 과거 적체 처리 순번을 나누고 사용자 중지·검토 거절·사용량 한도를 보존합니다. 최신 모델 접근이 확인되면 `--enable --resume`으로 기존 cycle을 명시 재개하고 `ops/com.hollobit.ai-news.risks.plist`를 사용자 LaunchAgent로 등록합니다. 기본 분석 완료와 위험 시나리오 갱신 완료는 서로 다릅니다.
 
@@ -572,3 +572,9 @@ API: GET/POST `/api/papers/pipeline` (`enabled` boolean), GET `/api/papers/strat
 ## 아키텍처와 실행 흐름
 
 실행 경계·자료 식별자·검토·캐시·공개 배포 계약은 [ARCHITECTURE.md](ARCHITECTURE.md)에 정리했습니다. `docs/news-architecture.html`은 전체 구조, 신규 뉴스 처리, 조회·공개 배포를 전환하는 인포그래픽 원본입니다. 후속 리팩토링의 검증 결과와 남은 성능 목표는 [Plans.md](Plans.md)를 참고하세요.
+
+### 수집·분석 운영 감시와 로컬 알림
+
+[운영 화면](http://127.0.0.1:8001/operations#pipeline-health)에서 Telegram 확인 → 기사 추출 → 기본 분석 → 상세·위험 분석과 문제 이력을 확인한다. `ops/com.hollobit.ai-news.health.plist`의 5분 감시는 `operations_health.py`를 실행한다. 수동 점검도 `.venv/bin/python operations_health.py`로 실행할 수 있다. 운영 상태 API는 `/api/operations/health`, 읽음 처리는 `POST /api/operations/incidents/<id>/ack`다.
+
+새 문제는 macOS 알림으로 요청하고 운영 화면에 지속 보관한다. 실제 배너가 보이지 않으면 macOS 알림 권한과 집중 모드를 확인한다. 확인 표시는 분석 재개나 장애 해소를 뜻하지 않는다. 로그인 세션이 없거나 Mac이 잠든 동안에는 예약 점검·알림이 실행되지 않는다. 재설치 시 health plist를 `~/Library/LaunchAgents/`에 복사하고 현재 등록 여부를 확인한 뒤 `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.hollobit.ai-news.health.plist`로 등록한다. Telegram 외부 전송은 사용하지 않는다.

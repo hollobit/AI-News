@@ -114,7 +114,8 @@ class RecursiveImprovementService:
                 if name not in {r[1] for r in db.execute('PRAGMA table_info('+table+')')}:
                     db.execute('ALTER TABLE '+table+' ADD COLUMN '+name+" TEXT NOT NULL DEFAULT '"+default+"'")
             for row in db.execute("SELECT id,owner_pid FROM rsi_cycles WHERE status IN ('running','waiting','finishing')").fetchall():
-                if not owner_alive(row['owner_pid']):
+                from automation_runtime import scheduled_cycle
+                if not owner_alive(row['owner_pid']) and not scheduled_cycle(db, row['id']):
                     db.execute("UPDATE rsi_cycles SET status='paused',pause_requested=1,owner_pid=NULL,updated_at=? WHERE id=?", (now(), row['id']))
 
     def db(self):

@@ -64,3 +64,20 @@ def test_access_preflight_caches_failure_and_never_downgrades(tmp_path):
     assert [c['ok'] for c in result['checks']]==[False,False,True]
     assert ensure_model_access(caller=unavailable,state_path=path,stamp=1001)==result
     assert len(calls)==3
+
+
+def test_cli_update_invalidates_cached_model_rejection(monkeypatch,tmp_path):
+    from model_access import ensure_model_access
+    from engine_errors import EngineError
+    version={'version':'old'}
+    monkeypatch.setattr('model_access.client_identity',lambda:dict(version))
+    calls=[]
+    def probe(*args,**kwargs):
+        calls.append(kwargs)
+        if version['version']=='old':raise EngineError('configuration')
+        return {'ok':True}
+    path=tmp_path/'access.json'
+    assert not ensure_model_access(caller=probe,state_path=path,stamp=1000)['ready']
+    version['version']='new'
+    assert ensure_model_access(caller=probe,state_path=path,stamp=1001)['ready']
+    assert len(calls)==6

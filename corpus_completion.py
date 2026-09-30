@@ -243,7 +243,13 @@ class CompletionRunner:
             db.execute('BEGIN IMMEDIATE')
             for pending in db.execute("SELECT * FROM rsi_rounds WHERE cycle_id=? AND status IN ('planned','running') ORDER BY number",(self.cycle_id,)).fetchall():
                 snapshot=json.loads(pending['snapshot_json'])
-                if snapshot.get('completion_attempt') and pending['id'] not in self.claimed_rounds:
+                if snapshot.get('items') and snapshot.get('identities') and pending['id'] not in self.claimed_rounds:
+                    # Older web-owned rounds have no completion_attempt. Preserve
+                    # their exact workflow/evidence checkpoint instead of orphaning it.
+                    if not snapshot.get('completion_attempt'):
+                        attempts = [db.execute('SELECT attempts FROM corpus_completion_documents WHERE cycle_id=? AND document_id=?',
+                                              (self.cycle_id, identity)).fetchone() for identity in snapshot['identities']]
+                        snapshot['completion_attempt'] = max([r[0] for r in attempts if r] + [1])
                     self.claimed_rounds.add(pending['id'])
                     return {'id':pending['id'],'number':pending['number'],'snapshot':snapshot,'workflow_run_id':pending['workflow_run_id']}
             # Persisted round numbers preserve a 2:1 new/review preference across

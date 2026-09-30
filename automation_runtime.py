@@ -31,6 +31,13 @@ def server_lease(path):
         finally:fcntl.flock(handle,fcntl.LOCK_UN)
 
 
+def scheduled_cycle(db, cycle_id):
+    """A managed completion cycle belongs to its scheduler, never the web worker."""
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='risk_schedule'").fetchone():
+        return False
+    return bool(db.execute('SELECT 1 FROM risk_schedule WHERE enabled=1 AND cycle_id=?', (cycle_id,)).fetchone())
+
+
 def interrupted_runs(path):
     """Capture before service constructors normalize abandoned running states."""
     result={}
@@ -45,6 +52,8 @@ def interrupted_runs(path):
             columns={r[1] for r in db.execute('PRAGMA table_info('+table+')')}
             rows=db.execute('SELECT * FROM '+table+' WHERE '+where+' ORDER BY created_at DESC').fetchall()
             for row in rows:
+                if kind == 'improvement' and scheduled_cycle(db, row['id']):
+                    continue
                 if kind == 'workflows' and 'request_json' in columns:
                     try:
                         workflow_owner = json.loads(row['request_json']).get('owner_pid')

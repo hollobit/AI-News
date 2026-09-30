@@ -66,6 +66,21 @@ class CompletionTests(unittest.TestCase):
         for context in reversed(self.patches):context.stop()
         self.ledger.close();self.temp.cleanup()
 
+    def test_legacy_checkpoint_is_resumed_without_resetting_attempts(self):
+        runner=CompletionRunner(self.path,'cycle');runner.prepare()
+        planned=runner.plan()
+        with connect(self.path) as db:
+            snapshot=json.loads(db.execute('SELECT snapshot_json FROM rsi_rounds WHERE id=?',(planned['id'],)).fetchone()[0])
+            snapshot.pop('completion_attempt')
+            db.execute('UPDATE rsi_rounds SET snapshot_json=?,workflow_run_id=? WHERE id=?',(json.dumps(snapshot),'old-workflow',planned['id']))
+            db.execute('UPDATE corpus_completion_documents SET attempts=2')
+        recovered=CompletionRunner(self.path,'cycle').plan()
+        self.assertEqual(recovered['id'],planned['id'])
+        self.assertEqual(recovered['workflow_run_id'],'old-workflow')
+        self.assertEqual(recovered['snapshot']['completion_attempt'],2)
+        with connect(self.path) as db:
+            self.assertEqual(db.execute('SELECT min(attempts) FROM corpus_completion_documents').fetchone()[0],2)
+
     def test_recent_first_keeps_backlog_turn_and_bounded_run(self):
         for i,item in enumerate(self.items):item['day']=f'2026-09-{i+1:02d}'
         runner=CompletionRunner(self.path,'cycle',workers=1,batch_size=1,recent_first=True,max_rounds=2)

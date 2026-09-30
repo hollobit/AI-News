@@ -5,6 +5,10 @@ from pathlib import Path
 from urllib.parse import parse_qs
 
 def get(self, route, params):
+    if route.path == '/api/operations/health':
+        from pipeline_health import view
+        self.send_json(view())
+        return True
     if route.path == '/api/runtime/workers':
         from background_jobs import worker_status
         self.send_json(worker_status(self.services.path))
@@ -74,6 +78,12 @@ def get(self, route, params):
     return False
 
 def post(self, route, payload):
+    incident = re.fullmatch('/api/operations/incidents/([0-9]+)/ack', route.path)
+    if incident:
+        from pipeline_health import acknowledge
+        found = acknowledge(int(incident.group(1)))
+        self.send_json({'acknowledged': found}, 200 if found else 404)
+        return True
     is_workflow = route.path == '/api/workflows'
     is_improvement = route.path == '/api/improvement'
     is_baseline = route.path == '/api/baseline'
