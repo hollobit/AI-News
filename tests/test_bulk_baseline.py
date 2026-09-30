@@ -53,6 +53,19 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(again['metrics']['reused_verified'],7);self.assertEqual(len(self.calls),count)
         with s.db() as db:self.assertEqual(len(read_baseline(db,self.items)),7)
 
+    def test_review_receives_same_keyword_candidates_as_generation(self):
+        service=self.service()
+        result=self.done(service,service.start({'workers':1,'batch_size':1})['id'])
+        self.assertEqual(result['status'],'complete')
+        generated={d['document_id']:d['keyword_citations'] for p in self.calls if p.startswith('ROLE: baseline_analysis') for d in json.loads(p.split('DATA:\n')[1])}
+        for prompt in self.calls:
+            if prompt.startswith('ROLE: baseline_verification'):
+                for document in json.loads(prompt.split('DATA:\n')[1]):
+                    self.assertEqual(document['keyword_citations'],generated[document['document_id']])
+                    self.assertTrue(document['keyword_citations'])
+                    for keyword in document['analysis']['keywords']:
+                        self.assertIn(keyword,document['keyword_citations'].values())
+
     def test_engine_outage_pauses_without_exhausting_documents(self):
         def unavailable(prompt, schema):
             raise RuntimeError('[engine:circuit_open] temporary outage')

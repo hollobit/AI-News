@@ -320,7 +320,7 @@ class BulkBaselineService:
                     valid[identity]=validate_record(materialize(matches[0],citation_options[identity]),snapshots[identity],preparations[identity])
                 except (ValueError,TypeError) as exc:outcomes[identity]=('failed',None,str(exc))
             if valid:
-                review_inputs=[dict(snapshots[key],analysis=value) for key,value in valid.items()]
+                review_inputs=[dict(snapshots[key],keyword_citations=citation_options[key],analysis=value) for key,value in valid.items()]
                 phase=time.monotonic()
                 response=self.analyzer(self._prompt('verification',review_inputs),REVIEW_SCHEMA)
                 review_ms=round((time.monotonic()-phase)*1000);output_chars+=len(js(response))
