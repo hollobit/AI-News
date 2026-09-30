@@ -463,9 +463,15 @@
       } else if (view === 'risks') {
         items = site.risks || [];
         draw = (r) => {
-          const n = card(r.title, '기사 ' + (r.day || '날짜 미상') + ' · 분석 ' +
-            (r.analysis_at ? r.analysis_at.slice(0, 10) : '날짜 미상') +
-            ' · 검토된 해석 · 현재 위험 ' + r.current_severity);
+          const n = card(
+            r.title,
+            '기사 ' +
+              (r.day || '날짜 미상') +
+              ' · 분석 ' +
+              (r.analysis_at ? r.analysis_at.slice(0, 10) : '날짜 미상') +
+              ' · 검토된 해석 · 현재 위험 ' +
+              r.current_severity
+          );
           for (const [k, label] of [
             ['current_basis', '현재 판단 근거'],
             ['scenario', '조건부 미래 시나리오'],
