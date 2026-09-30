@@ -37,6 +37,9 @@ def matching_processes(service, output):
 
 
 def deep_command(db):
+    if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='risk_schedule'").fetchone():
+        managed=db.execute('SELECT enabled FROM risk_schedule WHERE id=1').fetchone()
+        if managed and managed[0]:return None
     row=db.execute('SELECT id,status,pause_requested,owner_pid FROM rsi_cycles ORDER BY created_at DESC LIMIT 1').fetchone()
     if not row or row['pause_requested'] or row['status'] not in ('running','waiting','finishing'):
         return None

@@ -122,3 +122,18 @@ class RuntimeTests(unittest.TestCase):
             rows=[{'snapshot_json':json.dumps({'evidence':[{'text':'x'*length}]})}]
             self.assertEqual(choose_batch_size(rows,{'adaptive_batches':True}),expected)
             self.assertEqual(choose_batch_size(rows,{'batch_size':12}),12)
+
+
+def test_nested_transaction_helper_does_not_close_callers_connection(tmp_path):
+    import sqlite3
+    from llm_runtime import ClosingConnection
+    db=sqlite3.connect(tmp_path/'nested.db',factory=ClosingConnection)
+    with db:
+        db.execute('CREATE TABLE rows(value INTEGER)')
+        with db:
+            db.execute('INSERT INTO rows VALUES(1)')
+        db.execute('INSERT INTO rows VALUES(2)')
+    import pytest
+    with pytest.raises(sqlite3.ProgrammingError,match='closed'):db.execute('SELECT 1')
+    with sqlite3.connect(tmp_path/'nested.db') as read:
+        assert read.execute('SELECT COUNT(*) FROM rows').fetchone()[0]==2

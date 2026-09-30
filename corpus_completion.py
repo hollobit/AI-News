@@ -22,7 +22,8 @@ from recursive_improvement import news_identity, news_fingerprint, now, encoded,
 
 
 def connect(path):
-    db = sqlite3.connect(path, timeout=60)
+    from llm_runtime import ClosingConnection
+    db = sqlite3.connect(path, timeout=60, factory=ClosingConnection)
     db.row_factory = sqlite3.Row
     return db
 
@@ -106,7 +107,7 @@ def historical_feedback(db,items):
 
 
 class CompletionRunner:
-    def __init__(self, path, cycle_id, workers=6, batch_size=24, recover_engine=False, review_first=False):
+    def __init__(self, path, cycle_id, workers=6, batch_size=24, recover_engine=False, review_first=False, recent_first=False, max_rounds=0):
         self.path = str(Path(path).resolve()); self.cycle_id = cycle_id
         self.workers = max(1, min(6, workers)); self.batch_size = max(1, min(24, batch_size))
         self.stop = threading.Event()
@@ -115,6 +116,9 @@ class CompletionRunner:
         self.review_first = review_first
         self.recover_engine = recover_engine
         self.engine_error = ''
+        self.recent_first = recent_first
+        self.max_rounds = max(0, int(max_rounds))
+        self.user_stopped = False
 
     def prepare(self):
         from improvement_selection import all_corpus_items
@@ -173,6 +177,22 @@ class CompletionRunner:
                 current={news_identity(item):item for item in corpus}
                 state,seen=json.loads(cycle['state_json']),json.loads(cycle['seen_json'])
                 known={row[0] for row in db.execute('SELECT document_id FROM corpus_completion_documents WHERE cycle_id=?',(self.cycle_id,))}
+                db.execute('''CREATE TABLE IF NOT EXISTS completion_input_history (
+                    seq INTEGER PRIMARY KEY,cycle_id TEXT,document_id TEXT,prior_json TEXT,changed_at TEXT)''')
+                # An input revision is a new analysis target. Preserve the entire
+                # previous row; never reset attempts for an unchanged rejection.
+                active_ids=set()
+                for r in db.execute("SELECT snapshot_json FROM rsi_rounds WHERE cycle_id=? AND status IN ('planned','running')",(self.cycle_id,)):
+                    active_ids.update(json.loads(r[0]).get('identities',[]))
+                for old in db.execute('SELECT * FROM corpus_completion_documents WHERE cycle_id=?',(self.cycle_id,)).fetchall():
+                    item=current.get(old['document_id'])
+                    if not item or old['document_id'] in active_ids:continue
+                    if news_fingerprint(item)==news_fingerprint(json.loads(old['snapshot_json'])):continue
+                    db.execute('INSERT INTO completion_input_history(cycle_id,document_id,prior_json,changed_at) VALUES(?,?,?,?)',
+                               (self.cycle_id,old['document_id'],encoded(dict(old)),now()))
+                    db.execute("UPDATE corpus_completion_documents SET snapshot_json=?,status='pending',attempts=0,workflow_run_id=NULL,admission_json=?,updated_at=? WHERE cycle_id=? AND document_id=?",
+                               (encoded(item),encoded({'reason':'changed_input','prior_attempts':old['attempts']}),now(),self.cycle_id,old['document_id']))
+                    state.pop(old['document_id'],None);seen.pop(old['document_id'],None)
                 position=db.execute('SELECT COALESCE(MAX(position),-1)+1 FROM corpus_completion_documents WHERE cycle_id=?',(self.cycle_id,)).fetchone()[0]
                 for identity,item in current.items():
                     if identity in known:continue
@@ -230,9 +250,12 @@ class CompletionRunner:
             # restarts. Either queue falls back to the other when it is empty.
             number = db.execute('SELECT COALESCE(MAX(number),0)+1 FROM rsi_rounds WHERE cycle_id=?', (self.cycle_id,)).fetchone()[0]
             prefer_review = self.review_first or number % 3 == 0
+            order = ("CASE WHEN (attempts>0)=? THEN 0 ELSE 1 END,attempts,"
+                     + ("json_extract(snapshot_json,'$.day') DESC," if self.recent_first and number % 4 else '')
+                     + 'position')
             rows = db.execute('''SELECT * FROM corpus_completion_documents WHERE cycle_id=?
                 AND status IN ('pending','needs_review','failed') AND attempts<3
-                ORDER BY CASE WHEN (attempts>0)=? THEN 0 ELSE 1 END,attempts,position LIMIT ?''',
+                ORDER BY ''' + order + ' LIMIT ?',
                 (self.cycle_id, int(prefer_review), self.batch_size)).fetchall()
             if not rows: return None
             attempt = rows[0]['attempts']
@@ -261,7 +284,8 @@ class CompletionRunner:
     def work(self, service, planned):
         snapshot = planned['snapshot']
         request = {'full_corpus': True, 'completion': True, 'recursive_cycle_id': self.cycle_id,
-                   'recursive_round_id': planned['id'], 'improvement_context': snapshot['improvement_context']}
+                   'recursive_round_id': planned['id'], 'improvement_context': snapshot['improvement_context'],
+                   'completion_attempt': snapshot.get('completion_attempt',1)}
         with connect(self.path) as db:
             prior=db.execute("SELECT id FROM strategic_workflow_runs WHERE json_extract(request_json,'$.recursive_round_id')=? ORDER BY created_at DESC LIMIT 1",(planned['id'],)).fetchone()
         prior_id=planned.get('workflow_run_id') or (prior[0] if prior else None)
@@ -356,18 +380,23 @@ class CompletionRunner:
         services = [WorkflowService(self.path, sources=sources, enabled=True, recover_interrupted=False) for _ in range(self.workers)]
         self.ledger = RecursiveImprovementService(self.path, services[0], lambda *_: [])
         old_handlers={}
+        def signal_stop(*_):
+            self.user_stopped=True
+            self.stop.set()
         if threading.current_thread() is threading.main_thread():
             for sig in (signal.SIGTERM, signal.SIGINT):
-                old_handlers[sig]=signal.signal(sig,lambda *_:self.stop.set())
+                old_handlers[sig]=signal.signal(sig,signal_stop)
         failed = None
         try:
             with ThreadPoolExecutor(max_workers=self.workers) as pool:
-                futures = {}; available = list(services)
+                futures = {}; available = list(services); dispatched=0
                 while True:
                     if self.cycle_control(): self.stop.set()
                     while available and not self.stop.is_set():
+                        if self.max_rounds and dispatched>=self.max_rounds:break
                         planned = self.plan()
                         if not planned: break
+                        dispatched+=1
                         service = available.pop()
                         futures[pool.submit(self.work, service, planned)] = service
                     if not futures: break
@@ -386,9 +415,13 @@ class CompletionRunner:
             summary = self.summary()
             complete = summary['counts'].get('complete', 0) == summary['total'] and summary['total'] > 0
             status = 'error' if failed else 'paused' if self.stop.is_set() else 'complete' if complete else 'needs_review'
+            if self.max_rounds and not failed and not self.stop.is_set() and not complete:
+                with connect(self.path) as db:
+                    if db.execute("SELECT 1 FROM corpus_completion_documents WHERE cycle_id=? AND status IN ('pending','needs_review','failed','running') AND attempts<3 LIMIT 1",(self.cycle_id,)).fetchone():status='waiting'
             with connect(self.path) as db:
+                user_pause = self.user_stopped or bool(db.execute('SELECT pause_requested FROM rsi_cycles WHERE id=?',(self.cycle_id,)).fetchone()[0])
                 db.execute('UPDATE rsi_cycles SET status=?,owner_pid=NULL,pause_requested=?,error=?,updated_at=? WHERE id=?',
-                           (status, int(self.stop.is_set()), failed or self.engine_error, now(), self.cycle_id))
+                           (status, int(user_pause), failed or self.engine_error, now(), self.cycle_id))
             print(json.dumps(dict(summary, status=status), ensure_ascii=False), flush=True)
             for sig,handler in old_handlers.items():signal.signal(sig,handler)
 
@@ -401,7 +434,9 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=24)
     parser.add_argument('--recover-engine-failures', action='store_true')
     parser.add_argument('--review-first', action='store_true')
+    parser.add_argument('--recent-first', action='store_true')
+    parser.add_argument('--max-rounds', type=int, default=0)
     args = parser.parse_args()
     from app import load_local_env
     load_local_env()
-    CompletionRunner(args.db, args.cycle, args.workers, args.batch_size, args.recover_engine_failures, args.review_first).run()
+    CompletionRunner(args.db, args.cycle, args.workers, args.batch_size, args.recover_engine_failures, args.review_first, args.recent_first, args.max_rounds).run()

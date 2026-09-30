@@ -28,6 +28,14 @@
 
 검증은 `.venv/bin/python -m pytest tests -q`, `node --test tests/*.test.cjs`를 사용합니다. `tests/ui_refactoring.py`는 실제 공개 생성본의 초기 JSON 2MiB 예산, 전체 그래프 미로딩, 로컬 읽기/운영 화면·모바일·본문 이동을 검사합니다. `npm ci` 후 `npm run format`으로 직접 작성한 정적 자산을 정리하고 `npm run check:format`으로 확인합니다. 포함된 three.js 원본은 제외합니다. GitHub Actions는 프로젝트 테스트·JavaScript·포맷 검사를 실행합니다. 구조 및 식별자/검토 계약은 [ARCHITECTURE.md](ARCHITECTURE.md), 개선 항목별 이행 범위는 [REFACTORING_GUIDE.md](REFACTORING_GUIDE.md)를 참고하세요.
 
+## 뉴스 분석 모델과 위험 갱신
+
+`model_policy.py`는 기본 분석을 `gpt-6-luna`, 일반 위험 분석과 독립 검토를 `gpt-6.1-sol`, 중요한 위험의 검토 및 반복 보완을 `gpt-6-astra`로 고정합니다. 구버전으로 자동 대체하지 않습니다. 유효한 과거 검토 결과는 그대로 재사용하며 새 호출의 모델·역할·입력 해시를 기록합니다.
+
+`.venv/bin/python model_access.py --refresh`로 실제 로그인에서 세 모델의 접근을 확인합니다. 모델명 설정만으로 사용 권한이 생기지 않습니다. 현재 로그인에서는 최신 Luna·Sol이 거절돼 활성화가 보류돼 있습니다. 사전 점검 실패는 새로운 분석 실행을 차단합니다.
+
+`scheduled_risks.py`는 수집 완료 후 심층 위험 분석을 소량씩 이어가는 별도 스케줄러입니다. 최근 기사 우선과 과거 적체 처리 순번을 나누고 사용자 중지·검토 거절·사용량 한도를 보존합니다. 최신 모델 접근이 확인되면 `--enable --resume`으로 기존 cycle을 명시 재개하고 `ops/com.hollobit.ai-news.risks.plist`를 사용자 LaunchAgent로 등록합니다. 기본 분석 완료와 위험 시나리오 갱신 완료는 서로 다릅니다.
+
 ## 지식 위키
 
 공개 관계 탐색은 현재 입력·독립 검토를 통과한 뉴스와 논문의 문서별 분석 전체를 연결합니다. 뉴스 문서 수, 종합 위키 페이지 수, 지도 노드 수는 서로 다릅니다. 종합 위키의 검토된 의미 관계와 90일 문서별 공동 관측(탐색 추천)을 구분하며, 전체 분석 연결이 모든 문서의 종합 위키 편찬 완료를 뜻하지는 않습니다. 신규·변경 자료는 다음 공개 스냅샷 생성에서 반영됩니다. 로컬 지식 API는 조회 지연 방지를 위해 종합 위키 범위를 유지합니다.

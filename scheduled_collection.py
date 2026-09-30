@@ -93,7 +93,7 @@ def inspect(db):
     return states, dict(latest) if latest else None, any(owner_alive(r['owner_pid']) for r in active)
 
 
-def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVERY):
+def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVERY, check_models=None):
     now = now or datetime.now(timezone.utc)
     states, latest, active = inspect(db)
     extraction = json.loads(states.get('collector_corpus_snapshot', '{}'))
@@ -120,6 +120,10 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
     summary.update(total_unique=len(snapshots), pending_current_inputs=pending)
     if not pending:
         return dict(summary, stage='up_to_date')
+    from model_access import ensure_model_access
+    access=(check_models or ensure_model_access)()
+    if not access['ready']:
+        return dict(summary,stage='model_access_required',model_access=access)
     # After a timed-out POST, recheck the DB on the next tick rather than retrying.
     result = request('/api/baseline', {'workers': 2, 'batch_size': 1})['run']
     return dict(summary, stage='baseline_started', baseline_run=result['id'],

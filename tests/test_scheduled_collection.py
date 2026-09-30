@@ -30,6 +30,7 @@ def db():
 
 
 def run(db, **kwargs):
+    kwargs.setdefault('check_models',lambda:{'ready':True})
     return dispatch(db, now=datetime(2026, 9, 28, 12, 0, 1, tzinfo=timezone.utc), **kwargs)
 
 

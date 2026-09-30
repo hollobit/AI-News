@@ -11,6 +11,20 @@ DEFAULT_LIMIT = 6
 INTERACTIVE_ROLES = ('graph_answer', 'strategic_question', 'strategic_question_verification', 'engine_probe')
 
 
+class ClosingConnection(sqlite3.Connection):
+    def __enter__(self):
+        self._context_depth = getattr(self, '_context_depth', 0) + 1
+        return super().__enter__()
+
+    def __exit__(self, *args):
+        try:
+            return super().__exit__(*args)
+        finally:
+            self._context_depth = getattr(self, '_context_depth', 1) - 1
+            if self._context_depth == 0:
+                self.close()
+
+
 def _alive(pid):
     try:
         os.kill(int(pid), 0)
@@ -49,6 +63,7 @@ class LLMRuntime:
         self.poll_seconds = poll_seconds
         self.queue_timeout = queue_timeout
         with self.db() as db:
+            db.execute('BEGIN IMMEDIATE')
             db.execute('CREATE TABLE IF NOT EXISTS llm_runtime_settings(id INTEGER PRIMARY KEY CHECK(id=1),max_concurrent INTEGER NOT NULL)')
             db.execute('INSERT OR IGNORE INTO llm_runtime_settings VALUES (1,?)', (DEFAULT_LIMIT if limit is None else max(1, min(int(limit), 12)),))
             db.execute('''CREATE TABLE IF NOT EXISTS llm_calls (
@@ -57,9 +72,13 @@ class LLMRuntime:
                 lease_until REAL,input_chars INTEGER NOT NULL,schema_chars INTEGER NOT NULL,
                 output_chars INTEGER NOT NULL DEFAULT 0,wait_ms INTEGER,run_ms INTEGER,error_code TEXT NOT NULL DEFAULT '')''')
             db.execute('CREATE INDEX IF NOT EXISTS llm_calls_active ON llm_calls(status,id)')
+            columns = {r[1] for r in db.execute('PRAGMA table_info(llm_calls)')}
+            for column in ('model', 'reasoning_effort'):
+                if column not in columns:
+                    db.execute(f"ALTER TABLE llm_calls ADD COLUMN {column} TEXT NOT NULL DEFAULT ''")
 
     def db(self):
-        db = sqlite3.connect(self.path, timeout=30)
+        db = sqlite3.connect(self.path, timeout=30, factory=ClosingConnection)
         db.row_factory = sqlite3.Row
         return db
 
@@ -92,13 +111,13 @@ class LLMRuntime:
         return len(rows)==3 and all(row['status']=='failed' and row['error_code'] in INFRASTRUCTURE_CODES for row in rows)
 
     @contextmanager
-    def slot(self, role, input_chars, schema_chars, max_run_seconds=240):
+    def slot(self, role, input_chars, schema_chars, max_run_seconds=240, model='', reasoning_effort=''):
         if not re.fullmatch(r'[a-z_]{1,48}', role):
             role = 'structured_analysis'
         queued = time.time()
         with self.db() as db:
-            identity = db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,input_chars,schema_chars) VALUES (?,'queued',?,?,?,?)",
-                                  (role, os.getpid(), queued, int(input_chars), int(schema_chars))).lastrowid
+            identity = db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,input_chars,schema_chars,model,reasoning_effort) VALUES (?,'queued',?,?,?,?,?,?)",
+                                  (role, os.getpid(), queued, int(input_chars), int(schema_chars), model, reasoning_effort)).lastrowid
         ticket = _Ticket(identity)
         started = None
         try:
@@ -119,6 +138,7 @@ class LLMRuntime:
                     # old jobs age into that tier after 60 seconds to prevent starvation.
                     bulk_active = db.execute("SELECT COUNT(*) FROM llm_calls WHERE status='running' AND role NOT IN (?,?,?,?)",
                                              INTERACTIVE_ROLES).fetchone()[0]
+                    analysis_active = db.execute("SELECT COUNT(*) FROM llm_calls WHERE status='running' AND role NOT LIKE '%verification' AND role NOT IN (?,?,?,?)", INTERACTIVE_ROLES).fetchone()[0]
                     waiting = db.execute("""SELECT id,role FROM llm_calls WHERE status='queued'
                         ORDER BY CASE WHEN role IN (?,?,?,?) OR queued_at<? THEN 0 ELSE 1 END,id""",
                         (*INTERACTIVE_ROLES, stamp-60)).fetchall()
@@ -129,6 +149,9 @@ class LLMRuntime:
                             # Retain one slot for an interactive answer while bulk
                             # analysis is busy. The total cross-process limit is unchanged.
                             if bulk_active>=max(1,limit-1):continue
+                            if not pending['role'].endswith('verification'):
+                                if analysis_active >= max(1, limit-2):continue
+                                analysis_active += 1
                             bulk_active+=1
                         eligible.append(pending['id'])
                     if identity in eligible:
@@ -160,8 +183,7 @@ class LLMRuntime:
 def runtime_status(path=None):
     runtime = LLMRuntime(path)
     with runtime.db() as db:
-        with db:
-            runtime._reap(db, time.time())
+        runtime._reap(db, time.time())
         limit = db.execute('SELECT max_concurrent FROM llm_runtime_settings WHERE id=1').fetchone()[0]
         counts = dict(db.execute('SELECT status,COUNT(*) FROM llm_calls GROUP BY status'))
         roles = [dict(row) for row in db.execute('''SELECT role,COUNT(*) calls,
@@ -170,7 +192,7 @@ def runtime_status(path=None):
             ROUND(AVG(input_chars)) mean_input_chars,ROUND(AVG(output_chars)) mean_output_chars
             FROM llm_calls GROUP BY role ORDER BY calls DESC''')]
         recent = [dict(row) for row in db.execute('''SELECT id,role,status,queued_at,started_at,finished_at,input_chars,schema_chars,
-            output_chars,wait_ms,run_ms,error_code FROM llm_calls ORDER BY id DESC LIMIT 40''')]
+            output_chars,wait_ms,run_ms,error_code,model,reasoning_effort FROM llm_calls ORDER BY id DESC LIMIT 40''')]
     return {'limit': limit, 'active': counts.get('running', 0), 'waiting': counts.get('queued', 0),
             'counts': counts, 'roles': roles, 'recent': recent, 'scope': 'all_local_processes_using_shared_runtime',
-            'privacy': '길이·시간·역할·오류코드만 기록하며 프롬프트·결과 본문·인증정보는 저장하지 않습니다.'}
+            'privacy': '길이·시간·역할·모델·오류코드를 기록하며 프롬프트·결과 본문·인증정보는 저장하지 않습니다.'}

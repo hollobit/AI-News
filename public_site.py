@@ -86,7 +86,8 @@ def content(db):
                 for risk in checked.get('risks',[]):
                     if risk.get('evidence_ids') and set(risk['evidence_ids'])<=own:
                         risks.append(dict(pick(risk,'title current_severity current_basis scenario assumptions uncertainty future_likelihood horizon mitigations'),
-                            article_id=bykey[key]['id'],url=bykey[key]['url'],day=bykey[key]['day']))
+                            article_id=bykey[key]['id'],url=bykey[key]['url'],day=bykey[key]['day'],
+                            analysis_at=report.get('completed_at','')))
     papers=[]
     if 'arxiv_papers' in tables:
         analyses={r['paper_id']:dict(r) for r in db.execute('SELECT * FROM arxiv_paper_analyses')} if 'arxiv_paper_analyses' in tables else {}

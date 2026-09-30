@@ -166,9 +166,23 @@ class WorkflowService:
                         db.execute("UPDATE strategic_workflow_runs SET status='paused',updated_at=? WHERE id=?",(now(),row['id']))
 
     def db(self):
-        db = sqlite3.connect(self.path, timeout=30)
+        from llm_runtime import ClosingConnection
+        db = sqlite3.connect(self.path, timeout=30, factory=ClosingConnection)
         db.row_factory = sqlite3.Row
         return db
+
+    def _analyze(self, prompt, schema, *, escalation=False):
+        result = (self.analyzer(prompt, schema, escalation=escalation)
+                  if self.analyzer is run_structured else self.analyzer(prompt, schema))
+        provenance = getattr(result, 'provenance', None)
+        if provenance and self.active:
+            self._save(self.active, 'model_call_' + str(provenance['call_id']), provenance)
+        return result
+
+    def _model_provenance(self, run_id):
+        with self.db() as db:
+            return [json.loads(r[0]) for r in db.execute(
+                "SELECT payload_json FROM strategic_workflow_artifacts WHERE run_id=? AND stage LIKE 'model_call_%' ORDER BY stage", (run_id,))]
 
     def _event(self, run_id, stage, status, detail=''):
         with self.db() as db:
@@ -417,7 +431,8 @@ class WorkflowService:
             from event_observations import audit_schema as event_audit_schema
             schema=event_audit_schema(schema,report['event_observations'])
         if require_all_news:audit_context['request']={'completion':True}
-        audit = self.analyzer(self._prompt('risk_verification' if risk else 'verification', evidence, audit_context), evidence_schema(schema,evidence))
+        critical = risk and any(r.get('current_severity') in ('high','critical') for r in report.get('risks',[]))
+        audit = self._analyze(self._prompt('risk_verification' if risk else 'verification', evidence, audit_context), evidence_schema(schema,evidence), escalation=critical)
         all_ids = {e['id'] for e in evidence}
         cited = {ref for claim in report['risks' if risk else 'claims'] for ref in claim['evidence_ids']}
         if risk:
@@ -541,10 +556,10 @@ class WorkflowService:
             retrieval = self._stage(run_id, 'graph_retrieval', lambda: self._retrieve_graph(snapshot, request))
             context = {'keywords': keywords, 'coverage': enrichment['coverage'], 'graph_context': retrieval, 'request': request}
             def analyze(role):
-                return self._stage(run_id, role, lambda: self._report(self.analyzer(self._prompt(role, evidence, context), evidence_schema(REPORT,evidence)), evidence))
+                return self._stage(run_id, role, lambda: self._report(self._analyze(self._prompt(role, evidence, context), evidence_schema(REPORT,evidence)), evidence))
             with ThreadPoolExecutor(max_workers=3) as pool:
                 futures = {role: pool.submit(analyze, role) for role in ('national', 'technology')}
-                risk_future=pool.submit(self._stage,run_id,'risk_assessment',lambda:validate_risk_report(self.analyzer(
+                risk_future=pool.submit(self._stage,run_id,'risk_assessment',lambda:validate_risk_report(self._analyze(
                     self._prompt('risk_assessment',evidence,context),evidence_schema(RISK_SCHEMA,evidence)),evidence))
                 reports = {role: future.result() for role, future in futures.items()}
                 risk_report=risk_future.result()
@@ -558,7 +573,7 @@ class WorkflowService:
             # Independent risk review and strategy synthesis share the same frozen observations.
             with ThreadPoolExecutor(max_workers=2) as pool:
                 risk_future = pool.submit(self._stage, run_id, 'risk_verification', lambda: self._audit(evidence, risk_report, risk=True, require_all_news=require_all_news))
-                report_future = pool.submit(self._stage, run_id, 'synthesis', lambda: self._report(self.analyzer(
+                report_future = pool.submit(self._stage, run_id, 'synthesis', lambda: self._report(self._analyze(
                     self._prompt('synthesis', evidence, dict(context, analysts=reports)), evidence_schema(synthesis_schema,evidence)), evidence))
                 risk_audit, report = risk_future.result(), report_future.result()
             risk_audit = self._current_audit(risk_audit, evidence, risk_report, required_checked=risk_report.get('not_assessable_evidence_ids',[]) if require_all_news else ())
@@ -576,7 +591,7 @@ class WorkflowService:
                                    source_repair={'attempts': 1, 'scope': 'failed_snapshot_urls_only',
                                                   'graph_context_reused': '기존 검색은 해석 단서이며 새 원문은 evidence로 직접 제공'})
                 if not risk_audit['accepted'] or risk_audit.get('evidence_hash') != digest(evidence):
-                    risk_report = self._stage(run_id, 'risk_revision', lambda: validate_risk_report(self.analyzer(
+                    risk_report = self._stage(run_id, 'risk_revision', lambda: validate_risk_report(self._analyze(
                         self._prompt('risk_revision', evidence, dict(context, risk_report=risk_report, critique=risk_audit)), evidence_schema(RISK_SCHEMA,evidence)), evidence))
                 # New observations invalidate the old risk audit even when its report did not change.
                 risk_audit = self._stage(run_id, 'risk_reverification',
@@ -591,8 +606,8 @@ class WorkflowService:
                     audit=self._stage(run_id,'strategy_audit_reuse',lambda:dict(audit,reused=True,
                         reuse_reason='unchanged_evidence_report_and_verification_version'))
                 else:
-                    report = self._stage(run_id, 'revision', lambda: self._report(self.analyzer(
-                        self._prompt('revision', evidence, dict(context, report=report, critique=audit)), evidence_schema(event_report_schema(REPORT,evidence),evidence)), evidence))
+                    report = self._stage(run_id, 'revision', lambda: self._report(self._analyze(
+                        self._prompt('revision', evidence, dict(context, report=report, critique=audit)), evidence_schema(event_report_schema(REPORT,evidence),evidence), escalation=request.get('completion_attempt',1)>=2), evidence))
                     audit = self._stage(run_id, 'reverification', lambda: self._audit(evidence, report, require_all_news=require_all_news, deliberation=deliberation))
                     audit = self._current_audit(audit, evidence, report, deliberation=deliberation)
             self._save(run_id, 'final', {'report': report, 'verification': audit,
@@ -605,6 +620,7 @@ class WorkflowService:
                                       'orchestration': {'pattern': 'observation_retrieval_analysis_review_one_repair',
                                                         'inspired_by': 'MiroFish ReportAgent ReAct',
                                                         'mirofish_simulation_executed': False},
+                                      'model_provenance': self._model_provenance(run_id),
                                       'basis': 'snapshot_excerpt_analysis', 'completed_at': now()})
             from review_routing import route_review
             self._save(run_id,'review_plan',route_review({'id':run_id,'results':{'verification':audit,'risk_verification':risk_audit,'evidence':evidence,'coverage':enrichment['coverage']}}))

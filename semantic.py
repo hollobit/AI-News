@@ -167,7 +167,7 @@ Do not treat arXiv versions as new papers; compare only statements present in su
     return result
 
 
-def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_timeout=900, reasoning_effort='medium'):
+def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_timeout=900, reasoning_effort=None, escalation=False):
     """Run an approved excerpt-only structured request without tools or bot secrets."""
     if os.environ.get("NEWS_EXTERNAL_ANALYSIS_ENABLED") != "1":
         raise RuntimeError("외부 의미 분석이 아직 활성화되지 않았습니다.")
@@ -175,15 +175,23 @@ def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_t
     if not executable:
         raise RuntimeError("의미 분석에는 Codex CLI 설치와 로그인이 필요합니다.")
     from llm_runtime import LLMRuntime, infer_role
+    from model_policy import policy, StructuredResult, input_digest
+    role = role or infer_role(prompt, schema_definition)
+    selected = policy(role, escalation=escalation)
+    reasoning_effort = reasoning_effort or selected['reasoning_effort']
     if reasoning_effort not in {'low','medium','high'}:
         raise ValueError('지원되지 않는 분석 추론 설정입니다.')
     timeout=max(1,min(240,float(timeout)))
-    with LLMRuntime(queue_timeout=queue_timeout).slot(role or infer_role(prompt, schema_definition), len(prompt),
-                           len(json.dumps(schema_definition, ensure_ascii=False)), max_run_seconds=timeout) as ticket:
-        return _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=timeout, reasoning_effort=reasoning_effort)
+    with LLMRuntime(queue_timeout=queue_timeout).slot(role, len(prompt),
+                           len(json.dumps(schema_definition, ensure_ascii=False)), max_run_seconds=timeout,
+                           model=selected['model'], reasoning_effort=reasoning_effort) as ticket:
+        result = _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=timeout,
+                                     reasoning_effort=reasoning_effort, model=selected['model'])
+        return StructuredResult(result, dict(selected, role=role, reasoning_effort=reasoning_effort,
+            call_id=ticket.id, input_hash=input_digest(prompt)))
 
 
-def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=240, reasoning_effort='medium'):
+def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=240, reasoning_effort='medium', model=None):
     # Child only needs authentication, TLS and executable paths, not Telegram secrets.
     environment = {key: value for key, value in os.environ.items()
                    if key in {"PATH", "HOME", "TMPDIR", "LANG", "LC_ALL", "CODEX_HOME", "SSL_CERT_FILE"}}
@@ -195,6 +203,8 @@ def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=2
                    "--sandbox", "read-only", "--color", "never", "--output-schema", str(schema),
                    "--output-last-message", str(output), "-c", 'web_search="disabled"',
                    '-c', f'model_reasoning_effort="{reasoning_effort}"']
+        if model:
+            command.extend(['--model', model])
         for feature in ("shell_tool", "unified_exec", "apps", "plugins", "hooks", "multi_agent", "skill_search",
                         "browser_use", "image_generation", "view_image", "code_mode_host"):
             command.extend(["--disable", feature])

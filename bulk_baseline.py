@@ -338,7 +338,8 @@ class BulkBaselineService:
                     audit=dict(audit,accepted=accepted,report_hash=digest(record),evidence_hash=digest(snapshots[identity]['evidence']))
                     result=dict(record,verification=audit,verified=accepted,run_id=run_id,source_scope=snapshots[identity]['source_scope'],
                                 evidence=snapshots[identity]['evidence'],input_hash=snapshots[identity]['input_hash'],sectors=preparations[identity]['sectors'],
-                                strategic_value=preparations[identity]['strategic_value'])
+                                strategic_value=preparations[identity]['strategic_value'],
+                                model_provenance=[p for p in (getattr(raw,'provenance',None),getattr(response,'provenance',None)) if p])
                     outcomes[identity]=('verified' if accepted else 'needs_review',result,'; '.join(issues)[:500])
         except Exception as exc:
             from engine_errors import infrastructure_error

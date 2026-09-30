@@ -35,7 +35,7 @@ def classify_failure(stderr, returncode=None):
         ('rate_limit', r'usage limit|rate.?limit|quota|too many requests|\b429\b|credits? (?:exhausted|remaining)'),
         ('authentication', r'\b401\b|unauthorized|token_invalidated|refresh_token|not logged in|authentication'),
         ('permission', r'operation not permitted|permission denied|sandbox.*denied'),
-        ('configuration', r'unexpected argument|unknown (?:feature|model)|invalid.*schema|unsupported|model.*not.*found'),
+        ('configuration', r'unexpected argument|unknown (?:feature|model)|invalid.*schema|unsupported|model.*not.*(?:found|supported|available)'),
         ('network', r'connection|network|dns|stream disconnected|timed out|\b50[234]\b|transport'),
     )
     return next((code for code, pattern in patterns if re.search(pattern, text)), 'execution_failed')

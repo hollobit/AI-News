@@ -66,6 +66,34 @@ class CompletionTests(unittest.TestCase):
         for context in reversed(self.patches):context.stop()
         self.ledger.close();self.temp.cleanup()
 
+    def test_recent_first_keeps_backlog_turn_and_bounded_run(self):
+        for i,item in enumerate(self.items):item['day']=f'2026-09-{i+1:02d}'
+        runner=CompletionRunner(self.path,'cycle',workers=1,batch_size=1,recent_first=True,max_rounds=2)
+        runner.run()
+        with connect(self.path) as db:
+            rounds=[json.loads(r[0]) for r in db.execute('SELECT snapshot_json FROM rsi_rounds ORDER BY number')]
+            self.assertEqual([r['items'][0]['day'] for r in rounds],['2026-09-06','2026-09-05'])
+            self.assertEqual(tuple(db.execute('SELECT status,pause_requested FROM rsi_cycles').fetchone()),('waiting',0))
+
+    def test_changed_input_archives_history_but_same_rejection_keeps_attempts(self):
+        runner=CompletionRunner(self.path,'cycle');runner.prepare()
+        with connect(self.path) as db:
+            db.execute("UPDATE corpus_completion_documents SET status='needs_review',attempts=3")
+            db.execute("UPDATE rsi_cycles SET status='paused'")
+        self.items[0]['text']='변경된 원문'
+        runner.prepare()
+        with connect(self.path) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM completion_input_history').fetchone()[0],1)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM corpus_completion_documents WHERE attempts=3 AND status='needs_review'").fetchone()[0],5)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM corpus_completion_documents WHERE attempts=0 AND status='pending'").fetchone()[0],1)
+
+    def test_engine_stop_is_not_user_pause(self):
+        runner=CompletionRunner(self.path,'cycle',workers=1,batch_size=1)
+        with patch.object(runner,'work',lambda service,planned:(planned,{'status':'failed','error':'[engine:timeout]'})):
+            runner.run()
+        with connect(self.path) as db:
+            self.assertEqual(tuple(db.execute('SELECT status,pause_requested FROM rsi_cycles').fetchone()),('paused',0))
+
     def test_resume_appends_new_documents_once(self):
         runner=CompletionRunner(self.path,'cycle')
         runner.prepare()
