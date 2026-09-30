@@ -44,7 +44,7 @@ def alive(pid):
 
 def launch(path, cycle):
     command=[sys.executable,str(ROOT/'corpus_completion.py'),'--db',str(Path(path).resolve()),
-             '--cycle',cycle,'--workers','1','--batch-size','1','--recent-first','--max-rounds','4']
+             '--cycle',cycle,'--workers','2','--batch-size','1','--recent-first','--max-rounds','20']
     with (ROOT/'.runtime/scheduled-risks-worker.log').open('ab') as log:
         child=subprocess.Popen(command,cwd=ROOT,stdout=log,stderr=log,start_new_session=True)
     return child.pid
@@ -105,7 +105,7 @@ def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=
         db.commit()
         pid=launcher(path,identity)
         db.execute('UPDATE risk_schedule SET launched_pid=? WHERE id=1',(pid,))
-        event(db,identity,'launched',{'pid':pid,'workers':1,'batch_size':1,'max_rounds':4,'recent_first':True})
+        event(db,identity,'launched',{'pid':pid,'workers':2,'batch_size':1,'max_rounds':20,'recent_first':True})
         return {'stage':'started','cycle':identity,'pid':pid,'verified_before':verified}
 
 

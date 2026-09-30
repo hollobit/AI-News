@@ -578,3 +578,5 @@ API: GET/POST `/api/papers/pipeline` (`enabled` boolean), GET `/api/papers/strat
 [운영 화면](http://127.0.0.1:8001/operations#pipeline-health)에서 Telegram 확인 → 기사 추출 → 기본 분석 → 상세·위험 분석과 문제 이력을 확인한다. `ops/com.hollobit.ai-news.health.plist`는 `operations_health.py --watch`를 상시 실행해 2초마다 상태를 점검한다. 운영 순환 패널도 2초마다 자동 갱신하며, 정상 응답 시 변경 반영은 대략 2~4초다. 숨겨진 탭은 조회를 멈추고 복귀 시 즉시 갱신한다. 마지막 점검이 15초 이상 오래되면 화면에 연결 지연을 표시한다. 수동 점검도 `.venv/bin/python operations_health.py`로 실행할 수 있다. 운영 상태 API는 `/api/operations/health`, 읽음 처리는 `POST /api/operations/incidents/<id>/ack`다.
 
 새 문제는 macOS 알림으로 요청하고 운영 화면에 지속 보관한다. 실제 배너가 보이지 않으면 macOS 알림 권한과 집중 모드를 확인한다. 확인 표시는 분석 재개나 장애 해소를 뜻하지 않는다. 로그인 세션이 없거나 Mac이 잠든 동안에는 예약 점검·알림이 실행되지 않는다. 재설치 시 health plist를 `~/Library/LaunchAgents/`에 복사하고 현재 등록 여부를 확인한 뒤 `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.hollobit.ai-news.health.plist`로 등록한다. Telegram 외부 전송은 사용하지 않는다.
+
+상세·위험 정기 분석은 `scheduled_risks.py`에서 **작업자 2명·기사 1건·실행당 최대 20회차**로 실행한다. 최신 기사 우선과 과거 적체 처리를 병행하며 모델 호출 공유 상한 6개, 독립 검토와 복구 예산을 유지한다. 이미 실행 중인 묶음은 기존 설정으로 마무리하고 다음 실행부터 적용된다.
