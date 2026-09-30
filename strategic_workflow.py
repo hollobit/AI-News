@@ -19,6 +19,8 @@ ROLES = [
     {'id': 'enrichment', 'title': 'URL 원문 보강', 'kind': 'retrieval'},
     {'id': 'morphology', 'title': '형태소·키워드 분석', 'kind': 'kiwi'},
     {'id': 'graph_retrieval', 'title': 'GraphRAG 연관 근거 검색', 'kind': 'retrieval'},
+    {'id': 'integrated_analysis', 'title': '통합 전략·위험 분석', 'kind': 'llm'},
+    {'id': 'integrated_verification', 'title': '통합 독립 검토', 'kind': 'llm'},
     {'id': 'national', 'title': '국가·정부 전략 분석가', 'kind': 'llm'},
     {'id': 'technology', 'title': '기술·사업 전략 분석가', 'kind': 'llm'},
     {'id': 'risk_assessment', 'title': '현재·미래 위험 평가', 'kind': 'llm'},
@@ -179,6 +181,12 @@ class WorkflowService:
             self._save(self.active, 'model_call_' + str(provenance['call_id']), provenance)
         return result
 
+    def _validated_call(self, stage, prompt, schema, validate, escalation=False):
+        if not self.active:
+            return validate(self._analyze(prompt, schema, escalation=escalation))
+        from workflow_efficiency import cached_call
+        return cached_call(self, self.active, stage, prompt, schema, validate, escalation=escalation)
+
     def _model_provenance(self, run_id):
         with self.db() as db:
             return [json.loads(r[0]) for r in db.execute(
@@ -207,14 +215,17 @@ class WorkflowService:
         if self.closed:
             raise Paused()
 
-    def _stage(self, run_id, stage, function):
+    def _stage(self, run_id, stage, function, dependencies=None):
         self._check()
         saved = self._artifact(run_id, stage)
-        if saved is not None:
+        expected = digest(dependencies) if dependencies is not None else None
+        if saved is not None and (expected is None or self._artifact(run_id, 'input_' + stage) == expected):
             return saved
         self._event(run_id, stage, 'running')
         try:
-            return self._save(run_id, stage, function())
+            result = self._save(run_id, stage, function())
+            if expected is not None:self._save(run_id, 'input_' + stage, expected)
+            return result
         except Paused:
             raise
         except Exception:
@@ -317,7 +328,8 @@ class WorkflowService:
         return value
 
     def _prompt(self, role, evidence, context):
-        context=compact_context(context,evidence)
+        from workflow_efficiency import role_context
+        context=compact_context(role_context(role, context),evidence)
         request=context.get('request') or {}
         full_scope=bool(request.get('full_corpus') or request.get('completion'))
         coverage_instruction=('전수 처리 요청: synthesis/revision은 모든 telegram_excerpt 뉴스 ID마다 최소 한 claim의 실제 근거 연결을 포함한다. '
@@ -432,7 +444,11 @@ class WorkflowService:
             schema=event_audit_schema(schema,report['event_observations'])
         if require_all_news:audit_context['request']={'completion':True}
         critical = risk and any(r.get('current_severity') in ('high','critical') for r in report.get('risks',[]))
-        audit = self._analyze(self._prompt('risk_verification' if risk else 'verification', evidence, audit_context), evidence_schema(schema,evidence), escalation=critical)
+        return self._validated_call('risk_verification' if risk else 'verification',
+            self._prompt('risk_verification' if risk else 'verification', evidence, audit_context), evidence_schema(schema,evidence),
+            lambda value: self._validate_audit(value, evidence, report, risk, require_all_news, deliberation), escalation=critical)
+
+    def _validate_audit(self, audit, evidence, report, risk=False, require_all_news=False, deliberation=None):
         all_ids = {e['id'] for e in evidence}
         cited = {ref for claim in report['risks' if risk else 'claims'] for ref in claim['evidence_ids']}
         if risk:
@@ -551,12 +567,19 @@ class WorkflowService:
                 snapshot, request = json.loads(row[0]), json.loads(row[1])
             enrichment = self._stage(run_id, 'enrichment', lambda: self._enrich(snapshot))
             evidence = enrichment['evidence']
+            from workflow_compact import eligible, execute
+            use_compact = eligible(snapshot, request, enrichment)
+            self._save(run_id, 'execution_plan', {'path':'compact-v1' if use_compact else 'multi-role',
+                'reason':'single_simple_document' if use_compact else 'sensitive_complex_retry_or_legacy_request'})
+            if use_compact:
+                execute(self, run_id, evidence, request, enrichment)
+                return
             keywords = self._stage(run_id, 'morphology', lambda: [
                 {'evidence_id': e['id'], 'keywords': self.extractor(e['text'])[:40]} for e in evidence])
             retrieval = self._stage(run_id, 'graph_retrieval', lambda: self._retrieve_graph(snapshot, request))
             context = {'keywords': keywords, 'coverage': enrichment['coverage'], 'graph_context': retrieval, 'request': request}
             def analyze(role):
-                return self._stage(run_id, role, lambda: self._report(self._analyze(self._prompt(role, evidence, context), evidence_schema(REPORT,evidence)), evidence))
+                return self._stage(run_id, role, lambda: self._validated_call(role, self._prompt(role, evidence, context), evidence_schema(REPORT,evidence), lambda value:self._report(value,evidence)))
             with ThreadPoolExecutor(max_workers=3) as pool:
                 futures = {role: pool.submit(analyze, role) for role in ('national', 'technology')}
                 risk_future=pool.submit(self._stage,run_id,'risk_assessment',lambda:validate_risk_report(self._analyze(
@@ -649,6 +672,13 @@ class WorkflowService:
         stages = {role['id']: 'pending' for role in ROLES}
         for event in events:
             stages[event['stage']] = event['status']
+        compact = (artifacts.get('execution_plan') or {}).get('path') == 'compact-v1'
+        if compact:
+            for stage in ('national', 'technology', 'deliberation', 'graph_retrieval', 'morphology'):
+                stages[stage] = 'skipped'
+        elif row['status'] in ('complete', 'needs_review'):
+            for stage in ('integrated_analysis', 'integrated_verification'):
+                stages[stage] = 'skipped'
         if row['status'] in ('complete', 'needs_review') and 'revision' not in artifacts:
             stages['revision'] = stages['reverification'] = 'skipped'
         if row['status'] in ('complete', 'needs_review') and 'source_repair' not in artifacts:
