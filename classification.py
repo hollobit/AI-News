@@ -20,6 +20,7 @@ TOPICS = OrderedDict([
 
 _FULL_DATE = re.compile(r"(?<!\d)(\d{4})[-./](\d{1,2})[-./](\d{1,2})(?!\d)")
 _SHORT_DATE = re.compile(r"(?<![\d/])(\d{1,2})[-/](\d{1,2})(?![\d/])")
+_SECTION_START = re.compile(r"^\s*(?:\d\ufe0f?\u20e3|🔟|\d+[.)])\s+")
 _ITEM_START = re.compile(r"^\s*(?:[-•]\s+|\*\s+|\d+[.)]\s+)")
 _URL = re.compile(r"https?://[^\s<>\])}]+", re.IGNORECASE)
 _MARKDOWN_URL = re.compile(r"\[[^\]]*\]\((https?://[^\s)]+)\)", re.IGNORECASE)
@@ -217,6 +218,7 @@ def _article_lines(lines):
 
 
 def _title_and_excerpt(lines):
+    lines = [_SECTION_START.sub("", lines[0], count=1), *lines[1:]] if lines else []
     first = _plain(_ITEM_START.sub("", lines[0], count=1)) if lines else ""
     first = re.sub(r"^(?:⭐\s*\d+\s*\|\s*)", "", first)
     first = re.sub(r"^\[?\d{4}[-./]\d{1,2}[-./]\d{1,2}\]?\s*", "", first)
@@ -270,6 +272,30 @@ def _entry(lines, day, date_basis, kind):
     }
 
 
+def article_starts(lines):
+    """Keep an explicitly numbered story heading above its explanation bullets.
+
+    A single trailing source belongs to that section, not its last sub-bullet.
+    Explicit bullet links and separately dated stories retain their boundaries.
+    """
+    starts = {i for i, line in enumerate(lines) if _ITEM_START.match(line) or _SECTION_START.match(line)}
+    sections = [i for i, line in enumerate(lines) if _SECTION_START.match(line)]
+    for position, start in enumerate(sections):
+        end = sections[position + 1] if position + 1 < len(sections) else len(lines)
+        block = _article_lines(lines[start:end])
+        children = [i for i in sorted(starts) if start < i < start + len(block)]
+        urls = _safe_urls('\n'.join(block))
+        if len(set(urls)) != 1 or not children:
+            continue
+        explicit_children = any(_safe_urls(lines[i]) or
+            re.match(r'^\s*[-*•]\s+\[?\d{1,4}[-/.]\d', lines[i]) for i in children)
+        # A URL between child items belongs to that child, not a section footer.
+        first_url = next(i for i in range(start, start + len(block)) if _safe_urls(lines[i]))
+        if not explicit_children and first_url > max(children):
+            starts.difference_update(children)
+    return sorted(starts)
+
+
 def classify_message(row: dict) -> list[dict]:
     """Split one stored Telegram row into dated, topic-classified news entries."""
     body = str(row.get("text") or "").strip()
@@ -280,7 +306,7 @@ def classify_message(row: dict) -> list[dict]:
     telegram = _telegram_day(row)
     context_year = _context_year(body, header)
 
-    starts = [index for index, line in enumerate(lines) if _ITEM_START.match(line)]
+    starts = article_starts(lines)
     articles = []
     for position, start in enumerate(starts):
         end = starts[position + 1] if position + 1 < len(starts) else len(lines)

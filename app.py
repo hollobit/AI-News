@@ -38,7 +38,7 @@ from news_repository import (unindexed_link_rows, hidden_link_rows, normalized_m
 
 ROOT = Path(__file__).resolve().parent
 KST = ZoneInfo("Asia/Seoul")
-CLASSIFICATION_VERSION = "1"
+CLASSIFICATION_VERSION = "2-hierarchical-sources"
 _LINK_CACHE = {"signature": None, "groups": []}
 _LINK_CACHE_LOCK = threading.Lock()
 _KEYWORD_SCHEMA_PATHS = set()
@@ -78,8 +78,23 @@ def index_message(db, row):
 def rebuild_articles(db):
     # Only derived rows change. Original Telegram messages remain intact.
     with db:
-        db.execute("DELETE FROM articles")
+        db.execute("""CREATE TABLE IF NOT EXISTS article_reindex_history (
+            id INTEGER PRIMARY KEY, chat_id TEXT, message_id INTEGER, parser_version TEXT,
+            previous_json TEXT, replacement_json TEXT,
+            created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))""")
+        fields = ('title','excerpt','text','day','date_basis','topic','source_url','kind')
         for row in db.execute("SELECT * FROM news").fetchall():
+            old = [dict(r) for r in db.execute(
+                'SELECT * FROM articles WHERE chat_id=? AND message_id=? ORDER BY item_index',
+                (row['chat_id'], row['message_id']))]
+            parsed = classify_message(dict(row))
+            if [{k: r[k] for k in fields} for r in old] == parsed:
+                continue
+            if old:
+                db.execute("""INSERT INTO article_reindex_history
+                    (chat_id,message_id,parser_version,previous_json,replacement_json)
+                    VALUES(?,?,?,?,?)""", (row['chat_id'],row['message_id'],CLASSIFICATION_VERSION,
+                    json.dumps(old,ensure_ascii=False),json.dumps(parsed,ensure_ascii=False)))
             index_message(db, row)
         db.execute("INSERT OR REPLACE INTO state VALUES ('classification_version', ?)",
                    (CLASSIFICATION_VERSION,))

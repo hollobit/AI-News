@@ -182,3 +182,33 @@ AI 뉴스 브리핑 | 2025-12-18"""))[0]
 
 if __name__ == "__main__":
     unittest.main()
+
+class HierarchicalBriefingTests(unittest.TestCase):
+    def test_trailing_source_uses_section_heading_not_last_related_story(self):
+        for marker in ('3️⃣', '3.', '3)'):
+            text = f'''뉴스 브리핑 | 2026-10-01
+{marker} [공공AX] 포티투마루, 9개국에 공공 AX 전략 제시
+- 네이버, 멕시코 정부 협력 제안
+- 고려대 세종캠, 전교생 AI 교육으로 AX 인재 양성
+🔗 https://www.epnc.co.kr/news/articleView.html?idxno=407591
+
+4️⃣ [AI챔피언] 전국 공공기관 인증 소식
+- 별도 소식
+🔗 https://example.org/other?id=5'''
+            result = classify_message(row(text))
+            self.assertEqual(len(result), 2)
+            self.assertIn('포티투마루', result[0]['title'])
+            self.assertNotIn('고려대', result[0]['title'])
+            self.assertNotIn('AI챔피언', result[0]['text'])
+            self.assertEqual(result[0]['source_url'], 'https://www.epnc.co.kr/news/articleView.html?idxno=407591')
+            self.assertIn('AI챔피언', result[1]['title'])
+
+    def test_section_does_not_override_individually_linked_bullet_titles(self):
+        result = classify_message(row('''1️⃣ 여러 소식
+- 첫 번째 독립 기사
+https://example.org/first
+- 두 번째 독립 기사
+https://example.org/second
+2️⃣ 기타 소식'''))
+        self.assertEqual([a['title'] for a in result], ['첫 번째 독립 기사', '두 번째 독립 기사'])
+        self.assertNotIn('기타 소식', result[-1]['text'])

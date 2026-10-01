@@ -258,3 +258,24 @@ class NewsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_hierarchical_reindex_preserves_raw_and_previous_rows(tmp_path):
+    import json
+    from app import index_message
+    db = connect(tmp_path / 'reindex.sqlite3')
+    raw = '3️⃣ [공공AX] 포티투마루 전략\n- 고려대 교육\nhttps://example.org/article?id=1'
+    db.execute('INSERT INTO news VALUES(?,?,?,?,?,?,?,?,?,?)',
+               ('test', 1, 'test', 'briefing', '', raw, '', '2026-10-01', '2026-10-01', 1))
+    record = db.execute('SELECT * FROM news').fetchone()
+    index_message(db, record)
+    db.execute("UPDATE articles SET title='고려대 교육'")
+    db.commit()
+    rebuild_articles(db)
+    assert '포티투마루' in db.execute('SELECT title FROM articles').fetchone()[0]
+    assert db.execute('SELECT text FROM news').fetchone()[0] == raw
+    history = db.execute('SELECT previous_json FROM article_reindex_history').fetchone()[0]
+    assert json.loads(history)[0]['title'] == '고려대 교육'
+    rebuild_articles(db)
+    assert db.execute('SELECT count(*) FROM article_reindex_history').fetchone()[0] == 1
+    db.close()
