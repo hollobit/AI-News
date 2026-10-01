@@ -20,7 +20,8 @@ def processing_events(db, limit=200):
 
 
 class ObservatoryRuntime:
-    def __init__(self,path,status_loader=None):
+    def __init__(self,path,status_loader=None,*,isolated=False):
+        self.isolated=isolated
         self.path=str(path);self.lock=threading.RLock();self.views={};self.pending=set();self.checked={};self.errors={}
         self.pool=ThreadPoolExecutor(max_workers=1,thread_name_prefix='observatory-views')
         self.directory=Path(str(path)+'.observatory');self.directory.mkdir(exist_ok=True)
@@ -62,12 +63,17 @@ class ObservatoryRuntime:
                     if saved.get('window')==window and saved.get('expanded',False)==expanded and isinstance(saved.get('data',{}).get('days'),list):
                         with self.lock:self.views[view_key]=saved['data']
                 except (ValueError,OSError):pass
-            with sqlite3.connect(self.path,timeout=2) as db:
-                db.row_factory=sqlite3.Row
-                cancellable_db(db)
-                result=read_observatory(db,window,expanded)
-            checkpoint()
-            temp=file.with_suffix('.tmp');temp.write_text(json.dumps({'window':window,'expanded':expanded,'data':result},ensure_ascii=False));temp.replace(file)
+            if self.isolated:
+                from projection_worker import prepare
+                prepare('observatory',self.path,window,int(expanded),file)
+                result=json.loads(file.read_text())['data']
+            else:
+                with sqlite3.connect(self.path,timeout=2) as db:
+                    db.row_factory=sqlite3.Row
+                    cancellable_db(db)
+                    result=read_observatory(db,window,expanded)
+                checkpoint()
+                temp=file.with_suffix('.tmp');temp.write_text(json.dumps({'window':window,'expanded':expanded,'data':result},ensure_ascii=False));temp.replace(file)
             with self.lock:self.views[view_key]=result;self.errors.pop(view_key,None)
         except Exception as error:
             with self.lock:self.errors[view_key]='관측 자료 재집계 실패: '+type(error).__name__

@@ -151,7 +151,7 @@ def retrieve(graph, question, node_ids=None):
         n=deepcopy(index.nodes[identity]);n['evidence_ids']=[r for r in n.get('evidence_ids',[]) if r in refs]
         nodes.append(n)
     edges=[]
-    for edge in index.edges:
+    for edge in (index.edges.between(selected_set) if hasattr(index.edges,'between') else index.edges):
         checkpoint()
         attached=[r for r in edge.get('evidence_ids',[]) if r in refs]
         if edge['source'] in selected_set and edge['target'] in selected_set and attached:

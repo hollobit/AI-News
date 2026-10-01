@@ -263,12 +263,15 @@ def sync_keyword_index(db, rows, prepared=None) -> None:
                    [(identity,) for identity in removed_documents])
 
 
-def _metadata(db, keyword_ids=None) -> dict[str, dict]:
+def _metadata(db, keyword_ids=None, *, counts=True) -> dict[str, dict]:
     keys = list(dict.fromkeys(keyword_ids)) if keyword_ids is not None else None
     batches = [None] if keys is None else [keys[i:i+400] for i in range(0,len(keys),400)]
     result = {}
     for batch in batches:
         where = '' if batch is None else ' WHERE t.keyword_id IN ('+','.join('?' for _ in batch)+')'
+        if not counts:
+            result.update((row['keyword_id'],dict(row)) for row in db.execute('SELECT t.* FROM keyword_terms t'+where,batch or []))
+            continue
         rows = db.execute("""SELECT t.keyword_id,t.label,t.first_seen,t.first_observed_at,
             t.is_generic,COUNT(DISTINCT r.document_id) AS document_count
             FROM keyword_terms t LEFT JOIN record_keywords k ON k.keyword_id=t.keyword_id
@@ -306,7 +309,13 @@ def _record_mappings(db, record_ids=None) -> dict[str, list]:
 
 def annotate_items(db, items: list[dict]) -> list[dict]:
     mappings = _record_mappings(db, [keyword_record_id(item) for item in items])
-    metadata = _metadata(db, (row["keyword_id"] for rows in mappings.values() for row in rows))
+    metadata = _metadata(db, (row["keyword_id"] for rows in mappings.values() for row in rows), counts=False)
+    displayed=set()
+    for rows in mappings.values():
+        valid=[row for row in rows if row['keyword_id'] in metadata]
+        prominent=[row for row in valid if not metadata[row['keyword_id']]['is_generic']] or valid
+        displayed.update(row['keyword_id'] for row in prominent[:_PROMINENT_LIMIT])
+    metadata.update(_metadata(db,displayed))
     result = []
     for original in items:
         item = dict(original)
@@ -344,7 +353,7 @@ def read_keyword_record(db, record_id: str) -> dict | None:
 
 
 def keyword_discovery(db, items: list[dict], date: str, selected_keyword: str = "") -> dict:
-    metadata = _metadata(db, (key for item in items for key in item.get("_all_keyword_ids", [])))
+    metadata = _metadata(db, (key for item in items for key in item.get("_all_keyword_ids", [])), counts=False)
     document_words = defaultdict(set)
     for item in items:
         document_words[document_id(item)].update(item.get("_all_keyword_ids") or [])
@@ -371,12 +380,15 @@ def keyword_discovery(db, items: list[dict], date: str, selected_keyword: str = 
         "document_count": count, "relation_type": "co_occurs",
     } for (source, target), count in sorted(
         pairs.items(), key=lambda value: (-value[1], value[0]))[:40]]
+    newest = [key for key in ranked if date != 'all' and metadata[key]['first_seen']==date][:20]
+    needed = set(ranked[:20]+newest)
+    if selected_keyword in scope_counts:needed.add(selected_keyword)
+    metadata.update(_metadata(db,needed))
     selected = metadata.get(selected_keyword)
     return {
         "selected_keyword": (_term(metadata, selected_keyword, date, scope_counts[selected_keyword])
                              if selected and selected_keyword in scope_counts else None),
-        "new_keywords": [_term(metadata, key, date, scope_counts[key]) for key in ranked
-                         if date != "all" and metadata[key]["first_seen"] == date][:20],
+        "new_keywords": [_term(metadata, key, date, scope_counts[key]) for key in newest],
         "top_keywords": [_term(metadata, key, date, scope_counts[key]) for key in ranked[:20]],
         "relationships": relationships,
         "scope_note": ("제목·본문·URL의 모든 단어를 로컬에서 색인했습니다. 대표 목록과 관계는 읽기 쉬운 "

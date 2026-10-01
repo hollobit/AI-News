@@ -6,21 +6,34 @@ import sqlite3
 from code_policy import policy
 
 
+INTERNAL = {'evidence_blob_migrations','completion_report_digests','completion_admission_checks',
+            'projection_revisions','projection_source_meanings','source_changes','source_change_state','morphology_cache'}
+
+
 def signature(db_path, root):
     if not Path(db_path).is_file(): return None
     with sqlite3.connect(db_path,timeout=15) as db:
         db.execute('CREATE TABLE IF NOT EXISTS publication_revision(id INTEGER PRIMARY KEY,revision INTEGER NOT NULL)')
         db.execute('INSERT OR IGNORE INTO publication_revision VALUES(1,0)')
         tables=sorted(r[1] for r in db.execute('PRAGMA table_list') if r[2]=='table'
-                      and not r[1].startswith(('sqlite_', 'publication_')) and r[1] not in {'evidence_blob_migrations'})
+                      and not r[1].startswith(('sqlite_', 'publication_')) and r[1] not in INTERNAL)
         triggers={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='trigger'")}
         changed=False
+        for table in INTERNAL | {'state'}:
+            for event in ('INSERT','UPDATE','DELETE'):
+                old='publication_v1_'+hashlib.sha256((table+event).encode()).hexdigest()[:24]
+                if old in triggers:
+                    db.execute(f'DROP TRIGGER "{old}"');changed=True
         for table in tables:
             for event in ('INSERT','UPDATE','DELETE'):
-                name='publication_v1_'+hashlib.sha256((table+event).encode()).hexdigest()[:24]
+                name=('publication_v2_' if table=='state' else 'publication_v1_')+hashlib.sha256((table+event).encode()).hexdigest()[:24]
                 if name in triggers: continue
                 quoted='"'+table.replace('"','""')+'"'
-                db.execute(f'CREATE TRIGGER "{name}" AFTER {event} ON {quoted} BEGIN UPDATE publication_revision SET revision=revision+1 WHERE id=1; END')
+                condition=''
+                if table=='state':
+                    refs=('OLD','NEW') if event=='UPDATE' else ('OLD',) if event=='DELETE' else ('NEW',)
+                    condition=' WHEN '+ ' OR '.join(f"({ref}.key!='offset' AND {ref}.key NOT GLOB 'collector_*')" for ref in refs)
+                db.execute(f'CREATE TRIGGER "{name}" AFTER {event} ON {quoted}{condition} BEGIN UPDATE publication_revision SET revision=revision+1 WHERE id=1; END')
                 changed=True
         if changed:db.execute('UPDATE publication_revision SET revision=revision+1 WHERE id=1')
         version=db.execute('SELECT revision FROM publication_revision WHERE id=1').fetchone()[0]

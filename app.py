@@ -342,21 +342,12 @@ def warm_strategy_views(path, stop, source_status):
             warm_revision = (source_revision, list_registry(db)['version'])
             if source_revision is not None and warm_revision != last_source:
                 view_status('preparing')
-                prepared=dataset(db)
-                from document_features import persist
-                persist(db,prepared['items'])
-                if stop.is_set():
-                    break
-                read_view(db, {'view': ['overview'], 'date': ['all']}, source_status())
+                from projection_worker import prepare
+                prepare('strategy',db_path)
+                if stop.is_set():break
                 last_source = warm_revision
             if stop.is_set():
                 break
-            graph_revision = revision_token(db)
-            if graph_revision is not None and graph_revision != last_graph:
-                graph = load_integrated_graph(db, {}, for_retrieval=True)
-                from graph_retrieval import get_index
-                get_index(graph)
-                last_graph = graph_revision
             view_status('ready')
         except Exception as error:
             view_status('retrying', error)

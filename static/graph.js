@@ -323,7 +323,7 @@
     try {
       const query = queryString();
       const requests = [fetch('/api/graph?' + query, { signal: controller.signal })];
-      if (!options.poll)
+      if (!options.poll || state.integrated?.status === 'preparing')
         requests.push(fetch('/api/graph/integrated?' + query, { signal: controller.signal }));
       const responses = await Promise.all(requests);
       const response = responses[0];
@@ -333,7 +333,9 @@
       if (responses[1]?.ok) data.integrated = await responses[1].json();
       adaptResult(data);
       const status = data.analysis?.status;
-      if (['queued', 'running'].includes(status)) {
+      const preparing = data.integrated?.status === 'preparing';
+      if (preparing) setStatus('최신 근거의 관계 지도를 준비하고 있습니다.');
+      if (preparing || ['queued', 'running'].includes(status)) {
         if (!state.pollDeadline) state.pollDeadline = Date.now() + 300000;
         if (state.pollDeadline && Date.now() >= state.pollDeadline) {
           setStatus('분석 시간이 5분을 넘었습니다. 잠시 뒤 다시 확인해 주세요.', true);

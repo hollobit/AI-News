@@ -113,3 +113,18 @@ def test_date_pushdown_and_pagination_match_legacy(tmp_path):
     selected=all_corpus_items(db,{'https://example.org/3'})
     assert [x['source_url'] for x in selected]==['https://example.org/3']
     db.close()
+
+
+def test_compact_news_retains_provenance_and_loads_full_body_by_stable_id(tmp_path):
+    from news_repository import read_news
+    db=connect(tmp_path/'news.db')
+    post(db,1,'공공 AI 설명\n긴 원문 설명입니다.\nhttps://example.org/a?key=1&part=2')
+    full=read_news(db,{},include_discovery=False)
+    compact=read_news(db,{'compact':['1'],'page_size':['40']},include_discovery=False)
+    item=compact['items'][0]
+    assert 'text' not in item and 'source_context' not in item
+    assert item['detail_id']==full['items'][0]['detail_id']
+    detail=read_news(db,{'date':[item['day']],'detail_id':[item['detail_id']]},include_discovery=False)
+    assert detail['items']==full['items']
+    assert read_news(db,{'detail_id':['a'*64]},include_discovery=False)['items']==[]
+    db.close()

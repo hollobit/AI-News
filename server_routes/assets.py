@@ -5,10 +5,16 @@ from news_repository import read_news
 
 def get(self, route, params):
     status = 200
-    if route.path == '/api/news':
+    if route.path in {'/api/news','/api/news/detail'}:
         db = self.services.connect(self.services.path)
         try:
-            result = read_news(db, parse_qs(route.query))
+            query = parse_qs(route.query)
+            if route.path.endswith('/detail'):
+                if not query.get('detail_id') or not query.get('date'):raise ValueError('Missing article identity')
+                result = read_news(db, {'detail_id':query['detail_id'],'date':query['date']}, include_discovery=False)
+                result = next(iter(result['items']), None)
+                if result is None:status,result=404,{'error':'기사가 변경되었거나 삭제되었습니다. 목록을 새로고침해 주세요.'}
+            else:result = read_news(db, query)
         except ValueError:
             status, result = (400, {'error': '올바른 날짜를 선택해 주세요.'})
         finally:

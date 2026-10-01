@@ -2,7 +2,7 @@
 import re
 from collections import Counter
 from datetime import datetime
-from news_repository import (joined_articles, unique_articles, KST, TOPICS, CONTENT_TYPES)
+from news_repository import (joined_articles, unique_articles, KST, TOPICS, CONTENT_TYPES, article_key)
 from keyword_index import annotate_items, keyword_discovery, public_item
 
 
@@ -29,10 +29,16 @@ def read_news(db, params, *, include_discovery=True):
     keyword = params.get("keyword", [""])[0]
     if keyword and not re.fullmatch(r"[0-9a-f]{16}", keyword):
         raise ValueError("키워드 ID 형식이 올바르지 않습니다.")
-    filtered = annotate_items(db, unique_articles(
+    filtered = unique_articles(
         row for row in rows if (day == "all" or row["day"] == day)
         and (not channel or str(row["chat_id"]) == channel)
-        and (not query or query in row["text"].casefold())))
+        and (not query or query in row["text"].casefold()))
+    detail_id = params.get('detail_id', [''])[0]
+    if detail_id and not re.fullmatch(r'[0-9a-f]{64}', detail_id):
+        raise ValueError('Invalid article identity')
+    for item in filtered: item['detail_id'] = article_key(item)
+    if detail_id: filtered = [item for item in filtered if item['detail_id']==detail_id]
+    filtered = annotate_items(db, filtered)
     if keyword:
         filtered = [item for item in filtered
                     if keyword in item["_all_keyword_ids"]]
@@ -52,6 +58,9 @@ def read_news(db, params, *, include_discovery=True):
         items = items[(page-1)*page_size:page*page_size]
     from source_titles import title_projection
     items = [public_item(dict(item, **title_projection(item))) for item in items]
+    if params.get('compact', [''])[0] == '1':
+        items = [dict({k:v for k,v in item.items() if k not in {'text','source_context'}},
+                      has_full_text=bool(item.get('text') and item.get('text')!=item.get('excerpt'))) for item in items]
     return {"total":total,"page":page,"page_size":page_size,"date": day, "dates": dates, "channels": channels,
             "topics": topics, "types": [{"id": key, "title": title, "count": type_counts[key]}
                                            for key, title in CONTENT_TYPES.items()],

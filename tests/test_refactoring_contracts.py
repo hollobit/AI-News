@@ -56,3 +56,17 @@ def test_publication_signature_tracks_data_and_assets(tmp_path):
 def test_article_key_parameter_survives_publication():
     assert public_url('https://example.org/article?key=42&part=2')=='https://example.org/article?key=42&part=2'
     assert 'api_key=' not in public_url('https://example.org/article?key=42&api_key=secret')
+
+
+def test_publication_ignores_internal_cache_and_collector_heartbeat(tmp_path):
+    path=tmp_path/'db.sqlite'
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE state(key TEXT PRIMARY KEY,value TEXT)')
+        db.execute('CREATE TABLE completion_report_digests(run_id TEXT,digest TEXT)')
+    before=signature(path,tmp_path)
+    with sqlite3.connect(path) as db:
+        db.execute("INSERT INTO state VALUES('collector_last_success','now')")
+        db.execute("INSERT INTO completion_report_digests VALUES('run','hash')")
+    assert signature(path,tmp_path)==before
+    with sqlite3.connect(path) as db:db.execute("INSERT INTO state VALUES('demo','1')")
+    assert signature(path,tmp_path)!=before

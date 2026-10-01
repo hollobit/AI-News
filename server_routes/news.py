@@ -18,14 +18,19 @@ def get(self, route, params):
             self.send_json({'error': '근거 갱신 중입니다. 잠시 후 다시 조회해 주세요.'}, 503)
         return True
     if route.path == '/api/graph/integrated':
-        db = sqlite3.connect(self.services.path, timeout=15)
-        db.row_factory = sqlite3.Row
         try:
-            result = load_integrated_graph(db, parse_qs(route.query), presentation_only=True)
+            query=parse_qs(route.query)
+            key,graph,pending=self.services.question_service.snapshots.request(query)
+            if graph is None:
+                result,status={'status':'preparing','nodes':[],'edges':[],'evidence':[],
+                    'message':'최신 근거의 관계 지도를 준비하고 있습니다.'},202
+            else:
+                from graph_disk_index import preview
+                result=preview(graph,query)
         except ValueError:
-            result, status = ({'error': '그래프 필터를 확인해 주세요.'}, 400)
-        finally:
-            db.close()
+            result,status={'error':'그래프 필터를 확인해 주세요.'},400
+        except (RuntimeError,sqlite3.OperationalError):
+            result,status={'error':'근거 갱신 중입니다. 잠시 후 다시 조회해 주세요.'},503
         self.send_json(result, status)
         return True
     if route.path in {'/api/urls', '/api/urls/export.json'}:

@@ -19,7 +19,7 @@ from projection_cache import revision_token, content_digest
 from graph_rag import GraphResult, load_integrated_graph
 from graph_retrieval import RetrievalIndex
 
-FORMAT='graph-qa-snapshot-1:'+VERSION
+FORMAT='graph-qa-snapshot-2:'+VERSION
 
 def filters(params):
     result={}
@@ -34,7 +34,8 @@ def revision(path,params):
         db.row_factory=sqlite3.Row
         token=revision_token(db)
         if token is None:raise RuntimeError('근거 저장소 갱신 중')
-        return content_digest([FORMAT,token,correction_token(db),filters(params)])
+        from verified_cache import policy
+        return content_digest([FORMAT,policy(),token,correction_token(db),filters(params)])
 
 def export_graph(graph):
     index=graph.prepared_index
@@ -69,6 +70,7 @@ class GraphSnapshots:
         self.directory=Path(directory or (self.path+'.graph-snapshots'))
         self.directory.mkdir(parents=True,exist_ok=True)
         self.builder=builder or load_integrated_graph
+        self.isolated=builder is None
         self.lock=threading.RLock();self.ready=OrderedDict();self.pending={};self.errors={}
         self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='graph-snapshots')
 
@@ -97,6 +99,7 @@ class GraphSnapshots:
                 while len(self.errors)>16:self.errors.pop(next(iter(self.errors)))
 
     def _prepare(self,key,params):
+        if self.isolated:return self._prepare_disk(key,params)
         file=self.directory/(content_digest(params)+'.json.gz')
         graph=None
         if file.exists():
@@ -127,4 +130,48 @@ class GraphSnapshots:
             while len(self.ready)>3:self.ready.popitem(last=False)
         return graph
 
+    def _prepare_disk(self,key,params):
+        import subprocess,sys
+        from graph_disk_index import read
+        file=self.directory/(key+'.sqlite3')
+        if file.exists():
+            try:read(file,key)
+            except (sqlite3.DatabaseError,ValueError,KeyError,IndexError):file.unlink(missing_ok=True)
+        if not file.exists():
+            process=subprocess.Popen([sys.executable,__file__,'--build',self.path,str(file),key,json.dumps(params)],
+                                     stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            try:
+                while process.poll() is None:
+                    checkpoint()
+                    time.sleep(.1)
+                if process.returncode:raise RuntimeError('Graph index preparation failed')
+            finally:
+                if process.poll() is None:
+                    process.terminate()
+                    try:process.wait(timeout=3)
+                    except subprocess.TimeoutExpired:process.kill();process.wait()
+        if self.key(params)!=key:raise RuntimeError('저장 근거가 갱신되었습니다.')
+        graph=read(file,key)
+        with self.lock:
+            self.ready[key]=graph
+            while len(self.ready)>3:self.ready.popitem(last=False)
+        from graph_disk_index import prune
+        prune(self.directory)
+        return graph
+
     def close(self):self.executor.shutdown(wait=False,cancel_futures=True)
+
+if __name__=='__main__':
+    import sys
+    if len(sys.argv)!=6 or sys.argv[1]!='--build':raise SystemExit('Invalid graph preparation arguments')
+    path,file,key,raw=sys.argv[2:];params=json.loads(raw)
+    from graph_disk_index import write
+    target=Path(file);temporary=target.with_suffix('.'+str(os.getpid())+'.tmp')
+    try:
+        with sqlite3.connect(path,timeout=15) as db:
+            db.row_factory=sqlite3.Row
+            graph=load_integrated_graph(db,params,for_retrieval=True)
+            write(temporary,graph,key)
+        if revision(path,params)!=key:raise RuntimeError('Evidence changed during graph preparation')
+        temporary.replace(target)
+    finally:temporary.unlink(missing_ok=True)

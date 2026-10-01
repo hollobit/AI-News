@@ -9,7 +9,7 @@ TARGETS=(('improvement_catalog','payload_json'),('improvement_catalog_history','
          ('bulk_baseline_documents','prepared_json'),('bulk_baseline_documents','result_json'))
 
 
-def run(path, batches=1, size=100):
+def run(path, batches=1, size=100, progress=None):
     if batches<1 or not 1<=size<=1000:raise ValueError('Invalid bounded migration size')
     db=sqlite3.connect(path,timeout=30)
     try:
@@ -21,6 +21,7 @@ def run(path, batches=1, size=100):
             for _ in range(batches):
                 with db:result=migrate_batch(db,table,column,size)
                 for key,value in result.items():total[key]+=value
+                if progress and (_ % 100 == 0 or result['scanned']<size):progress(dict(total))
                 if result['scanned']<size:break
             stats.append(total)
         return stats
@@ -32,5 +33,7 @@ if __name__=='__main__':
     parser.add_argument('--db',default='data/news.sqlite3')
     parser.add_argument('--batches',type=int,default=1)
     parser.add_argument('--batch-size',type=int,default=100)
+    parser.add_argument('--all',action='store_true',help='Resume every remaining historical row in bounded transactions.')
     args=parser.parse_args()
-    print(json.dumps(run(args.db,args.batches,args.batch_size),ensure_ascii=False))
+    print(json.dumps(run(args.db,1000000000 if args.all else args.batches,args.batch_size,
+        progress=lambda row:print(json.dumps(row,ensure_ascii=False),flush=True)),ensure_ascii=False),flush=True)

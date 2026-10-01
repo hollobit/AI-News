@@ -118,7 +118,7 @@ def _bootstrap(path, port, queries, scope):
             base = status_response(db, 'baseline', limit=1)
             deep = status_response(db, 'improvement', limit=1)
         return dict(collector=collector, base=base, deep=deep, corpus=corpus_status.get(), sources=source_service.status())
-    observatory_service = scope.register(ObservatoryRuntime(path, status_loader=observatory_status))
+    observatory_service = scope.register(ObservatoryRuntime(path, status_loader=observatory_status, isolated=True))
     observatory_service.request()
     observatory_service.status()
     from article_explanations import ArticleExplanations

@@ -2419,12 +2419,35 @@
           }
           appendKeywords(article, item);
           if (item.excerpt) article.append(el('p', 'excerpt', item.excerpt));
-          if (item.text && item.text !== item.excerpt) {
+          if (item.has_full_text || (item.text && item.text !== item.excerpt)) {
             const details = el('details');
             details.append(
               el('summary', '', '수집 내용 전체 보기'),
-              el('p', 'original', item.text)
+              el('p', 'original', item.text || '펼치면 수집 내용을 불러옵니다.')
             );
+            if (!item.text) {
+              let loading = false,
+                loaded = false;
+              details.addEventListener('toggle', async () => {
+                if (!details.open || loading || loaded) return;
+                loading = true;
+                const body = details.querySelector('.original');
+                body.textContent = '불러오는 중…';
+                try {
+                  const query = new URLSearchParams({ date: item.day, detail_id: item.detail_id });
+                  const response = await fetch('/api/news/detail?' + query);
+                  if (!response.ok) throw new Error('HTTP ' + response.status);
+                  const full = await response.json();
+                  item.text = full.text || '';
+                  body.textContent = item.text || '수집 내용이 없습니다.';
+                  loaded = true;
+                } catch (_) {
+                  body.textContent = '불러오지 못했습니다. 닫았다 다시 펼치면 재시도합니다.';
+                } finally {
+                  loading = false;
+                }
+              });
+            }
             article.append(details);
           }
           if (Number(item.source_count || 0) > 1) {
@@ -2829,14 +2852,22 @@
           els.briefingResults.replaceChildren(makeBox());
         }
 
-        async function loadNews() {
+        let newsPage = 1,
+          newsItems = [];
+        async function loadNews(more = false) {
+          more = more === true;
+          if (!more) {
+            newsPage = 1;
+            newsItems = [];
+          }
+
           wordCache.clear();
-          if (state.controller) state.controller.abort();
-          const controller = new AbortController();
+          if (state.controller && !more) state.controller.abort();
+          const controller = more && state.controller ? state.controller : new AbortController();
           state.controller = controller;
           els.refresh.disabled = true;
           els.refresh.classList.add('loading');
-          renderStatus('뉴스를 불러오는 중입니다.');
+          if (!more) renderStatus('뉴스를 불러오는 중입니다.');
           const query = new URLSearchParams();
           if (state.date) query.set('date', state.date);
           if (state.query) query.set('q', state.query);
@@ -2845,19 +2876,17 @@
           if (state.topic) query.set('topic', state.topic);
           if (state.contentType) query.set('content_type', state.contentType);
           try {
-            const [newsResponse, briefingResponse] = await Promise.all([
-              fetch('/api/news?' + query.toString(), { signal: controller.signal }),
-              fetch('/api/briefing?' + query.toString(), { signal: controller.signal }).catch(
-                () => null
-              ),
-            ]);
+            const briefingPromise = more
+              ? Promise.resolve(null)
+              : fetch('/api/briefing?' + query.toString(), { signal: controller.signal })
+                  .then((response) => (response.ok ? response.json() : null))
+                  .catch(() => null);
+            query.set('page_size', '40');
+            query.set('page', String(more ? newsPage + 1 : 1));
+            query.set('compact', '1');
+            const newsResponse = await fetch('/api/news?' + query, { signal: controller.signal });
             if (!newsResponse.ok) throw new Error(`HTTP ${newsResponse.status}`);
-            const [data, briefing] = await Promise.all([
-              newsResponse.json(),
-              briefingResponse?.ok
-                ? briefingResponse.json().catch(() => null)
-                : Promise.resolve(null),
-            ]);
+            const data = await newsResponse.json();
             if (controller.signal.aborted) return;
             state.date = data.date || state.date;
             state.dates = Array.isArray(data.dates) ? data.dates : [];
@@ -2865,21 +2894,49 @@
             renderTypeOptions(els.dailyContentType, Array.isArray(data.types) ? data.types : []);
             renderArchive();
             renderTopics(Array.isArray(data.topics) ? data.topics : []);
-            const items = Array.isArray(data.items) ? data.items : [];
-            renderHeader(items.length);
+            const incoming = Array.isArray(data.items) ? data.items : [];
+            newsItems = more
+              ? [
+                  ...new Map(
+                    [...newsItems, ...incoming].map((item) => [
+                      item.detail_id || JSON.stringify(item),
+                      item,
+                    ])
+                  ).values(),
+                ]
+              : incoming;
+            const items = newsItems;
+            newsPage = Number(data.page || (more ? newsPage + 1 : 1));
+            const total = Number(data.total ?? items.length);
+            renderHeader(total);
             renderKeywordDiscovery(data.keyword_discovery);
-            if (briefing) renderBriefing(briefing);
-            else
-              els.briefingResults.replaceChildren(
-                el(
-                  'div',
-                  'briefing-empty',
-                  '핵심 브리핑을 불러오지 못했습니다. 아래 전체 뉴스는 모두 확인할 수 있습니다.'
-                )
-              );
+            if (!more)
+              briefingPromise.then((briefing) => {
+                if (controller.signal.aborted) return;
+                if (briefing) renderBriefing(briefing);
+                else
+                  els.briefingResults.replaceChildren(
+                    el(
+                      'div',
+                      'briefing-empty',
+                      '브리핑을 불러오지 못했습니다. 뉴스 목록은 계속 확인할 수 있습니다.'
+                    )
+                  );
+              });
             renderItems(items);
             renderNewsNetwork(items);
-            els.dailyArchiveNote.textContent = `${items.length.toLocaleString('ko-KR')}건 모두 표시 · 현재 날짜·검색·키워드·필터 기준 · 중복 제외`;
+            els.dailyArchiveNote.textContent = `전체 ${total.toLocaleString('ko-KR')}건 중 ${items.length.toLocaleString('ko-KR')}건 표시 · 관계 지도는 현재 불러온 기사 기준`;
+            if (items.length < total) {
+              const next = el('button', 'story-action', '다음 40건 더 보기');
+              next.type = 'button';
+              next.addEventListener('click', () => {
+                next.disabled = true;
+                loadNews(true).finally(() => {
+                  next.disabled = false;
+                });
+              });
+              els.results.append(next);
+            }
             els.demo.classList.toggle('visible', data.demo === true);
             els.clear.style.display = state.query ? 'block' : 'none';
             // Canonicalize the backend-selected date without adding a duplicate history entry.
@@ -2894,8 +2951,12 @@
               }
             }
           } catch (error) {
-            if (error.name !== 'AbortError')
-              renderStatus('뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.', true);
+            if (error.name !== 'AbortError') {
+              if (more)
+                els.dailyArchiveNote.textContent =
+                  '추가 뉴스를 불러오지 못했습니다. 더 보기 버튼으로 다시 시도해 주세요.';
+              else renderStatus('뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.', true);
+            }
           } finally {
             if (state.controller === controller) {
               els.refresh.disabled = false;
