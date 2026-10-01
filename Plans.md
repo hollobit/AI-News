@@ -633,3 +633,7 @@ Telegram 뉴스 확인 → 기사 추출·고유 문서 집계 → 원문 확보
 - 운영 실측: compact 40건 116,380 bytes, 반복 HTTP 0.293~0.402초. 기존과 동일한 날짜 120건 전체 응답은 0.392/0.270초(810,001 bytes, 상세 식별자 추가). 초기 캐시 준비 중에는 5.609초였으며 서버 포트 개방 전 프로브 실패 1회를 따로 기록했다.
 - 그래프 24노드/12근거 화면 HTTP 0.046~0.048초, 준비 중 202 응답 0.003~0.004초. 실제 disk retrieval 3질문 0.119~0.206초, 각 12근거/16노드 반환. LLM 생성·독립 검토 완료 시간이 아니다.
 - 짧은 반복 측정에서 HTTP 서버 RSS 약 2.61GiB, 준비 자식 프로세스 종료를 확인했다. 이전 서버 약 7GiB 이상과 실행 상태가 다르므로 고정 메모리 절감률/누수 해소를 보장하지 않는다. 장기 관찰은 performance_probe.py로 반복할 수 있다. 근거 `refactoring-phase2-final-performance.jsonl`, `phase2-disk-retrieval.json`, `phase2-local-ui.json`.
+- 원격 반영: 소스 `2b4de1a0` push, Pages `2203906732f0affae43a816bba1107c8e2ef4106` 배포 run 36882716641 success. 실제 공개 브라우저의 독파모/포티투마루 제목·원출처, 복구 PDF 및 쿼리 보존 확인(JS 오류 0).
+- 동일 입력의 배포 재실행은 preflight=true/unchanged로 0.532초에 종료했다(전체 export 생략). 근거 `phase2-publication-repeat.json`.
+- 유지보수 후 서버/collector/background와 같은 상세 cycle을 재개했다. 상세 driver 30495 owner_alive=true, running/pause_requested=0 확인. workers2/batch1/recent-first/maxrounds20 유지. collector/deep/baseline/risks/health/pages LaunchAgents 복구 완료. 이 PID들은 다음 작업에서 재확인한다.
+- GitHub Project checks run 36882541828 최종 success 확인. 재개한 상세 분석 round3541·3542가 각각 기사1건 accepted로 완료됐다. 전체 상세 분석 대기열 완료를 뜻하지 않는다.
