@@ -18,17 +18,22 @@ RECOVERABLE = {'timeout', 'queue_timeout', 'database_locked', 'network', 'capaci
 
 
 def probe():
+    from llm_runtime import LLMRuntime
+    from llm_recovery import shared_probe, synchronize
+    runtime = LLMRuntime()
+    synchronize(runtime)
+    return shared_probe(runtime, _probe)
+
+
+def _probe():
     from app import load_local_env
     from semantic import run_structured
     load_local_env()
-    try:
-        result = run_structured('Return {"ok":true}. No tools or external facts.',
-            {'type': 'object', 'properties': {'ok': {'type': 'boolean'}},
-             'required': ['ok'], 'additionalProperties': False},
-            role='engine_probe', timeout=15, queue_timeout=5, reasoning_effort='low')
-        return result == {'ok': True}
-    except Exception:
-        return False
+    result = run_structured('Return {"ok":true}. No tools or external facts.',
+        {'type': 'object', 'properties': {'ok': {'type': 'boolean'}},
+         'required': ['ok'], 'additionalProperties': False},
+        role='engine_probe', timeout=15, queue_timeout=5, reasoning_effort='low')
+    return result == {'ok': True}
 
 
 def save_json(path, value):

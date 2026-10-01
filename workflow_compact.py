@@ -33,7 +33,7 @@ def content_route(evidence):
 
 
 def eligible(snapshot, request, enrichment):
-    return (request.get('analysis_mode') == VERSION and len(snapshot) == 1
+    return (request.get('analysis_mode') in (VERSION,'adaptive-v2') and len(snapshot) == 1
             and request.get('completion_attempt', 1) <= 1
             and not request.get('question') and not request.get('terms')
             and not (request.get('improvement_context') or {}).get('review_issues')

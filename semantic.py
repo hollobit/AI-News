@@ -167,7 +167,7 @@ Do not treat arXiv versions as new papers; compare only statements present in su
     return result
 
 
-def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_timeout=900, reasoning_effort=None, escalation=False):
+def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_timeout=900, reasoning_effort=None, escalation=False, _runtime=None):
     """Run an approved excerpt-only structured request without tools or bot secrets."""
     if os.environ.get("NEWS_EXTERNAL_ANALYSIS_ENABLED") != "1":
         raise RuntimeError("외부 의미 분석이 아직 활성화되지 않았습니다.")
@@ -182,7 +182,15 @@ def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_t
     if reasoning_effort not in {'low','medium','high'}:
         raise ValueError('지원되지 않는 분석 추론 설정입니다.')
     timeout=max(1,min(240,float(timeout)))
-    with LLMRuntime(queue_timeout=queue_timeout).slot(role, len(prompt),
+    runtime = _runtime or LLMRuntime(queue_timeout=queue_timeout)
+    if role != 'engine_probe':
+        from llm_recovery import wait_until_ready
+        def recovery_probe():
+            return run_structured('Return {"ok":true}. No tools.',
+                {'type':'object','properties':{'ok':{'type':'boolean'}},'required':['ok'],'additionalProperties':False},
+                role='engine_probe',timeout=15,queue_timeout=5,reasoning_effort='low',_runtime=LLMRuntime(runtime.path,queue_timeout=5)) == {'ok':True}
+        wait_until_ready(runtime, recovery_probe, max_wait=min(queue_timeout,180))
+    with runtime.slot(role, len(prompt),
                            len(json.dumps(schema_definition, ensure_ascii=False)), max_run_seconds=timeout,
                            model=selected['model'], reasoning_effort=reasoning_effort) as ticket:
         result = _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=timeout,

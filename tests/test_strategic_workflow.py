@@ -80,6 +80,21 @@ class WorkflowTests(unittest.TestCase):
         reopened = self.service()
         self.assertEqual(reopened.get_run(run['id'])['results'], run['results'])
 
+    def test_all_legacy_generation_stages_reuse_exact_inputs(self):
+        class StableSources:
+            def fetch(self,url):
+                return {'status':'fetched','url':url,'text':'정부 AI 투자 계획 발표','fetched_at':'2026-09-30T00:00:00+00:00'}
+        model=Model();service=self.service(model,sources=StableSources())
+        service._retrieve_graph=lambda *_:{'status':'unavailable'}
+        first=self.done(service,service.create_run(self.items())['id'])
+        self.assertEqual(first['status'],'complete',first['error'])
+        before=len(model.calls)
+        second=self.done(service,service.create_run(self.items())['id'])
+        self.assertEqual(second['status'],'complete',second['error'])
+        self.assertEqual(len(model.calls),before)
+        for stage in ('risk_assessment','synthesis','national','technology','verification','risk_verification'):
+            self.assertIn('reuse_'+stage,second['artifacts'])
+
     def test_high_impact_value_is_snapshot_metadata_not_truth(self):
         from strategic_value import evaluate_news
         item = {'title': '정부 국가안보와 반도체 수출통제 정책', 'summary': '교육과 산업에 미치는 조건부 영향'}

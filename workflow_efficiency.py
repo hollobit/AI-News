@@ -16,8 +16,8 @@ def role_context(role, context):
         'technology': common | {'keywords', 'graph_context'},
         'risk_assessment': common,
         'synthesis': common | {'analysts', 'deliberation', 'risk_report'},
-        'verification': {'report', 'deliberation', 'request'},
-        'risk_verification': {'risk_report', 'request'},
+        'verification': {'report', 'deliberation', 'request', 'revision_target_map'},
+        'risk_verification': {'risk_report', 'request', 'revision_target_map'},
         'revision': common | {'report', 'critique', 'deliberation'},
         'risk_revision': common | {'risk_report', 'critique'},
     }

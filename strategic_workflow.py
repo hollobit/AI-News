@@ -19,6 +19,8 @@ ROLES = [
     {'id': 'enrichment', 'title': 'URL 원문 보강', 'kind': 'retrieval'},
     {'id': 'morphology', 'title': '형태소·키워드 분석', 'kind': 'kiwi'},
     {'id': 'graph_retrieval', 'title': 'GraphRAG 연관 근거 검색', 'kind': 'retrieval'},
+    {'id': 'strategy_draft', 'title': '국가·기술 통합 초안', 'kind': 'llm'},
+    {'id': 'integrated_reverification', 'title': '통합 최종 재검토', 'kind': 'llm'},
     {'id': 'integrated_analysis', 'title': '통합 전략·위험 분석', 'kind': 'llm'},
     {'id': 'integrated_verification', 'title': '통합 독립 검토', 'kind': 'llm'},
     {'id': 'national', 'title': '국가·정부 전략 분석가', 'kind': 'llm'},
@@ -186,6 +188,13 @@ class WorkflowService:
             return validate(self._analyze(prompt, schema, escalation=escalation))
         from workflow_efficiency import cached_call
         return cached_call(self, self.active, stage, prompt, schema, validate, escalation=escalation)
+
+    def _revise(self, stage, evidence, report, audit, context, schema, validate, *, risk=False, escalation=False):
+        from workflow_patch import revise
+        if audit.get('evidence_hash') == digest(evidence):
+            patched=revise(self,stage,evidence,report,audit,schema,validate,risk=risk,escalation=escalation)
+            if patched is not None:return patched
+        return self._validated_call(stage,self._prompt(stage,evidence,context),evidence_schema(schema,evidence),validate,escalation=escalation)
 
     def _model_provenance(self, run_id):
         with self.db() as db:
@@ -442,10 +451,13 @@ class WorkflowService:
         if not risk and 'event_observations' in report:
             from event_observations import audit_schema as event_audit_schema
             schema=event_audit_schema(schema,report['event_observations'])
+        from workflow_patch import audit_schema as patch_audit_schema, targets
+        schema=patch_audit_schema(schema,report,risk)
+        audit_context['revision_target_map']={key:index for key,(index,_) in targets(report,risk).items()}
         if require_all_news:audit_context['request']={'completion':True}
         critical = risk and any(r.get('current_severity') in ('high','critical') for r in report.get('risks',[]))
         return self._validated_call('risk_verification' if risk else 'verification',
-            self._prompt('risk_verification' if risk else 'verification', evidence, audit_context), evidence_schema(schema,evidence),
+            self._prompt('risk_verification' if risk else 'verification', evidence, audit_context).replace('\nDATA:\n', '\n각 issues의 번호(issue_index, 0부터)에 대해 수정할 target_id와 fields를 revision_targets에 지정한다. 전역 누락·구조 문제는 빈 배열로 남긴다. 통과 시 빈 배열이다.\nDATA:\n'), evidence_schema(schema,evidence),
             lambda value: self._validate_audit(value, evidence, report, risk, require_all_news, deliberation), escalation=critical)
 
     def _validate_audit(self, audit, evidence, report, risk=False, require_all_news=False, deliberation=None):
@@ -569,11 +581,16 @@ class WorkflowService:
             evidence = enrichment['evidence']
             from workflow_compact import eligible, execute, content_route
             use_compact = eligible(snapshot, request, enrichment)
-            self._save(run_id, 'execution_plan', {'path':'compact-v1' if use_compact else 'multi-role',
+            import workflow_complex
+            use_complex = not use_compact and workflow_complex.eligible(snapshot,request,enrichment)
+            self._save(run_id, 'execution_plan', {'path':'compact-v1' if use_compact else workflow_complex.VERSION if use_complex else 'multi-role',
                 'reason':content_route(evidence) if use_compact else 'sensitive_complex_retry_or_legacy_request',
-                'content_route':content_route(evidence), 'routing_version':'announcement-v2'})
+                'content_route':content_route(evidence), 'routing_version':'adaptive-v3' if request.get('analysis_mode')=='adaptive-v2' else 'announcement-v2'})
             if use_compact:
                 execute(self, run_id, evidence, request, enrichment)
+                return
+            if use_complex:
+                workflow_complex.execute(self,run_id,evidence,request,enrichment)
                 return
             keywords = self._stage(run_id, 'morphology', lambda: [
                 {'evidence_id': e['id'], 'keywords': self.extractor(e['text'])[:40]} for e in evidence])
@@ -583,8 +600,8 @@ class WorkflowService:
                 return self._stage(run_id, role, lambda: self._validated_call(role, self._prompt(role, evidence, context), evidence_schema(REPORT,evidence), lambda value:self._report(value,evidence)))
             with ThreadPoolExecutor(max_workers=3) as pool:
                 futures = {role: pool.submit(analyze, role) for role in ('national', 'technology')}
-                risk_future=pool.submit(self._stage,run_id,'risk_assessment',lambda:validate_risk_report(self._analyze(
-                    self._prompt('risk_assessment',evidence,context),evidence_schema(RISK_SCHEMA,evidence)),evidence))
+                risk_future=pool.submit(self._stage,run_id,'risk_assessment',lambda:self._validated_call('risk_assessment',
+                    self._prompt('risk_assessment',evidence,context),evidence_schema(RISK_SCHEMA,evidence),lambda value:validate_risk_report(value,evidence)))
                 reports = {role: future.result() for role, future in futures.items()}
                 risk_report=risk_future.result()
             from deliberation import build_deliberation
@@ -597,8 +614,8 @@ class WorkflowService:
             # Independent risk review and strategy synthesis share the same frozen observations.
             with ThreadPoolExecutor(max_workers=2) as pool:
                 risk_future = pool.submit(self._stage, run_id, 'risk_verification', lambda: self._audit(evidence, risk_report, risk=True, require_all_news=require_all_news))
-                report_future = pool.submit(self._stage, run_id, 'synthesis', lambda: self._report(self._analyze(
-                    self._prompt('synthesis', evidence, dict(context, analysts=reports)), evidence_schema(synthesis_schema,evidence)), evidence))
+                report_future = pool.submit(self._stage, run_id, 'synthesis', lambda: self._validated_call('synthesis',
+                    self._prompt('synthesis', evidence, dict(context, analysts=reports)), evidence_schema(synthesis_schema,evidence),lambda value:self._report(value,evidence)))
                 risk_audit, report = risk_future.result(), report_future.result()
             risk_audit = self._current_audit(risk_audit, evidence, risk_report, required_checked=risk_report.get('not_assessable_evidence_ids',[]) if require_all_news else ())
             audit = self._stage(run_id, 'verification', lambda: self._audit(evidence, report, require_all_news=require_all_news, deliberation=deliberation))
@@ -615,8 +632,7 @@ class WorkflowService:
                                    source_repair={'attempts': 1, 'scope': 'failed_snapshot_urls_only',
                                                   'graph_context_reused': '기존 검색은 해석 단서이며 새 원문은 evidence로 직접 제공'})
                 if not risk_audit['accepted'] or risk_audit.get('evidence_hash') != digest(evidence):
-                    risk_report = self._stage(run_id, 'risk_revision', lambda: validate_risk_report(self._analyze(
-                        self._prompt('risk_revision', evidence, dict(context, risk_report=risk_report, critique=risk_audit)), evidence_schema(RISK_SCHEMA,evidence)), evidence))
+                    risk_report = self._stage(run_id, 'risk_revision', lambda: self._revise('risk_revision',evidence,risk_report,risk_audit,dict(context,risk_report=risk_report,critique=risk_audit),RISK_SCHEMA,lambda value:validate_risk_report(value,evidence),risk=True))
                 # New observations invalidate the old risk audit even when its report did not change.
                 risk_audit = self._stage(run_id, 'risk_reverification',
                     lambda: dict(risk_audit, reused=True, reuse_reason='unchanged_evidence_report_and_verification_version')
@@ -630,8 +646,7 @@ class WorkflowService:
                     audit=self._stage(run_id,'strategy_audit_reuse',lambda:dict(audit,reused=True,
                         reuse_reason='unchanged_evidence_report_and_verification_version'))
                 else:
-                    report = self._stage(run_id, 'revision', lambda: self._report(self._analyze(
-                        self._prompt('revision', evidence, dict(context, report=report, critique=audit)), evidence_schema(event_report_schema(REPORT,evidence),evidence), escalation=request.get('completion_attempt',1)>=2), evidence))
+                    report = self._stage(run_id, 'revision', lambda: self._revise('revision',evidence,report,audit,dict(context,report=report,critique=audit),event_report_schema(REPORT,evidence),lambda value:self._report(value,evidence),escalation=request.get('completion_attempt',1)>=2))
                     audit = self._stage(run_id, 'reverification', lambda: self._audit(evidence, report, require_all_news=require_all_news, deliberation=deliberation))
                     audit = self._current_audit(audit, evidence, report, deliberation=deliberation)
             self._save(run_id, 'final', {'report': report, 'verification': audit,
@@ -673,12 +688,16 @@ class WorkflowService:
         stages = {role['id']: 'pending' for role in ROLES}
         for event in events:
             stages[event['stage']] = event['status']
-        compact = (artifacts.get('execution_plan') or {}).get('path') == 'compact-v1'
+        compact = (artifacts.get('execution_plan') or {}).get('path') in ('compact-v1','parallel-drafts-v1')
         if compact:
             for stage in ('national', 'technology', 'deliberation', 'graph_retrieval', 'morphology'):
                 stages[stage] = 'skipped'
+            route=(artifacts.get('execution_plan') or {}).get('path')
+            stages['strategy_draft' if route=='compact-v1' else 'integrated_analysis']='skipped'
+            if row['status'] in ('complete','needs_review') and 'integrated_reverification' not in artifacts:
+                stages['integrated_reverification']='skipped'
         elif row['status'] in ('complete', 'needs_review'):
-            for stage in ('integrated_analysis', 'integrated_verification'):
+            for stage in ('integrated_analysis', 'integrated_verification', 'strategy_draft', 'integrated_reverification'):
                 stages[stage] = 'skipped'
         if row['status'] in ('complete', 'needs_review') and 'revision' not in artifacts:
             stages['revision'] = stages['reverification'] = 'skipped'

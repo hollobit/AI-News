@@ -196,4 +196,5 @@ def runtime_status(path=None):
     return {'limit': limit, 'active': counts.get('running', 0), 'waiting': counts.get('queued', 0),
             'counts': counts, 'roles': roles, 'recent': recent, 'scope': 'all_local_processes_using_shared_runtime',
             'queue_policy': __import__('llm_priority').POLICY,
+            'recovery': __import__('llm_recovery').state(runtime),
             'privacy': '길이·시간·역할·모델·오류코드를 기록하며 프롬프트·결과 본문·인증정보는 저장하지 않습니다.'}

@@ -153,3 +153,99 @@ def test_keyword_candidate_korean_suffix_is_not_a_particle():
     assert complete_surface('출국 통제 법제화','출국 통제 법제화를 시행했다.')
     assert complete_surface('소버린AI','소버린AI와 GPU')
     assert not complete_surface('국','출국 통제')
+
+
+class ComplexModel(Model):
+    def __init__(self,repair=False):
+        super().__init__();self.repair=repair;self.reviews=0
+    def __call__(self,prompt,schema):
+        role=prompt.splitlines()[0][6:]
+        if role in ('strategy_draft','risk_assessment'):
+            self.calls.append(role)
+            value=Model()(prompt.replace('ROLE: '+role,'ROLE: integrated_analysis',1),schema)
+            return value['report' if role=='strategy_draft' else 'risk_report']
+        if role=='strategy_patch':
+            self.calls.append(role)
+            data=json.loads(prompt.split('DATA:\n')[1]);identity,name=data['fields'][0]
+            return {'patches':[{'target_id':identity,'field':name,'value':'원문에 따르면 새 AI 도구를 공개했다.'}]}
+        value=super().__call__(prompt,schema)
+        if role=='integrated_verification':
+            self.reviews+=1
+            if self.repair and self.reviews==1:
+                data=json.loads(prompt.split('DATA:\n')[1])
+                identity=next(k for k in data['strategy_target_map'] if k.startswith('claim_'))
+                value['verification'].update(accepted=False,issues=['설명 보완'],revision_targets=[{'issue_index':0,'target_id':identity,'fields':['detail']}])
+        return value
+
+
+@pytest.mark.parametrize('repair',[False,True])
+def test_complex_three_calls_and_targeted_repair_keep_public_gates(tmp_path,repair):
+    m=ComplexModel(repair);s=WorkflowService(tmp_path/'db',sources=Sources(),analyzer=m,enabled=True)
+    try:
+        r=s.create_run([dict(title='벤치마크 연구',text='벤치마크 연구 도구를 공개했다.',source_url='https://example.com/a')],dict(analysis_mode='adaptive-v2',completion=True))
+        result=wait(s,r['id'])
+        assert result['status']=='complete',result['error']
+        assert result['results']['orchestration']['pattern']=='parallel-drafts-v1'
+        assert len(m.calls)==(5 if repair else 3)
+        assert m.calls.count('risk_assessment')==1
+        from graph_rag import validated_workflow_content
+        from risk_analysis import validated_risk_content
+        assert validated_workflow_content(result['results'],r['id'])
+        assert validated_risk_content(result['results'],r['id'])
+        if repair:assert 'revision_patch_plan' in result['artifacts']
+    finally:s.close()
+
+
+def test_patch_scope_is_complete_and_immutable():
+    from workflow_patch import plan,targets,apply
+    report={'summary':'unchanged','claims':[{'detail':'old','title':'same'}],'limitations':[]}
+    identity=next(k for k in targets(report) if k.startswith('claim_'))
+    audit={'issues':['wrong detail'],'revision_targets':[{'issue_index':0,'target_id':identity,'fields':['detail']}]}
+    fields=plan(report,audit)
+    updated=apply(report,fields,{'patches':[{'target_id':identity,'field':'detail','value':'new'}]})
+    assert report['claims'][0]['detail']=='old'
+    assert updated['summary']=='unchanged' and updated['claims'][0]['title']=='same'
+    assert plan(report,dict(audit,issues=['wrong detail','global omission'])) is None
+    with pytest.raises(ValueError):apply(report,fields,{'patches':[{'target_id':'report','field':'summary','value':'bad'}]})
+    with pytest.raises(ValueError):apply(report,fields,{'patches':[]})
+
+
+def test_complex_path_excludes_observed_contamination_regression():
+    from workflow_complex import eligible
+    e={'id':'news_a','origin':'telegram_excerpt','text':'벤치마크 결과는 data contamination에 취약하고 작업별 순위가 바뀐다.'}
+    assert not eligible([e],{'analysis_mode':'adaptive-v2'},{'evidence':[e],'coverage':{}})
+    assert not eligible([e],{'analysis_mode':'adaptive-v2'},{'evidence':[dict(e,text='에이전트가 통제를 우회한 사건')],'coverage':{}})
+
+
+def test_complex_high_risk_review_keeps_astra_escalation(tmp_path):
+    from test_risk_analysis import fixture
+    class HighRisk(ComplexModel):
+        def __call__(self,prompt,schema):
+            result=super().__call__(prompt,schema)
+            if prompt.startswith('ROLE: risk_assessment'):
+                data=json.loads(prompt.split('DATA:\n')[1]);ids=[e['id'] for e in data['evidence']]
+                result=fixture()['risk_report'];result['risks'][0]['evidence_ids']=ids
+                result['assessed_evidence_ids']=ids
+            return result
+    s=WorkflowService(tmp_path/'db',sources=Sources(),analyzer=HighRisk(),enabled=True)
+    selected=[];original=s._validated_call
+    def traced(stage,*args,**kwargs):
+        selected.append((stage,kwargs.get('escalation',False)))
+        return original(stage,*args,**kwargs)
+    s._validated_call=traced
+    try:
+        r=s.create_run([dict(title='벤치마크 연구',text='새 연구 도구 공개',source_url='https://example.com/a')],dict(analysis_mode='adaptive-v2',completion=True))
+        result=wait(s,r['id'])
+        assert result['status']=='complete',result['error']
+        assert ('integrated_verification',True) in selected
+    finally:s.close()
+
+
+def test_risk_patch_enforces_original_output_bounds_before_review():
+    from test_risk_analysis import fixture
+    from workflow_patch import targets,apply
+    report=fixture()['risk_report'];identity=next(k for k in targets(report,True) if k.startswith('risk_'))
+    with pytest.raises(ValueError,match='120자'):
+        apply(report,[(identity,'current_basis')],{'patches':[{'target_id':identity,'field':'current_basis','value':'x'*121}]},True)
+    with pytest.raises(ValueError,match='배열'):
+        apply(report,[(identity,'observed_indicators')],{'patches':[{'target_id':identity,'field':'observed_indicators','value':['a','b','c']}]},True)
