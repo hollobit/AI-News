@@ -21,6 +21,8 @@ def init(db):
     CREATE TABLE IF NOT EXISTS source_reanalysis(url TEXT PRIMARY KEY,hash TEXT,status TEXT,run_id TEXT,error TEXT,updated_at TEXT);
     ''')
 
+    from source_review_queue import initialize
+    initialize(db)
 
 def error_kind(result):
     if result.get('status')=='fetched':return ''
@@ -67,7 +69,10 @@ def save(db,url,raw,stamp):
         db.execute('DELETE FROM source_passages WHERE url=?',(url,))
         db.executemany('INSERT INTO source_passages(url,hash,position,start,end,text,title,published_at,scope) VALUES (?,?,?,?,?,?,?,?,?)',
             [(url,hash_,p,a,b,t,raw.get('title',''),raw.get('published_at',''),raw.get('evidence_scope','')) for p,a,b,t in chunks(text)])
-        db.execute("INSERT INTO source_reanalysis VALUES (?,?,'pending','','',?) ON CONFLICT(url) DO UPDATE SET hash=excluded.hash,status='pending',run_id='',error='',updated_at=excluded.updated_at",(url,hash_,stamp))
+        from source_review_queue import archive
+        archive(db,url)
+        initial_status='pending' if prior_hash else 'indexed'
+        db.execute("INSERT INTO source_reanalysis VALUES (?,?,?,'','',?) ON CONFLICT(url) DO UPDATE SET hash=excluded.hash,status=excluded.status,run_id='',error='',updated_at=excluded.updated_at",(url,hash_,initial_status,stamp))
     return {'full_content_hash':hash_,'full_text_chars':len(text) if ok else 0,'full_text_truncated':bool(raw.get('truncated')), 'content_changed':changed,'next_retry':retry,'last_attempt_status':raw.get('status','failed'),'last_attempt_error':raw.get('error','')}
 
 

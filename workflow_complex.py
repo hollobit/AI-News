@@ -35,10 +35,9 @@ def execute(service,run_id,evidence,request,enrichment):
     from model_policy import policy
     context={'coverage':enrichment['coverage'],'request':request}
     strategy_schema=report_schema(REPORT,evidence)
-    generation=service._prompt('synthesis',evidence,context)
-    generation=generation.replace('ROLE: synthesis','ROLE: strategy_draft',1).replace('\nDATA:\n',
-        '\n이 경로에서는 국가·기술 관점을 직접 종합한 최종 전략 초안을 작성한다. 별도 역할 보고서·합의는 존재하지 않는다. '
-        '원문에 명시된 비교 조건·반대 근거·불확실성을 보존한다. 원문에 없는 일반적인 우려나 후속 과제로 빈 절을 채우지 않는다. 위험 평가는 별도 병렬 작업과 독립 검토에서 수행된다.\nDATA:\n')
+    generation=service._prompt('synthesis',evidence,context,output_role='strategy_draft',extra_instructions=
+        '이 경로에서는 국가·기술 관점을 직접 종합한 최종 전략 초안을 작성한다. 별도 역할 보고서·합의는 존재하지 않는다. '
+        '원문에 명시된 비교 조건·반대 근거·불확실성을 보존한다. 원문에 없는 일반적인 우려나 후속 과제로 빈 절을 채우지 않는다. 위험 평가는 별도 병렬 작업과 독립 검토에서 수행된다.')
     risk_prompt=service._prompt('risk_assessment',evidence,context)
     validate_strategy=lambda value:service._report(value,evidence)
     validate_risk=lambda value:validate_risk_report(value,evidence)
@@ -54,9 +53,9 @@ def execute(service,run_id,evidence,request,enrichment):
         generated={'report':report,'risk_report':risk_report,
             'strategy_target_map':{key:index for key,(index,_) in targets(report).items()},
             'risk_target_map':{key:index for key,(index,_) in targets(risk_report,True).items()}}
-        prompt=compact_prompt(service,'integrated_verification',evidence,generated).replace('\nDATA:\n',
+        prompt=compact_prompt(service,'integrated_verification',evidence,generated,extra_instructions=
             '\n각 검토의 issues를 issue_index(0부터)로 연결하여 수정할 target_id와 fields를 revision_targets에 지정한다. '
-            '전역 누락·구조 문제나 지적이 없으면 빈 배열이다. 중요한 위험·반대 근거가 두 보고서를 합친 결과에서 누락되거나 서로 모순되는지 확인한다. 위험보고서의 모든 시나리오를 전략보고서에 중복 기재하도록 요구하지 않는다.\nDATA:\n')
+            '전역 누락·구조 문제나 지적이 없으면 빈 배열이다. 중요한 위험·반대 근거가 두 보고서를 합친 결과에서 누락되거나 서로 모순되는지 확인한다. 위험보고서의 모든 시나리오를 전략보고서에 중복 기재하도록 요구하지 않는다.')
         schema=evidence_schema(object_schema({
             'verification':patch_audit_schema(event_audit_schema(AUDIT,report['event_observations']),report),
             'risk_verification':patch_audit_schema(AUDIT,risk_report,True)}),evidence)

@@ -45,7 +45,7 @@ def eligible(snapshot, request, enrichment):
             and content_route(enrichment['evidence']) in ('simple_document', 'simple_publication_announcement'))
 
 
-def prompt(service, role, evidence, payload):
+def prompt(service, role, evidence, payload, *, extra_instructions=""):
     # Keep the established risk definitions and source-provenance instructions.
     base = service._prompt('risk_assessment' if role == 'integrated_analysis' else 'risk_verification', evidence, {})
     instructions = base.split('\nDATA:\n')[0].split('\n', 1)[1]
@@ -67,7 +67,7 @@ def prompt(service, role, evidence, payload):
         '전략·위험 모두 accepted이고 issues가 비어 있을 때만 통과한다.'
     )
     # Evidence appears once; no model-produced summaries replace original evidence.
-    return f'ROLE: {role}\n{mission}\n{instructions}\nDATA:\n' + json.dumps(
+    return f'ROLE: {role}\n{mission}\n{instructions}\n{extra_instructions}\nDATA:\n' + json.dumps(
         dict(evidence=evidence, **payload), ensure_ascii=False, separators=(',', ':'))
 
 

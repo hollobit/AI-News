@@ -154,6 +154,9 @@
       running: '처리 중',
       complete: '완료',
       pending: '검토 대기',
+      indexed: '저장·색인 완료 (분석 전)',
+      delegated_corpus: '전수 분석에서 처리',
+      blocked_engine: '분석 엔진 복구 대기',
       needs_review: '검토 미통과',
       failed: '실패',
       fetched: '확보',
@@ -168,7 +171,11 @@
     try {
       const d = await api('/api/agent-reach/pipeline');
       $('#pipeline-counts').textContent =
-        `전체 본문 ${d.full_documents}개 · 외부 관측 ${d.observations}개 · 작업 대기 ${d.counts.queued || 0}, 처리 중 ${d.counts.running || 0}, 재시도 ${d.counts.retry || 0} · 변경 원문 검토 ${JSON.stringify(d.reanalysis)}`;
+        `전체 본문 ${d.full_documents}개 · 외부 관측 ${d.observations}개 · 작업 대기 ${d.counts.queued || 0}, 처리 중 ${d.counts.running || 0}, 재시도 ${d.counts.retry || 0} · 변경 원문 검토 ${Object.entries(
+          d.reanalysis
+        )
+          .map(([state, count]) => `${stateName(state)} ${count}건`)
+          .join(', ')}`;
       $('#pipeline-jobs').replaceChildren(
         ...d.tasks.slice(0, 12).map((t) => {
           const r = node(

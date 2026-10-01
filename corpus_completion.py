@@ -38,6 +38,9 @@ def init(db):
         cycle_id TEXT NOT NULL, document_id TEXT NOT NULL, prior_json TEXT NOT NULL,
         recovered_at TEXT NOT NULL, PRIMARY KEY(cycle_id,document_id))''')
 
+    db.execute('CREATE INDEX IF NOT EXISTS completion_queue ON corpus_completion_documents(cycle_id,status,position)')
+    db.execute("CREATE INDEX IF NOT EXISTS completion_source_url ON corpus_completion_documents(json_extract(snapshot_json,'$.source_url'))")
+
 
 def recover_engine_failures(db, cycle_id):
     """One explicit recovery allowance for engine failures, never reviewer rejection."""
@@ -203,19 +206,28 @@ class CompletionRunner:
                 db.execute('UPDATE rsi_cycles SET coverage_json=? WHERE id=?',(encoded(coverage),self.cycle_id))
                 db.commit()
 
-                runs={};reasons={};reconciled=[]
+                from completion_reconciliation import AdmissionChecks
+                checks=AdmissionChecks(db)
+                runs={};stored_runs={};reasons={};reconciled=[]
                 completed=db.execute("SELECT * FROM corpus_completion_documents WHERE cycle_id=? AND status='complete'",(self.cycle_id,)).fetchall()
                 frozen=attach_sources(db,[json.loads(row['snapshot_json']) for row in completed])
                 for row,fallback in zip(completed,frozen):
                     run_id=row['workflow_run_id']
+                    if run_id not in stored_runs:
+                        stored_runs[run_id]=db.execute("SELECT r.id,r.status,r.error,a.payload_json FROM strategic_workflow_runs r LEFT JOIN strategic_workflow_artifacts a ON a.run_id=r.id AND a.stage='final' WHERE r.id=?",(run_id,)).fetchone()
+                    stored=stored_runs[run_id]
+                    item=current.get(row['document_id'],fallback)
+                    unchanged,check_key=checks.unchanged(self.cycle_id,row,stored,item)
+                    if unchanged:continue
                     if run_id not in runs:
-                        stored=db.execute("SELECT r.id,r.status,r.error,a.payload_json FROM strategic_workflow_runs r LEFT JOIN strategic_workflow_artifacts a ON a.run_id=r.id AND a.stage='final' WHERE r.id=?",(run_id,)).fetchone()
                         run=dict(stored) if stored else {'id':run_id,'status':'needs_review','error':'기존 분석 결과 없음'}
                         run['results']=json.loads(run.pop('payload_json',None) or '{}');runs[run_id]=run
                         try:validate_risk_report(run['results'].get('risk_report'),run['results'].get('evidence') or [])
                         except (ValueError,TypeError,KeyError) as exc:reasons[run_id]=str(exc)
-                    admission=document_admission(runs[run_id],current.get(row['document_id'],fallback))
-                    if admission['complete']:continue
+                    admission=document_admission(runs[run_id],item)
+                    if admission['complete']:
+                        if run_id not in reasons:checks.accept(self.cycle_id,row,check_key)
+                        continue
                     reason=reasons.get(run_id)
                     if reason:admission['issues']=list(dict.fromkeys(admission['issues']+[reason]))
                     admission.update(status='needs_review',reconciliation_version='current-admission-v2',prior_attempts=row['attempts'])
@@ -226,6 +238,8 @@ class CompletionRunner:
                     seen.pop(row['document_id'],None)
                 # Validating thousands of stored reports is CPU work. Only hold
                 # SQLite's writer lock while applying the resulting decisions.
+                checks.flush()
+                print(json.dumps({'admission_checks_reused':checks.hits,'admission_checks_executed':checks.misses}),flush=True)
                 db.executemany("UPDATE corpus_completion_documents SET status='needs_review',attempts=?,admission_json=?,updated_at=? WHERE cycle_id=? AND document_id=?",reconciled)
                 db.execute('UPDATE rsi_cycles SET state_json=?,seen_json=? WHERE id=?',(encoded(state),encoded(seen),self.cycle_id))
             # Recover only this runner's unfinished jobs after its previous owner exited.

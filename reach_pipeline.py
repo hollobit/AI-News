@@ -203,33 +203,53 @@ class ReachPipeline:
             with self.lock:self.active.discard(row['id'])
 
     def _review(self):
-        """Only changed URLs, one independent workflow at a time; no corpus reset."""
+        from source_review_queue import classify, engine_blocked, archive, recovered_after
+        from engine_errors import infrastructure_error
+        # Do not create workflow rows, spend retry budgets or resume a checkpoint
+        # while the shared engine gate is closed.
+        if engine_blocked():
+            with self.db() as db:
+                db.execute("UPDATE source_reanalysis SET status='blocked_engine' WHERE status='pending'")
+            return
         if self.workflow is None:
             from strategic_workflow import WorkflowService
             self.workflow=WorkflowService(self.path,recover_interrupted=False)
         if not self.workflow.enabled:return
         with self.db() as db:
-            active=db.execute("SELECT * FROM source_reanalysis WHERE status='running' LIMIT 1").fetchone()
+            active=db.execute("SELECT * FROM source_reanalysis WHERE status IN ('running','blocked_engine') AND run_id!='' LIMIT 1").fetchone()
         if active:
             run=self.workflow.get_run(active['run_id'])
-            if run and run['status'] in ('queued','running','paused') and not self.workflow.active:
+            engine_failure=run and run['status']=='failed' and infrastructure_error(run.get('error',''))
+            recoverable=engine_failure and recovered_after(run.get('updated_at'))
+            if engine_failure and not recoverable:
+                with self.db() as db:db.execute("UPDATE source_reanalysis SET status='blocked_engine',error=? WHERE url=? AND hash=?",(run.get('error',''),active['url'],active['hash']))
+                return
+            if run and (run['status'] in ('queued','running','paused') or recoverable) and not self.workflow.active:
                 from strategic_jobs import alive
                 with self.db() as db:
                     request=json.loads(db.execute('SELECT request_json FROM strategic_workflow_runs WHERE id=?',(active['run_id'],)).fetchone()[0])
-                    if not alive(request.get('owner_pid')):
+                    if not alive(request.get('owner_pid')) or recoverable:
+                        archive(db,active['url'])
+                        db.execute("UPDATE source_reanalysis SET status='running' WHERE url=? AND hash=?",(active['url'],active['hash']))
                         db.execute("UPDATE strategic_workflow_runs SET status='paused' WHERE id=? AND status IN ('queued','running')",(active['run_id'],))
                         db.commit();self.workflow.resume(active['run_id'])
                 return
             if run and run['status'] in ('complete','needs_review','failed','interrupted'):
-                with self.db() as db:db.execute('UPDATE source_reanalysis SET status=?,error=?,updated_at=? WHERE url=? AND hash=? AND run_id=?',(run['status'],run.get('error',''),now(),active['url'],active['hash'],active['run_id']))
+                status='blocked_engine' if infrastructure_error(run.get('error','')) else run['status']
+                with self.db() as db:db.execute('UPDATE source_reanalysis SET status=?,error=?,updated_at=? WHERE url=? AND hash=? AND run_id=?',(status,run.get('error',''),now(),active['url'],active['hash'],active['run_id']))
             return
         if self.workflow.active:return
         with self.db() as db:
-            row=db.execute("SELECT r.*,v.title,v.text FROM source_reanalysis r JOIN source_versions v ON v.url=r.url AND v.hash=r.hash WHERE r.status='pending' ORDER BY r.updated_at LIMIT 1").fetchone()
-        if not row:return
+            row=db.execute("SELECT r.*,v.title,v.text FROM source_reanalysis r JOIN source_versions v ON v.url=r.url AND v.hash=r.hash WHERE r.status IN ('pending','blocked_engine') AND r.run_id='' ORDER BY r.updated_at LIMIT 1").fetchone()
+            if not row:return
+            disposition=classify(db,row)
+            if disposition!='pending':
+                archive(db,row['url'])
+                db.execute('UPDATE source_reanalysis SET status=?,updated_at=? WHERE url=? AND hash=?',(disposition,now(),row['url'],row['hash']))
+                return
         item={'source_url':row['url'],'title':row['title'],'text':row['text'][:2000],'origin':'external_source','date_basis':'unknown'}
-        run=self.workflow.create_run([item],{'reason':'source_content_changed','source_hash':row['hash'],'source_url':row['url']})
-        with self.db() as db:db.execute("UPDATE source_reanalysis SET status='running',run_id=?,updated_at=? WHERE url=? AND hash=? AND status='pending'",(run['id'],now(),row['url'],row['hash']))
+        run=self.workflow.create_run([item],{'analysis_mode':'adaptive-v2','reason':'source_content_changed','source_hash':row['hash'],'source_url':row['url']})
+        with self.db() as db:db.execute("UPDATE source_reanalysis SET status='running',run_id=?,updated_at=? WHERE url=? AND hash=? AND status IN ('pending','blocked_engine')",(run['id'],now(),row['url'],row['hash']))
 
     def get(self,id):
         with self.db() as db:r=db.execute('SELECT * FROM reach_tasks WHERE id=?',(id,)).fetchone()

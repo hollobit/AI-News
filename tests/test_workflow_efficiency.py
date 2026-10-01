@@ -249,3 +249,21 @@ def test_risk_patch_enforces_original_output_bounds_before_review():
         apply(report,[(identity,'current_basis')],{'patches':[{'target_id':identity,'field':'current_basis','value':'x'*121}]},True)
     with pytest.raises(ValueError,match='배열'):
         apply(report,[(identity,'observed_indicators')],{'patches':[{'target_id':identity,'field':'observed_indicators','value':['a','b','c']}]},True)
+
+
+def test_concurrent_identical_workflows_share_generation_and_review(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    model=Model()
+    services=[WorkflowService(tmp_path/'shared.db',sources=Sources(),analyzer=model,enabled=True,recover_interrupted=False) for _ in range(2)]
+    try:
+        with ThreadPoolExecutor(2) as pool:
+            futures=[pool.submit(s.create_run,[{'title':'도구 공개','text':'기업이 새 AI 개발 도구를 공개했다.','source_url':'https://example.org/tool'}],{'analysis_mode':'adaptive-v2'}) for s in services]
+            runs=[f.result() for f in futures]
+        results=[wait(s,r['id']) for s,r in zip(services,runs)]
+        assert all(r['status']=='complete' for r in results)
+        assert model.calls.count('integrated_analysis')==1
+        assert model.calls.count('integrated_verification')==1
+        with services[0].db() as db:
+            assert db.execute("select count(*) from workflow_cache_observations where outcome='hit'").fetchone()[0]==2
+    finally:
+        for s in services:s.close()
