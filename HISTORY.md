@@ -600,3 +600,6 @@
 - Pages 배포 중 이전 세대 누적으로 공개 파일이 약 6,004MB(10,743개), 현재 조각은 111MB인 상태를 확인했다. 이전 세대는 최대 24시간·현재 조각 포함 400MiB 범위에서 최신 완전 세대부터 보관하도록 상한을 추가했다. 현재 데이터는 상한과 무관하게 보존한다. 만료된 탭은 기존 manifest 갱신 동작으로 복구한다.
 - 제거 대상 원격 파일 검증 시 로컬 Git 불변 blob을 우선 사용하고 SHA256 파일명 검증을 유지한다. 로컬 객체가 없으면 기존 API로 검증한다. 데이터/브랜치 강제 덮어쓰기는 없다.
 - 보관 상한 회귀 포함 전체 Python 745 tests + 56 subtests 통과. 이후 기사 code 파라미터 보존을 추가해 공개 URL/데이터 관련 32 tests, 배포 4 tests 및 공개 데이터 JavaScript 4 tests 통과.
+
+- 원격 게시 완료: 소스 `0ee19fbf`, Pages `7bcce8c48732b09394268911557509619de4058a`. 공개 파일 2,799개/484.5MB. GitHub Project checks 및 Pages 배포 run 36866697809 success 확인.
+- 실제 https://hollobit.github.io/AI-News/ 에서 복구 PDF 링크와 `cbIdx`/`bcIdx` 기사 식별 파라미터를 가진 원출처 버튼 2건 확인, JS 오류 0/로컬 API 요청 0. 근거 `.runtime/verification/public-links-local.json`, `public-links-remote.json`. 전체 외부 기사 응답을 전수 검증한 것은 아니다. 배포 중 정지했던 Pages LaunchAgent는 새 코드로 재개한다.
