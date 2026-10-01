@@ -84,6 +84,19 @@
       a.title,
       `${a.day} · ${a.topic} · ${a.analyses.length ? '현재 입력·독립 검토 확인' : '제목·출처만 공개'}`
     );
+    if (a.title_origin) {
+      n.append(
+        el(
+          'small',
+          a.title_origin === 'source_page'
+            ? '확보된 원문 제목'
+            : 'Telegram 브리핑 제목 · 원문 제목 미확인',
+          'tag'
+        )
+      );
+      if (a.source_title && a.briefing_title !== a.source_title)
+        n.append(el('p', '브리핑 제목: ' + a.briefing_title));
+    }
     for (const r of a.analyses) {
       const d = el('details');
       d.append(el('summary', r.kind + (r.title ? ' · ' + r.title : '')), el('p', r.text));
