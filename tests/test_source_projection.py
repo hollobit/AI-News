@@ -128,3 +128,23 @@ def test_compact_news_retains_provenance_and_loads_full_body_by_stable_id(tmp_pa
     assert detail['items']==full['items']
     assert read_news(db,{'detail_id':['a'*64]},include_discovery=False)['items']==[]
     db.close()
+
+
+def test_paged_keywords_keep_full_scope_and_annotate_only_visible_cards(tmp_path):
+    from news_repository import read_news
+    from keyword_index import annotate_items
+    db = connect(tmp_path / 'news.db')
+    for i in range(9):
+        post(db, i, f'공공 AI 행정 뉴스 {i}\nhttps://example.org/{i}')
+    full = read_news(db, {})
+    key = full['items'][0]['keywords'][0]['id']
+    for filters in ({}, {'keyword': [key]}, {'topic': [full['items'][0]['topic']]}):
+        expected = read_news(db, filters)
+        with patch('news_views.annotate_items', wraps=annotate_items) as annotate:
+            page = read_news(db, dict(filters, page_size=['2'], page=['2']))
+            assert len(annotate.call_args.args[1]) == 2
+        assert page['items'] == expected['items'][2:4]
+        for field in ('total', 'topics', 'types', 'keyword_discovery'):
+            assert page[field] == expected[field]
+    assert read_news(db, {'page_size': ['2'], 'page': ['99']})['items'] == []
+    db.close()

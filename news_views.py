@@ -3,7 +3,24 @@ import re
 from collections import Counter
 from datetime import datetime
 from news_repository import (joined_articles, unique_articles, KST, TOPICS, CONTENT_TYPES, article_key)
-from keyword_index import annotate_items, keyword_discovery, public_item
+from keyword_index import annotate_items, keyword_discovery, public_item, keyword_record_id
+
+
+def _keyword_membership(db, items):
+    """Filter/discovery need membership, not every off-screen card's term counts."""
+    records = {keyword_record_id(item) for item in items}
+    mappings = {}
+    records = sorted(records)
+    for offset in range(0, len(records), 400):
+        batch = records[offset:offset + 400]
+        for row in db.execute(
+            'SELECT k.record_id,k.keyword_id FROM record_keywords k '
+            'JOIN keyword_terms t ON t.keyword_id=k.keyword_id '
+            'WHERE k.record_id IN (' + ','.join('?' for _ in batch) + ') '
+            'ORDER BY k.record_id,k.weight DESC,k.keyword_id', batch):
+            mappings.setdefault(row['record_id'], []).append(row['keyword_id'])
+    return [dict(item, _all_keyword_ids=mappings.get(keyword_record_id(item), []))
+            for item in items]
 
 
 def read_news(db, params, *, include_discovery=True):
@@ -38,7 +55,7 @@ def read_news(db, params, *, include_discovery=True):
         raise ValueError('Invalid article identity')
     for item in filtered: item['detail_id'] = article_key(item)
     if detail_id: filtered = [item for item in filtered if item['detail_id']==detail_id]
-    filtered = annotate_items(db, filtered)
+    filtered = _keyword_membership(db, filtered)
     if keyword:
         filtered = [item for item in filtered
                     if keyword in item["_all_keyword_ids"]]
@@ -56,6 +73,7 @@ def read_news(db, params, *, include_discovery=True):
     discovery = keyword_discovery(db, items, day, keyword) if include_discovery else None
     if page_size:
         items = items[(page-1)*page_size:page*page_size]
+    items = annotate_items(db, items)
     from source_titles import title_projection
     items = [public_item(dict(item, **title_projection(item))) for item in items]
     if params.get('compact', [''])[0] == '1':
@@ -68,4 +86,3 @@ def read_news(db, params, *, include_discovery=True):
             "keyword_discovery": discovery,
             "raw_message_count": db.execute("SELECT COUNT(*) FROM news").fetchone()[0],
             "demo": db.execute("SELECT 1 FROM state WHERE key='demo'").fetchone() is not None}
-
