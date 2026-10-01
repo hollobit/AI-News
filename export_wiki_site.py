@@ -123,11 +123,21 @@ def _export_site(db_path, target, include_excerpts=False, full_site=False):
             from source_navigation import original_url
             from functools import lru_cache
             resolve = lru_cache(maxsize=None)(lambda value: original_url(db, value))
+            from link_groups import canonical_url
+            labels = {canonical_url(a['url']): a for a in corpus['news'] if a['url']}
+            def source_label(entry):
+                article = labels.get(canonical_url(entry.get('url', '')))
+                if article:
+                    entry.update({k: article[k] for k in ('title','briefing_title','source_title','title_origin')})
+            for node in data['nodes']:
+                if node.get('type') == 'source':
+                    source_label(node)
             for raw in observations.values():
                 for field in ('evidence', 'documents'):
                     for entry in raw.get('data', {}).get(field, {}).values():
                         if entry.get('url'):
                             entry['url'] = resolve(entry['url'])
+                            source_label(entry)
             observed=observation(observations['observatory-90-expanded.json'])
             expand(data,corpus,observed)
     target.mkdir(parents=True,exist_ok=True)

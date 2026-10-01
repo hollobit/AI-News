@@ -122,7 +122,8 @@ def read_news(db, params, *, include_discovery=True):
     items = [item for item in filtered if (not topic or item["topic"] == topic)
              and (not content_type or item["content_type"] == content_type)]
     discovery = keyword_discovery(db, items, day, keyword) if include_discovery else None
-    items = [public_item(item) for item in items]
+    from source_titles import title_projection
+    items = [public_item(dict(item, **title_projection(item))) for item in items]
     return {"date": day, "dates": dates, "channels": channels,
             "topics": topics, "types": [{"id": key, "title": title, "count": type_counts[key]}
                                            for key, title in CONTENT_TYPES.items()],

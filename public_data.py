@@ -97,7 +97,7 @@ def write_data(root, corpus, graph, observatory=None, *, now=None):
     # a query is entered. No partial-shard search is presented as global search.
     search = {}
     for n in corpus['news']:
-        values = [n.get(k) for k in ('title', 'topic', 'url', 'summary', 'current_basis', 'scenario', 'uncertainty')]
+        values = [n.get(k) for k in ('title', 'briefing_title', 'source_title', 'topic', 'url', 'summary', 'current_basis', 'scenario', 'uncertainty')]
         values += n.get('assumptions', []) + n.get('mitigations', [])
         values += [a.get(k) for a in n.get('analyses', []) for k in ('title', 'text', 'uncertainty')]
         values += [a.get(k) for a in n.get('claims', []) for k in ('title', 'text', 'detail', 'uncertainty')]

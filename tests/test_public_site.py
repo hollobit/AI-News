@@ -76,3 +76,25 @@ def test_public_source_resolves_proven_legacy_repair():
     db.execute('INSERT INTO repaired_source_links VALUES(?,?)', (old, new))
     assert public_url(old, db) == new
     db.close()
+
+
+def test_public_content_uses_source_title_and_retains_briefing(tmp_path):
+    from app import connect, process_updates
+    from source_enrichment import init_sources
+    from public_site import content
+    with connect(tmp_path / 'headlines.db') as db:
+        process_updates(db, [{'update_id':1, 'channel_post':{
+            'chat':{'id':-100123,'type':'channel','title':'Briefing'},
+            'message_id':1,'date':1790812800,
+            'text':'- 브리핑 독파모 계속\nhttps://example.org/article?id=1'}}], {'-100123'})
+        init_sources(db)
+        db.execute('INSERT INTO source_excerpts VALUES(?,?,?)',
+                   ('https://example.org/article?id=1', json.dumps(dict(
+                       status='fetched',url='https://example.org/article?id=1',
+                       title='중단설 휩싸인 독파모',text='실제 원문 본문',error='')), '2026-10-01'))
+        db.commit()
+        article=content(db)['news'][0]
+        assert article['title']=='중단설 휩싸인 독파모'
+        assert article['briefing_title']=='브리핑 독파모 계속'
+        assert article['title_origin']=='source_page'
+        assert db.execute('SELECT title FROM articles').fetchone()[0]=='브리핑 독파모 계속'

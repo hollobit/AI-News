@@ -2399,6 +2399,19 @@
             typeBadge,
             newsHeading('h3', 'article-title', item.title, item.source_url)
           );
+          if (item.title_origin) {
+            article.append(
+              el(
+                'small',
+                'tag',
+                item.title_origin === 'source_page'
+                  ? '확보된 원문 제목'
+                  : 'Telegram 브리핑 제목 · 원문 제목 미확인'
+              )
+            );
+            if (item.source_title && item.briefing_title !== item.source_title)
+              article.append(el('p', 'excerpt', '브리핑 제목: ' + item.briefing_title));
+          }
           if (safeSourceUrl(item.source_url)) {
             const explain = el('a', 'story-action', '기사 상세 해설 ↗');
             explain.href = '/article?url=' + encodeURIComponent(item.source_url);

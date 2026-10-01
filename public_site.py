@@ -27,15 +27,16 @@ def observation(raw):
     result=pick(d,'selection_version document_index_version comparison_days days limits method version comparison computed_at')
     result['nodes']=[pick(n,'id label kind origin count series evidence_by_day document_ids_by_day current previous') for n in d['nodes']]
     result['edges']=[pick(e,'id source target relation count series evidence_by_day current previous') for e in d['edges']]
-    result['evidence']={key:dict(pick(e,'id day title'),url=public_url(e.get('url','')),
+    result['evidence']={key:dict(pick(e,'id day title briefing_title source_title title_origin'),url=public_url(e.get('url','')),
         document_id=identity(str(e.get('document_id',key)))) for key,e in d['evidence'].items()}
     if d.get('document_index_version')==1:
-        result['documents']={key:dict(pick(e,'id day title'),url=public_url(e.get('url','')),
+        result['documents']={key:dict(pick(e,'id day title briefing_title source_title title_origin'),url=public_url(e.get('url','')),
             document_id=identity(str(e.get('document_id',key)))) for key,e in d.get('documents',{}).items()}
     return result
 
 def content(db):
     from export_wiki_site import public_url
+    from source_titles import title_projection
     from improvement_selection import all_corpus_items, content_identity
     from baseline_graph import baseline_sources
     from arxiv_papers import _paper_rows
@@ -50,6 +51,7 @@ def content(db):
         from keyword_index import document_id
         entry=dict(id=identity(key),title=item.get('title') or '제목 없음',day=item.get('day',''),
             topic=item.get('topic',''),url=public_url(item.get('original_url') or item.get('source_url',''), db),analyses=[],observation_document_id=identity(document_id(item)))
+        entry.update(title_projection(item))
         articles.append(entry);bykey[key]=entry
     baseline,_=baseline_sources(db,items)
     for source in baseline:
