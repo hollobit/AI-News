@@ -50,6 +50,7 @@ def test_publish_rejects_missing_module_dependency(tmp_path):
 
 @pytest.mark.parametrize('url', [
     'https://news.example/read?id=123&section=it&page=2#detail',
+    'https://news.example/article?code=ABC123',
     'https://news.example/a(clean).pdf?x=%2f&x=+&flag&empty=',
     'https://news.example/?redirect=https%3A%2F%2Fother.example%2Fa%3Fid%3D5%26page%3D2',
 ])

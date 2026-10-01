@@ -156,8 +156,15 @@ def _sync(db, output):
                 if entry['sha'] != git_hash(files[name]):
                     raise RuntimeError('Unexpected public data content; refusing to overwrite.')
             else:
-                blob=api('git/blobs/'+entry['sha'])
-                content=base64.b64decode(blob['content']).decode()
+                # Previous exports already have these immutable Git objects.
+                # Validate their content address without thousands of API reads.
+                local=subprocess.run(['git','cat-file','blob',entry['sha']],
+                    cwd=Path(__file__).resolve().parent,capture_output=True,timeout=30)
+                if local.returncode == 0:
+                    content=local.stdout.decode()
+                else:
+                    blob=api('git/blobs/'+entry['sha'])
+                    content=base64.b64decode(blob['content']).decode()
                 if hashlib.sha256(content.encode()).hexdigest() != name[12:-5]:
                     raise RuntimeError('Unexpected public data content; refusing to overwrite.')
         with ThreadPoolExecutor(max_workers=4) as pool:

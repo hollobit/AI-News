@@ -95,3 +95,16 @@ def test_insert_reorder_edit_delete_keep_unaffected_details_stable(tmp_path):
     graph['nodes']=[n for n in graph['nodes'] if n['id']!='new-node']
     d=write_data(tmp_path,corpus,graph)
     assert d['news']['parts']==a['news']['parts'] and d['graph']['parts']==a['graph']['parts']
+
+
+def test_retention_budget_keeps_current_and_newest_complete_generation(tmp_path, monkeypatch):
+    import public_data
+    for name in ('current', 'recent', 'old'):
+        (tmp_path / name).write_bytes(b'12345')
+    generations = [dict(expires_at=1, files=['old', 'current']),
+                   dict(expires_at=2, files=['recent', 'current'])]
+    monkeypatch.setattr(public_data, 'RETENTION_BYTES', 10)
+    assert public_data.bounded_generations(tmp_path, {'current'}, generations) == generations[1:]
+    monkeypatch.setattr(public_data, 'RETENTION_BYTES', 1)
+    assert public_data.bounded_generations(tmp_path, {'current'}, generations) == []
+    assert (tmp_path / 'current').exists()

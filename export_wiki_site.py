@@ -14,7 +14,10 @@ ROOT = Path(__file__).resolve().parent
 def _public_parameters(value):
     sensitive = {'secret','token','access_token','refresh_token','api_key','apikey','key',
                  'password','passwd','authorization','auth','signature','sig','hmac',
-                 'credential','policy','key-pair-id','session','sessionid','jwt','code'}
+                 'credential','policy','key-pair-id','session','sessionid','jwt'}
+    keys = {unquote_plus(p.partition('=')[0]).lower() for p in value.split('&')}
+    if keys & {'state', 'client_id', 'redirect_uri'}:
+        sensitive.add('code')
     kept = []
     for part in value.split('&'):
         key, _, payload = part.partition('=')

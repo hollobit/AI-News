@@ -13,6 +13,7 @@ def retention_path(root):
     root = Path(root).resolve()
     return root.with_name(root.name + RETENTION_FILE)
 RETENTION_SECONDS = 24 * 60 * 60
+RETENTION_BYTES = 400 * 1024 * 1024
 
 DATA_NAME = re.compile(r'public-data-[0-9a-f]{64}\.json\Z')
 
@@ -42,6 +43,21 @@ def data_files(root):
     if not isinstance(names, list) or any(not isinstance(n, str) or not DATA_NAME.fullmatch(n) for n in names):
         raise ValueError('Invalid public data manifest')
     return tuple(sorted(set(names)))
+
+
+def bounded_generations(root, current, generations):
+    selected = set(current)
+    used = sum((root / name).stat().st_size for name in selected)
+    kept = []
+    for generation in sorted(generations, key=lambda g: g['expires_at'], reverse=True):
+        extra = set(generation['files']) - selected
+        size = sum((root / name).stat().st_size for name in extra)
+        if used + size > RETENTION_BYTES:
+            break
+        selected.update(extra)
+        used += size
+        kept.append(generation)
+    return list(reversed(kept))
 
 
 def write_data(root, corpus, graph, observatory=None, *, now=None):
@@ -129,6 +145,9 @@ def write_data(root, corpus, graph, observatory=None, *, now=None):
     manifest['version'] = hashlib.sha256(encoded({k: v for k, v in manifest.items() if k != 'exported_at'})).hexdigest()
     if old.get('version') and old['version'] != manifest['version']:
         retained.append(dict(version=old['version'], expires_at=stamp + RETENTION_SECONDS, files=previous))
+    # Keep complete newest generations within a byte budget. Current data is
+    # never evicted; old tabs already recover through the fresh manifest on 404.
+    retained = bounded_generations(root, files, retained)
     # Retention bookkeeping does not change the immutable content generation.
     manifest.update(files=sorted(files), previous_files=[],
                     retention_seconds=RETENTION_SECONDS)
