@@ -631,3 +631,5 @@
 - Pages는 변경 전 검사·파일별 로딩·회차별 프로세스 종료를 사용한다. 브리핑의 원출처 우선순위와 제목 출처 표시를 뉴스 목록과 맞췄으며 URL의 일반 key 파라미터를 보존한다.
 - 추가 프로파일에 따라 전체 키워드 통계를 조회마다 2회 계산하던 병목을 선택 기사 키워드의 SQL 집계로 제한했다. 실데이터 함수 반복 조회 5.39초→1.76~1.77초. 재시작 직후 실제 HTTP 8.46~20.30초는 별도 기록하며 API 성능 목표 달성을 주장하지 않는다.
 - Python 761 tests + 56 subtests, JS 12 tests, 구문/포맷/diff 및 브라우저 6개 스크립트 통과. 실제 600개 저장 필드의 이관·복원 검증 및 이력 행 수 불변 확인. 과거 전수 변환/VACUUM은 수행하지 않았다. 근거: `.runtime/verification/storage-refactor-migration.json`, `refactoring-api-performance.json`.
+- export가 끝난 뒤 실제 HTTP 재측정은 1.891초·1.833초(동일 날짜 120건)였다. 앞선 직접 함수 시간과 별도로 운영 응답 개선을 확인했다. 소스 `1612e317` push 완료, Pages 커밋 `f12825e25931778f84ba1c6e2e0292dbe5407b7a` 게시 완료. 로컬 공개 산출물에서 독파모·포티투마루 제목 출처, 복구 PDF와 기사 파라미터 보존 확인(JS 오류 0).
+- GitHub Project checks run 36876753252 및 Pages deployment run 36876790438 success 확인. 정기 Pages LaunchAgent를 새 코드로 재등록한다. 실제 상세 분석 round 3525·3526에서 각각 기사 1건 accepted 확인.
