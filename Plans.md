@@ -651,3 +651,10 @@ Telegram 뉴스 확인 → 기사 추출·고유 문서 집계 → 원문 확보
 - 2시간 추가 관찰 시작: PID8860(기록 시점), 모델 호출 없이120회/60초 간격, `.runtime/verification/priority-2hour.jsonl`. 아직 측정 완료가 아니며 다음 작업에서 PID와 결과를 확인한다.
 - 모델 capacity 재발 뒤 기존 대기를 지킨 자동 복구가 다시 동작했다. 00:40 KST 확인: 같은 cycle running/owner7039 생존/pause_requested0/error 없음, complete3756/pending4540/running2(총8298). 원장의 running2는 실제 worker 확인과 함께 보고했다. 자동 복구 누적20회로 상한에 도달했으므로 추가 장애 시 자동 재개를 보장하지 않으며 기존 운영 화면·macOS 알림 요청 기록을 유지한다. 기본 분석의 기존 검토 보류1건도 운영 화면에서 확인됐으며 이번 목록 개선으로 해결됐다고 표시하지 않는다.
 - 소스 `07b884ce` push 및 GitHub Project checks run36885555762 success. 공개 정적 UI 변경은 없고 로컬 서버만 새 읽기 모델로 교체했다. 기록 파일은 `.runtime/verification/priority-*.json*`, 코드/상태 문서는 원격에 반영한다.
+
+## 2026-10-02 상세 분석 복구·잔여 처리 재개 (06:56 KST)
+
+- 사용자 요청에 따라 capacity로 paused였던 동일 cycle `d4686920261a4380bd467ed4ae1c6bda`를 복구했다. 기존 상세 프로세스 없음 확인 → 공용 엔진 명시 probe 성공 → `scheduled_risks.py --resume`으로 재개했다. 실패·검토 이력과 누적 자동 복구20회는 초기화하지 않았다.
+- 실제 owner76029 생존/running/pause_requested0/error 없음 확인. workers2/batch1/recent-first/maxrounds20 유지. 중단됐던 round3594가 같은 workflow에서 완료됐으며, round3596 및 후속 처리는 진행 중이다.
+- 재개 전 원장 complete3796/pending4501/running1(8298)이었으나 최신 수집 입력 재대조 직후 complete3779/pending4558/running2(8339)로 변경됐다. 기존 완료 중 변경된 입력은 다시 처리하며 과거 보고서를 삭제한 것이 아니다. round3594 완료 후 complete3780/pending4557/running2 확인. 전체 잔여 분석 완료를 뜻하지 않는다.
+- 자동 복구 누적 상한은 유지하므로 추가 모델 장애 시 다시 운영 확인이 필요할 수 있다. 모델·검토 기준 변경이나 서버 중복 실행 없이 기존 정기 스케줄을 유지했다. 코드 변경/추가 단위 테스트 없음. 실운영 근거 `.runtime/verification/deep-resume-20261002.json`, `.runtime/scheduled-risks-worker.log`.
