@@ -4,21 +4,45 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import sqlite3
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit, unquote_plus
 from knowledge_wiki import read_wiki
 from wiki_network import project, source_id
 
 ROOT = Path(__file__).resolve().parent
 
 
-def public_url(value):
+def _public_parameters(value):
+    sensitive = {'secret','token','access_token','refresh_token','api_key','apikey','key',
+                 'password','passwd','authorization','auth','signature','sig','hmac',
+                 'credential','policy','key-pair-id','session','sessionid','jwt','code'}
+    kept = []
+    for part in value.split('&'):
+        key, _, payload = part.partition('=')
+        name = unquote_plus(key).lower().replace('-', '_')
+        if name in {k.replace('-', '_') for k in sensitive} or name.startswith(('x_amz_', 'x_goog_')):
+            continue
+        decoded = unquote_plus(payload)
+        if decoded.startswith(('http://', 'https://')) and public_url(decoded) != decoded:
+            continue
+        kept.append(part)
+    return '&'.join(kept)
+
+
+def public_url(value, db=None):
     try:
+        if db is not None:
+            from source_navigation import original_url
+            value = original_url(db, value)
+        if not isinstance(value, str) or any(ord(c) < 32 or ord(c) == 127 for c in value):
+            return ''
         u = urlsplit(value)
         if u.scheme not in ('http','https') or not u.hostname or u.username or u.password:
             return ''
         if u.hostname in ('localhost','127.0.0.1','::1') or u.hostname.endswith('.local'):
             return ''
-        return urlunsplit((u.scheme,u.netloc,u.path,'',''))
+        query = _public_parameters(u.query)
+        fragment = _public_parameters(u.fragment) if query == u.query else ''
+        return urlunsplit((u.scheme,u.netloc,u.path,query,fragment))
     except ValueError:
         return ''
 
@@ -30,7 +54,7 @@ def snapshot(db, include_excerpts=False):
     for original in graph['nodes']:
         node = {k:original[k] for k in ('id','type','title','page_ids','topics','source_ids','claims','claim_kind','origin','scope','day','status') if k in original}
         if original.get('url'):
-            node['url']=public_url(original['url'])
+            node['url']=public_url(original['url'], db)
             from public_site import identity
             from link_groups import canonical_url
             if not node['id'].startswith('source:paper:'):
@@ -93,6 +117,14 @@ def _export_site(db_path, target, include_excerpts=False, full_site=False):
             from public_site import content, observation
             from corpus_knowledge import expand
             corpus=content(db)
+            from source_navigation import original_url
+            from functools import lru_cache
+            resolve = lru_cache(maxsize=None)(lambda value: original_url(db, value))
+            for raw in observations.values():
+                for field in ('evidence', 'documents'):
+                    for entry in raw.get('data', {}).get(field, {}).values():
+                        if entry.get('url'):
+                            entry['url'] = resolve(entry['url'])
             observed=observation(observations['observatory-90-expanded.json'])
             expand(data,corpus,observed)
     target.mkdir(parents=True,exist_ok=True)

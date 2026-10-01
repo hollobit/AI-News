@@ -47,3 +47,31 @@ def test_publish_rejects_missing_module_dependency(tmp_path):
     (tmp_path/'atlas.js').write_text("import * as THREE from './three.module.js';")
     with pytest.raises(RuntimeError,match='missing published asset three.module.js'):
         validate_static_dependencies(tmp_path,('knowledge.html','atlas.js'))
+
+@pytest.mark.parametrize('url', [
+    'https://news.example/read?id=123&section=it&page=2#detail',
+    'https://news.example/a(clean).pdf?x=%2f&x=+&flag&empty=',
+    'https://news.example/?redirect=https%3A%2F%2Fother.example%2Fa%3Fid%3D5%26page%3D2',
+])
+def test_public_source_keeps_semantic_parameters(url):
+    from export_wiki_site import public_url
+    assert public_url(url) == url
+
+
+def test_public_source_hides_credentials_without_losing_article_id():
+    from export_wiki_site import public_url
+    assert public_url('https://news.example/?id=123&access_token=PRIVATE') == 'https://news.example/?id=123'
+    assert public_url('https://news.example/?id=123#access_token=PRIVATE') == 'https://news.example/?id=123'
+    assert public_url('https://news.example/?id=123&next=https%3A%2F%2Fother.example%2F%3Ftoken%3DPRIVATE') == 'https://news.example/?id=123'
+
+
+def test_public_source_resolves_proven_legacy_repair():
+    import sqlite3
+    from export_wiki_site import public_url
+    db = sqlite3.connect(':memory:')
+    db.execute('CREATE TABLE repaired_source_links(old_url TEXT, new_url TEXT)')
+    old = 'https://news.example/a(clean'
+    new = old + ').pdf?id=1&part=2'
+    db.execute('INSERT INTO repaired_source_links VALUES(?,?)', (old, new))
+    assert public_url(old, db) == new
+    db.close()

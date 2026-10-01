@@ -49,7 +49,7 @@ def content(db):
         key=content_identity(item)
         from keyword_index import document_id
         entry=dict(id=identity(key),title=item.get('title') or '제목 없음',day=item.get('day',''),
-            topic=item.get('topic',''),url=public_url(item.get('source_url','')),analyses=[],observation_document_id=identity(document_id(item)))
+            topic=item.get('topic',''),url=public_url(item.get('original_url') or item.get('source_url',''), db),analyses=[],observation_document_id=identity(document_id(item)))
         articles.append(entry);bykey[key]=entry
     baseline,_=baseline_sources(db,items)
     for source in baseline:
