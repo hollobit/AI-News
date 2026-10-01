@@ -14,15 +14,7 @@ NAMESPACES = {'baseline_verified_content','paper_verified_content','workflow_ver
 MAX_BYTES = 256 * 1024 * 1024
 
 
-@lru_cache(maxsize=1)
-def policy():
-    # Conservatively invalidate on any Python policy/dependency change. This is
-    # computed once per process, never once per document.
-    root = Path(__file__).resolve().parent
-    digest = hashlib.sha256()
-    for path in sorted(root.glob('*.py')):
-        digest.update(path.name.encode()); digest.update(path.read_bytes())
-    return digest.hexdigest()
+from code_policy import policy
 
 
 def path_for(db):

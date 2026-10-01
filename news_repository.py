@@ -91,46 +91,8 @@ def joined_articles(db, *, _message=None, _duplicates=None):
 
 
 def read_news(db, params, *, include_discovery=True):
-    rows = joined_articles(db)
-    dates_count = Counter(item["day"] for item in unique_articles(rows))
-    dates = [{"date": day, "count": count} for day, count in sorted(dates_count.items(), reverse=True)]
-    day = params.get("date", [dates[0]["date"] if dates else datetime.now(KST).date().isoformat()])[0]
-    if day != "all":
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
-            raise ValueError("날짜는 YYYY-MM-DD 형식이어야 합니다.")
-        datetime.strptime(day, "%Y-%m-%d")
-    query = params.get("q", [""])[0].strip().casefold()
-    channel = params.get("channel", [""])[0]
-    topic = params.get("topic", [""])[0]
-    content_type = params.get("content_type", [""])[0]
-    keyword = params.get("keyword", [""])[0]
-    if keyword and not re.fullmatch(r"[0-9a-f]{16}", keyword):
-        raise ValueError("키워드 ID 형식이 올바르지 않습니다.")
-    filtered = annotate_items(db, unique_articles(
-        row for row in rows if (day == "all" or row["day"] == day)
-        and (not channel or str(row["chat_id"]) == channel)
-        and (not query or query in row["text"].casefold())))
-    if keyword:
-        filtered = [item for item in filtered
-                    if keyword in item["_all_keyword_ids"]]
-    counts = Counter(item["topic"] for item in filtered)
-    type_counts = Counter(item["content_type"] for item in filtered if not topic or item["topic"] == topic)
-    topics = [{"id": key, "title": title, "count": counts[key]} for key, title in TOPICS.items()]
-    channels = [dict(row) for row in db.execute(
-        "SELECT chat_id AS id, MAX(channel) AS title FROM news GROUP BY chat_id ORDER BY title")]
-    if any(r.get('source_origin')=='external_watch' for r in rows):channels.append({'id':-9900,'title':'외부 정기 관측'})
-    items = [item for item in filtered if (not topic or item["topic"] == topic)
-             and (not content_type or item["content_type"] == content_type)]
-    discovery = keyword_discovery(db, items, day, keyword) if include_discovery else None
-    from source_titles import title_projection
-    items = [public_item(dict(item, **title_projection(item))) for item in items]
-    return {"date": day, "dates": dates, "channels": channels,
-            "topics": topics, "types": [{"id": key, "title": title, "count": type_counts[key]}
-                                           for key, title in CONTENT_TYPES.items()],
-            "items": items,
-            "keyword_discovery": discovery,
-            "raw_message_count": db.execute("SELECT COUNT(*) FROM news").fetchone()[0],
-            "demo": db.execute("SELECT 1 FROM state WHERE key='demo'").fetchone() is not None}
+    from news_views import read_news as read
+    return read(db, params, include_discovery=include_discovery)
 
 
 def unindexed_link_rows(db, indexed_rows, *, _message=None, _duplicates=None):

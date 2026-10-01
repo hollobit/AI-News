@@ -623,3 +623,11 @@
 
 - 공개 스냅샷 8,252건 중 source_page 5,430건/telegram_briefing 2,822건으로 표시 출처를 구분했다. 원문 제목 확보는 브리핑의 모든 주장과 원문이 의미상 일치한다는 판정이 아니다.
 - 소스 `a035db33`, Pages `a61f0964e7adc2ceaa890ad7a4ec953b035a5187` (run 36870650680 success), GitHub Project checks success. 실제 공개 브라우저에서 중앙일보 실제 제목·별도 브리핑 제목·동일 URL 및 JS 오류 0 확인. 로컬 /api/news도 동일 표시를 확인했다(코드 갱신 직후 초기 조회는 30/45초 대기 제한을 넘겼고 재준비 후 조회는 6.52초). 근거 `headline-provenance-local.json`, `headline-provenance-remote.json`. 정기 Pages 배포를 재개한다.
+
+## 2026-10-01 조회·검증·저장·배포 경로 리팩토링
+
+- 날짜/URL SQL 필터와 뉴스 페이지 API, 표시 코드와 입력/검토 정책 해시 분리, 재개 보고서 해시의 변경 trigger, Graph API 선택 범위 복사 및 최종 보고서 순차 처리를 구현했다.
+- 기본 분석/개선 이력에 해시 공유·압축 JSON 저장과 과거 JSON 호환 reader를 도입했다. 마이그레이션은 배치별 원본 복원값 일치 검증과 체크포인트를 사용하고 기존 이력 행을 보존한다.
+- Pages는 변경 전 검사·파일별 로딩·회차별 프로세스 종료를 사용한다. 브리핑의 원출처 우선순위와 제목 출처 표시를 뉴스 목록과 맞췄으며 URL의 일반 key 파라미터를 보존한다.
+- 추가 프로파일에 따라 전체 키워드 통계를 조회마다 2회 계산하던 병목을 선택 기사 키워드의 SQL 집계로 제한했다. 실데이터 함수 반복 조회 5.39초→1.76~1.77초. 재시작 직후 실제 HTTP 8.46~20.30초는 별도 기록하며 API 성능 목표 달성을 주장하지 않는다.
+- Python 761 tests + 56 subtests, JS 12 tests, 구문/포맷/diff 및 브라우저 6개 스크립트 통과. 실제 600개 저장 필드의 이관·복원 검증 및 이력 행 수 불변 확인. 과거 전수 변환/VACUUM은 수행하지 않았다. 근거: `.runtime/verification/storage-refactor-migration.json`, `refactoring-api-performance.json`.

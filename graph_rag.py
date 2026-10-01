@@ -274,23 +274,24 @@ def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dic
         identity = _clean(row.get("id") or row.get("document_id") or row.get("doc_id")
                           or row.get("canonical_url") or index)
         sources.append({"kind": "research", "id": identity, "result": result, "row": row})
-    workflow_rows, finals = [], {}
+    workflow_rows, finals = [], ()
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_runs'").fetchone():
         workflow_rows = [dict(zip(('id','status','error'),row)) for row in
                          db.execute('SELECT id,status,error FROM strategic_workflow_runs')]
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_artifacts'").fetchone():
         # Intermediate role reports and failed attempts never enter this graph.
         # Filtering in SQL avoids decoding gigabytes of unrelated execution history.
-        finals = {row[0]:_json(row[1]) for row in db.execute('''SELECT a.run_id,a.payload_json
+        finals = db.execute('''SELECT a.run_id,a.payload_json
             FROM strategic_workflow_artifacts a JOIN strategic_workflow_runs r ON r.id=a.run_id
-            WHERE a.stage='final' AND r.status='complete' AND COALESCE(r.error,'')='' ''')}
+            WHERE a.stage='final' AND r.status='complete' AND COALESCE(r.error,'')='' ''')
     completed_workflows = 0
     stale_workflow_claims = 0
     corrections = correction_token(db)
-    for row in workflow_rows:
+    for run_id, body in finals:
         checkpoint()
-        payload = finals.get(row.get("id"))
-        if row.get("status") != "complete" or row.get("error") or not isinstance(payload, dict):
+        row = {"id":run_id,"status":"complete","error":None}
+        payload = _json(body)
+        if not isinstance(payload, dict):
             continue
         result = cached_read(db, 'workflow_verified_graph', content_digest((row['id'],payload,corrections)),
                              lambda: _workflow_graph(payload, row['id'], corrections), copy_result=False)
@@ -447,7 +448,7 @@ def _filters_evidence(evidence: dict[str, Any], date: str, topic: str) -> bool:
             and (not topic or topic in evidence.get("topics", [evidence["topic"]])))
 
 
-def load_integrated_graph(db: sqlite3.Connection, params: dict[str, Any], *, for_retrieval=False) -> GraphResult:
+def load_integrated_graph(db: sqlite3.Connection, params: dict[str, Any], *, for_retrieval=False, presentation_only=False) -> GraphResult:
     """Cache the current filtered graph; presentation limits never remove retrieval data."""
     params = dict(params)
     def bounded(key, default, maximum):
@@ -463,12 +464,18 @@ def load_integrated_graph(db: sqlite3.Connection, params: dict[str, Any], *, for
     token = revision_token(db)
     key = None if token is None else (token,correction_token(db),content_digest(semantic))
     result = cached_read(db,'integrated_graph',key,lambda: _build_integrated_graph(db,semantic),
-                         copy_result=not for_retrieval)
+                         copy_result=not (for_retrieval or presentation_only))
     result.search_key = key
     if for_retrieval:
         # Internal retrieval treats the shared projection as immutable and returns
         # copied selected records. Avoid cloning the entire graph for each question.
         return result
+    if presentation_only:
+        from copy import deepcopy
+        # HTTP output needs only the selected view; retrieval retains all evidence.
+        shared = result
+        result = GraphResult({k: deepcopy(v) for k,v in shared.items() if k not in {'nodes','edges','evidence'}},
+                             full_nodes=shared.full_nodes,full_edges=shared.full_edges,full_evidence=shared.full_evidence)
     result['nodes'] = result.full_nodes[:node_limit]
     visible = {node['id'] for node in result['nodes']}
     result['edges'] = [edge for edge in result.full_edges if edge['source'] in visible and edge['target'] in visible][:EDGE_LIMIT]
@@ -477,6 +484,9 @@ def load_integrated_graph(db: sqlite3.Connection, params: dict[str, Any], *, for
     result['limits'].update(nodes=node_limit,evidence=evidence_limit)
     result['truncated'] = (len(result['nodes']) < len(result.full_nodes) or len(result['edges']) < len(result.full_edges)
                            or len(result['evidence']) < len(refs))
+    if presentation_only:
+        # Detach only returned records; no shared full arrays escape this path.
+        return deepcopy(dict(result))
     return result
 
 

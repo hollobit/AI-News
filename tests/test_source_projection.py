@@ -97,3 +97,19 @@ def test_focused_url_keeps_scheduling_id_from_original_url(tmp_path):
     with patch('url_context.focus_url_context',side_effect=redirected),patch('improvement_selection.focus_url_context',side_effect=redirected):
         assert_equivalent(db)
     db.close()
+
+
+def test_date_pushdown_and_pagination_match_legacy(tmp_path):
+    from news_repository import read_news
+    db=connect(tmp_path/'news.db')
+    for i in range(8):post(db,i,f'AI 기사 {i}\nhttps://example.org/{i}',day=i%2)
+    actual=read_news(db,{},include_discovery=False)
+    with patch('source_projection.news_dates',return_value=None),patch('source_projection.joined',return_value=None):
+        expected=read_news(db,{},include_discovery=False)
+    assert actual==expected
+    paged=read_news(db,{'page_size':['2'],'page':['2']},include_discovery=False)
+    assert paged['items']==actual['items'][2:4]
+    assert paged['total']==len(actual['items'])
+    selected=all_corpus_items(db,{'https://example.org/3'})
+    assert [x['source_url'] for x in selected]==['https://example.org/3']
+    db.close()

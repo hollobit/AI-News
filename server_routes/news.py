@@ -21,7 +21,7 @@ def get(self, route, params):
         db = sqlite3.connect(self.services.path, timeout=15)
         db.row_factory = sqlite3.Row
         try:
-            result = load_integrated_graph(db, parse_qs(route.query))
+            result = load_integrated_graph(db, parse_qs(route.query), presentation_only=True)
         except ValueError:
             result, status = ({'error': '그래프 필터를 확인해 주세요.'}, 400)
         finally:

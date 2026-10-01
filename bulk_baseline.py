@@ -12,6 +12,13 @@ import time
 import uuid
 
 from recursive_improvement import news_identity, owner_alive
+from evidence_blobs import init as init_blobs, dumps as pack_json, loads as unpack_json
+
+
+def hydrate_rows(db, rows):
+    return [dict(row, **{key:js(unpack_json(db,row[key])) for key in
+            ('snapshot_json','prepared_json','result_json') if key in row.keys() and row[key] is not None}) for row in rows]
+
 
 
 def choose_batch_size(rows, settings):
@@ -107,6 +114,7 @@ class BulkBaselineService:
         with self.db() as db:
             db.execute('''CREATE TABLE IF NOT EXISTS bulk_baseline_runs(id TEXT PRIMARY KEY,status TEXT NOT NULL,settings_json TEXT NOT NULL,
                 created_at TEXT NOT NULL,updated_at TEXT NOT NULL,owner_pid INTEGER,error TEXT NOT NULL DEFAULT '')''')
+            init_blobs(db)
             db.execute('''CREATE TABLE IF NOT EXISTS bulk_baseline_documents(run_id TEXT NOT NULL,document_id TEXT NOT NULL,position INTEGER NOT NULL,
                 input_hash TEXT NOT NULL,snapshot_json TEXT NOT NULL,prepared_json TEXT,status TEXT NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,
                 result_json TEXT,error TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL,reused INTEGER NOT NULL DEFAULT 0,
@@ -161,8 +169,8 @@ class BulkBaselineService:
                     reusable=bool(cached and self._valid_cached(json.loads(cached['result_json']),snapshot))
                     empty=not snapshot['evidence']
                     db.execute('INSERT INTO bulk_baseline_documents VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-                               (run_id,snapshot['document_id'],position,snapshot['input_hash'],js(snapshot),cached['prepared_json'] if reusable else None,
-                                'verified' if reusable else 'failed' if empty else 'pending',2 if empty else 0,cached['result_json'] if reusable else None,
+                               (run_id,snapshot['document_id'],position,snapshot['input_hash'],pack_json(db,snapshot),pack_json(db,json.loads(cached['prepared_json'])) if reusable else None,
+                                'verified' if reusable else 'failed' if empty else 'pending',2 if empty else 0,pack_json(db,json.loads(cached['result_json'])) if reusable else None,
                                 '읽을 수 있는 원문·메시지 발췌가 없습니다.' if empty else '',stamp,int(reusable)))
             self._launch(run_id)
         return self.get(run_id)
@@ -200,7 +208,7 @@ class BulkBaselineService:
                 db.execute("UPDATE bulk_baseline_documents SET status='pending' WHERE run_id=? AND status='running'",(run_id,))
                 if run['status'] in ('requires_review','failed'):
                     retryable=db.execute("SELECT document_id,snapshot_json FROM bulk_baseline_documents WHERE run_id=? AND status IN ('failed','needs_review')",(run_id,)).fetchall()
-                    ids=[r['document_id'] for r in retryable if json.loads(r['snapshot_json'])['evidence']]
+                    ids=[r['document_id'] for r in retryable if unpack_json(db,r['snapshot_json'])['evidence']]
                     db.executemany("UPDATE bulk_baseline_documents SET status='pending',attempts=0 WHERE run_id=? AND document_id=?",[(run_id,identity) for identity in ids])
                     db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES (?,?,?,?)',
                                (run_id,'manual_retry',js({'documents':len(ids),'max_retries':1,'reason':'사용자가 명시적으로 재개한 미검증 문서'}),now()))
@@ -232,10 +240,11 @@ class BulkBaselineService:
         for row in rows:
             if self.stop.is_set() or self.closed:return
             try:
-                prepared=self._prepare(json.loads(row['snapshot_json']))
+                with self.db() as db: snapshot=unpack_json(db,row['snapshot_json'])
+                prepared=self._prepare(snapshot)
                 with self.db() as db:
                     db.execute('UPDATE bulk_baseline_documents SET prepared_json=?,updated_at=? WHERE run_id=? AND document_id=?',
-                               (js(prepared),now(),run_id,row['document_id']))
+                               (pack_json(db,prepared),now(),run_id,row['document_id']))
             except Exception as exc:
                 with self.db() as db:
                     db.execute("UPDATE bulk_baseline_documents SET status='failed',attempts=2,error=? WHERE run_id=? AND document_id=?",(str(exc)[:400],run_id,row['document_id']))
@@ -254,6 +263,7 @@ class BulkBaselineService:
                             with self.db() as db:
                                 db.execute('BEGIN IMMEDIATE')
                                 rows=db.execute("SELECT * FROM bulk_baseline_documents WHERE run_id=? AND prepared_json IS NOT NULL AND status IN ('pending','retry') AND attempts<2 ORDER BY attempts,position LIMIT ?",(run_id,16 if settings.get('adaptive_batches') else settings['batch_size'])).fetchall()
+                                rows=hydrate_rows(db,rows)
                                 target=choose_batch_size(rows,settings)
                                 rows=rows[:target]
                                 if len(rows)<target and preparation.is_alive():rows=[]
@@ -372,7 +382,7 @@ class BulkBaselineService:
                     continue
                 if status!='verified' and row['attempts']+1<2:status='retry'
                 db.execute('UPDATE bulk_baseline_documents SET status=?,result_json=?,error=?,updated_at=? WHERE run_id=? AND document_id=?',
-                           (status,js(result) if result else None,error,now(),run_id,identity))
+                           (status,pack_json(db,result) if result else None,error,now(),run_id,identity))
                 if status=='verified':
                     db.execute('INSERT OR REPLACE INTO bulk_baseline_cache VALUES (?,?,?,?,?,?)',
                                (row['input_hash'],identity,js(result),js(snapshots[identity]['evidence']),row['prepared_json'],now()))

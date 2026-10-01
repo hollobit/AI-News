@@ -95,10 +95,11 @@ def git_publish(files, parent, *, root=None, expected_remote=None):
             command(['fetch','--no-tags','--depth=1','origin',parent])
     import tempfile
     entries = []
-    ordered = sorted(files.items())
+    ordered = sorted(files)
     with tempfile.TemporaryDirectory(prefix='news-pages-') as temporary:
         paths = []
-        for name, content in ordered:
+        for name in ordered:
+            content=files[name]
             if '/' in name or '\t' in name or '\n' in name or name in ('.','..'):
                 raise ValueError('Invalid Pages Git asset path')
             path = Path(temporary) / name
@@ -107,7 +108,7 @@ def git_publish(files, parent, *, root=None, expected_remote=None):
         hashes = command(['hash-object','-w','--stdin-paths'], ('\n'.join(paths)+'\n').encode()).splitlines()
     if len(hashes) != len(ordered):
         raise RuntimeError('Incomplete Pages Git objects')
-    for (name, _), sha in zip(ordered, hashes):
+    for name, sha in zip(ordered, hashes):
         entries.append('100644 blob ' + sha + '\t' + name + '\n')
     tree = command(['mktree'], ''.join(entries).encode())
     arguments = ['commit-tree',tree]
@@ -121,7 +122,22 @@ def git_publish(files, parent, *, root=None, expected_remote=None):
 def sync(db, output):
     from export_staging import output_lock
     with output_lock(output):
-        return _sync(db, output)
+        from publication_state import signature, state_path
+        marker=state_path(output)
+        before=signature(db,Path(__file__).resolve().parent)
+        try: previous=json.loads(marker.read_text())
+        except (OSError,ValueError):previous={}
+        if before and previous.get('signature')==before and Path(output).exists():
+            head=api('branches/'+BRANCH)['commit']['sha']
+            if head==previous.get('commit'):
+                return dict(status='unchanged',commit=head,preflight=True,output=str(output))
+        result=_sync(db, output)
+        after=signature(db,Path(__file__).resolve().parent)
+        if before and before==after and result.get('commit'):
+            temporary=marker.with_suffix('.tmp')
+            temporary.write_text(json.dumps(dict(signature=after,commit=result['commit'])))
+            temporary.replace(marker)
+        return result
 
 
 def _sync(db, output):
@@ -129,7 +145,8 @@ def _sync(db, output):
     output=summary.pop('snapshot_directory', output)
     names=published_files(output)
     validate_static_dependencies(output,names)
-    files={name:(Path(output)/name).read_text() for name in names}
+    from publication_assets import FileAssets
+    files=FileAssets(output,names)
     branches=api('branches?per_page=100')
     branch=next((b for b in branches if b['name']==BRANCH),None)
     parent=branch['commit']['sha'] if branch else None
@@ -183,18 +200,18 @@ def _sync(db, output):
         return dict(summary, status='published', commit=commit, transport='git')
     # Only independent blob creation is parallel. Tree/commit/ref publication is
     # sequential and happens after every asset has been uploaded successfully.
-    def upload(item):
-        name,content=item
+    def upload(name):
+        content=files[name]
         encoded=content.encode('utf-8')
         sha=hashlib.sha1(b'blob '+str(len(encoded)).encode()+b'\0'+encoded).hexdigest()
-        if not parent or not any(e['path']==name and e['sha']==sha for e in tree['tree']):
+        if not parent or existing.get(name,{}).get('sha')!=sha:
             try:
                 sha=immutable_object('git/blobs',{'content':base64.b64encode(encoded).decode('ascii'),'encoding':'base64'})['sha']
             except RuntimeError as error:
                 raise RuntimeError(f'{name}: {error}') from error
         return {'path':name,'mode':'100644','type':'blob','sha':sha}
     with ThreadPoolExecutor(max_workers=4) as pool:
-        entries=list(pool.map(upload,files.items()))
+        entries=list(pool.map(upload,files))
     tree=immutable_object('git/trees',{'tree':entries})
     commit=api('git/commits','POST',{'message':'Sync reviewed read-only wiki site','tree':tree['sha'],'parents':[parent] if parent else []})
     if parent:
@@ -208,11 +225,17 @@ if __name__=='__main__':
     parser.add_argument('--db',default='data/news.sqlite3')
     parser.add_argument('--output',default='.runtime/wiki-site')
     parser.add_argument('--watch',action='store_true',help='Sync changed reviewed output every five minutes while running.')
+    parser.add_argument('--child',action='store_true',help=argparse.SUPPRESS)
     args=parser.parse_args()
     with open('.runtime/wiki-pages-sync.lock','a+') as lock:
-        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        if not args.child: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         while True:
-            try:print(json.dumps(sync(args.db,args.output),ensure_ascii=False),flush=True)
+            try:
+                if args.watch:
+                    import sys
+                    subprocess.run([sys.executable,__file__,'--db',args.db,'--output',args.output,'--child'],check=True)
+                else:
+                    print(json.dumps(sync(args.db,args.output),ensure_ascii=False),flush=True)
             except Exception as error:
                 print(json.dumps({'status':'error','type':type(error).__name__,'message':str(error)},ensure_ascii=False),flush=True)
                 if not args.watch:raise SystemExit(1)

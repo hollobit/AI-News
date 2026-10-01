@@ -202,7 +202,7 @@ def _make_story(
     if date == "all":
         date = str(item.get("day") or "")
     urls = _item_urls(item)
-    source_url = ((group or {}).get("canonical_url")
+    source_url = (item.get("original_url") or (group or {}).get("original_url") or (group or {}).get("canonical_url")
                   or (urls[0] if urls else str(item.get("source_url") or "")))
     sources = item.get("sources") or []
     telegram_url = str(item.get("url") or "")
@@ -218,6 +218,7 @@ def _make_story(
         "id": item_id,
         "title": _clean(item.get("title")) or _clean((group or {}).get("title")) or "제목 없는 소식",
         "summary": _summary(item, group),
+        **{key:item[key] for key in ('briefing_title','source_title','title_origin','original_url') if key in item},
         "why_selected": "",
         "topic": topic,
         "topic_title": str(item.get("topic_title") or (group or {}).get("topic_title")

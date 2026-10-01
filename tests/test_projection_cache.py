@@ -132,6 +132,9 @@ def test_preview_caps_preserve_full_retrieval_and_invalidate(tmp_path):
         graph=load_integrated_graph(db,{'max_nodes':['16'],'evidence_limit':['3']})
         assert len(graph['nodes'])==16 and len(graph['evidence'])==3
         assert len(graph.full_nodes)==30 and len(graph.full_evidence)==30
+        preview=load_integrated_graph(db,{'max_nodes':['16'],'evidence_limit':['3']},presentation_only=True)
+        assert preview==dict(graph)
+        preview['nodes'][0]['name']='preview mutation'
         graph['nodes'][0]['name']='mutated'
         other=load_integrated_graph(db,{'view':['preview'],'max_nodes':['24'],'evidence_limit':['12']})
         assert len(other['nodes'])==24 and len(other['evidence'])==12

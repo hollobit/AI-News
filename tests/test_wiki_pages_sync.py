@@ -55,3 +55,22 @@ def test_only_immutable_objects_have_bounded_transient_retries(tmp_path, monkeyp
     assert calls.count('git/trees') == 2
     assert calls.count('git/commits') == 1
     assert calls.count('git/refs') == 1
+
+
+def test_preflight_skips_export_only_for_matching_remote_head(tmp_path,monkeypatch):
+    import sqlite3
+    path=tmp_path/'news.sqlite'
+    with sqlite3.connect(path) as db:db.execute('CREATE TABLE articles(title TEXT)')
+    output=tmp_path/'site';output.mkdir()
+    calls=[]
+    monkeypatch.setattr(publish,'_sync',lambda *a:(calls.append('export') or {'status':'published','commit':'head'}))
+    monkeypatch.setattr(publish,'api',lambda *a,**kw:{'commit':{'sha':'head'}})
+    assert publish.sync(path,output)['status']=='published'
+    assert publish.sync(path,output)['preflight'] is True
+    assert calls==['export']
+    with sqlite3.connect(path) as db:db.execute("INSERT INTO articles VALUES('new')")
+    publish.sync(path,output)
+    assert calls==['export','export']
+    monkeypatch.setattr(publish,'api',lambda *a,**kw:{'commit':{'sha':'other'}})
+    publish.sync(path,output)
+    assert len(calls)==3

@@ -263,13 +263,19 @@ def sync_keyword_index(db, rows, prepared=None) -> None:
                    [(identity,) for identity in removed_documents])
 
 
-def _metadata(db) -> dict[str, dict]:
-    rows = db.execute("""SELECT t.keyword_id,t.label,t.first_seen,t.first_observed_at,
-        t.is_generic,COUNT(DISTINCT r.document_id) AS document_count
-        FROM keyword_terms t LEFT JOIN record_keywords k ON k.keyword_id=t.keyword_id
-        LEFT JOIN keyword_records r ON r.record_id=k.record_id
-        GROUP BY t.keyword_id,t.label,t.first_seen,t.first_observed_at,t.is_generic""").fetchall()
-    return {row["keyword_id"]: dict(row) for row in rows}
+def _metadata(db, keyword_ids=None) -> dict[str, dict]:
+    keys = list(dict.fromkeys(keyword_ids)) if keyword_ids is not None else None
+    batches = [None] if keys is None else [keys[i:i+400] for i in range(0,len(keys),400)]
+    result = {}
+    for batch in batches:
+        where = '' if batch is None else ' WHERE t.keyword_id IN ('+','.join('?' for _ in batch)+')'
+        rows = db.execute("""SELECT t.keyword_id,t.label,t.first_seen,t.first_observed_at,
+            t.is_generic,COUNT(DISTINCT r.document_id) AS document_count
+            FROM keyword_terms t LEFT JOIN record_keywords k ON k.keyword_id=t.keyword_id
+            LEFT JOIN keyword_records r ON r.record_id=k.record_id"""+where+"""
+            GROUP BY t.keyword_id,t.label,t.first_seen,t.first_observed_at,t.is_generic""",batch or [])
+        result.update((row['keyword_id'],dict(row)) for row in rows)
+    return result
 
 
 def _term(metadata: dict, keyword_id: str, day: str, scope_count: int | None = None) -> dict:
@@ -299,8 +305,8 @@ def _record_mappings(db, record_ids=None) -> dict[str, list]:
 
 
 def annotate_items(db, items: list[dict]) -> list[dict]:
-    metadata = _metadata(db)
     mappings = _record_mappings(db, [keyword_record_id(item) for item in items])
+    metadata = _metadata(db, (row["keyword_id"] for rows in mappings.values() for row in rows))
     result = []
     for original in items:
         item = dict(original)
@@ -338,7 +344,7 @@ def read_keyword_record(db, record_id: str) -> dict | None:
 
 
 def keyword_discovery(db, items: list[dict], date: str, selected_keyword: str = "") -> dict:
-    metadata = _metadata(db)
+    metadata = _metadata(db, (key for item in items for key in item.get("_all_keyword_ids", [])))
     document_words = defaultdict(set)
     for item in items:
         document_words[document_id(item)].update(item.get("_all_keyword_ids") or [])

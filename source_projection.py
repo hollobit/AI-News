@@ -10,7 +10,9 @@ from pathlib import Path
 import sqlite3
 from task_lifecycle import checkpoint, cancellable_db
 from source_changes import position
-from verified_cache import policy
+from code_policy import policy as code_policy
+
+def policy(): return code_policy("source")
 
 
 def encode(value):return json.dumps(value,ensure_ascii=False,separators=(',',':'))
@@ -21,11 +23,16 @@ def _schema(store):
     store.executescript('''PRAGMA journal_mode=WAL;
         CREATE TABLE IF NOT EXISTS meta(id INTEGER PRIMARY KEY,epoch TEXT,seq INTEGER,policy TEXT,metrics TEXT);
         CREATE TABLE IF NOT EXISTS messages(key TEXT PRIMARY KEY,signature TEXT,published TEXT,message_id INTEGER,active INTEGER,source_order INTEGER);
+        CREATE TABLE IF NOT EXISTS news_index(message TEXT,position INTEGER,day TEXT,article_key TEXT,PRIMARY KEY(message,position));
+        CREATE INDEX IF NOT EXISTS news_index_day ON news_index(day,article_key);
         CREATE INDEX IF NOT EXISTS messages_signature ON messages(signature);
         CREATE TABLE IF NOT EXISTS rows(message TEXT,section INTEGER,position INTEGER,day TEXT,published TEXT,message_id INTEGER,item_index INTEGER,payload TEXT,PRIMARY KEY(message,section,position));
+        CREATE INDEX IF NOT EXISTS rows_day ON rows(section,day,message);
         CREATE TABLE IF NOT EXISTS urls(url TEXT,message TEXT,PRIMARY KEY(url,message));
         CREATE TABLE IF NOT EXISTS contributions(message TEXT,section INTEGER,position INTEGER,identity TEXT,context TEXT,day TEXT,published TEXT,payload TEXT,PRIMARY KEY(message,section,position,identity));
         CREATE INDEX IF NOT EXISTS contribution_identity ON contributions(identity);
+        CREATE TABLE IF NOT EXISTS document_urls(url TEXT,identity TEXT PRIMARY KEY);
+        CREATE INDEX IF NOT EXISTS document_urls_url ON document_urls(url);
         CREATE TABLE IF NOT EXISTS documents(identity TEXT PRIMARY KEY,score REAL,day TEXT,published TEXT,payload TEXT,source_rows INTEGER);
     ''')
 
@@ -104,7 +111,9 @@ def _message(db, store, key):
     for section,rows in enumerate((joined,extra,hidden_rows)):
         for index,row in enumerate(rows):
             checkpoint()
-            if section==0:row=dict(row,_repository_key=article_key(row))
+            if section==0:
+                row=dict(row,_repository_key=article_key(row))
+                store.execute('INSERT INTO news_index VALUES(?,?,?,?)',(key,index,row.get('day',''),row['_repository_key']))
             store.execute('INSERT INTO rows VALUES(?,?,?,?,?,?,?,?)',(key,section,index,row.get('day',''),row.get('published_at',''),mid,row.get('item_index',0),encode(row)))
             urls=list(dict.fromkeys(canonical_url(url) for url in [row.get('source_url') or '',*extract_links(row.get('text') or '')] if canonical_url(url)))
             for url in urls or ['']:
@@ -126,7 +135,7 @@ def _refresh(db,store,pos):
     reason='initial' if not previous else 'epoch' if previous[0]!=pos[0] else 'history_gap' if previous[1]<pos[2] else 'policy' if previous[2]!=policy() else 'delta'
     changed=set();affected=set();signatures=set()
     if full:
-        for table in ('messages','rows','urls','contributions','documents'):store.execute('DELETE FROM '+table)
+        for table in ('messages','rows','urls','contributions','documents','news_index','document_urls'):store.execute('DELETE FROM '+table)
         for table in ('news','articles','archived_urls'):
             changed.update(message_key(*r) for r in db.execute(f'SELECT DISTINCT chat_id,message_id FROM {table}'))
     else:
@@ -147,7 +156,7 @@ def _refresh(db,store,pos):
         old=store.execute('SELECT signature FROM messages WHERE key=?',(key,)).fetchone()
         if old:
             signatures.add(old[0]);affect(related(old[0]))
-        for table,column in (('rows','message'),('urls','message'),('contributions','message'),('messages','key')):
+        for table,column in (('news_index','message'),('rows','message'),('urls','message'),('contributions','message'),('messages','key')):
             store.execute(f'DELETE FROM {table} WHERE {column}=?',(key,))
         signature=_message(db,store,key)
         signatures.add(signature);affect(related(signature))
@@ -167,39 +176,64 @@ def _refresh(db,store,pos):
             CASE WHEN c.section=2 THEN m.published END,
             CASE WHEN c.section=2 THEN m.message_id END,c.position,c.message''',(identity,)))
         if not candidates:
-            store.execute('DELETE FROM documents WHERE identity=?',(identity,));continue
+            store.execute('DELETE FROM documents WHERE identity=?',(identity,))
+            store.execute('DELETE FROM document_urls WHERE identity=?',(identity,));continue
         item=attach_sources(db,[json.loads(candidates[0][0])])[0]
         item.update(corpus_identity=identity,source_item_index=item.get('item_index'),
             item_index=-int(hashlib.sha256(identity.encode()).hexdigest()[:15],16)-1,
             distinct_contexts=len({r[1] for r in candidates}),
             selection_reason='전체 텔레그램 뉴스 대기열 · 정규 URL/동일 본문 중복 제거',strategic_value=evaluate_news(item))
+        store.execute('INSERT OR REPLACE INTO document_urls VALUES(?,?)',(item.get('source_url',''),identity))
         store.execute('INSERT OR REPLACE INTO documents VALUES(?,?,?,?,?,?)',(identity,item['strategic_value']['score'],str(item.get('day') or ''),str(item.get('published_at') or ''),encode(item),len(candidates)))
     metrics={'mode':reason,'changed_messages':len(changed),'changed_documents':len(affected),'checkpoint':pos[1]}
     store.execute('INSERT OR REPLACE INTO meta VALUES(1,?,?,?,?)',(pos[0],pos[1],policy(),encode(metrics)))
 
 
-def joined(db):
+def joined(db, day=None):
     with snapshot(db) as store:
         if store is None:return None
         result=[json.loads(r[0]) for r in store.execute('''SELECT r.payload FROM rows r JOIN messages m ON m.key=r.message
-            WHERE r.section=0 AND m.active=1 ORDER BY r.day DESC,r.published DESC,r.message_id DESC,r.item_index,r.message''')]
+            WHERE r.section=0 AND m.active=1''' + (' AND r.day=?' if day else '') + ''' ORDER BY r.day DESC,r.published DESC,r.message_id DESC,r.item_index,r.message''', (day,) if day else ())]
     from reach_pipeline import external_rows
     from source_enrichment import attach_sources
-    return result+attach_sources(db,external_rows(db))
+    return result+attach_sources(db,[r for r in external_rows(db) if not day or r.get('day')==day])
 
 
 def corpus(db, source_urls=None):
     from improvement_selection import SelectionBatch
     with snapshot(db) as store:
         if store is None:return None
-        rows=store.execute('SELECT payload,source_rows FROM documents ORDER BY score DESC,day DESC,published DESC,identity DESC')
+        if source_urls is not None:
+            # Filter actual projected URLs, including URL-free records and redirects.
+            wanted = list(source_urls)
+            selected = []
+            for offset in range(0, len(wanted), 500):
+                batch = wanted[offset:offset+500]
+                selected.extend(store.execute('SELECT payload,source_rows FROM documents WHERE identity IN (SELECT identity FROM document_urls WHERE url IN ('+','.join('?' for _ in batch)+')) ORDER BY score DESC,day DESC,published DESC,identity DESC', batch))
+            rows = selected
+        else:
+            rows=store.execute('SELECT payload,source_rows FROM documents ORDER BY score DESC,day DESC,published DESC,identity DESC')
         items=[];count=0
         for body,total in rows:
             checkpoint()
             item=json.loads(body)
             if source_urls is not None and item.get('source_url','') not in source_urls:continue
             items.append(item);count+=total
+        if source_urls is not None:
+            items.sort(key=lambda i:(i['strategic_value']['score'],str(i.get('day') or ''),str(i.get('published_at') or ''),i['corpus_identity']),reverse=True)
         coverage={'total_unique':len(items),'source_rows':count,'duplicates_excluded':count-len(items),
             'scope':'all_telegram_news','unit':'정규 URL 또는 URL 없는 동일 제목·본문',
             'text_scope':'대표 뉴스 문맥과 조회 가능한 원문 발췌; 반복 게시 문맥은 원문 보관함에 보존'}
         return SelectionBatch(items,coverage)
+
+
+def news_dates(db):
+    from collections import Counter
+    from news_repository import article_key
+    from reach_pipeline import external_rows
+    with snapshot(db) as store:
+        if store is None: return None
+        pairs=set(store.execute('SELECT n.day,n.article_key FROM news_index n JOIN messages m ON m.key=n.message WHERE m.active=1'))
+    pairs.update((r.get('day',''),article_key(r)) for r in external_rows(db))
+    counts=Counter(day for day,key in pairs)
+    return [{'date':day,'count':count} for day,count in sorted(counts.items(),reverse=True)]

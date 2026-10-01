@@ -119,3 +119,14 @@ class BriefingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_briefing_keeps_headline_provenance_and_original_query():
+    day='2026-09-12'
+    item=article(1,day,'확보 원문 제목','공개된 AI 모델 설명과 성능 평가 기준을 소개했다.','https://example.org/a?key=1')
+    item.update(briefing_title='브리핑 제목',source_title='확보 원문 제목',title_origin='source_page',original_url='https://example.org/a?key=1&part=2')
+    lead=build_briefing(payload(day,[item]),build_link_groups([item]))['lead']
+    assert lead['briefing_title']==item['briefing_title']
+    assert lead['source_title']==item['source_title']
+    assert lead['title_origin']=='source_page'
+    assert lead['source_url']==item['original_url']

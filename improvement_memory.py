@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from graph_rag import validated_workflow_content
 from evidence_corrections import project_catalog
 from morphology import extract_keywords
+from evidence_blobs import init as init_blobs, dumps as pack_json, loads as unpack_json
 
 
 def _digest(value):
@@ -20,6 +21,7 @@ def _identity(kind, label):
 
 
 def init_memory(db):
+    init_blobs(db)
     db.execute('CREATE TABLE IF NOT EXISTS improvement_catalog (id TEXT PRIMARY KEY, version INTEGER NOT NULL, payload_json TEXT NOT NULL)')
     db.execute('''CREATE TABLE IF NOT EXISTS improvement_catalog_history (
         id TEXT NOT NULL, version INTEGER NOT NULL, run_id TEXT NOT NULL, created_at TEXT NOT NULL,
@@ -31,7 +33,7 @@ def list_catalog(db, limit=100):
     init_memory(db)
     rows = db.execute('SELECT payload_json FROM improvement_catalog ORDER BY id LIMIT ?',
                       (max(1, min(500, int(limit))),)).fetchall()
-    return {'items': project_catalog(db, [json.loads(row[0]) for row in rows]),
+    return {'items': project_catalog(db, [unpack_json(db,row[0]) for row in rows]),
             'version': db.execute('SELECT COUNT(*) FROM improvement_catalog_history').fetchone()[0],
             'limitations': ['관측 키워드, 제안 전략 개념, 검증된 해석의 인용 관계를 구분합니다.',
                             '카탈로그는 검토 기억이며 새로운 사실 근거·인과관계·자동 점수 상승의 근거가 아닙니다.']}
@@ -39,7 +41,7 @@ def list_catalog(db, limit=100):
 
 def catalog_history(db, entry_id):
     init_memory(db)
-    return [dict(json.loads(row[0]), recorded_at=row[1], source_run_id=row[2]) for row in db.execute(
+    return [dict(unpack_json(db,row[0]), recorded_at=row[1], source_run_id=row[2]) for row in db.execute(
         'SELECT payload_json,created_at,run_id FROM improvement_catalog_history WHERE id=? ORDER BY version', (entry_id,))]
 
 
@@ -65,7 +67,7 @@ def improve_catalog(db, workflow_run_id, workflow):
     fingerprint = _digest(workflow)
     previous = db.execute('SELECT input_hash,result_json FROM improvement_ingestions WHERE run_id=?', (workflow_run_id,)).fetchone()
     if previous and previous[0] == fingerprint:
-        return dict(json.loads(previous[1]), added=[], updated=[])
+        return dict(unpack_json(db,previous[1]), added=[], updated=[])
     content = (validated_workflow_content(payload, workflow_run_id)
                if workflow.get('id') == workflow_run_id and workflow.get('status') == 'complete' and not workflow.get('error') else {})
     keywords = _source_keywords(payload)
@@ -132,7 +134,7 @@ def improve_catalog(db, workflow_run_id, workflow):
         for item_id, value in pending.items():
             old = db.execute('SELECT version,payload_json FROM improvement_catalog WHERE id=?', (item_id,)).fetchone()
             if old:
-                prior = json.loads(old[1])
+                prior = unpack_json(db,old[1])
                 value['run_ids'] = sorted(set(value['run_ids']) | set(prior['run_ids']))
                 value['evidence_ids'] = sorted(set(value['evidence_ids']) | set(prior['evidence_ids']))
                 merged = {}
@@ -146,7 +148,7 @@ def improve_catalog(db, workflow_run_id, workflow):
             if old and value == {key: item for key, item in prior.items() if key != 'version'}:
                 continue
             value['version'] = old[0] + 1 if old else 1
-            serialized = json.dumps(value, ensure_ascii=False, sort_keys=True)
+            serialized = pack_json(db,value)
             db.execute('INSERT OR REPLACE INTO improvement_catalog VALUES (?,?,?)', (item_id, value['version'], serialized))
             db.execute('INSERT INTO improvement_catalog_history VALUES (?,?,?,?,?)',
                        (item_id, value['version'], workflow_run_id, datetime.now(timezone.utc).isoformat(), serialized))
@@ -155,5 +157,5 @@ def improve_catalog(db, workflow_run_id, workflow):
                   'followup_tasks': followups[:6], 'rule_proposals': rules[:4],
                   'catalog_version': db.execute('SELECT COUNT(*) FROM improvement_catalog_history').fetchone()[0]}
         db.execute('INSERT OR REPLACE INTO improvement_ingestions VALUES (?,?,?)',
-                   (workflow_run_id, fingerprint, json.dumps(result, ensure_ascii=False)))
+                   (workflow_run_id, fingerprint, pack_json(db,result)))
     return result

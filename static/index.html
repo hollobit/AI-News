@@ -2619,12 +2619,32 @@
           return wrap;
         }
 
+        function appendHeadlineOrigin(container, story) {
+          if (!story.title_origin) return;
+          container.append(
+            el(
+              'p',
+              'excerpt',
+              story.title_origin === 'source_page'
+                ? '확보된 원문 제목'
+                : 'Telegram 브리핑 제목 · 원문 제목 미확인'
+            )
+          );
+          if (
+            story.source_title &&
+            story.briefing_title &&
+            story.briefing_title !== story.source_title
+          )
+            container.append(el('p', 'excerpt', '브리핑 제목: ' + story.briefing_title));
+        }
+
         function renderLead(story) {
           const article = el('article', 'lead-story');
           article.append(
             storyLabels(story, true),
             newsHeading('h2', 'lead-title', story.title, story.source_url)
           );
+          appendHeadlineOrigin(article, story);
           appendKeywords(article, story);
           if (story.summary)
             article.append(el('p', 'lead-summary', compactText(story.summary, 380)));
@@ -2648,6 +2668,7 @@
             storyLabels(story),
             newsHeading('h3', 'highlight-title', story.title, story.source_url)
           );
+          appendHeadlineOrigin(body, story);
           appendKeywords(body, story);
           if (story.summary)
             body.append(el('p', 'highlight-summary', compactText(story.summary, 300)));

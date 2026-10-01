@@ -206,22 +206,21 @@ class CompletionRunner:
                 db.execute('UPDATE rsi_cycles SET coverage_json=? WHERE id=?',(encoded(coverage),self.cycle_id))
                 db.commit()
 
-                from completion_reconciliation import AdmissionChecks
+                from completion_reconciliation import AdmissionChecks, report_summaries
                 checks=AdmissionChecks(db)
-                runs={};stored_runs={};reasons={};reconciled=[]
+                runs={};stored_runs=report_summaries(db,self.cycle_id);reasons={};reconciled=[]
                 completed=db.execute("SELECT * FROM corpus_completion_documents WHERE cycle_id=? AND status='complete'",(self.cycle_id,)).fetchall()
                 frozen=attach_sources(db,[json.loads(row['snapshot_json']) for row in completed])
                 for row,fallback in zip(completed,frozen):
                     run_id=row['workflow_run_id']
-                    if run_id not in stored_runs:
-                        stored_runs[run_id]=db.execute("SELECT r.id,r.status,r.error,a.payload_json FROM strategic_workflow_runs r LEFT JOIN strategic_workflow_artifacts a ON a.run_id=r.id AND a.stage='final' WHERE r.id=?",(run_id,)).fetchone()
-                    stored=stored_runs[run_id]
+                    stored=stored_runs.get(run_id)
                     item=current.get(row['document_id'],fallback)
                     unchanged,check_key=checks.unchanged(self.cycle_id,row,stored,item)
                     if unchanged:continue
                     if run_id not in runs:
                         run=dict(stored) if stored else {'id':run_id,'status':'needs_review','error':'기존 분석 결과 없음'}
-                        run['results']=json.loads(run.pop('payload_json',None) or '{}');runs[run_id]=run
+                        payload=db.execute("SELECT payload_json FROM strategic_workflow_artifacts WHERE run_id=? AND stage='final'",(run_id,)).fetchone()
+                        run['results']=json.loads(payload[0] if payload else '{}');runs[run_id]=run
                         try:validate_risk_report(run['results'].get('risk_report'),run['results'].get('evidence') or [])
                         except (ValueError,TypeError,KeyError) as exc:reasons[run_id]=str(exc)
                     admission=document_admission(runs[run_id],item)
