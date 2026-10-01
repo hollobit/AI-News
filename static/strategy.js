@@ -1235,7 +1235,7 @@
       actions.append(
         link('기사 상세 해설 ↗', '/article?url=' + encodeURIComponent(item.source_url), 'button')
       );
-      actions.append(link('원문 열기 ↗', item.source_url, 'button'));
+      actions.append(link('원문 열기 ↗', item.original_url || item.source_url, 'button'));
       const fetchButton = node('button', 'button', '원문 정보 가져오기');
       fetchButton.addEventListener('click', () =>
         action(fetchButton, async () => {

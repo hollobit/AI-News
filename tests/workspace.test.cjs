@@ -107,3 +107,16 @@ test('route state restores defaults, preserves unrelated deep links and canonica
   location.search='?q=복원&page=3';const restored=route.read();
   assert.equal(nodes.search.value,'복원');assert.equal(nodes.sort.value,'priority');assert.equal(restored.page,'3');
 });
+
+test('local source navigation preserves nested query bytes; static sites stay direct', () => {
+  const events = {};
+  const document = {hidden: false, addEventListener: (kind, fn) => {events[kind] = fn;}};
+  setup(undefined, {location: {hostname: '127.0.0.1', origin: 'http://127.0.0.1:8001'}, document});
+  const url = 'https://example.org/report_(final).pdf?ids[]=2&ids[]=1&next=https://other.org/a?x=a%2Fb#part';
+  const anchor = {href: url, hasAttribute: () => false};
+  events.click({target: {closest: () => anchor}});
+  assert.equal(new URL(anchor.href, 'http://127.0.0.1:8001').searchParams.get('url'), url);
+  const external = {};
+  setup(undefined, {location: {hostname: 'hollobit.github.io', origin: 'https://hollobit.github.io'}, document: {hidden: false, addEventListener: (kind, fn) => {external[kind] = fn;}}});
+  assert.equal(external.click, undefined);
+});

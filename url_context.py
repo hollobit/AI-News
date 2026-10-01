@@ -38,7 +38,8 @@ def focus_url_context(item, target_url, limit=1100):
     target = canonical_url(target_url)
     text = str(item.get('text') or '')
     urls = {canonical_url(url) for url in extract_links(text)}
-    result = dict(item, source_url=target)
+    original=next((url for url in [item.get('source_url') or '',*extract_links(text)] if canonical_url(url)==target),target)
+    result = dict(item, source_url=target, original_url=original)
     if not target:
         return result
     primary = canonical_url(item.get('source_url') or '')

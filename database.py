@@ -51,6 +51,8 @@ def prepare_database(path, rebuild_articles, joined_articles, classification_ver
     version = db.execute("SELECT value FROM state WHERE key='classification_version'").fetchone()
     if version is None or version[0] != classification_version:
         rebuild_articles(db)
+    from url_integrity import ensure
+    ensure(db)
     from source_changes import install
     install(db)
     db.commit()

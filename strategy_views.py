@@ -95,7 +95,7 @@ def enrich(db, items):
 
 
 def card(item):
-    keys=('item_id','keyword_record_id','chat_id','message_id','item_index','title','excerpt','day','topic','content_type','type_label','type_reason','source_url','url','channel','published_at','sectors','strategic_value','group_id','source_count','matched_terms')
+    keys=('item_id','keyword_record_id','chat_id','message_id','item_index','title','excerpt','day','topic','content_type','type_label','type_reason','source_url','original_url','url','channel','published_at','sectors','strategic_value','group_id','source_count','matched_terms')
     result={k:item[k] for k in keys if k in item}
     for key in ('title','excerpt'): result[key]=str(result.get(key) or '')[:300]
     result['strategic_keywords']=[{k:t[k] for k in ('id','label','kind') if k in t} for t in item.get('strategic_keywords',[])[:6]]

@@ -209,6 +209,22 @@
     requires_review: '검토 필요',
     failed: '실패',
   };
+  // Local navigation resolves saved originals at click time. Published static
+  // sites keep direct links and never depend on the local redirect endpoint.
+  if (['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname)) {
+    const originalSource = (event) => {
+      const anchor = event.target.closest?.('a[href]');
+      if (!anchor || anchor.hasAttribute('download')) return;
+      try {
+        const target = new URL(anchor.href);
+        if (!['http:', 'https:'].includes(target.protocol) || target.origin === location.origin)
+          return;
+        anchor.href = '/source-link?url=' + encodeURIComponent(target.href);
+      } catch (_) {}
+    };
+    document.addEventListener('click', originalSource, true);
+    document.addEventListener('auxclick', originalSource, true);
+  }
   window.Workspace = {
     request,
     routeState,

@@ -89,8 +89,10 @@ class SourceService:
             init(db)
 
     def fetch(self, url, refresh=False):
-        fetch_url = str(url or '').strip()
-        url = canonical_url(url)
+        from source_navigation import original_url
+        with sqlite3.connect(self.path,timeout=15) as db:
+            fetch_url=original_url(db,url)
+        url = canonical_url(fetch_url)
         key = (str(Path(self.path).resolve()), url)
         with _FETCH_LOCK:
             owner = key not in _FETCHES

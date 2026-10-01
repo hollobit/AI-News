@@ -1,3 +1,13 @@
+## 2026-10-01 복잡한 원출처 URL 보존·복구 (21:53 KST)
+
+- 기사 분리기의 `)`/`]`/`}` 종료 정규식 때문에 괄호 뒤 경로·파라미터가 잘리는 문제를 확인했다. `url_parser.py`의 균형 괄호/Markdown 경계 처리와 중첩 redirect URL 범위 판별을 기사 분리·링크 추출·원문 보관함에 적용했다. Telegram entity URL은 원본 그대로 보존한다.
+- 일반 쿼리는 값의 decode/re-encode·정렬을 제거해 중복 키 순서, 빈 값/값 없는 플래그, % 인코딩, +, 배열/객체 표현 및 fragment를 보존한다. 알려진 서명/토큰 URL은 경로·쿼리와 추적 키를 포함한 전체 주소를 그대로 둔다. 정규 URL은 중복 판별용이며 링크 그룹/문맥에는 original_url을 별도로 보존한다.
+- SourceService는 보관된 원본 주소를 조회에 우선 사용한다. 로컬 화면의 외부 링크 클릭은 `/source-link`에서 원본 주소 또는 근거가 유일한 복구 주소로 연결한다. 과거 보고서의 URL/해시·검토 이력을 고쳐 쓰지 않는다. HTTP(S), 제어문자/인증정보 금지, Location 문자 인코딩을 검증하고 서버가 외부 본문을 프록시하지 않는다. 원격 정적 사이트는 직접 링크를 유지하며 이번에 공개 Pages를 재배포하지 않았다.
+- 버전 마이그레이션 `lossless-links-v2`: 저장된 본문과 메시지 스냅샷만 근거로 기사 URL 2건, URL 보관함 스냅샷 8건 복구. 변경 전 파생 행은 url_integrity_history, 유일한 옛 주소 대응은 repaired_source_links에 보존했다. 원본 Telegram/기존 분석 보고서는 유지한다. 재점검 결과 추가 복구 0/0. 정규화 의미 변경에 따른 문서·분석 캐시는 기존 입력 대조를 거치며 과거 결과를 자동 통과시키지 않는다.
+- 실제 사례: `...tracker-(clean`은 HEAD 404, `...tracker-(clean).pdf`는 HEAD 200/application/pdf. 브라우저의 원문 버튼이 새 탭에서 복구 PDF URL로 요청되는 것을 확인했고, 서명/중첩 쿼리 Location 바이트 보존과 JS 오류 0을 검증했다. PDF 다운로드는 일반 HTML 페이지 load와 달라 요청 URL·HTTP 응답으로 따로 확인했다. 원문 삭제·서명 만료·외부 사이트 접근 제한까지 해결됐다고 주장하지 않는다.
+- 검증: 전체 Python 739 tests + 56 subtests(11.87초), JavaScript 12 tests, 구문/포맷/diff 검사 통과. 근거 `.runtime/verification/url-integrity-browser.json`, `url-restored-head.json`, `url-integrity-rollout.json`. 서명 테스트는 가상 주소이며 인증값을 문서/로그에 기록하지 않았다.
+- 운영 반영: 기존 작업의 정상 종료·저장 후 서버 15409, collector 15417, background 16070, 상세 driver 19290 확인. 동일 cycle d4686920261a4380bd467ed4ae1c6bda running, pause_requested=0/error 없음, workers=2/batch=1/max_rounds=20 유지. Telegram 마지막 확인 21:52:33. PID/시각은 이 점검 당시 기록이다.
+
 ## 2026-10-01 중복 분석·재개 비용·구조 리팩토링
 
 - 원문 최초 확보는 `indexed`(저장·색인, 미검토)로 기록해 전체 전략 분석을 자동 생성하지 않는다. 원문 변경 시 기존 큐 행을 `source_review_history`에 보존한다. 전수 원장에 같은 정규 URL이 있는 변경분은 `delegated_corpus`로 보내 해당 원장의 최신 입력/독립 검토/재시도 정책으로 처리한다. 위임은 검토 완료 판정이 아니다. 기존 완료·실패·검토 거절 이력은 삭제하지 않는다.

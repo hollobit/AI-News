@@ -179,15 +179,8 @@ def _item_date(first_line, context_year, header):
 
 
 def _safe_urls(text):
-    candidates = _MARKDOWN_URL.findall(text) + _URL.findall(text)
-    urls = []
-    for candidate in candidates:
-        candidate = candidate.rstrip(".,;:!?'\"")
-        parsed = urlparse(candidate)
-        if parsed.scheme.lower() in {"http", "https"} and parsed.netloc:
-            if candidate not in urls:
-                urls.append(candidate)
-    return urls
+    from url_parser import links
+    return links(text)
 
 
 def _plain(text):

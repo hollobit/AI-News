@@ -63,6 +63,7 @@ def init_archive(db):
         );
         CREATE INDEX IF NOT EXISTS archived_urls_lookup
             ON archived_urls(active, day, chat_id, message_id);
+        CREATE INDEX IF NOT EXISTS archived_urls_original ON archived_urls(original_url,active);
         CREATE INDEX IF NOT EXISTS archived_urls_canonical
             ON archived_urls(canonical_url);
         CREATE TABLE IF NOT EXISTS url_archive_meta (
@@ -202,20 +203,17 @@ def _text_occurrences(text, entities, body_kind):
             "entity_type": "markdown_link", "nearby_context": _context(text, match.start(), url_end + 1),
         })
     plain_index = 0
-    for match in _URL_START.finditer(text):
-        end = match.end()
-        while end < len(text) and not text[end].isspace() and text[end] not in '<>"`':
-            end += 1
-        if any(start <= match.start() < stop for start, stop, _ in occupied):
+    from url_parser import spans
+    for url_start, end, raw in spans(text):
+        if any(start <= url_start < stop for start, stop, _ in occupied):
             continue
-        if any(start <= match.start() < stop for start, stop in markdown_spans):
+        if any(start <= url_start < stop for start, stop in markdown_spans):
             continue
-        raw = _clean_url_tail(text[match.start():end])
         if not _valid_http_url(raw):
             continue
-        nearby = _context(text, match.start(), end)
+        nearby = _context(text, url_start, end)
         found.append({
-            "sort": (match.start(), 2, plain_index), "original_url": raw,
+            "sort": (url_start, 2, plain_index), "original_url": raw,
             "title": _inferred_title(nearby, raw), "title_source": "nearby_context",
             "verified_article_title": 0, "origin": f"{body_kind}_plain",
             "entity_type": "", "nearby_context": nearby,

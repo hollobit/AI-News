@@ -24,7 +24,7 @@ class LinkGroupTests(unittest.TestCase):
     def test_canonical_known_aliases_and_semantic_queries(self):
         self.assertEqual(
             canonical_url("https://www.Example.com/a/?utm_source=x&id=2&empty=&id=1#part"),
-            "https://www.example.com/a?empty=&id=1&id=2#part",
+            "https://www.example.com/a?id=2&empty=&id=1#part",
         )
         self.assertNotEqual(canonical_url("https://example.com/a?id=1"),
                             canonical_url("https://example.com/a?id=2"))

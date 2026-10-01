@@ -3237,7 +3237,7 @@
           const back = el('button', 'back-button', '← 링크 목록');
           back.type = 'button';
           back.addEventListener('click', () => closeLinkDetail());
-          const canonical = safeSourceUrl(group.canonical_url);
+          const canonical = safeSourceUrl(group.original_url || group.canonical_url);
           header.append(
             back,
             el(

@@ -57,23 +57,8 @@ def _is_valid_http_url(value: str) -> bool:
 
 
 def extract_links(text: str) -> list[str]:
-    """Return ordered unique HTTP(S) links from Markdown or plain prose.
-
-    Scanning instead of a single ``[^)]`` regex retains valid parentheses in URLs,
-    while the tail cleanup removes the Markdown closing parenthesis.
-    """
-    source = str(text or "")
-    links: list[str] = []
-    seen: set[str] = set()
-    for match in _URL_START.finditer(source):
-        end = match.end()
-        while end < len(source) and not source[end].isspace() and source[end] not in '<>"`':
-            end += 1
-        candidate = _clean_url_tail(source[match.start():end])
-        if _is_valid_http_url(candidate) and candidate not in seen:
-            seen.add(candidate)
-            links.append(candidate)
-    return links
+    from url_parser import links
+    return links(text)
 
 
 def _netloc(parsed) -> str:
@@ -90,21 +75,31 @@ def _netloc(parsed) -> str:
     return host
 
 
+def _signed_query(query):
+    from urllib.parse import unquote_plus
+    keys=[unquote_plus(part.split('=',1)[0]).casefold() for part in query.split('&')]
+    return any(key in {'signature','sig','token','access_token','auth','hmac','expires','policy','key-pair-id'} or key.startswith(('x-amz-','x-goog-')) for key in keys)
+
+
 def _clean_query(query: str) -> str:
-    pairs = [
-        (key, value) for key, value in parse_qsl(query, keep_blank_values=True)
-        if not key.casefold().startswith("utm_") and key.casefold() not in _TRACKING_KEYS
-    ]
-    return urlencode(sorted(pairs, key=lambda pair: (pair[0], pair[1])), doseq=True)
+    # Do not decode/re-encode values or reorder duplicate keys: servers and
+    # signatures may distinguish + from %20, escapes, ordering and bare flags.
+    from urllib.parse import unquote_plus
+    parts=query.split('&')
+    keys=[unquote_plus(part.split('=',1)[0]).casefold() for part in parts]
+    if _signed_query(query):
+        return query
+    return '&'.join(part for part,key in zip(parts,keys) if not key.startswith('utm_') and key not in _TRACKING_KEYS)
 
 
 @lru_cache(maxsize=32768)
 def canonical_url(url: str) -> str:
     """Canonicalize only well-known aliases and unambiguous tracking noise."""
-    value = _clean_url_tail(str(url or "").strip())
+    value = str(url or "").strip()
     if not _is_valid_http_url(value):
         return ""
     parsed = urlsplit(value)
+    if _signed_query(parsed.query):return value
     scheme = parsed.scheme.lower()
     host = _netloc(parsed)
     path = parsed.path or "/"
@@ -318,7 +313,7 @@ def build_link_groups(rows) -> list[dict]:
         links = extract_links(row.get("text") or "")
         source_url = str(row.get("source_url") or "")
         if source_url and _is_valid_http_url(_clean_url_tail(source_url.strip())):
-            links.append(_clean_url_tail(source_url.strip()))
+            links.append(source_url.strip())
         # Count a source article at most once in each canonical group.
         per_row: dict[str, set[str]] = defaultdict(set)
         for link in links:
@@ -356,6 +351,7 @@ def build_link_groups(rows) -> list[dict]:
         group = {
             "id": _stable_hash(canonical, length=24),
             "canonical_url": canonical,
+            "original_url": str(representative.get("source_url") or "") if str(representative.get("source_url") or "") in bucket["variants"] else sorted(bucket["variants"])[0],
             "title": title,
             "domain": urlsplit(canonical).hostname or "",
             **typing,
