@@ -676,3 +676,10 @@
 
 - 운영 반영(09:28 KST): 명시 engine probe 성공 후 같은 cycle을 workers2/batch1/maxrounds20으로 재개했다. owner59470 생존/running/error 없음, 중단 round3679가 같은 workflow에서 accepted1/complete로 완료됐다. 입력 재대조 직후 complete3849→3850, pending4508/running2(총8360). 수집 증분/입력 변경으로 재개 전8351건과 대상이 다르다. 누적 recoveries20은 보존되고 stagnant0 및 completed_rounds2491로 진척 기준이 저장됐다.
 - HTTP 서버와 운영 알림 감독기를 새 코드로 교체했고 실제 health API에서 engine_retry_rounds0과 최신 실행 상태 확인. 기존 collector/별도 background 및 검토 이력 유지. 소스 c42b478d push 완료. 실운영 근거 `.runtime/verification/engine-isolation-rollout.json`, 모의 화면 근거 `engine-retry-ui.json`. 운영에서 추가 capacity를 고의로 발생시켜 시험한 것은 아니며 전수 분석 완료도 아니다.
+
+## 2026-10-02 수집 연결 회복 확인·상세 분석 재개 (15:19 KST)
+
+- 기존 collector30511은 살아 있었고 로그에 연결 오류 후10초 재시도가 반복됐다. 현재는15:17:16→15:17:46→15:18:17→15:19:19 KST 확인 성공이 갱신돼 연결 회복을 확인했다. 구체적인 네트워크 단절 원인까지 확정하지 않았다. 기존 기사 추출은complete이며 수집기를 중복 실행하거나 성공 시각을 인위적으로 갱신하지 않았다.
+- 사용자 요청에 따라 `scheduled_risks.py --resume`으로 같은 cycle d4686920261a4380bd467ed4ae1c6bda를 재개했다. owner1354 생존/running/pause_requested0/error 없음. workers2/batch1/recent-first/maxrounds20과 일시 장애 격리·진척 기반 복구 정책을 유지했다.
+- 재개 전 complete3964/pending4428(8392), 실제 round3819 accepted/complete 후 complete3965/pending4425/running2(8392). round3818·3820 진행 중. Sol 통합 분석 실제 호출을 확인했고 검토/실패 이력 및 누적 복구20회는 보존했다. 전수 잔여 완료를 뜻하지 않는다.
+- 코드 변경·추가 단위 테스트 없이 실운영 재개와 처리 진척을 검증했다. 근거 `.runtime/verification/deep-resume-20261002-1518.json`, `.runtime/scheduled-risks-worker.log`. PID와 상태는 이 확인 시점 기록이다.
