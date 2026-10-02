@@ -40,6 +40,17 @@ async def main():
   await page.locator('#filter-attention').click();assert await page.locator('.stage.dim').count()==8
   await page.locator('#filter-all').click();await page.locator('[data-stage="deep"]').click()
   await expect(page.locator('.ws-global-menu a')).to_have_count(15)
+  await expect(page.locator('#chart-value')).to_have_text('5건')
+  await expect(page.locator('#chart-empty')).to_be_hidden()
+  assert len((await page.locator('#chart-line').get_attribute('points')).split())==3
+  await page.locator('#task-search').fill('없는 기사');await expect(page.locator('#tasks details')).to_have_count(0)
+  await expect(page.locator('#tasks')).to_contain_text('검색 조건')
+  await page.locator('#task-search').fill('개별');await expect(page.locator('#tasks details')).to_have_count(1)
+  await page.locator('#task-status').select_option('complete');await expect(page.locator('#tasks details')).to_have_count(0)
+  await page.locator('#task-status').select_option('active');await expect(page.locator('#tasks details')).to_have_count(1)
+  await page.locator('#task-search').fill('');await page.locator('#task-status').select_option('all')
+  await page.locator('#tasks summary').click()
+
   out=ROOT/'.runtime/verification';out.mkdir(parents=True,exist_ok=True)
   await page.screenshot(path=str(out/'workflow-live-desktop.png'),full_page=True)
   for width in [390,320]:

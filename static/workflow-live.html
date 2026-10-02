@@ -16,11 +16,9 @@
     <main id="main" class="flow-main">
       <header class="flow-hero">
         <div>
-          <p class="eyebrow">LIVE WORKFLOW / 뉴스 분석 관제</p>
-          <h1>실시간 워크플로우</h1>
-          <p class="intro">
-            수집부터 독립 검토, 지식 연결까지. 단계별 진행과 남은 작업을 실시간으로 살펴보세요.
-          </p>
+          <p class="eyebrow">WORKFLOW TERMINAL · LIVE</p>
+          <h1>뉴스 분석 시황판</h1>
+          <p class="intro">수집 · 분석 · 검토 · 게시의 실시간 운영 현황</p>
         </div>
         <div class="live-controls">
           <span id="connection" role="status" aria-live="polite">연결 중</span
@@ -53,49 +51,118 @@
           </svg>
         </article>
       </section>
-      <section class="flow-map" aria-labelledby="map-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">01 / PROCESS MAP</p>
-            <h2 id="map-title">살아 있는 처리 흐름</h2>
+      <div class="market-top">
+        <section class="flow-map" aria-labelledby="map-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">PIPELINE HEATMAP</p>
+              <h2 id="map-title">처리 단계 히트맵</h2>
+            </div>
+            <div class="filters" role="group" aria-label="단계 강조">
+              <button id="filter-all" aria-pressed="true">모든 단계</button
+              ><button id="filter-attention" aria-pressed="false">확인 필요 강조</button>
+            </div>
           </div>
-          <div class="filters" role="group" aria-label="단계 강조">
-            <button id="filter-all" aria-pressed="true">모든 단계</button
-            ><button id="filter-attention" aria-pressed="false">확인 필요 강조</button>
+          <p class="map-note">
+            색은 운영 상태, 숫자는 단계별 진척률입니다. 선택하면 아래에 상세 상태가 표시됩니다.
+          </p>
+          <div
+            id="main-stages"
+            class="stage-grid primary-flow"
+            aria-label="뉴스 분석 주 흐름"
+          ></div>
+          <div id="support-stages" class="stage-grid" aria-label="근거 보강과 게시"></div>
+          <div class="legend">
+            <span class="ok">정상·완료</span><span class="active">진행</span
+            ><span class="pending">대기</span><span class="review">검토 필요·변경됨</span
+            ><span class="failed">실패</span>
           </div>
-        </div>
-        <p class="map-note">
-          카드를 선택하면 처리 기준과 남은 작업이 펼쳐집니다. 화살표는 처리 관계이며 모든 단계가
-          순차로 실행되는 것은 아닙니다.
-        </p>
-        <div id="main-stages" class="stage-grid primary-flow" aria-label="뉴스 분석 주 흐름"></div>
-        <div class="branch-label">
-          <span></span>원문·연구 근거를 보강하고, 검토 결과를 연결합니다<span></span>
-        </div>
-        <div id="support-stages" class="stage-grid" aria-label="근거 보강과 게시"></div>
-        <div class="legend">
-          <span class="ok">완료·확보</span><span class="active">진행</span
-          ><span class="pending">대기</span><span class="review">검토 필요·변경됨</span
-          ><span class="failed">실패</span>
-        </div>
-        <p id="scope" class="scope-note"></p>
-      </section>
+          <p id="scope" class="scope-note"></p>
+        </section>
+        <section class="market-chart" aria-labelledby="chart-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">COMPLETION INDEX</p>
+              <h2 id="chart-title">상세 분석 완료 추이</h2>
+            </div>
+            <span class="chart-badge">실측 · 3초</span>
+          </div>
+          <div class="chart-quote">
+            <strong id="chart-value">—</strong><span id="chart-change">관측 대기</span>
+          </div>
+          <div class="chart-wrap">
+            <svg
+              id="market-chart"
+              viewBox="0 0 600 180"
+              role="img"
+              aria-label="이 화면에서 관측한 상세 분석 완료 건수"
+            >
+              <defs>
+                <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#34d6b0" stop-opacity=".25" />
+                  <stop offset="100%" stop-color="#34d6b0" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0 20H600 M0 65H600 M0 110H600 M0 155H600 M100 0V180 M200 0V180 M300 0V180 M400 0V180 M500 0V180"
+                stroke="#263344"
+                stroke-width="1"
+                fill="none"
+              />
+              <polygon id="chart-area" fill="url(#chart-fill)" />
+              <polyline id="chart-line" fill="none" stroke="#4bdfbb" stroke-width="2.5" /></svg
+            ><span id="chart-empty">관측값을 모으는 중입니다</span>
+          </div>
+          <div class="chart-axis">
+            <span id="chart-start">—</span><span id="chart-range">—</span
+            ><span id="chart-end">—</span>
+          </div>
+          <p class="map-note">
+            이 화면에서 수신한 최근 120개 관측값. 입력 변경으로 완료 건수가 감소할 수 있습니다.
+          </p>
+        </section>
+      </div>
       <div class="flow-bottom">
         <section class="detail-panel" aria-labelledby="detail-title">
-          <p class="eyebrow">02 / STAGE FOCUS</p>
+          <p class="eyebrow">STAGE DETAIL</p>
           <div id="detail"></div>
         </section>
         <section class="activity-panel">
-          <p class="eyebrow">03 / EXECUTION PULSE</p>
-          <h2>지금 처리하는 작업</h2>
+          <p class="eyebrow">TASK WATCHLIST</p>
+          <h2>실시간 작업 보드 <small id="task-count"></small></h2>
           <p class="detail-note">
             진행 작업 우선 최대 12건과 최근 8회차를 표시합니다. 작업을 펼치면 단계별 기록이 3초마다
             갱신됩니다.
           </p>
+          <div class="task-toolbar">
+            <label
+              >기사·회차 검색<input
+                id="task-search"
+                type="search"
+                placeholder="현재 작업 목록에서 검색" /></label
+            ><label
+              >작업 상태<select id="task-status">
+                <option value="all">전체 상태</option>
+                <option value="active">진행·대기</option>
+                <option value="attention">확인 필요</option>
+                <option value="complete">완료</option>
+              </select></label
+            >
+          </div>
+          <div class="watchlist-head" aria-hidden="true">
+            <span>회차 / 상태</span><span>기사</span><span>현재 단계</span><span>단계 완료</span>
+          </div>
           <div id="tasks" class="tasks"></div>
+        </section>
+      </div>
+      <div class="market-tape">
+        <section class="activity-panel model-panel">
+          <p class="eyebrow">MODEL ACTIVITY</p>
           <h3>공유 모델 작업</h3>
           <p class="empty">전체 서비스의 호출입니다. 진행 작업 우선, 최대 12개를 표시합니다.</p>
           <div id="calls" class="calls"></div>
+        </section>
+        <section class="activity-panel tape-panel">
           <div class="section-heading compact">
             <h3>최근 상세 분석 회차</h3>
             <a href="/operations#improvement">운영 화면 ↗</a>

@@ -77,9 +77,9 @@
       ? 'ok'
       : ['running', 'queued'].includes(s)
         ? 'active'
-        : ['needs_review', 'requires_review', 'stale'].includes(s)
+        : ['needs_review', 'requires_review', 'stale', 'retry'].includes(s)
           ? 'review'
-          : ['failed', 'error', 'blocked', 'interrupted'].includes(s)
+          : ['failed', 'error', 'blocked', 'interrupted', 'owner_missing'].includes(s)
             ? 'failed'
             : 'pending';
   const el = (tag, text, cls, parent) => {
@@ -138,6 +138,20 @@
       el('span', undefined, 'progress-track', c);
       cards.set(s.id, c);
     }
+    const signature = JSON.stringify([s.counts, s.status, s.observed]);
+    if (c.dataset.signature && c.dataset.signature !== signature) {
+      c.classList.remove('tick');
+      void c.offsetWidth;
+      c.classList.add('tick');
+    }
+    c.dataset.signature = signature;
+    c.dataset.tone = needsAttention(s)
+      ? ['failed', 'error', 'owner_missing', 'delayed'].includes(s.status)
+        ? 'failed'
+        : 'review'
+      : s.status === 'live' || ['complete', 'verified'].includes(s.status)
+        ? 'ok'
+        : tone(s.status);
     c.setAttribute('aria-pressed', String(selected === s.id));
     c.classList.toggle('live', s.status === 'live' || (s.status === 'running' && s.owner_alive));
     c.classList.toggle('dim', focusAttention && !needsAttention(s));
@@ -279,6 +293,48 @@
       'aria-label',
       `최근 화면 관측 구간 완료 변화 ${change}건. 입력 재대조로 감소할 수 있습니다.`
     );
+    $('chart-value').textContent = deep.total ? fmt(deep.complete) + '건' : '—';
+    $('chart-change').textContent =
+      `${change > 0 ? '▲ +' : change < 0 ? '▼ ' : '— '}${fmt(change)}건 · 화면 진입 이후`;
+    $('chart-change').className = change < 0 ? 'quote-down' : 'quote-up';
+    const chartStart = Date.parse(samples[0].at);
+    const chartSpan = Math.max(1, Date.parse(samples.at(-1).at) - chartStart);
+    const chartPoints = samples
+      .map(
+        (s) =>
+          `${((Date.parse(s.at) - chartStart) / chartSpan) * 600},${155 - ((s.value - min) / range) * 130}`
+      )
+      .join(' ');
+    $('chart-line').setAttribute('points', chartPoints);
+    $('chart-area').setAttribute(
+      'points',
+      samples.length > 1 ? `0,180 ${chartPoints} 600,180` : ''
+    );
+    $('chart-empty').hidden = samples.length > 1;
+    const shortTime = (at) => new Date(at).toLocaleTimeString('ko-KR', { hour12: false });
+    $('chart-start').textContent = shortTime(samples[0].at);
+    $('chart-end').textContent = shortTime(samples.at(-1).at);
+    $('chart-range').textContent = `${fmt(min)}–${fmt(Math.max(...values))}건`;
+    $('market-chart').setAttribute(
+      'aria-label',
+      `상세 분석 완료 ${fmt(min)}에서 ${fmt(Math.max(...values))}건 범위, 최근 ${samples.length}개 실측값`
+    );
+    const query = $('task-search').value.trim().toLocaleLowerCase();
+    const statusFilter = $('task-status').value;
+    const matches = (t) =>
+      (!query || `${t.number} ${t.title || ''}`.toLocaleLowerCase().includes(query)) &&
+      (statusFilter === 'all' ||
+        (statusFilter === 'complete' && t.status === 'complete') ||
+        (statusFilter === 'active' &&
+          ['running', 'planned', 'pending', 'queued'].includes(t.status)) ||
+        (statusFilter === 'attention' &&
+          (t.retry ||
+            ['failed', 'needs_review', 'paused', 'interrupted'].includes(t.status) ||
+            (t.steps || []).some((step) =>
+              ['failed', 'retry', 'owner_missing', 'interrupted'].includes(step.status)
+            ))));
+    const visibleTasks = (data.tasks || []).filter(matches);
+    $('task-count').textContent = `${visibleTasks.length} / ${(data.tasks || []).length}건`;
     const taskScroll = $('tasks').scrollTop;
     const focusedTask = document.activeElement?.closest('#tasks details')?.dataset.task;
     const expanded = new Set(
@@ -286,14 +342,15 @@
     );
     $('tasks').dataset.loaded = 'true';
     $('tasks').replaceChildren();
-    for (const task of data.tasks || []) {
+    for (const task of visibleTasks) {
       const item = el('details', undefined, 'task', $('tasks'));
       item.dataset.task = String(task.id || task.number);
       item.open = expanded.has(item.dataset.task);
       const summary = el('summary', undefined, '', item);
       if (focusedTask === item.dataset.task) summary.focus({ preventScroll: true });
-      el('small', `상세 분석 회차 ${task.number} · ${label(task.status)}`, '', summary);
-      el('strong', task.title || '기사 체크포인트', '', summary);
+      el('small', `#${task.number} · ${label(task.status)}`, tone(task.status), summary);
+      el('strong', task.title || '기사 체크포인트', '', summary).title =
+        task.title || '기사 체크포인트';
       const steps = task.steps || [];
       const active = steps.filter((s) => ['running', 'retry', 'owner_missing'].includes(s.status));
       const latest = task.latest;
@@ -359,8 +416,15 @@
         );
       }
     }
-    if (!(data.tasks || []).length)
-      el('p', '현재 발행된 상세 분석 작업이 없습니다.', 'empty', $('tasks'));
+    if (!visibleTasks.length)
+      el(
+        'p',
+        (data.tasks || []).length
+          ? '검색 조건에 맞는 작업이 없습니다.'
+          : '현재 발행된 상세 분석 작업이 없습니다.',
+        'empty',
+        $('tasks')
+      );
     $('tasks').scrollTop = taskScroll;
     $('calls').replaceChildren();
     if (data.runtime_error)
@@ -439,6 +503,12 @@
     if (!paused) refresh();
   };
   $('refresh').onclick = refresh;
+  $('task-search').oninput = () => {
+    if (current) render(current);
+  };
+  $('task-status').onchange = () => {
+    if (current) render(current);
+  };
   function filter(value) {
     focusAttention = value;
     $('filter-all').setAttribute('aria-pressed', String(!value));
