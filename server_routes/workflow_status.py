@@ -56,9 +56,9 @@ def snapshot(path):
                     if 'strategic_workflow_events' in tables:
                         from server_routes.workflow_tasks import task_detail
                         # Active tasks first; retain recent results so completion does not disappear.
-                        active=list(db.execute("SELECT id FROM rsi_rounds WHERE cycle_id=? AND status IN ('running','planned') ORDER BY number LIMIT 12", (row['id'],)))
+                        active=list(db.execute("SELECT id FROM rsi_rounds WHERE cycle_id=? AND status IN ('running','planned') ORDER BY number LIMIT 20", (row['id'],)))
                         recent=list(db.execute("SELECT id FROM rsi_rounds WHERE cycle_id=? ORDER BY number DESC LIMIT 8", (row['id'],)))
-                        ids=list(dict.fromkeys(r['id'] for r in active+recent))[:20]
+                        ids=list(dict.fromkeys(r['id'] for r in active+recent))[:28]
                         for identity in ids:
                             r=db.execute("""SELECT id,number,status,workflow_run_id,created_at,completed_at,
                                 json_extract(snapshot_json,'$.items[0].title') AS title

@@ -198,15 +198,15 @@ class CompletionTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT status FROM rsi_cycles').fetchone()[0],'complete')
             self.assertEqual(db.execute("SELECT count(*) FROM rsi_rounds WHERE status='complete'").fetchone()[0],6)
 
-    def test_ten_workers_claim_distinct_documents(self):
-        self.items=SelectionBatch([dict(self.items[0],source_url=f'https://example.com/{i}') for i in range(10)],coverage={'total_unique':10})
-        FakeWorkflow.barrier=threading.Barrier(10)
-        runner=CompletionRunner(self.path,'cycle',workers=10,batch_size=1,max_rounds=20)
+    def test_twenty_workers_claim_distinct_documents(self):
+        self.items=SelectionBatch([dict(self.items[0],source_url=f'https://example.com/{i}') for i in range(20)],coverage={'total_unique':20})
+        FakeWorkflow.barrier=threading.Barrier(20)
+        runner=CompletionRunner(self.path,'cycle',workers=20,batch_size=1,max_rounds=20)
         runner.run()
-        self.assertEqual(FakeWorkflow.maximum,10)
-        self.assertEqual(runner.summary()['counts'],{'complete':10})
+        self.assertEqual(FakeWorkflow.maximum,20)
+        self.assertEqual(runner.summary()['counts'],{'complete':20})
         with connect(self.path) as db:
-            self.assertEqual(db.execute("SELECT count(*) FROM rsi_rounds WHERE status='complete'").fetchone()[0],10)
+            self.assertEqual(db.execute("SELECT count(*) FROM rsi_rounds WHERE status='complete'").fetchone()[0],20)
 
     def test_failed_groups_shrink_without_repeating_admitted_documents(self):
         FakeWorkflow.reject_groups=True

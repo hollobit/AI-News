@@ -65,7 +65,7 @@ class LLMRuntime:
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
             db.execute('CREATE TABLE IF NOT EXISTS llm_runtime_settings(id INTEGER PRIMARY KEY CHECK(id=1),max_concurrent INTEGER NOT NULL)')
-            db.execute('INSERT OR IGNORE INTO llm_runtime_settings VALUES (1,?)', (DEFAULT_LIMIT if limit is None else max(1, min(int(limit), 12)),))
+            db.execute('INSERT OR IGNORE INTO llm_runtime_settings VALUES (1,?)', (DEFAULT_LIMIT if limit is None else max(1, min(int(limit), 20)),))
             db.execute('''CREATE TABLE IF NOT EXISTS llm_calls (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,role TEXT NOT NULL,status TEXT NOT NULL,
                 owner_pid INTEGER NOT NULL,queued_at REAL NOT NULL,started_at REAL,finished_at REAL,
