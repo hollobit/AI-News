@@ -15,6 +15,7 @@
     ['research', '종합 분석', '/research', '분석·검토', '뉴스 분석'],
     ['simulation', '전략 시뮬레이션', '/simulation', '분석·검토', 'MiroFish 분석'],
     ['operations', '수집·분석 운영', '/operations', '운영'],
+    ['workflow', '실시간 워크플로우', '/workflow', '운영'],
     ['sources', '외부 자료', '/sources', '운영', '출처 목록'],
     ['services', '서비스 안내', null, '운영'],
   ].map(([id, label, path, group, publicLabel]) => ({
