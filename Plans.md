@@ -666,3 +666,6 @@ Telegram 뉴스 확인 → 기사 추출·고유 문서 집계 → 원문 확보
 - 스케줄러의 누적20회는 통계로 보존하며 영구 차단 조건에서 제외했다. 자동 복구는 실제 완료 회차 또는 완료 문서의 진척 없이3회 시도하면 멈춘다. 과거 완료 회차 수를 별도로 추적해 신규 입력 재대조로 유효 완료 문서 수가 감소해도 이후의 실제 처리 진척을 인식한다. 대기·사용자 중지·모델 접근·공용 probe gate를 유지한다.
 - 운영 API/화면에 오류 후 재시도 대상 회차 수와 재시도 가능 시각을 추가하고 기존 incident/macOS 알림 중복 방지 흐름에 연결했다. 원장의 running에는 재시도 대기 문서가 포함될 수 있어 별도 회차 수로 구분한다.
 - 검증: Python775 tests+56subtests(11.76초), JavaScript 구문/Prettier/diff 검사 통과. 격리 DB에서 실패1건 외 정상5건 완료, 같은 체크포인트 재선택·시도 횟수 보존, 재시작을 걸친 연속3회 장애 중지, 인증 즉시중지, 누적20회 이후 진척 기반 복구, 운영 대기 표시를 확인했다. 모의 브라우저 재시도 상태 표시/JS 오류0. 실제 운영 장애를 의도적으로 발생시키지 않았다.
+
+- 운영 반영(09:28 KST): 명시 engine probe 성공 후 같은 cycle을 workers2/batch1/maxrounds20으로 재개했다. owner59470 생존/running/error 없음, 중단 round3679가 같은 workflow에서 accepted1/complete로 완료됐다. 입력 재대조 직후 complete3849→3850, pending4508/running2(총8360). 수집 증분/입력 변경으로 재개 전8351건과 대상이 다르다. 누적 recoveries20은 보존되고 stagnant0 및 completed_rounds2491로 진척 기준이 저장됐다.
+- HTTP 서버와 운영 알림 감독기를 새 코드로 교체했고 실제 health API에서 engine_retry_rounds0과 최신 실행 상태 확인. 기존 collector/별도 background 및 검토 이력 유지. 소스 c42b478d push 완료. 실운영 근거 `.runtime/verification/engine-isolation-rollout.json`, 모의 화면 근거 `engine-retry-ui.json`. 운영에서 추가 capacity를 고의로 발생시켜 시험한 것은 아니며 전수 분석 완료도 아니다.
