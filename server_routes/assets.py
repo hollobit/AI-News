@@ -5,7 +5,11 @@ from news_repository import read_news
 
 def get(self, route, params):
     status = 200
-    if route.path in {'/api/news','/api/news/detail'}:
+    if route.path in {'/workflow', '/workflow-live.js', '/workflow-live.css'}:
+        name = 'workflow-live.html' if route.path == '/workflow' else route.path[1:]
+        content = (self.services.ROOT / 'static' / name).read_bytes()
+        mime = 'text/html; charset=utf-8' if name.endswith('.html') else 'text/css; charset=utf-8' if name.endswith('.css') else 'application/javascript; charset=utf-8'
+    elif route.path in {'/api/news','/api/news/detail'}:
         db = self.services.connect(self.services.path)
         try:
             query = parse_qs(route.query)

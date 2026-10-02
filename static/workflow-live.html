@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>실시간 워크플로우 · AI 뉴스</title>
+    <link rel="stylesheet" href="/workspace.css" />
+    <link rel="stylesheet" href="/workspace-ui.css" />
+    <link rel="stylesheet" href="/workflow-live.css" />
+    <script src="/workspace.js" defer></script>
+    <script src="/workspace-navigation.js" defer></script>
+    <script src="/workflow-live.js" defer></script>
+  </head>
+  <body>
+    <a class="workspace-skip" href="#main">본문으로 이동</a>
+    <main id="main" class="flow-main">
+      <header class="flow-hero">
+        <div>
+          <p class="eyebrow">LIVE WORKFLOW / 뉴스 분석 관제</p>
+          <h1>정보가 지식이 되는 과정<span>지금, 어디까지 왔을까요?</span></h1>
+          <p class="intro">
+            수집부터 독립 검토, 지식 연결까지. 단계별 진행과 남은 작업을 실시간으로 살펴보세요.
+          </p>
+        </div>
+        <div class="live-controls">
+          <span id="connection" role="status" aria-live="polite">연결 중</span
+          ><small id="updated">첫 상태를 불러오고 있습니다</small>
+          <div>
+            <button id="pause" type="button" aria-pressed="false">화면 갱신 멈춤</button
+            ><button id="refresh" type="button">지금 새로고침 ↻</button>
+          </div>
+          <small>3초 간격 · 화면을 멈춰도 분석은 계속됩니다</small>
+        </div>
+      </header>
+      <div id="notice" class="flow-notice" role="status" hidden></div>
+      <section class="summary-grid" aria-label="상세 분석 요약">
+        <article>
+          <span>상세·위험 검토 완료</span><strong id="done">—</strong
+          ><small id="denominator">현재 실행 기준</small>
+        </article>
+        <article>
+          <span>남은 검토 대상</span><strong id="remaining">—</strong
+          ><small>대기·진행·검토 보류 포함</small>
+        </article>
+        <article>
+          <span>모델 작업</span><strong id="workers">—</strong
+          ><small id="worker-note">실제 소유 프로세스 확인</small>
+        </article>
+        <article class="trend-card">
+          <span>이 화면을 연 이후 완료 건수</span><strong id="delta">—</strong
+          ><svg id="trend" viewBox="0 0 240 36" role="img" aria-label="상세 분석 완료 건수 변화">
+            <polyline fill="none" stroke="currentColor" stroke-width="2.5" points="0,33 240,33" />
+          </svg>
+        </article>
+      </section>
+      <section class="flow-map" aria-labelledby="map-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">01 / PROCESS MAP</p>
+            <h2 id="map-title">살아 있는 처리 흐름</h2>
+          </div>
+          <div class="filters" role="group" aria-label="단계 강조">
+            <button id="filter-all" aria-pressed="true">모든 단계</button
+            ><button id="filter-attention" aria-pressed="false">확인 필요 강조</button>
+          </div>
+        </div>
+        <p class="map-note">
+          카드를 선택하면 처리 기준과 남은 작업이 펼쳐집니다. 화살표는 처리 관계이며 모든 단계가
+          순차로 실행되는 것은 아닙니다.
+        </p>
+        <div id="main-stages" class="stage-grid primary-flow" aria-label="뉴스 분석 주 흐름"></div>
+        <div class="branch-label">
+          <span></span>원문·연구 근거를 보강하고, 검토 결과를 연결합니다<span></span>
+        </div>
+        <div id="support-stages" class="stage-grid" aria-label="근거 보강과 게시"></div>
+        <div class="legend">
+          <span class="ok">완료·확보</span><span class="active">진행</span
+          ><span class="pending">대기</span><span class="review">검토 필요·변경됨</span
+          ><span class="failed">실패</span>
+        </div>
+        <p id="scope" class="scope-note"></p>
+      </section>
+      <div class="flow-bottom">
+        <section class="detail-panel" aria-labelledby="detail-title">
+          <p class="eyebrow">02 / STAGE FOCUS</p>
+          <div id="detail"></div>
+        </section>
+        <section class="activity-panel">
+          <p class="eyebrow">03 / EXECUTION PULSE</p>
+          <h2>지금 처리하는 작업</h2>
+          <div id="tasks" class="tasks"></div>
+          <h3>공유 모델 작업</h3>
+          <p class="empty">전체 서비스의 호출입니다. 진행 작업 우선, 최대 12개를 표시합니다.</p>
+          <div id="calls" class="calls"></div>
+          <div class="section-heading compact">
+            <h3>최근 상세 분석 회차</h3>
+            <a href="/operations#improvement">운영 화면 ↗</a>
+          </div>
+          <ol id="events" class="events"></ol>
+        </section>
+      </div>
+      <footer class="flow-footer">
+        뉴스·논문·원문·주제는 서로 다른 처리 대상입니다. 완료율은 각 단계의 원장 기준이며, 새 입력과
+        재검토로 달라질 수 있습니다.
+      </footer>
+    </main>
+  </body>
+</html>

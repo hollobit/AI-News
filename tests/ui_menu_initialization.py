@@ -22,7 +22,7 @@ async def main():
   await page.route('http://test.local/**',route)
   for path in ('research','simulation','article'):
    await page.goto('http://test.local/'+path+('?url=https://example.org/news' if path=='article' else ''))
-   await expect(page.locator('.ws-global-menu a')).to_have_count(14)
+   await expect(page.locator('.ws-global-menu a')).to_have_count(15)
    if path=='article':await expect(page.locator('#status')).to_contain_text('아직 생성한 해설')
    else:await expect(page.locator('#runs')).to_contain_text('아직')
    assert 'is not defined' not in await page.locator('body').inner_text()

@@ -11,14 +11,14 @@ async def main():
  async with async_playwright() as p:
   browser=await p.chromium.launch();page=await browser.new_page(viewport={'width':1440,'height':1000})
   page.on('pageerror',lambda e:errors.append(str(e)))
-  paths=['/strategy','/operations','/news','/archive','/observatory','/intelligence','/risks','/papers','/research','/simulation','/sources','/wiki','/knowledge','/graph','/article']
+  paths=['/workflow','/strategy','/operations','/news','/archive','/observatory','/intelligence','/risks','/papers','/research','/simulation','/sources','/wiki','/knowledge','/graph','/article']
   paths += ['/intelligence/'+v for v in ('events','topics','decisions','scenarios','research','operations','concepts','experiments','profiles','risk_history')]
   for path in paths:
    print('Checking',path,flush=True)
    await page.goto('http://127.0.0.1:8001'+path,wait_until='domcontentloaded')
-   await expect(page.locator('.ws-global-menu a')).to_have_count(14)
+   await expect(page.locator('.ws-global-menu a')).to_have_count(15)
    links=await page.locator('.ws-global-menu a').evaluate_all('(links)=>links.map(a=>a.getAttribute("href"))')
-   assert len(set(links))==14
+   assert len(set(links))==15
    if path.startswith('/intelligence'):await expect(page.locator('#sections a')).to_have_count(11)
    if path=='/news':await expect(page.locator('nav.date-nav')).to_be_visible()
    if path=='/knowledge':await expect(page.get_by_role('link',name='Obsidian ZIP')).to_be_visible()

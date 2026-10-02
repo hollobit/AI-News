@@ -35,6 +35,7 @@ jobs:
           python tests/ui_dashboard_search.py
           python tests/ui_followup.py
           python tests/ui_news_pagination.py
+          python tests/ui_workflow_live.py
           python tests/ui_graph_preparation.py
           python tests/ui_graph_race.py
           python tests/ui_menu_initialization.py

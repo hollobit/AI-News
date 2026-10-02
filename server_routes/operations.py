@@ -5,6 +5,10 @@ from pathlib import Path
 from urllib.parse import parse_qs
 
 def get(self, route, params):
+    if route.path == '/api/operations/flow':
+        from .workflow_status import snapshot
+        self.send_json(snapshot(self.services.path))
+        return True
     if route.path == '/api/operations/health':
         from pipeline_health import view
         self.send_json(view())
