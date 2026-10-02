@@ -6,6 +6,8 @@ def render(role, evidence, context, *, output_role=None, extra_instructions=""):
     from workflow_efficiency import role_context
     context=compact_context(role_context(role, context),evidence)
     request=context.get('request') or {}
+    if role in ('national','technology'):
+        extra_instructions += '\n역할별 차이를 중심으로 작성한다. 공통 기사 배경과 원문 전체 요약은 반복하지 말고 summary는 핵심 판단 한 문장으로 쓴다. claims는 해당 국가·정책 또는 기술·작동 방식 관점에서 근거 있는 판단과 고유 조건에 집중한다. 분량을 줄이려고 중요한 상충 근거·불확실성·인용을 생략하거나 원문에 없는 차별점을 만들지 않는다.'
     full_scope=bool(request.get('full_corpus') or request.get('completion'))
     coverage_instruction=('전수 처리 요청: synthesis/revision은 모든 telegram_excerpt 뉴스 ID마다 최소 한 claim의 실제 근거 연결을 포함한다. '
         '자료 부족은 해당 원문에서 알 수 없는 점과 이유를 범위 한정 watch_signal로 설명하며 위험·기회·사실을 발명하지 않는다. '

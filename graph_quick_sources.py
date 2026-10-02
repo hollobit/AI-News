@@ -5,7 +5,7 @@ from evidence_search import terms, query_anchors, alias_patterns
 from keyword_index import document_id
 
 
-def cold_answer(path, question, ids, params, budget=2):
+def cold_answer(path, question, ids, params, budget=2, *, limit=6, ranked=False, include_items=False):
     # A node/lens scope cannot be inferred without the graph: never broaden it.
     if ids or set(params)-{'date','topic','channel','kind'}:return None
     started=time.monotonic();query=set(terms(question));anchors=query_anchors(question)
@@ -39,7 +39,8 @@ def cold_answer(path, question, ids, params, budget=2):
             text="lower(COALESCE(a.title,'')||' '||COALESCE(a.excerpt,'')||' '||COALESCE(a.text,''))"
             clauses.append('('+' OR '.join(text+" LIKE ?" for _ in words)+')')
             values += ['%'+w+'%' for w in words]
-        rows=db.execute('SELECT a.*,n.channel FROM '+source+' JOIN news n ON a.chat_id=n.chat_id AND a.message_id=n.message_id WHERE '+' AND '.join(clauses)+' ORDER BY a.rowid DESC LIMIT 300',values)
+        order='rank' if ranked and indexed and searchable else 'a.rowid DESC'
+        rows=db.execute('SELECT a.rowid AS search_rowid,a.*,n.channel FROM '+source+' JOIN news n ON a.chat_id=n.chat_id AND a.message_id=n.message_id WHERE '+' AND '.join(clauses)+' ORDER BY '+order+' LIMIT 300',values)
         for row in rows:
             if time.monotonic()-started>budget:break
             item=dict(row);body=(item.get('text') or item.get('excerpt') or '')[:6000]
@@ -58,7 +59,8 @@ def cold_answer(path, question, ids, params, budget=2):
         seen.add(doc)
         selected.append(dict(id='cold-source:'+doc,document_id=doc,title=item.get('title') or '',text=body,
             source_url=item.get('source_url') or '',day=item.get('day') or '',origin='stored_news_excerpt'))
-        if len(selected)>=6:break
+        if include_items:selected[-1]['current_item']=item
+        if len(selected)>=max(1,min(limit,24)):break
     if not selected:return None
     from graph_questions import passage
     return dict(phase='evidence',answer='관련 보관 뉴스의 원문 발췌입니다. 그래프 검색과 추가 분석·검토를 진행 중입니다.',

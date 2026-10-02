@@ -383,6 +383,15 @@
           '',
           item
         );
+        if (task.retrieval_timing?.total_ms != null) {
+          const r = task.retrieval_timing;
+          el(
+            'p',
+            `관련 근거 검색 ${r.total_ms}ms · 후보 조회 ${r.source_lookup_ms}ms · 현재 검토 통과 분석 ${r.validated_workflows}건`,
+            '',
+            item
+          );
+        }
         if (task.metrics) {
           const m = task.metrics;
           el(

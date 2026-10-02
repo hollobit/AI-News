@@ -490,9 +490,13 @@ class WorkflowService:
         from graph_rag import load_integrated_graph, build_retrieval
         question = str(request.get('question') or request.get('terms') or ' '.join(e['title'] for e in snapshot))[:1000]
         try:
-            with self.db() as db:
-                graph = load_integrated_graph(db, {'max_nodes': ['24']}, for_retrieval=True)
-                result = build_retrieval(graph, question)
+            if request.get('completion') and not request.get('question') and not request.get('terms'):
+                from workflow_retrieval import retrieve
+                result = retrieve(self.path, question)
+            else:
+                with self.db() as db:
+                    graph = load_integrated_graph(db, {'max_nodes': ['24']}, for_retrieval=True)
+                    result = build_retrieval(graph, question)
             result['evidence'] = [dict(e, text=str(e.get('text') or '')[:700]) for e in result.get('evidence', [])[:12]]
             return {'status': 'complete', 'question': question, 'result': result,
                     'basis': 'retrieval_clues_only_not_independent_corroboration'}
@@ -520,16 +524,22 @@ class WorkflowService:
                 from workflow_complex import execute
                 execute(self,run_id,evidence,request,enrichment)
                 return
-            keywords = self._stage(run_id, 'morphology', lambda: [
-                {'evidence_id': e['id'], 'keywords': self.extractor(e['text'])[:40]} for e in evidence])
-            retrieval = self._stage(run_id, 'graph_retrieval', lambda: self._retrieve_graph(snapshot, request))
-            context = {'keywords': keywords, 'coverage': enrichment['coverage'], 'graph_context': retrieval, 'request': request}
-            def analyze(role):
-                return self._stage(run_id, role, lambda: self._validated_call(role, self._prompt(role, evidence, context), evidence_schema(REPORT,evidence), lambda value:self._report(value,evidence)))
+            # Risk generation consumes current evidence/coverage, not graph hints.
+            risk_context = {'coverage': enrichment['coverage'], 'request': request}
             with ThreadPoolExecutor(max_workers=3) as pool:
-                futures = {role: pool.submit(analyze, role) for role in ('national', 'technology')}
                 risk_future=pool.submit(self._stage,run_id,'risk_assessment',lambda:self._validated_call('risk_assessment',
-                    self._prompt('risk_assessment',evidence,context),evidence_schema(RISK_SCHEMA,evidence),lambda value:validate_risk_report(value,evidence)))
+                    self._prompt('risk_assessment',evidence,risk_context),evidence_schema(RISK_SCHEMA,evidence),lambda value:validate_risk_report(value,evidence)))
+                keywords = self._stage(run_id, 'morphology', lambda: [
+                    {'evidence_id': e['id'], 'keywords': self.extractor(e['text'])[:40]} for e in evidence])
+                retrieval_dependencies = None
+                if request.get('completion') and not request.get('question') and not request.get('terms'):
+                    from workflow_retrieval import input_revision
+                    with self.db() as db: retrieval_dependencies = [input_revision(db), snapshot, request]
+                retrieval = self._stage(run_id, 'graph_retrieval', lambda: self._retrieve_graph(snapshot, request), dependencies=retrieval_dependencies)
+                context = {'keywords': keywords, 'coverage': enrichment['coverage'], 'graph_context': retrieval, 'request': request}
+                def analyze(role):
+                    return self._stage(run_id, role, lambda: self._validated_call(role, self._prompt(role, evidence, context), evidence_schema(REPORT,evidence), lambda value:self._report(value,evidence)))
+                futures = {role: pool.submit(analyze, role) for role in ('national', 'technology')}
                 reports = {role: future.result() for role, future in futures.items()}
                 risk_report=risk_future.result()
             from deliberation import build_deliberation

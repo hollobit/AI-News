@@ -261,6 +261,20 @@ class CompletionWorkflowTests(unittest.TestCase):
         run=self.done(service,service.create_run(self.items(),{})['id'])
         self.assertEqual(run['status'],'complete',run['error'])
 
+    def test_risk_starts_before_graph_lookup_finishes(self):
+        from unittest.mock import patch
+        started=threading.Event();model=Model()
+        def analyzer(prompt,schema):
+            if prompt.startswith('ROLE: risk_assessment'):started.set()
+            return model(prompt,schema)
+        service=self.service(analyzer)
+        def retrieval(*_):
+            self.assertTrue(started.wait(2), 'risk generation waited for graph retrieval')
+            return {'status':'complete','result':{}}
+        with patch.object(service,'_retrieve_graph',side_effect=retrieval):
+            run=self.done(service,service.create_run(self.items(),{})['id'])
+        self.assertEqual(run['status'],'complete',run['error'])
+
     def test_full_corpus_24_news_require_all_citations(self):
         model=Model()
         def analyzer(prompt,schema):
