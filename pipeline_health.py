@@ -57,6 +57,14 @@ def snapshot(path, runtime=None, stamp=None):
                     if launch and alive(launch[0]):
                         stage.update(owner_alive=True, execution_pid=launch[0], starting=True)
                 stage['counts'] = dict(db.execute('SELECT status,count(*) FROM corpus_completion_documents WHERE cycle_id=? GROUP BY status', (row['id'],)))
+                if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='completion_engine_waits'").fetchone():
+                    waiting = db.execute("""SELECT COUNT(*),MIN(w.next_attempt_at) FROM completion_engine_waits w
+                        JOIN rsi_rounds r ON r.id=w.round_id WHERE r.cycle_id=? AND r.status IN ('planned','running')""", (row['id'],)).fetchone()
+                    stage['engine_retry_rounds'] = waiting[0]
+                    if waiting[0]:
+                        stage['engine_retry_at'] = datetime.fromtimestamp(waiting[1], timezone.utc).isoformat()
+                        problem('deep_engine_retry', f'상세 분석 {waiting[0]}회차가 일시 오류 후 재시도 대상입니다.',
+                                '대기 시간이 지나면 기존 단계에서 재시도합니다. 정상 기사는 계속 처리하며 연속 장애 시 전체 복구 대기로 전환합니다.')
                 progress = db.execute('SELECT max(created_at) FROM strategic_workflow_events WHERE run_id IN (SELECT workflow_run_id FROM rsi_rounds WHERE cycle_id=? AND number=(SELECT max(number) FROM rsi_rounds WHERE cycle_id=?))', (row['id'], row['id'])).fetchone()[0]
             else:
                 stage['counts'] = dict(db.execute('SELECT status,count(*) FROM bulk_baseline_documents WHERE run_id=? GROUP BY status', (row['id'],)))

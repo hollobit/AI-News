@@ -62,6 +62,16 @@ def test_waiting_between_batches_and_old_complete_extraction_are_normal(tmp_path
         db.execute("UPDATE rsi_cycles SET status='running'")
     problems = snapshot(path,tmp_path,stamp)['problems']
     assert [p['code'] for p in problems] == ['deep_orphan']
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE rsi_cycles SET status='waiting'")
+        db.execute('ALTER TABLE rsi_rounds ADD COLUMN id TEXT')
+        db.execute('ALTER TABLE rsi_rounds ADD COLUMN status TEXT')
+        db.execute("INSERT INTO rsi_rounds VALUES('d',1,'workflow','round','planned')")
+        db.execute('CREATE TABLE completion_engine_waits(round_id,next_attempt_at)')
+        db.execute('INSERT INTO completion_engine_waits VALUES(?,?)', ('round', stamp+30))
+    result = snapshot(path,tmp_path,stamp)
+    assert [p['code'] for p in result['problems']] == ['deep_engine_retry']
+    assert result['stages'][-1]['engine_retry_rounds'] == 1
 
 
 def test_notification_arguments_are_data_and_timeout_is_reported(tmp_path):

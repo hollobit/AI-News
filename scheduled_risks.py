@@ -25,6 +25,8 @@ def init(db):
         stagnant INTEGER NOT NULL DEFAULT 0,verified INTEGER NOT NULL DEFAULT 0,
         next_attempt_at REAL NOT NULL DEFAULT 0)''')
     db.execute('INSERT OR IGNORE INTO risk_schedule(id) VALUES(1)')
+    if 'completed_rounds' not in {r[1] for r in db.execute('PRAGMA table_info(risk_schedule)')}:
+        db.execute('ALTER TABLE risk_schedule ADD COLUMN completed_rounds INTEGER NOT NULL DEFAULT 0')
     db.execute('''CREATE TABLE IF NOT EXISTS risk_schedule_events (
         seq INTEGER PRIMARY KEY,cycle_id TEXT,stage TEXT,detail TEXT,created_at TEXT)''')
 
@@ -79,13 +81,20 @@ def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=
         access=(check_models or ensure_model_access)()
         if not access['ready']:return {'stage':'model_access_required','model_access':access,'cycle':identity}
         verified=db.execute("SELECT COUNT(*) FROM corpus_completion_documents WHERE cycle_id=? AND status='complete'",(identity,)).fetchone()[0]
+        progress = 0
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='rsi_rounds'").fetchone():
+            progress = db.execute("SELECT COUNT(*) FROM rsi_rounds WHERE cycle_id=? AND status='complete'", (identity,)).fetchone()[0]
         if schedule['cycle_id']!=identity:
-            schedule.update(recoveries=0,stagnant=0,verified=verified,next_attempt_at=0)
-        if verified>schedule['verified']:schedule.update(stagnant=0,verified=verified)
+            schedule.update(stagnant=0,verified=verified,next_attempt_at=0,completed_rounds=0)
+        if verified>schedule['verified'] or progress>schedule['completed_rounds']:
+            schedule.update(stagnant=0,verified=verified,completed_rounds=progress)
+        db.execute('UPDATE risk_schedule SET stagnant=?,verified=?,completed_rounds=? WHERE id=1',
+                   (schedule['stagnant'],schedule['verified'],schedule['completed_rounds']))
+        db.commit()
         code=infrastructure_error(cycle['error']) if cycle['error'] else None
         if cycle['status'] in ('paused','error','failed') and not resume:
             if code not in RECOVERABLE:return {'stage':'attention_required','error_code':code,'cycle':identity}
-            if schedule['recoveries']>=20 or schedule['stagnant']>=3:return {'stage':'recovery_limit','cycle':identity}
+            if schedule['stagnant']>=3:return {'stage':'recovery_limit','cycle':identity}
             if stamp<schedule['next_attempt_at']:return {'stage':'recovery_backoff','cycle':identity}
             schedule.update(recoveries=schedule['recoveries']+1,stagnant=schedule['stagnant']+1,
                             next_attempt_at=stamp+min(3600,300*2**schedule['stagnant']))

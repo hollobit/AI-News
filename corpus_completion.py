@@ -39,6 +39,11 @@ def init(db):
         recovered_at TEXT NOT NULL, PRIMARY KEY(cycle_id,document_id))''')
 
     db.execute('CREATE INDEX IF NOT EXISTS completion_queue ON corpus_completion_documents(cycle_id,status,position)')
+    db.execute('''CREATE TABLE IF NOT EXISTS completion_engine_waits (
+        round_id TEXT PRIMARY KEY, failures INTEGER NOT NULL, next_attempt_at REAL NOT NULL,
+        error TEXT NOT NULL, updated_at TEXT NOT NULL)''')
+    db.execute('''CREATE TABLE IF NOT EXISTS completion_engine_events (
+        seq INTEGER PRIMARY KEY, cycle_id TEXT, round_id TEXT, error TEXT, created_at TEXT)''')
     db.execute("CREATE INDEX IF NOT EXISTS completion_source_url ON corpus_completion_documents(json_extract(snapshot_json,'$.source_url'))")
 
 
@@ -255,6 +260,8 @@ class CompletionRunner:
         with connect(self.path) as db:
             db.execute('BEGIN IMMEDIATE')
             for pending in db.execute("SELECT * FROM rsi_rounds WHERE cycle_id=? AND status IN ('planned','running') ORDER BY number",(self.cycle_id,)).fetchall():
+                deferred = db.execute('SELECT next_attempt_at FROM completion_engine_waits WHERE round_id=?', (pending['id'],)).fetchone()
+                if deferred and deferred[0] > time.time():continue
                 snapshot=json.loads(pending['snapshot_json'])
                 if snapshot.get('items') and snapshot.get('identities') and pending['id'] not in self.claimed_rounds:
                     # Older web-owned rounds have no completion_attempt. Preserve
@@ -339,6 +346,22 @@ class CompletionRunner:
             with connect(self.path) as db:
                 db.execute("UPDATE rsi_rounds SET status='planned',error=? WHERE id=?",
                            (run.get('error',''),planned['id']))
+                db.execute('INSERT INTO completion_engine_events(cycle_id,round_id,error,created_at) VALUES(?,?,?,?)',
+                           (self.cycle_id,planned['id'],run.get('error',''),now()))
+                if code in {'capacity','timeout','queue_timeout','network','database_locked'}:
+                    old = db.execute('SELECT failures FROM completion_engine_waits WHERE round_id=?', (planned['id'],)).fetchone()
+                    failures = (old[0] if old else 0) + 1
+                    delay = min(900, 30 * 2 ** min(failures - 1, 5))
+                    db.execute('INSERT OR REPLACE INTO completion_engine_waits VALUES(?,?,?,?,?)',
+                               (planned['id'],failures,time.time()+delay,run.get('error',''),now()))
+                    self.claimed_rounds.discard(planned['id'])
+                    streak = 0
+                    for event in db.execute('SELECT error FROM completion_engine_events WHERE cycle_id=? ORDER BY seq DESC LIMIT 3', (self.cycle_id,)):
+                        if not event[0]:break
+                        streak += 1
+                    if streak < 3:
+                        print(json.dumps({'round':planned['number'],'status':'engine_waiting','error_code':code,'retry_after_seconds':delay}),flush=True)
+                        return
             self.stop.set()
             self.engine_error = run.get('error','')
             print(json.dumps({'round':planned['number'],'status':'engine_paused','error_code':code}),flush=True)
@@ -375,6 +398,9 @@ class CompletionRunner:
                 (round_status, now(), encoded(quality), encoded({'assessment': '문서별 인용과 위험 독립 검토를 별도로 검사했습니다.',
                  'documents': len(items), 'verified_documents': sum(a['complete'] for a in admissions)}),
                  encoded({k: v for k, v in catalog.items() if k not in ('added', 'updated')}), run.get('error', ''), planned['id']))
+            db.execute('DELETE FROM completion_engine_waits WHERE round_id=?', (planned['id'],))
+            db.execute('INSERT INTO completion_engine_events(cycle_id,round_id,error,created_at) VALUES(?,?,?,?)',
+                       (self.cycle_id,planned['id'],'',now()))
             db.execute('UPDATE rsi_cycles SET state_json=?,seen_json=?,updated_at=? WHERE id=?',
                        (encoded(state), encoded(seen), now(), self.cycle_id))
         print(json.dumps({'round': planned['number'], 'documents': len(items),
@@ -437,6 +463,9 @@ class CompletionRunner:
             if self.max_rounds and not failed and not self.stop.is_set() and not complete:
                 with connect(self.path) as db:
                     if db.execute("SELECT 1 FROM corpus_completion_documents WHERE cycle_id=? AND status IN ('pending','needs_review','failed','running') AND attempts<3 LIMIT 1",(self.cycle_id,)).fetchone():status='waiting'
+            if not failed and not self.stop.is_set() and not complete:
+                with connect(self.path) as db:
+                    if db.execute("SELECT 1 FROM rsi_rounds WHERE cycle_id=? AND status IN ('planned','running') LIMIT 1", (self.cycle_id,)).fetchone():status='waiting'
             with connect(self.path) as db:
                 user_pause = self.user_stopped or bool(db.execute('SELECT pause_requested FROM rsi_cycles WHERE id=?',(self.cycle_id,)).fetchone()[0])
                 db.execute('UPDATE rsi_cycles SET status=?,owner_pid=NULL,pause_requested=?,error=?,updated_at=? WHERE id=?',

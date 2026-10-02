@@ -47,6 +47,50 @@ class FakeWorkflow:
 
 
 class CompletionTests(unittest.TestCase):
+    def test_capacity_defers_only_failed_checkpoint_and_survives_restart(self):
+        runner=CompletionRunner(self.path,'cycle',batch_size=1);runner.prepare()
+        planned=runner.plan()
+        with patch('corpus_completion.time.time',return_value=1000):
+            runner.record(planned,{'status':'failed','error':'[engine:capacity]'})
+        self.assertFalse(runner.stop.is_set())
+        restarted=CompletionRunner(self.path,'cycle',batch_size=1)
+        with patch('corpus_completion.time.time',return_value=1010):
+            other=restarted.plan()
+        self.assertNotEqual(other['id'],planned['id'])
+        with patch('corpus_completion.time.time',return_value=1031):
+            retry=restarted.plan()
+        self.assertEqual(retry['id'],planned['id'])
+        with connect(self.path) as db:
+            self.assertEqual(db.execute('SELECT attempts FROM corpus_completion_documents WHERE position=0').fetchone()[0],1)
+            self.assertEqual(db.execute('SELECT count(*) FROM completion_engine_events').fetchone()[0],1)
+
+    def test_three_consecutive_engine_failures_pause_even_across_restart(self):
+        runner=CompletionRunner(self.path,'cycle',batch_size=1);runner.prepare()
+        for n in range(3):
+            runner=CompletionRunner(self.path,'cycle',batch_size=1)
+            with patch('corpus_completion.time.time',return_value=1000+n):
+                planned=runner.plan()
+                runner.record(planned,{'status':'failed','error':'[engine:capacity]'})
+            self.assertEqual(runner.stop.is_set(),n==2)
+
+    def test_hard_engine_failure_still_stops_immediately(self):
+        runner=CompletionRunner(self.path,'cycle',batch_size=1);runner.prepare()
+        runner.record(runner.plan(),{'status':'failed','error':'[engine:authentication]'})
+        self.assertTrue(runner.stop.is_set())
+
+    def test_failed_document_does_not_stop_other_documents(self):
+        runner=CompletionRunner(self.path,'cycle',workers=2,batch_size=1,max_rounds=20)
+        original=runner.work
+        def work(service,planned):
+            if planned['number']==1:
+                return planned,{'status':'failed','error':'[engine:capacity]'}
+            return original(service,planned)
+        with patch.object(runner,'work',side_effect=work):runner.run()
+        self.assertEqual(runner.summary()['counts'],{'complete':5,'running':1})
+        with connect(self.path) as db:
+            self.assertEqual(db.execute('SELECT status FROM rsi_cycles').fetchone()[0],'waiting')
+            self.assertEqual(db.execute('SELECT error FROM completion_engine_events ORDER BY seq DESC LIMIT 1').fetchone()[0],'')
+
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.path=Path(self.temp.name)/'news.db'
         FakeWorkflow.calls=[];FakeWorkflow.barrier=None;FakeWorkflow.reject_groups=False;FakeWorkflow.reject_all=False;FakeWorkflow.maximum=FakeWorkflow.active_count=0

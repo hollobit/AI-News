@@ -46,6 +46,12 @@
           if (stage.last_progress_at)
             el('p', `최근 단계 진행 ${date(stage.last_progress_at)}`, card);
           if (stage.count != null) el('p', `고유 뉴스 ${stage.count.toLocaleString()}건`, card);
+          if (stage.engine_retry_rounds)
+            el(
+              'p',
+              `일시 오류 재시도 대상 ${stage.engine_retry_rounds}회차 · 재시도 가능 시각 ${date(stage.engine_retry_at)}`,
+              card
+            );
           if (stage.counts)
             el(
               'p',

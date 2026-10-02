@@ -62,3 +62,23 @@ def test_latest_model_access_blocks_launch(path):
     assert run(path,enable=True,resume=True,check_models=lambda:{'ready':False})['stage']=='model_access_required'
     with connect(path) as db:
         assert db.execute('select launched_pid from risk_schedule').fetchone()[0] is None
+
+
+def test_lifetime_recovery_count_is_history_not_permanent_block(path):
+    with connect(path) as db:
+        db.execute('UPDATE rsi_cycles SET pause_requested=0')
+        db.execute("UPDATE risk_schedule SET cycle_id='cycle',recoveries=20,stagnant=0")
+    assert run(path,enable=True)['stage']=='started'
+    with connect(path) as db:
+        assert db.execute('SELECT recoveries FROM risk_schedule').fetchone()[0]==21
+
+
+def test_new_completed_round_resets_stagnation_even_if_input_recheck_lowers_count(path):
+    with connect(path) as db:
+        db.execute('UPDATE rsi_cycles SET pause_requested=0')
+        db.execute("UPDATE risk_schedule SET cycle_id='cycle',recoveries=30,stagnant=3,verified=100,completed_rounds=10")
+        db.execute('CREATE TABLE rsi_rounds(cycle_id TEXT,number INTEGER,status TEXT)')
+        db.executemany("INSERT INTO rsi_rounds VALUES('cycle',?,'complete')", [(i,) for i in range(11)])
+    assert run(path,enable=True)['stage']=='started'
+    with connect(path) as db:
+        assert tuple(db.execute('SELECT recoveries,stagnant,completed_rounds FROM risk_schedule').fetchone())==(31,1,11)

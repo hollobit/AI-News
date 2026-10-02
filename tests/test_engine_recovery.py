@@ -88,14 +88,16 @@ class EngineRecoveryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'news.db'
             with connect(path) as db:
+                init(db)
                 db.execute('CREATE TABLE rsi_rounds(id TEXT,status TEXT,error TEXT)')
                 db.execute("INSERT INTO rsi_rounds VALUES ('round','running','')")
             runner=CompletionRunner(path,'cycle')
             runner.record({'id':'round','number':1},{'status':'failed','error':str(EngineError('network'))})
-            self.assertTrue(runner.stop.is_set())
-            self.assertIn('[engine:network]',runner.engine_error)
+            self.assertFalse(runner.stop.is_set())
+            self.assertEqual(runner.engine_error,'')
             with connect(path) as db:
                 self.assertEqual(db.execute('SELECT status FROM rsi_rounds').fetchone()[0],'planned')
+                self.assertIn('[engine:network]',db.execute('SELECT error FROM completion_engine_waits').fetchone()[0])
 
     def test_orphan_engine_failure_is_requeued_but_active_checkpoint_is_preserved(self):
         with tempfile.TemporaryDirectory() as directory:
