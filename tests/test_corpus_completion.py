@@ -208,6 +208,36 @@ class CompletionTests(unittest.TestCase):
         with connect(self.path) as db:
             self.assertEqual(db.execute("SELECT count(*) FROM rsi_rounds WHERE status='complete'").fetchone()[0],20)
 
+    def test_continuous_refills_past_twenty_without_waiting_for_slow_round(self):
+        self.items=SelectionBatch([dict(self.items[0],source_url=f'https://example.com/{i}') for i in range(24)],coverage={'total_unique':24})
+        runner=CompletionRunner(self.path,'cycle',workers=2,batch_size=1,window_seconds=1800)
+        original=runner.work
+        refilled=threading.Event()
+        def work(service,planned):
+            if planned['number']==1:
+                self.assertTrue(refilled.wait(5), 'slow round blocked work beyond old 20-round cap')
+            if planned['number']==21: refilled.set()
+            return original(service,planned)
+        with patch.object(runner,'work',side_effect=work):result=runner.run()
+        self.assertEqual(result['counts'],{'complete':24})
+
+    def test_input_refresh_window_drains_and_preserves_pause_on_handoff(self):
+        import time
+        runner=CompletionRunner(self.path,'cycle',workers=1,batch_size=1,window_seconds=.1)
+        original=runner.work
+        def work(service,planned):
+            time.sleep(.2)
+            return original(service,planned)
+        with patch.object(runner,'work',side_effect=work):result=runner.run()
+        self.assertTrue(runner.window_expired)
+        self.assertEqual(result['status'],'waiting')
+        self.assertEqual(result['counts'],{'complete':1,'pending':5})
+        with connect(self.path) as db:db.execute('UPDATE rsi_cycles SET pause_requested=1')
+        next_runner=CompletionRunner(self.path,'cycle',workers=1,batch_size=1)
+        next_runner.handoff=True
+        with self.assertRaisesRegex(RuntimeError,'일시중지'):next_runner.prepare()
+        with connect(self.path) as db:self.assertEqual(db.execute('SELECT pause_requested FROM rsi_cycles').fetchone()[0],1)
+
     def test_failed_groups_shrink_without_repeating_admitted_documents(self):
         FakeWorkflow.reject_groups=True
         self.items=SelectionBatch([dict(self.items[0],source_url=f'https://example.com/{i}') for i in range(7)],coverage={'total_unique':7})

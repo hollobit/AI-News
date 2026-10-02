@@ -15,9 +15,13 @@ EXTRAS = ['source_repair', 'repair_morphology', 'revision', 'reverification',
 def task_detail(db, task, tables, stamp, owner_alive):
     run_id = task['workflow_run_id']
     route = None
+    task['call_ids'] = []
+    task['reused_stages'] = 0
     if 'strategic_workflow_artifacts' in tables:
         row = db.execute("SELECT json_extract(payload_json,'$.path') FROM strategic_workflow_artifacts WHERE run_id=? AND stage='execution_plan'", (run_id,)).fetchone()
         route = row[0] if row else None
+        task['call_ids'] = [r[0] for r in db.execute("SELECT json_extract(payload_json,'$.call_id') FROM strategic_workflow_artifacts WHERE run_id=? AND stage LIKE 'model_call_%' LIMIT 100", (run_id,)) if isinstance(r[0], int)]
+        task['reused_stages'] = db.execute("SELECT count(*) FROM strategic_workflow_artifacts WHERE run_id=? AND stage LIKE 'reuse_%'", (run_id,)).fetchone()[0]
     events = [dict(r) for r in db.execute('''SELECT stage,status,created_at FROM strategic_workflow_events
         WHERE run_id=? ORDER BY seq DESC LIMIT 200''', (run_id,))][::-1]
     allowed = set(PREFIX + EXTRAS + ['final'] + sum(PATHS.values(), []))

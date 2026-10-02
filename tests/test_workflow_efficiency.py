@@ -267,3 +267,15 @@ def test_concurrent_identical_workflows_share_generation_and_review(tmp_path):
             assert db.execute("select count(*) from workflow_cache_observations where outcome='hit'").fetchone()[0]==2
     finally:
         for s in services:s.close()
+
+
+def test_scheduling_ids_do_not_change_prompt_but_review_feedback_does():
+    from workflow_prompts import render
+    evidence=[dict(id='e',text='기업이 AI 도구를 공개했다.',origin='telegram_excerpt')]
+    context=dict(request=dict(completion=True,owner_pid=1,recursive_cycle_id='a',recursive_round_id='b',
+                              improvement_context={'followup_tasks':[{'text':'근거를 확인','evidence_ids':['e']}]}))
+    other=copy.deepcopy(context);other['request'].update(owner_pid=2,recursive_cycle_id='c',recursive_round_id='d')
+    assert render('national',evidence,context)==render('national',evidence,other)
+    other['request']['improvement_context']['followup_tasks'][0]['text']='상충 근거 추가 확인'
+    assert render('national',evidence,context)!=render('national',evidence,other)
+    assert context['request']['owner_pid']==1

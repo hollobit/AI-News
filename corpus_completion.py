@@ -1,4 +1,4 @@
-"""Resumable six-worker completion of a frozen corpus using the existing role gates.
+"""Resumable bounded-worker completion of a frozen corpus using the existing role gates.
 
 Run only after the interactive RSI cycle has checkpointed. Results retain the
 normal workflow artifacts and independent audits; the corpus ledger never
@@ -115,7 +115,7 @@ def historical_feedback(db,items):
 
 
 class CompletionRunner:
-    def __init__(self, path, cycle_id, workers=6, batch_size=24, recover_engine=False, review_first=False, recent_first=False, max_rounds=0):
+    def __init__(self, path, cycle_id, workers=6, batch_size=24, recover_engine=False, review_first=False, recent_first=False, max_rounds=0, window_seconds=0, adaptive_workers=False):
         self.path = str(Path(path).resolve()); self.cycle_id = cycle_id
         self.workers = max(1, min(20, workers)); self.batch_size = max(1, min(24, batch_size))
         self.stop = threading.Event()
@@ -127,6 +127,11 @@ class CompletionRunner:
         self.recent_first = recent_first
         self.max_rounds = max(0, int(max_rounds))
         self.user_stopped = False
+        self.window_seconds = max(0, window_seconds)
+        self.window_expired = False
+        self.handoff = False
+        from completion_throughput import AdaptiveAdmission
+        self.admission = AdaptiveAdmission(self.workers, adaptive_workers)
 
     def prepare(self):
         from improvement_selection import all_corpus_items
@@ -249,8 +254,12 @@ class CompletionRunner:
             # Recover only this runner's unfinished jobs after its previous owner exited.
             # Running rows retain their original round and attempt. plan/work resume
             # the persisted workflow, including completed-but-not-recorded results.
-            db.execute("UPDATE rsi_cycles SET status='running',pause_requested=0,owner_pid=?,error='',updated_at=? WHERE id=?",
+            condition = ' AND pause_requested=0' if self.handoff else ''
+            updated = db.execute("UPDATE rsi_cycles SET status='running',pause_requested=0,owner_pid=?,error='',updated_at=? WHERE id=?" + condition,
                        (os.getpid(), now(), self.cycle_id))
+            if not updated.rowcount:
+                raise RuntimeError('입력 갱신 중 요청된 일시중지를 보존합니다.')
+
 
     def cycle_control(self):
         with connect(self.path) as db:
@@ -340,6 +349,7 @@ class CompletionRunner:
     def record(self, planned, run):
         from engine_errors import infrastructure_error
         code = infrastructure_error(run.get('error')) if run.get('status')=='failed' else None
+        self.admission.observe(code)
         if code:
             # Keep the same round/workflow checkpoints. An outage is not a failed
             # content review and must not consume thousands of document attempts.
@@ -435,9 +445,11 @@ class CompletionRunner:
         try:
             with ThreadPoolExecutor(max_workers=self.workers) as pool:
                 futures = {}; available = list(services); dispatched=0
+                started = time.monotonic()
                 while True:
                     if self.cycle_control(): self.stop.set()
-                    while available and not self.stop.is_set():
+                    self.window_expired = bool(self.window_seconds and time.monotonic() - started >= self.window_seconds)
+                    while available and not self.stop.is_set() and not self.window_expired and len(futures) < self.admission.target:
                         if self.max_rounds and dispatched>=self.max_rounds:break
                         planned = self.plan()
                         if not planned: break
@@ -449,7 +461,10 @@ class CompletionRunner:
                     for future in finished:
                         service = futures.pop(future)
                         planned, result = future.result()
+                        prior_target = self.admission.target
                         self.record(planned, result)
+                        if prior_target != self.admission.target:
+                            print(json.dumps({'status':'admission_adjusted','workers_max':self.workers,'workers_target':self.admission.target}),flush=True)
                         available.append(service)
         except Exception as exc:
             failed = type(exc).__name__ + ': ' + str(exc)[:300]
@@ -460,7 +475,7 @@ class CompletionRunner:
             summary = self.summary()
             complete = summary['counts'].get('complete', 0) == summary['total'] and summary['total'] > 0
             status = 'error' if failed else 'paused' if self.stop.is_set() else 'complete' if complete else 'needs_review'
-            if self.max_rounds and not failed and not self.stop.is_set() and not complete:
+            if (self.max_rounds or self.window_expired) and not failed and not self.stop.is_set() and not complete:
                 with connect(self.path) as db:
                     if db.execute("SELECT 1 FROM corpus_completion_documents WHERE cycle_id=? AND status IN ('pending','needs_review','failed','running') AND attempts<3 LIMIT 1",(self.cycle_id,)).fetchone():status='waiting'
             if not failed and not self.stop.is_set() and not complete:
@@ -472,6 +487,7 @@ class CompletionRunner:
                            (status, int(user_pause), failed or self.engine_error, now(), self.cycle_id))
             print(json.dumps(dict(summary, status=status), ensure_ascii=False), flush=True)
             for sig,handler in old_handlers.items():signal.signal(sig,handler)
+        return dict(summary, status=status)
 
 
 if __name__ == '__main__':
@@ -484,7 +500,23 @@ if __name__ == '__main__':
     parser.add_argument('--review-first', action='store_true')
     parser.add_argument('--recent-first', action='store_true')
     parser.add_argument('--max-rounds', type=int, default=0)
+    parser.add_argument('--window-seconds', type=int, default=0)
+    parser.add_argument('--continuous', action='store_true')
+    parser.add_argument('--adaptive-workers', action='store_true')
     args = parser.parse_args()
+    if args.continuous and (args.window_seconds <= 0 or args.max_rounds):
+        parser.error('--continuous requires --window-seconds > 0 and --max-rounds 0')
     from app import load_local_env
     load_local_env()
-    CompletionRunner(args.db, args.cycle, args.workers, args.batch_size, args.recover_engine_failures, args.review_first, args.recent_first, args.max_rounds).run()
+    admission = None
+    while True:
+        runner = CompletionRunner(args.db, args.cycle, args.workers, args.batch_size, args.recover_engine_failures, args.review_first, args.recent_first, args.max_rounds, args.window_seconds, args.adaptive_workers)
+        if admission is not None:
+            runner.admission = admission
+            runner.handoff = True
+        result = runner.run()
+        admission = runner.admission
+        if not (args.continuous and runner.window_expired and result['status'] == 'waiting'):
+            break
+        # An operator pause during handoff must not be cleared by prepare().
+        if runner.cycle_control(): break
