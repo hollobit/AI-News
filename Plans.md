@@ -698,3 +698,10 @@ Telegram 뉴스 확인 → 기사 추출·고유 문서 집계 → 원문 확보
 - 차트는 화면에서 수신한 최근120개 관측값의 실제 시각을 사용한다. 초기에는 관측 대기를 표시하고, 과거 이력·예측·주가나 가상의 캔들 데이터를 만들지 않는다. 입력 변경으로 완료 건수가 줄어드는 경우도 그대로 표시한다.
 - 작업 보드에 기사·회차 검색과 진행·대기/확인 필요/완료 필터를 추가했다. 검색 범위는 API가 제공한 진행·최근 작업이며 전수 기사 검색이 아니다. 행을 펼치면 기존 단계 기록·경과 시간·재시도 정보를 확인한다. 전체 작업 분모와 검토 통과 조건은 변경하지 않았다.
 - 검증: JavaScript12 tests, 구문·전체정적포맷·diff 검사 통과. 결정적 브라우저에서 차트 수신값·검색/필터·단계 상세·3초 갱신·오류 복구·390/320px 넘침 없음을 확인했다. 실제 로컬 API 연결 및 작업 펼침 갱신·모바일·JS오류0 확인. 이번 변경은 정적 UI와 브라우저 검사에 한정하며 Python 처리 엔진 변경이나 재시작은 없다.
+
+## 2026-10-03 상세 분석 복구·잔여 처리 (01:49 KST)
+
+- 모델 execution_failed 이후 paused/owner 없음/pause_requested0이었던 기존 cycle `d4686920261a4380bd467ed4ae1c6bda`를 사용자 요청으로 재개했다. `scheduled_risks.py --resume`의 공용 엔진 확인을 통과했으며 workers2/batch1/recent-first/maxrounds20을 유지한다. 구체적인 공급자 실패 원인은 저장된 일반 오류 코드만으로 확정하지 않았다.
+- 중단됐던3859(timeout)·3860(execution_failed)회차가 기존 workflow에서 모두 accepted1/complete로 복구됐다. 현재 owner95848 생존=True, 상태=running, pause_requested=0. 실패·검토 이력과 누적recoveries20 보존, 예약 실행enabled1/stagnant0 확인.
+- 재개 전 complete4001/pending4389/running2(8392)에서 신규 입력 대조 직후 complete3997/pending4404/running2(8403)로 변경됐고, 복구 완료 뒤 현재 원장은 {"complete": 3999, "pending": 4402, "running": 2}(총8403)다. 입력 변경에 따른 완료 무효화를 과거 결과 삭제나 처리량 감소로 해석하지 않는다. 전체 잔여 처리 완료를 뜻하지 않는다.
+- 코드 변경 없이 실운영 엔진 확인·회차 완료·owner 생존으로 검증했다. 근거 `.runtime/verification/deep-resume-20261003.json`, `.runtime/scheduled-risks-worker.log`. PID·건수는 위 점검 시각 기준이다.
