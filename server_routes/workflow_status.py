@@ -54,13 +54,17 @@ def snapshot(path):
                     for r in db.execute('SELECT number,status,created_at,completed_at FROM rsi_rounds WHERE cycle_id=? ORDER BY number DESC LIMIT 12',(row['id'],)):
                         events.append(dict(r))
                     if 'strategic_workflow_events' in tables:
-                        for r in db.execute("""SELECT number,status,workflow_run_id,
-                            json_extract(snapshot_json,'$.items[0].title') AS title FROM rsi_rounds
-                            WHERE cycle_id=? AND status IN ('running','planned') ORDER BY number LIMIT 6""", (row['id'],)):
-                            task=dict(r)
-                            latest=db.execute("SELECT stage,status,created_at FROM strategic_workflow_events WHERE run_id=? AND stage NOT LIKE 'model_call_%' ORDER BY seq DESC LIMIT 1", (r['workflow_run_id'],)).fetchone()
-                            task['latest']=dict(latest) if latest else None
-                            tasks.append(task)
+                        from server_routes.workflow_tasks import task_detail
+                        # Active tasks first; retain recent results so completion does not disappear.
+                        active=list(db.execute("SELECT id FROM rsi_rounds WHERE cycle_id=? AND status IN ('running','planned') ORDER BY number LIMIT 12", (row['id'],)))
+                        recent=list(db.execute("SELECT id FROM rsi_rounds WHERE cycle_id=? ORDER BY number DESC LIMIT 8", (row['id'],)))
+                        ids=list(dict.fromkeys(r['id'] for r in active+recent))[:20]
+                        for identity in ids:
+                            r=db.execute("""SELECT id,number,status,workflow_run_id,created_at,completed_at,
+                                json_extract(snapshot_json,'$.items[0].title') AS title
+                                FROM rsi_rounds WHERE id=?""", (identity,)).fetchone()
+                            tasks.append(task_detail(db,dict(r),tables,stamp,item['owner_alive']))
+
         for identity,title,table,done,href,note in [
             ('sources','외부 원문 확보','source_health',('fetched',),'/sources','확보 상태입니다. 원문 사실의 독립 검토 완료율이 아닙니다.'),
             ('papers','논문 분석','arxiv_paper_analyses',('complete',),'/papers','등록된 논문 분석 행 기준입니다. 최신 입력 유효성은 논문 화면에서 확인합니다.'),

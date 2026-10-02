@@ -39,3 +39,27 @@ def test_empty_store_has_unknown_not_fake_complete(tmp_path):
     assert len(result['stages'])==8
     assert all(s['percent'] is None for s in result['stages'])
     assert result['stages'][0]['status']=='delayed'
+
+
+def test_task_timeline_parallel_retry_and_restarted_stage(tmp_path):
+    from server_routes.workflow_tasks import task_detail
+    db=sqlite3.connect(':memory:');db.row_factory=sqlite3.Row
+    db.executescript('''CREATE TABLE strategic_workflow_events(seq INTEGER PRIMARY KEY,run_id,stage,status,created_at);
+    CREATE TABLE strategic_workflow_artifacts(run_id,stage,payload_json);
+    CREATE TABLE completion_engine_waits(round_id,failures,next_attempt_at);''')
+    db.execute("INSERT INTO strategic_workflow_artifacts VALUES('w','execution_plan','{\"path\":\"parallel-drafts-v1\"}')")
+    now=datetime.now(timezone.utc);stamp=now.timestamp();when=now.isoformat()
+    for stage,status in [('collection','complete'),('strategy_draft','complete'),('strategy_draft','running'),('risk_assessment','running'),('model_call_secret','complete')]:
+        db.execute('INSERT INTO strategic_workflow_events(run_id,stage,status,created_at) VALUES(?,?,?,?)',('w',stage,status,when))
+    db.execute("INSERT INTO completion_engine_waits VALUES('r',2,?)",(stamp+60,))
+    task=dict(id='r',workflow_run_id='w',status='running',created_at=when,completed_at=None)
+    result=task_detail(db,task,{'strategic_workflow_artifacts','completion_engine_waits'},stamp,True)
+    assert result['step_complete']==1 and result['step_total']==7
+    assert result['step_percent']==14
+    assert len([s for s in result['steps'] if s['status']=='retry'])==2
+    assert not any(s['stage']=='model_call_secret' for s in result['steps'])
+    result=task_detail(db,task,{'strategic_workflow_artifacts'},stamp,False)
+    assert len([s for s in result['steps'] if s['status']=='owner_missing'])==2
+    result=task_detail(db,task,set(),stamp,True)
+    assert result['step_percent'] is None
+    db.close()

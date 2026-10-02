@@ -35,6 +35,8 @@
     blocked: '차단',
   };
   const roles = {
+    strategy_draft: '전략 초안 분석',
+    integrated_reverification: '보완 통합 독립 검토',
     collection: '입력 자료 확인',
     enrichment: '외부 원문 보강',
     morphology: '핵심 표현 정리',
@@ -64,6 +66,8 @@
     baseline: '기본 분석',
     engine_probe: '엔진 복구 점검',
   };
+  const duration = (s) =>
+    s == null ? '기록 없음' : s < 60 ? `${s}초` : `${Math.floor(s / 60)}분 ${s % 60}초`;
   const fmt = (n) => Number(n || 0).toLocaleString('ko-KR');
   const date = (s) =>
     s ? new Date(typeof s === 'number' ? s * 1000 : s).toLocaleString('ko-KR') : '기록 없음';
@@ -275,23 +279,89 @@
       'aria-label',
       `최근 화면 관측 구간 완료 변화 ${change}건. 입력 재대조로 감소할 수 있습니다.`
     );
+    const taskScroll = $('tasks').scrollTop;
+    const focusedTask = document.activeElement?.closest('#tasks details')?.dataset.task;
+    const expanded = new Set(
+      [...document.querySelectorAll('#tasks details[open]')].map((n) => n.dataset.task)
+    );
+    $('tasks').dataset.loaded = 'true';
     $('tasks').replaceChildren();
     for (const task of data.tasks || []) {
-      const item = el('article', undefined, 'task', $('tasks'));
-      el('small', `상세 분석 회차 ${task.number}`, '', item);
-      el('strong', task.title || '기사 체크포인트', '', item);
+      const item = el('details', undefined, 'task', $('tasks'));
+      item.dataset.task = String(task.id || task.number);
+      item.open = expanded.has(item.dataset.task);
+      const summary = el('summary', undefined, '', item);
+      if (focusedTask === item.dataset.task) summary.focus({ preventScroll: true });
+      el('small', `상세 분석 회차 ${task.number} · ${label(task.status)}`, '', summary);
+      el('strong', task.title || '기사 체크포인트', '', summary);
+      const steps = task.steps || [];
+      const active = steps.filter((s) => ['running', 'retry', 'owner_missing'].includes(s.status));
       const latest = task.latest;
       el(
         'p',
-        latest
-          ? `${roles[latest.stage] || label(latest.stage)} · ${label(latest.status)}`
-          : label(task.status),
+        active.length
+          ? active.map((s) => `${roles[s.stage] || s.stage} · ${label(s.status)}`).join(' / ')
+          : latest
+            ? `${roles[latest.stage] || label(latest.stage)} · ${label(latest.status)}`
+            : label(task.status),
         '',
-        item
+        summary
       );
+      if (steps.length) {
+        el(
+          'p',
+          task.step_percent == null
+            ? '분석 경로 결정 중 · 완료율 미정'
+            : `단계 완료 ${task.step_complete}/${task.step_total} · ${task.step_percent}%`,
+          'task-progress-label',
+          summary
+        );
+        const progress = el('progress', undefined, 'task-progress', summary);
+        progress.max = task.step_total;
+        if (task.step_percent != null) progress.value = task.step_complete;
+        progress.setAttribute('aria-label', `회차 ${task.number} 단계 완료`);
+        el(
+          'p',
+          `회차 경과 ${duration(task.elapsed_seconds)} · ${task.route || '경로 미정'}`,
+          '',
+          item
+        );
+        if (task.retry)
+          el(
+            'p',
+            `실행 오류 ${task.retry.failures}회 · 재시도 가능 ${date(task.retry.next_attempt_at)} (자동 실행 보장 시각 아님)`,
+            'task-warning',
+            item
+          );
+        const list = el('ol', undefined, 'task-steps', item);
+        for (const step of steps) {
+          const li = el('li', undefined, tone(step.status), list);
+          el('span', roles[step.stage] || step.stage, '', li);
+          el(
+            'span',
+            `${label(step.status)}${step.elapsed_seconds == null ? '' : ` · ${duration(step.elapsed_seconds)}`}`,
+            '',
+            li
+          );
+          if (step.updated_at)
+            el(
+              'small',
+              `갱신 ${date(step.updated_at)}${step.attempts > 1 ? ` · 시작 기록 ${step.attempts}회` : ''}`,
+              '',
+              li
+            );
+        }
+        el(
+          'p',
+          '단계 수 기준이며 예상 소요 시간 비율이 아닙니다. 병렬 실행·재사용·추가 보완에 따라 달라집니다. 단계 완료와 검토 통과는 별개입니다.',
+          'task-note',
+          item
+        );
+      }
     }
     if (!(data.tasks || []).length)
       el('p', '현재 발행된 상세 분석 작업이 없습니다.', 'empty', $('tasks'));
+    $('tasks').scrollTop = taskScroll;
     $('calls').replaceChildren();
     if (data.runtime_error)
       el(
