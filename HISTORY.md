@@ -712,3 +712,11 @@
 - 중단됐던3859(timeout)·3860(execution_failed)회차가 기존 workflow에서 모두 accepted1/complete로 복구됐다. 현재 owner95848 생존=True, 상태=running, pause_requested=0. 실패·검토 이력과 누적recoveries20 보존, 예약 실행enabled1/stagnant0 확인.
 - 재개 전 complete4001/pending4389/running2(8392)에서 신규 입력 대조 직후 complete3997/pending4404/running2(8403)로 변경됐고, 복구 완료 뒤 현재 원장은 {"complete": 3999, "pending": 4402, "running": 2}(총8403)다. 입력 변경에 따른 완료 무효화를 과거 결과 삭제나 처리량 감소로 해석하지 않는다. 전체 잔여 처리 완료를 뜻하지 않는다.
 - 코드 변경 없이 실운영 엔진 확인·회차 완료·owner 생존으로 검증했다. 근거 `.runtime/verification/deep-resume-20261003.json`, `.runtime/scheduled-risks-worker.log`. PID·건수는 위 점검 시각 기준이다.
+
+## 2026-10-03 상세 분석 작업자10명 확대 (02:39 KST)
+
+- 사용자 요청으로 CompletionRunner 작업자 상한6→10, 정기 상세 실행2→10으로 변경했다. 기사1건·실행당20회차·최근 기사 우선·독립 검토·오류 대기 정책은 유지한다. 기본 분석 작업자 수는 변경하지 않았다.
+- 운영 `llm_runtime_settings.max_concurrent`를6→10으로 변경했다. 전체 서비스가 공유하는 실제 모델 호출 상한이며 역할별 내부 병렬 작업은 이 큐를 통과한다. 새 DB의 기본값6과 운영 설정10을 구분한다.
+- 기존 owner11012에 정상 종료를 요청하고 진행3910·3911회차의 accepted1/complete 저장 및 프로세스 종료를 확인했다. 명시 resume/probe 뒤 동일cycle d4686920261a4380bd467ed4ae1c6bda를 owner46875가 workers10/batch1/maxrounds20으로 이어받았다. 현재owner생존/running/pause_requested0, 실제동시회차10 확인. 이전 검토·실패 이력을 삭제하지 않았다.
+- 확인 시점 complete4042/pending4349/running10/failed1/needs_review1(총8403). 실패·검토 필요는 완료로 간주하지 않는다. 모델·기사별 소요 시간과 공급자 제한으로 속도가 작업자 수에 비례한다고 보장하지 않는다.
+- 검증:10개 작업자가 서로 다른10개 문서를 중복 없이 완료하는 병렬 테스트 추가. 관련31 tests 및 전체779 tests+56subtests(12.45초) 통과. 실행 프로세스 인자·DB상태를 별도로 확인했다. PID/건수는 이 시점의 기록이다.

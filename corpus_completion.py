@@ -117,7 +117,7 @@ def historical_feedback(db,items):
 class CompletionRunner:
     def __init__(self, path, cycle_id, workers=6, batch_size=24, recover_engine=False, review_first=False, recent_first=False, max_rounds=0):
         self.path = str(Path(path).resolve()); self.cycle_id = cycle_id
-        self.workers = max(1, min(6, workers)); self.batch_size = max(1, min(24, batch_size))
+        self.workers = max(1, min(10, workers)); self.batch_size = max(1, min(24, batch_size))
         self.stop = threading.Event()
         self.ledger = None
         self.claimed_rounds = set()
