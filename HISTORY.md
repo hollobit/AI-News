@@ -727,3 +727,10 @@
 - 기존 owner1892의 진행 작업을 정상 저장·종료한 뒤 같은 cycle을 재개했다. 현재 owner58614 생존, workers20/batch1/maxrounds20, 실제동시회차20 확인. 원장 {"complete": 4077, "failed": 1, "needs_review": 1, "pending": 4304, "running": 20}. 근거 `.runtime/verification/deep-workers20.json`. 기록 시각 2026-10-03T02:53:57.762967+09:00.
 - 시황판 진행 작업 표시를 최대20건+최근8회차(중복 제거 최대28건)로 확대하고 HTTP 서버에 반영했다. 모델 호출 카드는 기존최대12개 요약이며 전체 활성 건수와 호출 상한은 별도 표시한다.
 - 검증:20 workers가 서로 다른20문서를 완료하는 병렬 테스트 포함 전체779 tests+56subtests(13.27초) 통과. 브라우저 갱신/필터/모바일390·320/JS오류0 및 포맷/diff 검사 통과. 새 환경의 기본 모델 한도6과 운영 설정20은 구분한다. 분석 품질 기준과 실패·검토 이력을 유지한다.
+
+## 2026-10-03 상세 분석 복구·잔여 처리 (07:48 KST)
+
+- execution_failed로 paused/owner 없음/pause_requested0이던 동일cycle d4686920261a4380bd467ed4ae1c6bda를 사용자 요청에 따라 복구했다. 이전 예약 기록은 waiting_for_collector였지만 현재 수집 heartbeat가22초 이내임을 확인했고, `scheduled_risks.py --resume`의 엔진 probe가 성공했다. 구체적인 공급자 실패 원인은 저장된 일반 코드로 확정하지 않았다.
+- owner48725 생존/running/pause_requested0, workers20/batch1/maxrounds20 및 공유 모델 상한20 유지. 중단4266회차는 동일workflow c2e536dfd3c947b680aae0a426ba5ff6에서 complete로 복구됐고, 이후3회차도complete 확인. 실패·검토·복구 이력을 초기화하지 않았다.
+- 입력 재대조 전 complete4383/failed1/needs_review2/pending4016/running1(8403)에서 신규·변경 입력 반영 후 현재 complete4375/failed1/needs_review1/pending4046/running19(8442). 완료 감소는 입력 유효성 재대조를 포함하므로 순수 처리량으로 비교하지 않는다. 전체 잔여 처리는 계속 진행 중이다.
+- 실제 모델 호출 running18/queued12 관측. 실행·검토 예약 슬롯과 호출 상한을 유지한다. 코드 변경·추가 단위 테스트 없이 실운영 엔진 확인/복구 회차 완료/후속 처리/owner 생존을 검증했다. 근거 `.runtime/verification/deep-resume-20261003-0747.json`. PID/건수는07:48 KST 기록이다.
