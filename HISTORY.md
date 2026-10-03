@@ -1,3 +1,10 @@
+## 2026-10-03 정기 수집·상세 분석 실행 (17:38 KST)
+
+- 사용자 요청에 따라 정기 수집 스킬로 상태를 확인하고 scheduled_collection.py를 실행했다. 기존 collector PID30511/서버68823을 유지했으며 Telegram 확인 heartbeat가 17:36:50→17:37:21 이후에도 갱신됨을 확인했다. 마지막 추출은 12:02:40 KST complete/고유8475건이며 당시 증가15건을 이번 요청의 신규 수집량으로 표시하지 않는다.
+- 기본 run e60a0cec9929457cb66ae5990cc5c15b는 verified8222/needs_review1, owner없음/requires_review여서 스케줄러가 baseline_attention_required를 반환했다. iPhone Duo 워크맨 기사의 later in October를 10월 하순으로 좁혀 해석한 내용이 독립 검토에서 거절됐고 attempts2다. 자동 재개 API가 검토 보류 attempts를 초기화하는 동작임을 확인해 호출하지 않았다. 새 run으로 우회하지 않았다.
+- 상세는 기존 cycle d4686920261a4380bd467ed4ae1c6bda를 명시 resume했고 엔진 확인 후 PID79718이 최대20 workers/연속모드로 입력을 재대조했다. 기존 완료8475건의 admission을 다시 검사한 결과 complete8475/failed7/needs_review5(총8487), pending/running0으로 종료했다. 잔여12건은 모두 attempts3으로 자동 재시도 상한이며 보류 이력·실패 횟수를 유지했다. 새 모델 분석을 진행 중이라고 표시하지 않는다.
+- 코드 변경 없이 실프로세스·수집 heartbeat·스케줄러 응답·재대조 로그·DB 원장을 검증했다. 기본1건 및 상세12건의 원인별 보완/독립 재검토가 남아 있다. 근거 .runtime/verification/collection-deep-20261003-1737.json. 정기 수집은 계속 실행 중이며 위 수치는 이 확인 시점의 기록이다.
+
 ## 2026-10-03 복합 검색·일치 문맥·분석 범위 확장
 
 - 전략 홈·전체 뉴스·브리핑·링크 목록 검색을 제목/수집 내용/확보 원문 전체/현재 검토된 기본·심층·위험 분석으로 확장했다. 날짜·채널 등의 범위를 유지하고 페이지 분할 전에 일치 항목을 계산한다. 원문은 현재 source_health 해시의 저장 본문을 읽으며 검색 중 외부 수집/모델 호출은 없다.
