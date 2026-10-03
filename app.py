@@ -205,7 +205,7 @@ def read_links(db, params, service=None):
     date = params.get("date", ["all"])[0]
     if date != "all":
         datetime.strptime(date, "%Y-%m-%d")
-    query = params.get("q", [""])[0].strip().casefold()
+    query = params.get("q", [""])[0].strip()
     channel = params.get("channel", [""])[0]
     topic = params.get("topic", [""])[0]
     content_type = params.get("content_type", [""])[0]
@@ -214,9 +214,10 @@ def read_links(db, params, service=None):
     filtered = [group for group in groups if
                 any((date == "all" or m["day"] == date) and (not channel or str(m["chat_id"]) == channel)
                     for m in group["mentions"])
-                and (not repeated or group["distinct_days"] > 1)
-                and (not query or query in group["canonical_url"].casefold()
-                     or any(query in m["text"].casefold() for m in group["mentions"]))]
+                and (not repeated or group["distinct_days"] > 1)]
+    if query:
+        from news_search import filter_items
+        filtered = filter_items(db, filtered, query, links=True)
     topic_counts = Counter(group["topic"] for group in filtered)
     filtered = [group for group in filtered if not topic or group["topic"] == topic]
     type_counts = Counter(group["content_type"] for group in filtered)

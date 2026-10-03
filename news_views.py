@@ -39,7 +39,7 @@ def read_news(db, params, *, include_discovery=True):
     if rows is None:
         rows = joined(db, None if day == 'all' else day)
         if rows is None: rows = joined_articles(db)
-    query = params.get("q", [""])[0].strip().casefold()
+    query = params.get("q", [""])[0].strip()
     channel = params.get("channel", [""])[0]
     topic = params.get("topic", [""])[0]
     content_type = params.get("content_type", [""])[0]
@@ -48,8 +48,10 @@ def read_news(db, params, *, include_discovery=True):
         raise ValueError("키워드 ID 형식이 올바르지 않습니다.")
     filtered = unique_articles(
         row for row in rows if (day == "all" or row["day"] == day)
-        and (not channel or str(row["chat_id"]) == channel)
-        and (not query or query in row["text"].casefold()))
+        and (not channel or str(row["chat_id"]) == channel))
+    if query:
+        from news_search import filter_items
+        filtered = filter_items(db, filtered, query)
     detail_id = params.get('detail_id', [''])[0]
     if detail_id and not re.fullmatch(r'[0-9a-f]{64}', detail_id):
         raise ValueError('Invalid article identity')

@@ -824,6 +824,9 @@
       tags,
       foot
     );
+    for (const hit of item.search_matches || [])
+      card.append(node('p', 'search-match', hit.field + ' 일치 · ' + hit.text));
+    ObservatorySearch.highlight(card, $('#search').value);
     return card;
   }
   function renderNewsNetwork(data) {
@@ -1056,6 +1059,9 @@
       $('#more-news').hidden = true;
     }
     try {
+      const parsedSearch = ObservatorySearch.parse($('#search').value);
+      $('#search').setAttribute('aria-invalid', String(!!parsedSearch.error));
+      if (parsedSearch.error) throw new Error(parsedSearch.error);
       const data = await api(
         '/api/strategy?view=news&page=' + state.page + '&page_size=12&' + query(),
         undefined,

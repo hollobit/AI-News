@@ -146,6 +146,7 @@
     if (item._compact && newsSearch) return (newsSearch[item.id] || '').toLocaleLowerCase();
     return [
       item.title,
+      item.source_text,
       item.topic,
       item.url,
       item.summary,
@@ -158,7 +159,7 @@
       ...(item.claims || []).flatMap((c) => [c.title, c.text, c.detail, c.uncertainty]),
     ]
       .filter(Boolean)
-      .join(' ')
+      .join('\n')
       .toLocaleLowerCase();
   }
   function appendNetwork(parent, items, centerLabel, title, description) {
@@ -311,7 +312,7 @@
   function matching(item) {
     const q = $('search').value.trim().toLocaleLowerCase();
     return (
-      (!q || searchText(item).includes(q)) &&
+      ObservatorySearch.matches(ObservatorySearch.parse(q), [searchText(item)]) &&
       (!$('day').value || item.day === $('day').value) &&
       (!$('topic').value || item.topic === $('topic').value)
     );
@@ -344,13 +345,9 @@
       const neighbors = (obs.edges || [])
         .filter((e) => e.source === n.id || e.target === n.id)
         .map((e) => labels.get(e.source === n.id ? e.target : e.source));
-      return (
-        !q ||
-        [n.label, ...neighbors, ...evidence.map((e) => e.title)]
-          .filter(Boolean)
-          .join(' ')
-          .toLocaleLowerCase()
-          .includes(q)
+      return ObservatorySearch.matches(
+        ObservatorySearch.parse(q),
+        [n.label, ...neighbors, ...evidence.map((e) => e.title)].filter(Boolean)
       );
     });
   }
@@ -361,6 +358,13 @@
       restoreFilters = false;
     }
     try {
+      const parsedSearch = ObservatorySearch.parse($('search').value);
+      $('search').setAttribute('aria-invalid', String(!!parsedSearch.error));
+      if (parsedSearch.error) {
+        $('content').replaceChildren();
+        $('result-count').textContent = parsedSearch.error;
+        return;
+      }
       if (splitMode && $('search').value.trim() && site.news.length && !newsSearch)
         newsSearch = await PublicData.searchNews();
       if (token !== renderToken) return;
@@ -573,6 +577,23 @@
         }
         const n = draw(item),
           params = new URLSearchParams({ view, id: item.id });
+        if ($('search').value.trim() && item.source_text) {
+          const terms = parsedSearch.groups.flat().filter((t) => !t.negative);
+          const normalized = item.source_text.normalize('NFKC').toLocaleLowerCase();
+          const positions = terms.map((t) => normalized.indexOf(t.value)).filter((i) => i >= 0);
+          if (positions.length) {
+            const start = Math.max(0, Math.min(...positions) - 65);
+            n.append(
+              el(
+                'p',
+                '원문 일치 · ' + (start ? '…' : '') + item.source_text.slice(start, start + 260)
+              )
+            );
+          }
+        }
+        ObservatorySearch.highlight(n, parsedSearch);
+        for (const detail of n.querySelectorAll('details'))
+          if (detail.querySelector('mark')) detail.open = true;
         n.append(el('p'), link('이 내용의 고유 링크', 'index.html?' + params));
         for (const [i, d] of [...n.querySelectorAll('details')].entries()) {
           const section = String(i);

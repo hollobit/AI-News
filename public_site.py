@@ -34,7 +34,7 @@ def observation(raw):
             document_id=identity(str(e.get('document_id',key)))) for key,e in d.get('documents',{}).items()}
     return result
 
-def content(db):
+def content(db, *, news_only=False, selected_items=None, include_excerpts=False):
     from export_wiki_site import public_url
     from source_titles import title_projection
     from improvement_selection import all_corpus_items, content_identity
@@ -44,7 +44,7 @@ def content(db):
     from completion_quality import document_admission, message_text
     from graph_rag import validated_workflow_content
     tables={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    items=all_corpus_items(db) if {'news','articles','archived_urls'}<=tables else []
+    items=selected_items if selected_items is not None else (all_corpus_items(db) if {'news','articles','archived_urls'}<=tables else [])
     articles=[]; bykey={}; risks=[]
     for item in items:
         key=content_identity(item)
@@ -90,6 +90,13 @@ def content(db):
                         risks.append(dict(pick(risk,'title current_severity current_basis scenario assumptions uncertainty future_likelihood horizon mitigations'),
                             article_id=bykey[key]['id'],url=bykey[key]['url'],day=bykey[key]['day'],
                             analysis_at=report.get('completed_at','')))
+    if news_only:
+        return dict(news=articles, risks=risks)
+    if include_excerpts:
+        for item in items:
+            article = bykey[content_identity(item)]
+            source = item.get('source_context') or {}
+            article['source_text'] = source.get('text', '') if source.get('status') == 'fetched' else ''
     papers=[]
     if 'arxiv_papers' in tables:
         analyses={r['paper_id']:dict(r) for r in db.execute('SELECT * FROM arxiv_paper_analyses')} if 'arxiv_paper_analyses' in tables else {}

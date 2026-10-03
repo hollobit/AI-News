@@ -3,6 +3,7 @@ import re
 import sqlite3
 from pathlib import Path
 from urllib.parse import parse_qs
+from search_query import QueryError
 from semantic import compare_mentions
 from graph_rag import load_integrated_graph
 from keyword_index import read_keyword_record
@@ -70,6 +71,8 @@ def get(self, route, params):
         db = self.services.connect(self.services.path)
         try:
             result = self.services.read_briefing(db, parse_qs(route.query))
+        except QueryError as error:
+            status, result = 400, {'error': str(error)}
         except ValueError:
             result, status = ({'error': '브리핑 날짜를 확인해 주세요.'}, 400)
         finally:
@@ -98,6 +101,8 @@ def get(self, route, params):
                     result, status = ({'error': '링크 그룹을 찾을 수 없습니다.'}, 404)
                 else:
                     result = dict(group, comparison=compare_mentions(group), analysis=self.services.analysis_service.status(group))
+        except QueryError as error:
+            status, result = 400, {'error': str(error)}
         except ValueError:
             result, status = ({'error': '날짜 또는 페이지 번호를 확인해 주세요.'}, 400)
         finally:

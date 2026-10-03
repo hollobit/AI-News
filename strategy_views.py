@@ -62,13 +62,15 @@ def selected(db, params, data):
         datetime.strptime(day,'%Y-%m-%d')
     keyword = get('keyword')
     if keyword and not re.fullmatch(r'[0-9a-f]{16}',keyword): raise ValueError('키워드 ID 형식이 올바르지 않습니다.')
-    query = get('q').strip().casefold()
+    query = get('q').strip()
     items = [i for i in items if (day=='all' or i['day']==day)
         and (not get('channel') or str(i['chat_id'])==get('channel'))
-        and (not query or query in i['_search_text'])
         and (not keyword or keyword in i['_all_keyword_ids'])
         and (not get('topic') or i['topic']==get('topic'))
         and (not get('content_type') or i['content_type']==get('content_type'))]
+    if query:
+        from news_search import filter_items
+        items = filter_items(db, items, query)
     return select_strategy_items(db,dict({'sort':['strategic']},**params),items,records=data['morph'],precomputed=True)
 
 
@@ -95,7 +97,7 @@ def enrich(db, items):
 
 
 def card(item):
-    keys=('item_id','keyword_record_id','chat_id','message_id','item_index','title','excerpt','day','topic','content_type','type_label','type_reason','source_url','original_url','url','channel','published_at','sectors','strategic_value','group_id','source_count','matched_terms')
+    keys=('item_id','keyword_record_id','chat_id','message_id','item_index','title','excerpt','day','topic','content_type','type_label','type_reason','source_url','original_url','url','channel','published_at','sectors','strategic_value','group_id','source_count','matched_terms','search_matches')
     result={k:item[k] for k in keys if k in item}
     for key in ('title','excerpt'): result[key]=str(result.get(key) or '')[:300]
     result['strategic_keywords']=[{k:t[k] for k in ('id','label','kind') if k in t} for t in item.get('strategic_keywords',[])[:6]]

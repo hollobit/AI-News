@@ -16,7 +16,7 @@ def test_complete_index_details_and_incident_edges_are_preserved(tmp_path):
     corpus,graph=fixtures();m=write_data(tmp_path,corpus,graph)
     read=lambda name:json.loads((tmp_path/name).read_text())
     assert len(read(m['news']['index']))==201
-    assert read(m['news']['search'])['200'].endswith('Unique detail 200 Unknown')
+    assert read(m['news']['search'])['200'].endswith('Unique detail 200\nUnknown')
     assert corpus['news'][200] in read(m['news']['parts'][bucket('200',10)])
     for sid in ('source:news:0','source:news:200'):
         part=read(m['graph']['parts'][bucket(sid)])

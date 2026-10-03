@@ -309,3 +309,16 @@ body.ws-shell > .ws-header {
 .ws-shell .skip:focus {
   z-index: 10000;
 }
+
+mark.search-highlight {
+  background: #ffe58a;
+  color: #282000;
+  border-radius: 3px;
+  padding: 0 0.08em;
+  box-decoration-break: clone;
+}
+#search-help {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}

@@ -72,5 +72,65 @@
       )
     );
   }
-  globalThis.ObservatorySearch = { parse, matches };
+  // Build marks from text nodes only: query/source strings are never HTML.
+  function highlight(root, query) {
+    const parsed = typeof query === 'string' ? parse(query) : query;
+    if (parsed.error) return;
+    const terms = [
+      ...new Set(
+        parsed.groups
+          .flat()
+          .filter((t) => !t.negative)
+          .map((t) => t.value)
+      ),
+    ];
+    if (!terms.length) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) {
+      const n = walker.currentNode;
+      if (!n.parentElement?.closest('mark,script,style,input,textarea,select,svg')) nodes.push(n);
+    }
+    for (const node of nodes) {
+      const text = node.nodeValue;
+      let normalized = '',
+        offsets = [];
+      const segments = new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text);
+      for (const part of segments) {
+        const value = normalize(part.segment);
+        normalized += value;
+        for (let i = 0; i < value.length; i++)
+          offsets.push([part.index, part.index + part.segment.length]);
+      }
+      const ranges = [];
+      for (const term of terms) {
+        let at = normalized.indexOf(term);
+        while (at >= 0) {
+          ranges.push([offsets[at][0], offsets[at + term.length - 1][1]]);
+          at = normalized.indexOf(term, at + term.length);
+        }
+      }
+      if (!ranges.length) continue;
+      ranges.sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+      const merged = [];
+      for (const range of ranges) {
+        const last = merged.at(-1);
+        if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1]);
+        else merged.push([...range]);
+      }
+      const fragment = document.createDocumentFragment();
+      let end = 0;
+      for (const [start, stop] of merged) {
+        fragment.append(document.createTextNode(text.slice(end, start)));
+        const mark = document.createElement('mark');
+        mark.className = 'search-highlight';
+        mark.textContent = text.slice(start, stop);
+        fragment.append(mark);
+        end = stop;
+      }
+      fragment.append(document.createTextNode(text.slice(end)));
+      node.replaceWith(fragment);
+    }
+  }
+  globalThis.ObservatorySearch = { parse, matches, highlight };
 })();

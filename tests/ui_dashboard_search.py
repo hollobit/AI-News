@@ -33,6 +33,12 @@ async def main():
         await expect(cards.first.locator('h2')).to_have_text('의료')
         await expect(page.locator('#result-count')).to_contain_text('공개 자료 1개')
         await page.reload();await expect(cards).to_have_count(1)
+        await page.locator('#search').fill('의료 AND 진단 -반도체')
+        await expect(page.locator('#content .card h2').filter(has_text='의료 연구')).to_have_count(1)
+        await expect(page.locator('#content mark').filter(has_text='진단')).to_have_count(1)
+        assert await page.locator('#content details').first.get_attribute('open') is not None
+        await page.locator('#search').fill('AI OR')
+        await expect(page.locator('#result-count')).to_contain_text('키워드를 입력')
         await page.locator('#search').fill('not_found_123')
         await expect(cards).to_have_count(0)
         await expect(page.locator('#content .card')).to_have_count(0)

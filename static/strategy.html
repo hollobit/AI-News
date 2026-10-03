@@ -16,6 +16,7 @@
     <script src="/strategy-risks.js" defer></script>
     <script src="/strategy-baseline.js" defer></script>
     <script src="/strategy-topics.js" defer></script>
+    <script src="/observatory-search.js" defer></script>
     <script src="/strategy.js" defer></script>
     <script src="/pipeline-health.js" defer></script>
     <link rel="stylesheet" href="/pipeline-health.css" />
@@ -320,12 +321,18 @@
             </div>
             <a href="/news?date=all" class="text-link">전체 기록 ↗</a>
           </div>
+          <p id="search-help" class="subtle">
+            공백/AND: 모두 포함 · OR/|: 하나 이상 · "수출 통제": 정확한 구문 · -중국: 제외. 예: AI
+            반도체 OR 로봇 -중국 (AND 우선)
+          </p>
           <div class="filters">
             <label class="search"
               ><span>⌕</span
               ><input
                 id="search"
-                placeholder="기업, 기술, 전략 키워드 검색"
+                placeholder="제목·원문·검토 분석 검색"
+                maxlength="256"
+                aria-describedby="search-help"
                 aria-label="뉴스 검색" /></label
             ><select id="date-filter" aria-label="뉴스 날짜">
               <option value="all">모든 날짜</option></select

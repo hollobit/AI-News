@@ -119,7 +119,7 @@ def _export_site(db_path, target, include_excerpts=False, full_site=False):
         if full_site:
             from public_site import content, observation
             from corpus_knowledge import expand
-            corpus=content(db)
+            corpus=content(db, include_excerpts=include_excerpts)
             from source_navigation import original_url
             from functools import lru_cache
             resolve = lru_cache(maxsize=None)(lambda value: original_url(db, value))

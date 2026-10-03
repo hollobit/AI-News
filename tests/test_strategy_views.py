@@ -32,7 +32,8 @@ def test_filter_pagination_detail_and_response_isolation(corpus):
     assert read_item(db,item_id)['item']['strategic_value']['score']>=0
     assert read_item(db,item_id)['item']['strategic_keywords']
     assert read_item(db,'missing') is None
-    filtered=read_view(db,{'q':['투자 2']},{})
+    assert read_view(db,{'q':['투자 2']},{})['total']==4  # implicit AND also matches the date's 2
+    filtered=read_view(db,{'q':['"투자 2"']},{})
     assert filtered['total']==1 and '기사 2' in filtered['items'][0]['title']
     assert read_view(db,{'channel':['unknown']},{})['total']==0
     assert read_view(db,{'date':['2026-09-11']},{})['total']==0

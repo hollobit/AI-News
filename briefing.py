@@ -218,6 +218,7 @@ def _make_story(
         "id": item_id,
         "title": _clean(item.get("title")) or _clean((group or {}).get("title")) or "제목 없는 소식",
         "summary": _summary(item, group),
+        "search_matches": item.get("search_matches", []),
         **{key:item[key] for key in ('briefing_title','source_title','title_origin','original_url') if key in item},
         "why_selected": "",
         "topic": topic,

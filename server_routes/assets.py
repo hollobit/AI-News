@@ -1,6 +1,7 @@
 """Assets routes; shared transport checks stay in server_http."""
 import json
 from urllib.parse import parse_qs
+from search_query import QueryError
 from news_repository import read_news
 
 def get(self, route, params):
@@ -19,6 +20,8 @@ def get(self, route, params):
                 result = next(iter(result['items']), None)
                 if result is None:status,result=404,{'error':'기사가 변경되었거나 삭제되었습니다. 목록을 새로고침해 주세요.'}
             else:result = read_news(db, query)
+        except QueryError as error:
+            status, result = 400, {'error': str(error)}
         except ValueError:
             status, result = (400, {'error': '올바른 날짜를 선택해 주세요.'})
         finally:
