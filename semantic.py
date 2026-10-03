@@ -177,7 +177,7 @@ def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_t
     from llm_runtime import LLMRuntime, infer_role
     from model_policy import policy, StructuredResult, input_digest
     role = role or infer_role(prompt, schema_definition)
-    selected = policy(role, escalation=escalation)
+    selected = policy(role, escalation=escalation, prompt=prompt)
     reasoning_effort = reasoning_effort or selected['reasoning_effort']
     if reasoning_effort not in {'low','medium','high'}:
         raise ValueError('지원되지 않는 분석 추론 설정입니다.')
@@ -190,13 +190,16 @@ def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_t
                 {'type':'object','properties':{'ok':{'type':'boolean'}},'required':['ok'],'additionalProperties':False},
                 role='engine_probe',timeout=15,queue_timeout=5,reasoning_effort='low',_runtime=LLMRuntime(runtime.path,queue_timeout=5)) == {'ok':True}
         wait_until_ready(runtime, recovery_probe, max_wait=min(queue_timeout,180))
-    with runtime.slot(role, len(prompt),
-                           len(json.dumps(schema_definition, ensure_ascii=False)), max_run_seconds=timeout,
+    from llm_wire import prepare, restore
+    wire_prompt,wire_schema,aliases=prepare(prompt,schema_definition)
+    with runtime.slot(role, len(wire_prompt),
+                           len(json.dumps(wire_schema, ensure_ascii=False)), max_run_seconds=timeout,
                            model=selected['model'], reasoning_effort=reasoning_effort) as ticket:
-        result = _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=timeout,
+        result = _run_structured_cli(wire_prompt, wire_schema, executable, ticket, timeout=timeout,
                                      reasoning_effort=reasoning_effort, model=selected['model'])
-        return StructuredResult(result, dict(selected, role=role, reasoning_effort=reasoning_effort,
-            call_id=ticket.id, input_hash=input_digest(prompt)))
+        return StructuredResult(restore(result,aliases), dict(selected, role=role, reasoning_effort=reasoning_effort,
+            call_id=ticket.id, input_hash=input_digest(prompt),usage=ticket.usage,
+            wire_format='short-evidence-ids-v1' if aliases else 'original',wire_input_hash=input_digest(wire_prompt)))
 
 
 def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=240, reasoning_effort='medium', model=None):
@@ -207,7 +210,7 @@ def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=2
         work = Path(directory)
         schema, output = work / "schema.json", work / "result.json"
         schema.write_text(json.dumps(schema_definition), encoding="utf-8")
-        command = [executable, "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check",
+        command = [executable, "exec", "--json", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check",
                    "--sandbox", "read-only", "--color", "never", "--output-schema", str(schema),
                    "--output-last-message", str(output), "-c", 'web_search="disabled"',
                    '-c', f'model_reasoning_effort="{reasoning_effort}"']
@@ -218,8 +221,18 @@ def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=2
             command.extend(["--disable", feature])
         command.extend(["--enable", "skip_host_skill_discovery", "-"])
         try:
-            process = subprocess.run(command, input=prompt, text=True, cwd=work, env=environment,
-                                     stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=timeout)
+            # JSON events can contain article text. Retain numeric usage only;
+            # the temporary stream is closed/deleted even on timeout or failure.
+            with tempfile.TemporaryFile(mode='w+',encoding='utf-8') as events:
+                try:
+                    process = subprocess.run(command, input=prompt, text=True, cwd=work, env=environment,
+                                             stdout=events, stderr=subprocess.PIPE, timeout=timeout)
+                finally:
+                    from llm_usage import read_usage, failure_code
+                    events.seek(0)
+                    ticket.usage=read_usage(events)
+                    events.seek(0)
+                    event_error=failure_code(events)
         except subprocess.TimeoutExpired:
             from engine_errors import EngineError
             ticket.error_code = 'timeout'
@@ -233,7 +246,7 @@ def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=2
             # Human CLI output can echo the full input. Article words such as
             # "authentication" or "quota" are not provider diagnostics.
             diagnostic = (process.stderr or '').replace(prompt, '')
-            ticket.error_code = classify_failure(diagnostic, process.returncode)
+            ticket.error_code = event_error or classify_failure(diagnostic, process.returncode)
             raise EngineError(ticket.error_code, process.returncode)
         try:
             raw = output.read_text(encoding="utf-8")

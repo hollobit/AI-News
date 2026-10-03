@@ -400,6 +400,15 @@
             '',
             item
           );
+          const u = m.usage;
+          if (u?.measured_calls) {
+            el(
+              'p',
+              `토큰 실측 ${u.measured_calls}/${m.recorded_calls}회 · 입력 ${fmt(u.input_tokens)} · 입력 중 캐시 ${u.cached_input_tokens == null ? '미제공' : fmt(u.cached_input_tokens)} · 출력 ${fmt(u.output_tokens)} · 출력 중 추론 ${u.reasoning_output_tokens == null ? '미제공' : fmt(u.reasoning_output_tokens)}`,
+              '',
+              item
+            );
+          }
           el(
             'p',
             '현재 작업에 연결된 저장 호출 최대 100개 기준입니다. 실패·진행 중 호출은 누락될 수 있으며 병렬 시간 합계는 회차 경과 시간과 다릅니다. 입력 글자 수는 토큰 수가 아닙니다.',

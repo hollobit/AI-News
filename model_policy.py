@@ -16,15 +16,20 @@ class StructuredResult(dict):
         self.provenance = provenance
 
 
-def policy(role, *, escalation=False):
+def policy(role, *, escalation=False, prompt=None):
     tier = 'luna' if role in ('baseline_analysis', 'engine_probe') else 'sol'
+    announcement=False
+    if role=='integrated_analysis' and prompt and not escalation:
+        from workflow_model_profile import simple_announcement
+        announcement=simple_announcement(prompt)
+        if announcement:tier='luna'
     if escalation:
         tier = 'astra'
     model = os.environ.get('NEWS_MODEL_' + tier.upper(), MODELS[tier])
     if model not in ALLOWED[tier]:
         raise ValueError('지원되지 않는 뉴스 분석 모델 설정: ' + tier)
-    return {'policy_version': VERSION, 'tier': tier, 'model': model,
-            'reasoning_effort': 'high' if tier == 'luna' else 'medium' if tier == 'sol' else 'low'}
+    return {'policy_version': 'news-models-announcement-v1' if announcement else VERSION, 'tier': tier, 'model': model,
+            'reasoning_effort': 'medium' if announcement else 'high' if tier == 'luna' else 'medium' if tier == 'sol' else 'low'}
 
 
 def input_digest(prompt):

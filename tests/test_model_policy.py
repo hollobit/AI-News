@@ -81,3 +81,24 @@ def test_cli_update_invalidates_cached_model_rejection(monkeypatch,tmp_path):
     version['version']='new'
     assert ensure_model_access(caller=probe,state_path=path,stamp=1001)['ready']
     assert len(calls)==6
+
+
+def test_announcement_execution_matches_policy_and_restores_wire_ids(monkeypatch,tmp_path):
+    monkeypatch.setenv('NEWS_EXTERNAL_ANALYSIS_ENABLED','1')
+    monkeypatch.setenv('NEWS_LLM_RUNTIME_DB',str(tmp_path/'runtime.db'))
+    monkeypatch.setattr('semantic.codex_executable',lambda:'codex')
+    identity='news_'+'a'*24
+    prompt='ROLE: integrated_analysis\nDATA:\n'+json.dumps(dict(evidence=[dict(id=identity,text='새 도구 공개',origin='telegram_excerpt')],coverage={'failed_urls':[]}))
+    def execute(command,**kwargs):
+        assert command[command.index('--model')+1]=='gpt-6-luna'
+        assert 'model_reasoning_effort="medium"' in command
+        data=json.loads(kwargs['input'].split('DATA:\n')[1])
+        assert data['evidence'][0]['id']=='E1'
+        Path(command[command.index('--output-last-message')+1]).write_text('{"evidence_ids":["E1"]}')
+        return SimpleNamespace(returncode=0,stderr='')
+    monkeypatch.setattr('semantic.subprocess.run',execute)
+    result=run_structured(prompt,{'type':'object'})
+    assert result=={'evidence_ids':[identity]}
+    assert result.provenance['policy_version']=='news-models-announcement-v1'
+    assert result.provenance['role']=='integrated_analysis'
+    assert result.provenance['wire_format']=='short-evidence-ids-v1'

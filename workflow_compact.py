@@ -55,6 +55,7 @@ def prompt(service, role, evidence, payload, *, extra_instructions=""):
         'claims는 핵심 1~3개, 각 claim의 title/detail/category/evidence_ids/uncertainty를 작성한다. '
         'category는 opportunity/risk/watch_signal/strategic_concept이다. 모든 telegram_excerpt ID가 claim에 연결되어야 한다. '
         '자료가 부족하면 해당 근거의 한계를 watch_signal로 설명하며 사실을 발명하지 않는다. '
+        '위험 근거 분류에서 읽고 확인했다는 사실은 assessed를 뜻하지 않는다. 피해·노출·발생 지표나 시나리오 조건이 없어 위험을 평가할 수 없는 출시·공개 안내는 not_assessable_evidence_ids에 넣는다. limitations에서 평가할 정보가 부족하다고 설명한 동일 근거를 assessed_evidence_ids에 넣지 않는다. 평가 불가는 안전함의 확정이 아니다. '
         'event_observations는 원문 문서별 최대 한 사건, 관측 행위가 없으면 빈 배열이다. '
         'actor/action/target/outcome/occurred_at/uncertainty와 actor_countries/affected_countries/evidence_ids를 원문에서만 추출한다. '
         '계획·기대는 실제 outcome이 아니며 국가·일자를 추측하지 않는다. 미상은 빈 문자열·빈 배열이다.'
@@ -84,7 +85,7 @@ def execute(service, run_id, evidence, request, enrichment):
 
     generated = service._stage(run_id, 'integrated_analysis', lambda: cached_call(
         service, run_id, 'integrated_analysis', generation, schema, validate_generation),
-        dependencies=[generation,schema,policy('integrated_analysis')])
+        dependencies=[generation,schema,policy('integrated_analysis',prompt=generation)])
     # Revalidate checkpoint artifacts too; never trust status alone.
     generated = validate_generation(generated)
     report, risk_report = generated['report'], generated['risk_report']

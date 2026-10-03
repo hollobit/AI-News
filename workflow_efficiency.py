@@ -31,7 +31,7 @@ def cached_call(service, run_id, stage, prompt, schema, validate, *, escalation=
     import time
     from pathlib import Path
     from strategic_workflow import digest
-    selected=policy(infer_role(prompt,schema),escalation=escalation)
+    selected=policy(infer_role(prompt,schema),escalation=escalation,prompt=prompt)
     key=digest([VERSION,prompt,schema,selected])
     directory=Path(service.path).resolve().with_name(Path(service.path).name+'.stage-locks')
     directory.mkdir(exist_ok=True)
@@ -48,7 +48,7 @@ def cached_call(service, run_id, stage, prompt, schema, validate, *, escalation=
 
 def _cached_call(service, run_id, stage, prompt, schema, validate, *, escalation=False):
     from strategic_workflow import digest
-    selected = policy(infer_role(prompt, schema), escalation=escalation)
+    selected = policy(infer_role(prompt, schema), escalation=escalation,prompt=prompt)
     key = digest([VERSION, prompt, schema, selected])
     with service.db() as db:
         db.execute('''CREATE TABLE IF NOT EXISTS workflow_stage_cache (

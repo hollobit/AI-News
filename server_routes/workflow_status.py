@@ -98,6 +98,8 @@ def snapshot(path):
                     if not ids: continue
                     metrics=db.execute('SELECT count(*),COALESCE(sum(wait_ms),0),COALESCE(sum(run_ms),0),COALESCE(sum(input_chars),0) FROM llm_calls WHERE id IN ('+','.join('?' for _ in ids)+')',ids).fetchone()
                     task['metrics']=dict(recorded_calls=metrics[0],queue_seconds=round(metrics[1]/1000,1),model_seconds=round(metrics[2]/1000,1),input_chars=metrics[3])
+                    from llm_usage import totals
+                    task['metrics']['usage']=totals(db,ids)
                 for r in db.execute("SELECT owner_pid,status,COUNT(*) AS n FROM llm_calls WHERE status IN ('queued','running') GROUP BY owner_pid,status"):
                     if alive(r['owner_pid']):call_counts[r['status']]+=r['n']
                 calls=[dict(r) for r in db.execute('''SELECT id,role,model,status,owner_pid,started_at,queued_at,finished_at,error_code

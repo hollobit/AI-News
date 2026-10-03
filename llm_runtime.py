@@ -54,6 +54,7 @@ class _Ticket:
         self.id = identity
         self.error_code = ''
         self.output_chars = 0
+        self.usage = {}
 
 
 class LLMRuntime:
@@ -76,6 +77,10 @@ class LLMRuntime:
             for column in ('model', 'reasoning_effort'):
                 if column not in columns:
                     db.execute(f"ALTER TABLE llm_calls ADD COLUMN {column} TEXT NOT NULL DEFAULT ''")
+
+            from llm_usage import FIELDS
+            for column in FIELDS:
+                if column not in columns:db.execute(f'ALTER TABLE llm_calls ADD COLUMN {column} INTEGER')
 
     def db(self):
         db = sqlite3.connect(self.path, timeout=30, factory=ClosingConnection)
@@ -171,6 +176,8 @@ class LLMRuntime:
                 db.execute("UPDATE llm_calls SET status='failed',finished_at=?,wait_ms=COALESCE(wait_ms,?),run_ms=?,output_chars=?,error_code=? WHERE id=?",
                            (stamp, round(((started or stamp)-queued)*1000), round((stamp-started)*1000) if started else 0,
                             ticket.output_chars, ticket.error_code or 'request_failed', identity))
+                from llm_usage import persist
+                persist(db,ticket)
             raise
         else:
             with self.db() as db:
@@ -178,6 +185,8 @@ class LLMRuntime:
                 stamp = time.time()
                 db.execute("UPDATE llm_calls SET status='complete',finished_at=?,run_ms=?,output_chars=? WHERE id=?",
                            (stamp, round((stamp-started)*1000), ticket.output_chars, identity))
+                from llm_usage import persist
+                persist(db,ticket)
 
 
 def runtime_status(path=None):
@@ -189,12 +198,16 @@ def runtime_status(path=None):
         roles = [dict(row) for row in db.execute('''SELECT role,COUNT(*) calls,
             SUM(status='complete') completed,SUM(status='failed') failed,
             ROUND(AVG(wait_ms)) mean_wait_ms,ROUND(AVG(run_ms)) mean_run_ms,
-            ROUND(AVG(input_chars)) mean_input_chars,ROUND(AVG(output_chars)) mean_output_chars
+            ROUND(AVG(input_chars)) mean_input_chars,ROUND(AVG(output_chars)) mean_output_chars,
+            count(input_tokens) measured_calls,sum(input_tokens) input_tokens,sum(output_tokens) output_tokens
             FROM llm_calls GROUP BY role ORDER BY calls DESC''')]
         recent = [dict(row) for row in db.execute('''SELECT id,role,status,queued_at,started_at,finished_at,input_chars,schema_chars,
-            output_chars,wait_ms,run_ms,error_code,model,reasoning_effort FROM llm_calls ORDER BY id DESC LIMIT 40''')]
-    return {'limit': limit, 'active': counts.get('running', 0), 'waiting': counts.get('queued', 0),
+            output_chars,wait_ms,run_ms,error_code,model,reasoning_effort,input_tokens,cached_input_tokens,output_tokens,reasoning_output_tokens FROM llm_calls ORDER BY id DESC LIMIT 40''')]
+        from llm_usage import totals
+        usage=totals(db)
+        model_usage=[dict(r) for r in db.execute('SELECT model,reasoning_effort,count(*) calls,count(input_tokens) measured_calls,sum(input_tokens) input_tokens,sum(output_tokens) output_tokens FROM llm_calls GROUP BY model,reasoning_effort')]
+    return {'usage':usage,'model_usage':model_usage,'limit': limit, 'active': counts.get('running', 0), 'waiting': counts.get('queued', 0),
             'counts': counts, 'roles': roles, 'recent': recent, 'scope': 'all_local_processes_using_shared_runtime',
             'queue_policy': __import__('llm_priority').POLICY,
             'recovery': __import__('llm_recovery').state(runtime),
-            'privacy': '길이·시간·역할·모델·오류코드를 기록하며 프롬프트·결과 본문·인증정보는 저장하지 않습니다.'}
+            'privacy': '제공된 토큰 수·길이·시간·역할·모델·오류코드를 기록하며 프롬프트·결과 본문·인증정보는 저장하지 않습니다.'}

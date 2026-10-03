@@ -15,7 +15,7 @@ async def main():
    for i,key in enumerate(['collector','extract','baseline','deep','sources','papers','wiki','publication']):
     done=min(2+hits,9)
     stages.append(dict(id=key,title=['Telegram 확인','기사 추출','기본 검토','상세·위험 검토','외부 원문','논문','위키','게시'][i],counts={'complete':done,'pending':10-done},total=10,complete=done,percent=done*10,status='running',owner_alive=True,unit='기사',note='각 단계 원장 기준',href='/operations',run_id='fixed',updated_at=datetime.now(timezone.utc).isoformat()))
-   return dict(observed_at=datetime.now(timezone.utc).isoformat(),stages=stages,calls=[],call_limit=6,runtime_error=False,events=[],tasks=[dict(id='r',number=1,title='개별 기사 진행 검증',status='running',route='compact-v1',step_complete=min(hits,2),step_total=6,step_percent=min(hits,2)*100//6,elapsed_seconds=hits,steps=[dict(stage='integrated_analysis',status='running' if hits==1 else 'complete',elapsed_seconds=hits,updated_at=datetime.now(timezone.utc).isoformat(),attempts=1)])],schedule={'recoveries':20,'stagnant':0},scope='단계별 기준')
+   return dict(observed_at=datetime.now(timezone.utc).isoformat(),stages=stages,calls=[],call_limit=6,runtime_error=False,events=[],tasks=[dict(id='r',number=1,title='개별 기사 진행 검증',status='running',route='compact-v1',step_complete=min(hits,2),step_total=6,step_percent=min(hits,2)*100//6,elapsed_seconds=hits,metrics=dict(recorded_calls=2,queue_seconds=1,model_seconds=4,input_chars=300,usage=dict(measured_calls=1,input_tokens=120,cached_input_tokens=0,output_tokens=30,reasoning_output_tokens=None)),steps=[dict(stage='integrated_analysis',status='running' if hits==1 else 'complete',elapsed_seconds=hits,updated_at=datetime.now(timezone.utc).isoformat(),attempts=1)])],schedule={'recoveries':20,'stagnant':0},scope='단계별 기준')
   async def route(r):
    nonlocal hits
    path=__import__('urllib.parse',fromlist=['urlparse']).urlparse(r.request.url).path
@@ -29,6 +29,8 @@ async def main():
   await expect(page.locator('.stage')).to_have_count(8);await expect(page.locator('#done')).to_have_text('3')
   await page.locator('#tasks summary').click()
   await expect(page.locator('#tasks details')).to_have_attribute('open','')
+  await expect(page.locator('#tasks')).to_contain_text('토큰 실측 1/2회')
+  await expect(page.locator('#tasks')).to_contain_text('출력 중 추론 미제공')
   await expect(page.locator('#done')).to_have_text('4',timeout=6000)
   await expect(page.locator('#tasks details')).to_have_attribute('open','')
   await expect(page.locator('.task-steps li')).to_contain_text('완료')
