@@ -7,7 +7,7 @@ def render(role, evidence, context, *, output_role=None, extra_instructions=""):
     context=compact_context(role_context(role, context),evidence)
     request=context.get('request') or {}
     if role in ('national','technology'):
-        extra_instructions += '\n역할별 차이를 중심으로 작성한다. 공통 기사 배경과 원문 전체 요약은 반복하지 말고 summary는 핵심 판단 한 문장으로 쓴다. claims는 해당 국가·정책 또는 기술·작동 방식 관점에서 근거 있는 판단과 고유 조건에 집중한다. 분량을 줄이려고 중요한 상충 근거·불확실성·인용을 생략하거나 원문에 없는 차별점을 만들지 않는다.'
+        extra_instructions += '\n역할별 차이를 중심으로 작성한다. 공통 기사 배경과 원문 전체 요약은 반복하지 말고 중간 출력은 claims/limitations만 작성하고 summary를 만들지 않는다. 각 claim의 title/detail/category/evidence_ids/uncertainty에 판단·인용·상충점·조건을 담는다. 독자용 요약과 설명은 최종 종합 단계에서 작성한다. claims는 해당 국가·정책 또는 기술·작동 방식 관점에서 근거 있는 판단과 고유 조건에 집중한다. 분량을 줄이려고 중요한 상충 근거·불확실성·인용을 생략하거나 원문에 없는 차별점을 만들지 않는다.'
     full_scope=bool(request.get('full_corpus') or request.get('completion'))
     coverage_instruction=('전수 처리 요청: synthesis/revision은 모든 telegram_excerpt 뉴스 ID마다 최소 한 claim의 실제 근거 연결을 포함한다. '
         '자료 부족은 해당 원문에서 알 수 없는 점과 이유를 범위 한정 watch_signal로 설명하며 위험·기회·사실을 발명하지 않는다. '
@@ -71,7 +71,7 @@ def render(role, evidence, context, *, output_role=None, extra_instructions=""):
             '이는 실행 코드나 모델 가중치 변경이 아니며 이전 보고서·지적 사항을 새 사실 근거로 인용하지 말 것. '
             'graph_context는 기존 모델 해석을 포함한 검색 단서일 뿐 독립된 확인 근거가 아니다. '
             'graph_context의 노드·관계·인용 ID를 직접 인용하지 말고 현재 evidence에서 확인되는 주장만 작성. ' +
-            (risk_rules if role.startswith('risk_') else '전략 보고서는 summary/claims/limitations 형식이다. 개별 risk_report 전용 필드·분량 제한을 전략 claims에 요구하지 말 것. ') +
+            (risk_rules if role.startswith('risk_') else ('중간 역할 메모는 claims/limitations 형식이다. ' if role in ('national','technology') else '전략 보고서는 summary/claims/limitations 형식이다. ') + ' 개별 risk_report 전용 필드·분량 제한을 전략 claims에 요구하지 말 것. ') +
             '분석가 간 합의·검토 통과·대기 상태·수집 성공률·규칙 적용 여부는 처리 메타데이터이며 원문 주장이 아니다. '
             '이 처리 내역은 별도 실행 기록에 있으므로 summary/claims/limitations에 서술하지 말 것. '
             '원문의 정보 부족과 인과 불확실성은 limitations에 유지하고 검증자는 실제 원문 주장과 해석의 근거를 계속 대조할 것. '

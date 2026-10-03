@@ -526,9 +526,23 @@ class WorkflowService:
                 return
             # Risk generation consumes current evidence/coverage, not graph hints.
             risk_context = {'coverage': enrichment['coverage'], 'request': request}
-            with ThreadPoolExecutor(max_workers=3) as pool:
-                risk_future=pool.submit(self._stage,run_id,'risk_assessment',lambda:self._validated_call('risk_assessment',
+            require_all_news=bool(request.get('full_corpus') or request.get('completion'))
+            from concurrent.futures import Future
+            risk_draft_future = Future()
+            def assess_and_review_risk():
+                try:
+                    return risk_chain()
+                except BaseException as exc:
+                    if not risk_draft_future.done():risk_draft_future.set_exception(exc)
+                    raise
+            def risk_chain():
+                risk = self._stage(run_id,'risk_assessment',lambda:self._validated_call('risk_assessment',
                     self._prompt('risk_assessment',evidence,risk_context),evidence_schema(RISK_SCHEMA,evidence),lambda value:validate_risk_report(value,evidence)))
+                risk_draft_future.set_result(risk)
+                audit = self._stage(run_id,'risk_verification',lambda:self._audit(evidence,risk,risk=True,require_all_news=require_all_news))
+                return risk, audit
+            with ThreadPoolExecutor(max_workers=3) as pool:
+                risk_future=pool.submit(assess_and_review_risk)
                 keywords = self._stage(run_id, 'morphology', lambda: [
                     {'evidence_id': e['id'], 'keywords': self.extractor(e['text'])[:40]} for e in evidence])
                 retrieval_dependencies = None
@@ -538,25 +552,25 @@ class WorkflowService:
                 retrieval = self._stage(run_id, 'graph_retrieval', lambda: self._retrieve_graph(snapshot, request), dependencies=retrieval_dependencies)
                 context = {'keywords': keywords, 'coverage': enrichment['coverage'], 'graph_context': retrieval, 'request': request}
                 def analyze(role):
-                    return self._stage(run_id, role, lambda: self._validated_call(role, self._prompt(role, evidence, context), evidence_schema(REPORT,evidence), lambda value:self._report(value,evidence)))
+                    from workflow_notes import schema, normalize
+                    return self._stage(run_id, role, lambda: self._validated_call(role, self._prompt(role, evidence, context), evidence_schema(schema(),evidence), lambda value:self._report(normalize(value),evidence)))
                 futures = {role: pool.submit(analyze, role) for role in ('national', 'technology')}
                 reports = {role: future.result() for role, future in futures.items()}
-                risk_report=risk_future.result()
-            from deliberation import build_deliberation
-            deliberation=self._stage(run_id,'deliberation',lambda:build_deliberation(reports,evidence))
-            context=dict(context,deliberation=deliberation)
-            from event_observations import report_schema as event_report_schema
-            synthesis_schema=event_report_schema(REPORT,evidence)
-            require_all_news=bool(request.get('full_corpus') or request.get('completion'))
-            context = dict(context, risk_report=risk_report, risk_review_status='pending')
-            # Independent risk review and strategy synthesis share the same frozen observations.
-            with ThreadPoolExecutor(max_workers=2) as pool:
-                risk_future = pool.submit(self._stage, run_id, 'risk_verification', lambda: self._audit(evidence, risk_report, risk=True, require_all_news=require_all_news))
-                report_future = pool.submit(self._stage, run_id, 'synthesis', lambda: self._validated_call('synthesis',
+                # The saved risk draft is needed for synthesis, its audit is not.
+                # Keep a separate draft future/event rather than waiting for review.
+                risk_report=risk_draft_future.result()
+                from deliberation import build_deliberation
+                deliberation=self._stage(run_id,'deliberation',lambda:build_deliberation(reports,evidence))
+                context=dict(context,deliberation=deliberation)
+                from event_observations import report_schema as event_report_schema
+                synthesis_schema=event_report_schema(REPORT,evidence)
+                context = dict(context, risk_report=risk_report, risk_review_status='pending')
+                report = self._stage(run_id, 'synthesis', lambda: self._validated_call('synthesis',
                     self._prompt('synthesis', evidence, dict(context, analysts=reports)), evidence_schema(synthesis_schema,evidence),lambda value:self._report(value,evidence)))
-                risk_audit, report = risk_future.result(), report_future.result()
+                # Strategy review also need not wait for the independent risk chain.
+                audit = self._stage(run_id, 'verification', lambda: self._audit(evidence, report, require_all_news=require_all_news, deliberation=deliberation))
+                _, risk_audit = risk_future.result()
             risk_audit = self._current_audit(risk_audit, evidence, risk_report, required_checked=risk_report.get('not_assessable_evidence_ids',[]) if require_all_news else ())
-            audit = self._stage(run_id, 'verification', lambda: self._audit(evidence, report, require_all_news=require_all_news, deliberation=deliberation))
             audit = self._current_audit(audit, evidence, report, deliberation=deliberation)
             if not audit['accepted'] or not risk_audit['accepted']:
                 if enrichment['coverage']['failed_urls']:
@@ -569,24 +583,31 @@ class WorkflowService:
                     context = dict(context, keywords=keywords, coverage=enrichment['coverage'],
                                    source_repair={'attempts': 1, 'scope': 'failed_snapshot_urls_only',
                                                   'graph_context_reused': '기존 검색은 해석 단서이며 새 원문은 evidence로 직접 제공'})
-                if not risk_audit['accepted'] or risk_audit.get('evidence_hash') != digest(evidence):
-                    risk_report = self._stage(run_id, 'risk_revision', lambda: self._revise('risk_revision',evidence,risk_report,risk_audit,dict(context,risk_report=risk_report,critique=risk_audit),RISK_SCHEMA,lambda value:validate_risk_report(value,evidence),risk=True))
-                # New observations invalidate the old risk audit even when its report did not change.
-                risk_audit = self._stage(run_id, 'risk_reverification',
-                    lambda: dict(risk_audit, reused=True, reuse_reason='unchanged_evidence_report_and_verification_version')
-                    if self._reusable_risk_audit(risk_audit, evidence, risk_report, require_all_news)
-                    else self._audit(evidence, risk_report, risk=True, require_all_news=require_all_news))
-                risk_audit = self._current_audit(risk_audit, evidence, risk_report, required_checked=risk_report.get('not_assessable_evidence_ids',[]) if require_all_news else ())
-                context = dict(context, risk_report=risk_report, risk_review_status='accepted' if risk_audit['accepted'] else 'needs_review', risk_critique=risk_audit)
-                # Changing only the risk interpretation does not invalidate an independently
-                # accepted strategy report on identical evidence. New source content always does.
-                if self._reusable_strategy_audit(audit,evidence,report,require_all_news,deliberation):
-                    audit=self._stage(run_id,'strategy_audit_reuse',lambda:dict(audit,reused=True,
-                        reuse_reason='unchanged_evidence_report_and_verification_version'))
-                else:
-                    report = self._stage(run_id, 'revision', lambda: self._revise('revision',evidence,report,audit,dict(context,report=report,critique=audit),event_report_schema(REPORT,evidence),lambda value:self._report(value,evidence),escalation=request.get('completion_attempt',1)>=2))
-                    audit = self._stage(run_id, 'reverification', lambda: self._audit(evidence, report, require_all_news=require_all_news, deliberation=deliberation))
-                    audit = self._current_audit(audit, evidence, report, deliberation=deliberation)
+                def repair_risk():
+                    revised = risk_report
+                    if not risk_audit['accepted'] or risk_audit.get('evidence_hash') != digest(evidence):
+                        revised = self._stage(run_id, 'risk_revision', lambda: self._revise('risk_revision',evidence,risk_report,risk_audit,dict(context,risk_report=risk_report,critique=risk_audit),RISK_SCHEMA,lambda value:validate_risk_report(value,evidence),risk=True))
+                    checked = self._stage(run_id, 'risk_reverification',
+                        lambda: dict(risk_audit, reused=True, reuse_reason='unchanged_evidence_report_and_verification_version')
+                        if self._reusable_risk_audit(risk_audit, evidence, revised, require_all_news)
+                        else self._audit(evidence, revised, risk=True, require_all_news=require_all_news))
+                    return revised, self._current_audit(checked, evidence, revised, required_checked=revised.get('not_assessable_evidence_ids',[]) if require_all_news else ())
+                def repair_strategy():
+                    if self._reusable_strategy_audit(audit,evidence,report,require_all_news,deliberation):
+                        checked=self._stage(run_id,'strategy_audit_reuse',lambda:dict(audit,reused=True,
+                            reuse_reason='unchanged_evidence_report_and_verification_version'))
+                        return report, checked
+                    revised = self._stage(run_id, 'revision', lambda: self._revise('revision',evidence,report,audit,dict(context,report=report,critique=audit),event_report_schema(REPORT,evidence),lambda value:self._report(value,evidence),escalation=request.get('completion_attempt',1)>=2))
+                    checked = self._stage(run_id, 'reverification', lambda: self._audit(evidence, revised, require_all_news=require_all_news, deliberation=deliberation))
+                    return revised, self._current_audit(checked, evidence, revised, deliberation=deliberation)
+                # Both chains use the same frozen evidence after any source repair;
+                # strategy revision consumes no risk report or risk verdict.
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    risk_repair=pool.submit(repair_risk)
+                    strategy_repair=pool.submit(repair_strategy)
+                    risk_result, strategy_result = risk_repair.result(), strategy_repair.result()
+                risk_report, risk_audit = risk_result
+                report, audit = strategy_result
             self._save(run_id, 'final', {'report': report, 'verification': audit,
                                       **({'event_observations':report['event_observations']} if 'event_observations' in report else {}),
                                       'deliberation':deliberation,

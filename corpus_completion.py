@@ -416,6 +416,8 @@ class CompletionRunner:
         print(json.dumps({'round': planned['number'], 'documents': len(items),
                           'accepted': sum(a['complete'] for a in admissions), 'status': round_status}, ensure_ascii=False), flush=True)
 
+        return round_status
+
     def summary(self):
         with connect(self.path) as db:
             counts = dict(db.execute('SELECT status,COUNT(*) FROM corpus_completion_documents WHERE cycle_id=? GROUP BY status', (self.cycle_id,)))
@@ -446,7 +448,19 @@ class CompletionRunner:
             with ThreadPoolExecutor(max_workers=self.workers) as pool:
                 futures = {}; available = list(services); dispatched=0
                 started = time.monotonic()
+                last_pressure = float('-inf'); completed_at = []
                 while True:
+                    stamp = time.monotonic()
+                    if self.admission.enabled and stamp - last_pressure >= 60:
+                        from completion_throughput import pressure_sample
+                        sample = pressure_sample()
+                        completed_at = [t for t in completed_at if t >= stamp - 120]
+                        if sample is not None:
+                            sample['completed_per_minute'] = len(completed_at) / 2
+                            before = self.admission.target
+                            self.admission.tune(sample, stamp)
+                            print(json.dumps({'status':'admission_sample','workers_target':self.admission.target,'prior_target':before,'sample':sample,'reason':getattr(self.admission,'last_reason','warming_up')}),flush=True)
+                        last_pressure = stamp
                     if self.cycle_control(): self.stop.set()
                     self.window_expired = bool(self.window_seconds and time.monotonic() - started >= self.window_seconds)
                     while available and not self.stop.is_set() and not self.window_expired and len(futures) < self.admission.target:
@@ -462,7 +476,8 @@ class CompletionRunner:
                         service = futures.pop(future)
                         planned, result = future.result()
                         prior_target = self.admission.target
-                        self.record(planned, result)
+                        recorded = self.record(planned, result)
+                        if recorded == 'complete':completed_at.append(time.monotonic())
                         if prior_target != self.admission.target:
                             print(json.dumps({'status':'admission_adjusted','workers_max':self.workers,'workers_target':self.admission.target}),flush=True)
                         available.append(service)

@@ -12,12 +12,14 @@ AGENT_CONTROL = re.compile(r'우회|bypass|기만|decept|unauthoriz|무단|정�
 
 def eligible(snapshot, request, enrichment):
     evidence=enrichment['evidence']
+    from workflow_recovery_route import operational_feedback_only
+    recovered=operational_feedback_only(request)
     return (request.get('analysis_mode')=='adaptive-v2' and len(snapshot)==1
             and request.get('completion_attempt',1)==1
             and not request.get('question') and not request.get('terms')
             and not (request.get('active_rules') or {}).get('rules')
-            and not (request.get('improvement_context') or {}).get('review_issues')
-            and not (request.get('improvement_context') or {}).get('followup_tasks')
+            and (recovered or not (request.get('improvement_context') or {}).get('review_issues'))
+            and (recovered or not (request.get('improvement_context') or {}).get('followup_tasks'))
             and not enrichment['coverage'].get('failed_urls')
             and all(e.get('origin') in ('telegram_excerpt','fetched_url_excerpt') for e in evidence)
             and sum(len(e.get('text','')) for e in evidence)<=14000
@@ -50,7 +52,7 @@ def execute(service,run_id,evidence,request,enrichment):
         report,risk_report=validate_strategy(strategy_future.result()),validate_risk(risk_future.result())
 
     def review(report,risk_report,stage):
-        generated={'report':report,'risk_report':risk_report,
+        generated={'report':report,'risk_report':risk_report,'prior_feedback':request.get('improvement_context') or {},
             'strategy_target_map':{key:index for key,(index,_) in targets(report).items()},
             'risk_target_map':{key:index for key,(index,_) in targets(risk_report,True).items()}}
         prompt=compact_prompt(service,'integrated_verification',evidence,generated,extra_instructions=
@@ -71,14 +73,21 @@ def execute(service,run_id,evidence,request,enrichment):
     original_audits=audits
     if not all(audits[key]['accepted'] for key in ('verification','risk_verification')):
         # One bounded repair; accepted fields survive, all final outputs are reviewed again.
-        if not audits['verification']['accepted']:
-            report=service._stage(run_id,'revision',lambda:service._revise('revision',evidence,report,audits['verification'],
+        def repair_strategy():
+            if audits['verification']['accepted']:return report
+            return service._stage(run_id,'revision',lambda:service._revise('revision',evidence,report,audits['verification'],
                 dict(context,report=report,critique=audits['verification']),strategy_schema,validate_strategy),
                 dependencies=[report,audits['verification'],evidence,policy('revision')])
-        if not audits['risk_verification']['accepted']:
-            risk_report=service._stage(run_id,'risk_revision',lambda:service._revise('risk_revision',evidence,risk_report,audits['risk_verification'],
+        def repair_risk():
+            if audits['risk_verification']['accepted']:return risk_report
+            return service._stage(run_id,'risk_revision',lambda:service._revise('risk_revision',evidence,risk_report,audits['risk_verification'],
                 dict(context,risk_report=risk_report,critique=audits['risk_verification']),RISK_SCHEMA,validate_risk,risk=True),
                 dependencies=[risk_report,audits['risk_verification'],evidence,policy('risk_revision')])
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            strategy_repair=pool.submit(repair_strategy)
+            risk_repair=pool.submit(repair_risk)
+            revised_strategy,revised_risk=strategy_repair.result(),risk_repair.result()
+        report,risk_report=revised_strategy,revised_risk
         audits=review(report,risk_report,'integrated_reverification')
     audit=service._current_audit(audits['verification'],evidence,report)
     risk_audit=service._current_audit(audits['risk_verification'],evidence,risk_report,required_checked=risk_report['not_assessable_evidence_ids'])

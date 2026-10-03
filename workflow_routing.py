@@ -7,7 +7,8 @@ def select(snapshot, request, enrichment):
     if eligible(snapshot,request,enrichment):
         path,reason='compact-v1',route
     elif complex_eligible(snapshot,request,enrichment):
-        path,reason=VERSION,'eligible_parallel_drafts'
+        from workflow_recovery_route import operational_feedback_only
+        path,reason=VERSION,('operational_feedback_revalidated' if operational_feedback_only(request) else 'eligible_parallel_drafts')
     else:
         path='multi-role'
         if request.get('analysis_mode') not in ('adaptive-v2','compact-v1'):reason='legacy_request'
@@ -15,4 +16,4 @@ def select(snapshot, request, enrichment):
         elif enrichment['coverage'].get('failed_urls'):reason='source_unavailable'
         elif request.get('completion_attempt',1)>1:reason='review_retry'
         else:reason='sensitive_complex_or_custom_scope'
-    return dict(path=path,reason=reason,content_route=route,routing_version='adaptive-v4')
+    return dict(path=path,reason=reason,content_route=route,routing_version='adaptive-v5')

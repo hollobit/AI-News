@@ -69,9 +69,11 @@ class WorkflowTests(unittest.TestCase):
         run = self.done(service, service.create_run(self.items(30), {'question': '소버린 AI'})['id'])
         self.assertEqual(run['status'], 'complete', run['error'])
         self.assertEqual(run['snapshot_count'], 24)
-        self.assertEqual(set(model.calls[:3]), {'national', 'technology', 'risk_assessment'})
-        self.assertEqual(set(model.calls[3:5]), {'synthesis', 'risk_verification'})
-        self.assertEqual(model.calls[5:], ['verification'])
+        self.assertEqual(set(model.calls), {'national','technology','risk_assessment','risk_verification','synthesis','verification'})
+        self.assertLess(model.calls.index('risk_assessment'),model.calls.index('risk_verification'))
+        for dependency in ('national','technology','risk_assessment'):
+            self.assertLess(model.calls.index(dependency),model.calls.index('synthesis'))
+        self.assertLess(model.calls.index('synthesis'),model.calls.index('verification'))
         self.assertEqual(run['stages']['revision'], 'skipped')
         self.assertTrue(run['results']['verified'])
         self.assertTrue(run['results']['risk_verified'])
@@ -258,7 +260,11 @@ class CompletionWorkflowTests(unittest.TestCase):
             if role in ('national','technology','risk_assessment'):barrier.wait(timeout=2)
             return model(prompt,schema)
         service=self.service(analyzer)
-        run=self.done(service,service.create_run(self.items(),{})['id'])
+        service._retrieve_graph=lambda *_:{'status':'unavailable'}
+        from unittest.mock import patch
+        # Scheduling is independent of bounded cache-lock hash collisions.
+        with patch('workflow_efficiency.cached_call',side_effect=lambda s,r,stage,prompt,schema,validate,**kw:validate(s._analyze(prompt,schema))):
+            run=self.done(service,service.create_run(self.items(),{})['id'])
         self.assertEqual(run['status'],'complete',run['error'])
 
     def test_risk_starts_before_graph_lookup_finishes(self):

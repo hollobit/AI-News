@@ -160,3 +160,24 @@ def test_detail_admitted_ahead_of_earlier_background_ticket(tmp_path):
             assert db.execute("SELECT status FROM llm_calls WHERE role='wiki_compile'").fetchone()[0]=='queued'
     with runtime.db() as db:
         db.execute("DELETE FROM llm_calls WHERE status='queued'")
+
+
+def test_finish_priority_preserves_interactive_and_aging():
+    from llm_priority import queue_key
+    from llm_runtime import INTERACTIVE_ROLES
+    roles=['national','synthesis','revision','verification','risk_verification','graph_answer','paper_verification']
+    rows=[dict(id=i,role=r,queued_at=99) for i,r in enumerate(roles)]
+    assert [r['role'] for r in sorted(rows,key=lambda r:queue_key(r,100,INTERACTIVE_ROLES))]==[
+        'graph_answer','verification','risk_verification','synthesis','revision','national','paper_verification']
+    rows[0]['queued_at']=1
+    assert sorted(rows,key=lambda r:queue_key(r,100,INTERACTIVE_ROLES))[0]['role']=='national'
+
+
+def test_review_admitted_before_earlier_draft(tmp_path):
+    import os
+    runtime=LLMRuntime(tmp_path/'priority.db',limit=1,poll_seconds=.005,queue_timeout=.05)
+    with runtime.db() as db:
+        db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,input_chars,schema_chars) VALUES ('national','queued',?,?,1,1)",(os.getpid(),time.time()))
+    with runtime.slot('verification',1,1):
+        with runtime.db() as db:
+            assert db.execute("SELECT status FROM llm_calls WHERE role='national'").fetchone()[0]=='queued'
