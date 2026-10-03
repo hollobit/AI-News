@@ -47,3 +47,12 @@ def test_report_prose_references_are_mapped_before_review():
     data['evidence'][0]['text']=ids[0]+'라는 문자 자체를 설명하는 원문'
     prompt='ROLE: verification\nDATA:\n'+json.dumps(data,ensure_ascii=False)
     assert prepare(prompt,schema)==(prompt,schema,{})
+
+
+def test_bounded_prose_keeps_real_citation_lengths():
+    from llm_wire import prepare
+    identity='url_'+'a'*24
+    prompt='ROLE: risk_patch\nDATA:\n'+json.dumps({'evidence':[{'id':identity,'text':'원문'}], 'report':{'basis':identity+' 근거'}})
+    schema={'type':'object','properties':{'value':{'type':'string','maxLength':120}}}
+    packed,wire,aliases=prepare(prompt,schema)
+    assert packed==prompt and wire==schema and aliases=={}

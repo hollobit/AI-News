@@ -1,3 +1,13 @@
+## 2026-10-03 보류 13건 보완·독립 검토 완료 (20:38 KST)
+
+- 기본 분석 1건과 상세 failed7/needs_review5를 사용자 요청으로 보완했다. `workflow_patch.py`는 필드 value로 감싸기 전에 현재 evidence ID enum을 바인딩한다. 위험 보완 prompt에 120자/권장90자·완결 문장·별도 인용 배열을 명시했다. 원문 사실/등급/미래 가능성/반대 근거 구분은 독립 검토에서 다시 확인했고 기준을 낮추지 않았다.
+- `llm_wire.py`는 maxLength가 있는 자유 설명 필드에서 ID 축약을 사용하지 않는다. 별칭 복원으로 원래 ID 길이가 늘어 길이 계약을 위반할 수 있는 경로를 막는다. 설명을 코드로 잘라내거나 인용을 제거하지 않는다. 일반 길이 제한 없는 호출의 기존 축약은 유지한다.
+- `corpus_completion.py --repair-reason`은 명시 선택된 기존 상한 도달 문서에만 총5회 상한의 추가 보완을 허용한다. attempts를 0으로 초기화하지 않으며 이전 행/보고서/거절과 사유를 completion_manual_repairs에 보존한다. 일반 실행 상한3회는 그대로다. 새 문서에 추가 수동 예산이 전파되지 않는 테스트를 포함했다.
+- `repair_baseline.py`는 공통 worker lock·owner·현재 입력 해시를 확인하고 지정1건만 기존 생성/독립 검토로 보완한다. 기존 결과는 이벤트에 남기고 attempts를 증가시킨다(총4회 상한). 엔진 장애는 paused로 보존하며 검토 실패를 초기화하지 않는다. iPhone Duo 기사의 later in October를 ‘10월 중 추후 시작 예정’으로 수정한 새 결과가 accepted=true를 받았다. 기존 run e60a0cec9929457cb66ae5990cc5c15b 전체 verified8223/complete, 해당 기사 attempts2→3이며 이전 거절 결과를 보존했다.
+- 상세 기존12건 모두 complete/현재 인용·전략/위험 독립 검토 통과. 11건은 누적4회, 수도사업자 자격증명 기사는 추가 보완의 길이 오류 후 누적5회에 통과했다. 그사이 신규19건/변경3건도 처리해 원장 complete8506/failed0/needs_review0/pending0/running0으로 종료했다. 이 수치는 원장 누적 대상이며 Telegram 현재 고유 뉴스 수와 구분한다. 근거 `.runtime/verification/manual-deep-repair.log`, `manual-repair-complete.json`.
+- 막힘 해소 후 정기 기본 분석을 다시 호출했다. 새 run 5baf6c948e8644a5b94298bd4ae1181e는 현재 고유8494건 중 유효5768건을 재사용하고 신규·변경 입력2726건을 workers2/batch1로 시작했다. 이는 이번에 해결한 기존13건과 별도의 현재 입력 작업이며 실행 중이다. 상세 최대20/공유 모델 호출 한도를 유지했다.
+- 검증: 전체 Python845 tests + 56subtests(13.67초), 추가 엔진 대기/시도 보존 테스트 포함 기본14 tests 및 관련69 tests 통과. 실제 모델 생성·독립 검토·원장 기록으로 복구를 확인했다. 기존 자동 재시도/검토 게이트/공개 기준을 완화하거나 과거 실패 이력을 삭제하지 않았다. 상세 driver는 정상 종료했고 기본 worker는 독립 실행 중이다.
+
 ## 2026-10-03 정기 수집·상세 분석 실행 (17:38 KST)
 
 - 사용자 요청에 따라 정기 수집 스킬로 상태를 확인하고 scheduled_collection.py를 실행했다. 기존 collector PID30511/서버68823을 유지했으며 Telegram 확인 heartbeat가 17:36:50→17:37:21 이후에도 갱신됨을 확인했다. 마지막 추출은 12:02:40 KST complete/고유8475건이며 당시 증가15건을 이번 요청의 신규 수집량으로 표시하지 않는다.

@@ -115,8 +115,11 @@ def historical_feedback(db,items):
 
 
 class CompletionRunner:
-    def __init__(self, path, cycle_id, workers=6, batch_size=24, recover_engine=False, review_first=False, recent_first=False, max_rounds=0, window_seconds=0, adaptive_workers=False):
+    def __init__(self, path, cycle_id, workers=6, batch_size=24, recover_engine=False, review_first=False, recent_first=False, max_rounds=0, window_seconds=0, adaptive_workers=False, repair_reason=""):
         self.path = str(Path(path).resolve()); self.cycle_id = cycle_id
+        self.repair_reason = str(repair_reason).strip()
+        self.attempt_limit = 5 if self.repair_reason else 3
+        self.repair_documents = []
         self.workers = max(1, min(20, workers)); self.batch_size = max(1, min(24, batch_size))
         self.stop = threading.Event()
         self.ledger = None
@@ -141,6 +144,14 @@ class CompletionRunner:
             recoverable=bool(cycle and cycle['status'] in ('running','finishing','waiting') and not owner_alive(cycle['owner_pid']))
             if not cycle or (cycle['status'] not in ('paused', 'error', 'complete', 'needs_review') and not recoverable):
                 raise RuntimeError('먼저 기존 RSI 분석을 체크포인트까지 일시중지해야 합니다.')
+            if self.repair_reason:
+                db.execute('CREATE TABLE IF NOT EXISTS completion_manual_repairs (seq INTEGER PRIMARY KEY,cycle_id TEXT,reason TEXT,prior_json TEXT,created_at TEXT)')
+                rows=db.execute("SELECT * FROM corpus_completion_documents WHERE cycle_id=? AND status IN ('failed','needs_review') AND attempts>=3 AND attempts<5",(self.cycle_id,)).fetchall()
+                self.repair_documents = [r['document_id'] for r in rows]
+                if rows:
+                    db.execute('INSERT INTO completion_manual_repairs(cycle_id,reason,prior_json,created_at) VALUES(?,?,?,?)',
+                               (self.cycle_id,self.repair_reason,encoded([dict(r) for r in rows]),now()))
+                    db.commit()
             if self.recover_engine:
                 restored = recover_engine_failures(db, self.cycle_id)
                 print(json.dumps({'engine_failures_requeued':restored}), flush=True)
@@ -289,9 +300,10 @@ class CompletionRunner:
                      + ("json_extract(snapshot_json,'$.day') DESC," if self.recent_first and number % 4 else '')
                      + 'position')
             rows = db.execute('''SELECT * FROM corpus_completion_documents WHERE cycle_id=?
-                AND status IN ('pending','needs_review','failed') AND attempts<3
+                AND status IN ('pending','needs_review','failed')
+                AND (attempts<3 OR (attempts<? AND document_id IN (SELECT value FROM json_each(?))))
                 ORDER BY ''' + order + ' LIMIT ?',
-                (self.cycle_id, int(prefer_review), self.batch_size)).fetchall()
+                (self.cycle_id, self.attempt_limit, encoded(self.repair_documents), int(prefer_review), self.batch_size)).fetchall()
             if not rows: return None
             attempt = rows[0]['attempts']
             count = self.batch_size if attempt == 0 else 6 if attempt == 1 else 1
@@ -492,7 +504,7 @@ class CompletionRunner:
             status = 'error' if failed else 'paused' if self.stop.is_set() else 'complete' if complete else 'needs_review'
             if (self.max_rounds or self.window_expired) and not failed and not self.stop.is_set() and not complete:
                 with connect(self.path) as db:
-                    if db.execute("SELECT 1 FROM corpus_completion_documents WHERE cycle_id=? AND status IN ('pending','needs_review','failed','running') AND attempts<3 LIMIT 1",(self.cycle_id,)).fetchone():status='waiting'
+                    if db.execute("SELECT 1 FROM corpus_completion_documents WHERE cycle_id=? AND status IN ('pending','needs_review','failed','running') AND (attempts<3 OR (attempts<? AND document_id IN (SELECT value FROM json_each(?)))) LIMIT 1",(self.cycle_id,self.attempt_limit,encoded(self.repair_documents))).fetchone():status='waiting'
             if not failed and not self.stop.is_set() and not complete:
                 with connect(self.path) as db:
                     if db.execute("SELECT 1 FROM rsi_rounds WHERE cycle_id=? AND status IN ('planned','running') LIMIT 1", (self.cycle_id,)).fetchone():status='waiting'
@@ -513,6 +525,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=24)
     parser.add_argument('--recover-engine-failures', action='store_true')
     parser.add_argument('--review-first', action='store_true')
+    parser.add_argument('--repair-reason', default='', help='Explicit reviewed repair, total attempt cap 5; preserves prior attempts and reports')
     parser.add_argument('--recent-first', action='store_true')
     parser.add_argument('--max-rounds', type=int, default=0)
     parser.add_argument('--window-seconds', type=int, default=0)
@@ -525,7 +538,7 @@ if __name__ == '__main__':
     load_local_env()
     admission = None
     while True:
-        runner = CompletionRunner(args.db, args.cycle, args.workers, args.batch_size, args.recover_engine_failures, args.review_first, args.recent_first, args.max_rounds, args.window_seconds, args.adaptive_workers)
+        runner = CompletionRunner(args.db, args.cycle, args.workers, args.batch_size, args.recover_engine_failures, args.review_first, args.recent_first, args.max_rounds, args.window_seconds, args.adaptive_workers, args.repair_reason)
         if admission is not None:
             runner.admission = admission
             runner.handoff = True

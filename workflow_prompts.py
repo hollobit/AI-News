@@ -32,7 +32,7 @@ def render(role, evidence, context, *, output_role=None, extra_instructions=""):
             'limitations에는 근거 ID만 나열하지 말고 어떤 원문 정보가 부족하여 평가가 불가능한지 이유를 문장으로 쓴다. '
             '위험 출력은 최대 6개이고 자료가 약하면 0~3개만 작성한다. 위험이 확인되지 않으면 빈 risks와 근거 부족 요약을 허용하며 안전함을 입증했다고 해석하지 않는다. '
             '위험 horizon은 unknown/0-3mo/3-12mo/12-36mo, 영향분야는 economy/security/industry/exports/social/life/education. '
-            '위험 각 설명은 120자 이내, 배열은 각각 2개 이내, 위험보고서 본문 총 1800자 이내로 간결하게 작성한다. '
+            '위험 각 설명은 120자 이내(권장 90자), 배열은 각각 2개 이내, 위험보고서 본문 총 1800자 이내로 간결하게 작성한다. 길면 문장 끝을 잘라내지 말고 핵심을 짧은 완결 문장으로 다시 쓴다. '
             '단, assessed_evidence_ids와 not_assessable_evidence_ids는 길이를 자르지 말고 모든 입력 근거 ID를 정확히 한 번씩 두 목록에 나누어 기입한다. '
             '위험 검토가 가능한 근거는 assessed_evidence_ids, 정보 부족 등으로 평가할 수 없는 근거는 not_assessable_evidence_ids이며 이유는 limitations에 설명한다. '
             'current_basis에는 관측된 현재 등급 근거만, scenario에는 조건부 미래 경로만 작성. 숫자 확률 생성 금지. '

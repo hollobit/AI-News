@@ -8,6 +8,13 @@ IDENTITY = re.compile(r'(?:news|url)_[0-9a-f]{20,64}')
 
 
 def prepare(prompt, schema):
+    # Restoring E1 to a long evidence ID can violate a bounded prose field.
+    # Preserve original references for those contracts; never truncate output.
+    def bounded_text(node):
+        if isinstance(node,dict):
+            return (node.get('type')=='string' and 'maxLength' in node and 'enum' not in node) or any(bounded_text(v) for v in node.values())
+        return isinstance(node,list) and any(bounded_text(v) for v in node)
+    if bounded_text(schema): return prompt,schema,{}
     head, separator, body = prompt.partition('\nDATA:\n')
     if not separator:return prompt,schema,{}
     try:data=json.loads(body)

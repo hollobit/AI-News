@@ -279,3 +279,22 @@ def test_scheduling_ids_do_not_change_prompt_but_review_feedback_does():
     other['request']['improvement_context']['followup_tasks'][0]['text']='상충 근거 추가 확인'
     assert render('national',evidence,context)!=render('national',evidence,other)
     assert context['request']['owner_pid']==1
+
+
+def test_patch_citations_bound_before_wrapping_values():
+    from workflow_patch import revise, targets
+    from risk_analysis import RISK_SCHEMA
+    from strategic_workflow import digest
+    evidence=[{'id':'known','text':'근거'}]
+    report={'risks':[{'evidence_ids':['known']}]}
+    target=next(k for k in targets(report,True) if k!='report')
+    audit={'issues':['인용 수정'],'evidence_hash':digest(evidence),
+           'revision_targets':[{'issue_index':0,'target_id':target,'fields':['evidence_ids']}]}
+    class Service:
+        active=None
+        def _validated_call(self,stage,prompt,schema,validate,**kw):
+            choices=schema['properties']['patches']['items']['anyOf']
+            assert choices[0]['properties']['value']['items']['enum']==['known']
+            assert '완결 문장' in prompt
+            return validate({'patches':[{'target_id':target,'field':'evidence_ids','value':['known']}]})
+    assert revise(Service(),'revision',evidence,report,audit,RISK_SCHEMA,lambda x:x,risk=True)==report

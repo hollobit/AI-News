@@ -175,3 +175,38 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(snapshot['evidence'][1]['text'],'공식 원문 추가 근거')
 
 if __name__=='__main__':unittest.main()
+
+
+def test_explicit_single_document_repair_keeps_prior_attempts_and_review(monkeypatch):
+    import repair_baseline
+    from bulk_baseline import unpack_json
+    case=BaselineTests();case.setUp()
+    try:
+        case.reject_ids.add('https://example.com/0')
+        service=case.service()
+        run=case.done(service,service.start({'batch_size':1,'workers':1})['id'])
+        assert run['status']=='requires_review'
+        with service.db() as db:
+            rejected=db.execute("SELECT * FROM bulk_baseline_documents WHERE run_id=? AND status='needs_review'",(run['id'],)).fetchone()
+            assert rejected['attempts']==2
+            identity=rejected['document_id']
+        case.reject_ids.clear()
+        def unavailable(*args): raise RuntimeError('[engine:capacity]')
+        monkeypatch.setattr(repair_baseline,'BulkBaselineService',lambda *a,**k:case.service(model=unavailable))
+        monkeypatch.setattr(repair_baseline,'all_corpus_items',lambda db:case.items)
+        repair_baseline.repair(case.path,run['id'],identity,'Engine pause must preserve review history')
+        with service.db() as db:
+            assert db.execute('SELECT status FROM bulk_baseline_runs WHERE id=?',(run['id'],)).fetchone()[0]=='paused'
+            assert db.execute('SELECT attempts FROM bulk_baseline_documents WHERE run_id=? AND document_id=?',(run['id'],identity)).fetchone()[0]==2
+        monkeypatch.setattr(repair_baseline,'BulkBaselineService',lambda *a,**k:case.service())
+        monkeypatch.setattr(repair_baseline,'all_corpus_items',lambda db:case.items)
+        result=repair_baseline.repair(case.path,run['id'],identity,'Correct the specific rejected claim')
+        assert result['counts']=={'verified':7}
+        with service.db() as db:
+            row=db.execute('SELECT * FROM bulk_baseline_documents WHERE run_id=? AND document_id=?',(run['id'],identity)).fetchone()
+            assert row['attempts']==3
+            prior=json.loads(db.execute("SELECT detail FROM bulk_baseline_events WHERE stage='explicit_document_repair'").fetchone()[0])['prior']
+            assert prior['attempts']==2 and prior['status']=='needs_review'
+            assert not unpack_json(db,prior['result_json'])['verification']['accepted']
+            assert unpack_json(db,row['result_json'])['verification']['accepted']
+    finally:case.tearDown()

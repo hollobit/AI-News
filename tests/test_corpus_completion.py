@@ -47,6 +47,25 @@ class FakeWorkflow:
 
 
 class CompletionTests(unittest.TestCase):
+    def test_explicit_repair_preserves_attempts_and_caps_total(self):
+        runner=CompletionRunner(self.path,'cycle',batch_size=1)
+        runner.prepare()
+        with connect(self.path) as db:
+            db.execute("UPDATE corpus_completion_documents SET status='failed',attempts=3")
+            db.execute("UPDATE rsi_cycles SET status='needs_review',owner_pid=NULL WHERE id='cycle'")
+        self.assertIsNone(runner.plan())
+        repair=CompletionRunner(self.path,'cycle',batch_size=1,repair_reason='Fix bounded prose and citation schema')
+        repair.prepare()
+        planned=repair.plan()
+        self.assertEqual(planned['snapshot']['completion_attempt'],4)
+        with connect(self.path) as db:
+            prior=json.loads(db.execute('SELECT prior_json FROM completion_manual_repairs').fetchone()[0])
+            self.assertTrue(all(r['attempts']==3 for r in prior))
+            db.execute("UPDATE rsi_rounds SET status='failed'")
+            db.execute("UPDATE corpus_completion_documents SET status='failed',attempts=5")
+            db.execute("INSERT INTO corpus_completion_documents SELECT cycle_id,'new-unapproved',position+1000,snapshot_json,'failed',3,NULL,admission_json,updated_at FROM corpus_completion_documents LIMIT 1")
+        self.assertIsNone(repair.plan())
+
     def test_capacity_defers_only_failed_checkpoint_and_survives_restart(self):
         runner=CompletionRunner(self.path,'cycle',batch_size=1);runner.prepare()
         planned=runner.plan()
