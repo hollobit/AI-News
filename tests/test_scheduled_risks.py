@@ -82,3 +82,25 @@ def test_new_completed_round_resets_stagnation_even_if_input_recheck_lowers_coun
     assert run(path,enable=True)['stage']=='started'
     with connect(path) as db:
         assert tuple(db.execute('SELECT recoveries,stagnant,completed_rounds FROM risk_schedule').fetchone())==(31,1,11)
+
+
+def test_operator_recovery_precedes_fresh_model_check(path, monkeypatch):
+    calls=[]
+    monkeypatch.setattr('scheduled_risks.operator_probe',lambda:calls.append('operator') or True)
+    def models(*, force=False):
+        assert calls==['operator']
+        assert force is True
+        calls.append('models')
+        return {'ready':True}
+    monkeypatch.setattr('model_access.ensure_model_access',models)
+    result=dispatch(path,enable=True,resume=True,stamp=1000,is_alive=lambda _:False,launcher=lambda *_:42)
+    assert result['stage']=='started'
+    assert calls==['operator','models']
+
+
+def test_failed_operator_probe_does_not_check_models_or_launch(path, monkeypatch):
+    monkeypatch.setattr('scheduled_risks.operator_probe',lambda:False)
+    result=dispatch(path,enable=True,resume=True,stamp=1000,is_alive=lambda _:False,
+                    check_models=lambda:pytest.fail('breaker still blocked'),
+                    launcher=lambda *_:pytest.fail('must not launch'))
+    assert result['stage']=='engine_unavailable'

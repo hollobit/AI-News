@@ -52,8 +52,18 @@ def launch(path, cycle):
     return child.pid
 
 
-def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=probe, is_alive=alive, stamp=None, check_models=None):
+def operator_probe():
+    from llm_runtime import LLMRuntime
+    from llm_recovery import shared_probe, synchronize
+    from scheduled_collection import _probe
+    runtime = LLMRuntime()
+    synchronize(runtime)
+    return shared_probe(runtime, _probe, automatic=False)
+
+
+def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=None, is_alive=alive, stamp=None, check_models=None):
     stamp=time.time() if stamp is None else stamp
+    check_engine = check_engine or (operator_probe if resume else probe)
     with connect(path) as db:
         init(db)
         schedule=dict(db.execute('SELECT * FROM risk_schedule WHERE id=1').fetchone())
@@ -77,8 +87,11 @@ def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=
         extraction=json.loads(states.get('collector_corpus_snapshot','{}'))
         if extraction.get('status')!='complete':return {'stage':'waiting_for_extraction'}
         db.commit()
+        # Explicit recovery must precede normal model calls, which obey the breaker.
+        if resume and not check_engine():
+            return {'stage':'engine_unavailable','cycle':identity}
         from model_access import ensure_model_access
-        access=(check_models or ensure_model_access)()
+        access=check_models() if check_models else ensure_model_access(force=resume)
         if not access['ready']:return {'stage':'model_access_required','model_access':access,'cycle':identity}
         verified=db.execute("SELECT COUNT(*) FROM corpus_completion_documents WHERE cycle_id=? AND status='complete'",(identity,)).fetchone()[0]
         progress = 0
@@ -101,9 +114,6 @@ def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=
             db.execute('UPDATE risk_schedule SET cycle_id=?,recoveries=?,stagnant=?,verified=?,next_attempt_at=? WHERE id=1',
                        (identity,schedule['recoveries'],schedule['stagnant'],verified,schedule['next_attempt_at']))
             event(db,identity,'recovery_reserved',{'code':code,'attempt':schedule['recoveries']})
-            db.commit()
-            if not check_engine():return {'stage':'engine_unavailable','cycle':identity}
-        elif resume:
             db.commit()
             if not check_engine():return {'stage':'engine_unavailable','cycle':identity}
         # A pause or new owner arriving during the probe always wins.

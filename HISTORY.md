@@ -809,3 +809,20 @@
 - 최근100회차는 compact17/parallel26/multi-role57, 사유는 일반17/병렬적합26/민감·복잡39/원문실패10/재검토8이었다. 최근500개 완료 호출의 주요역할 평균대기0~3.1초, 실행18.1~43.0초였다. 같은100회차 캐시 관측393개는miss_input이었다. 고유 입력의 실패 없는 분석을 무조건 재사용할 수 있다는 뜻은 아니다. 실행 식별자 제거와 역할별 입력 축소는 기존 compact_context에 이미 구현돼 있어 중복 변경 없이 프롬프트 불변/관련 후속 지적 보존 회귀를 추가했다. 기존2회 호출·부분 보완·인용 검증 경로를 유지하고 민감기사 적용 조건을 완화하지 않았다.
 - 검증: 전체784 tests+56subtests(12.96초), JS12 tests/포맷/diff 통과. 느린1회차를 남긴 채21번째를 배정하는24문서 테스트, 구간 종료 후 저장/일시중지 보호, 장애 감속·점진 회복·상한을 검증했다. 기존2초 barrier 병렬 테스트가 전체검사 중1회 실패했으나 단독 및 전체 재검증 통과(검토·시간 기준 완화 없음). 브라우저 실제호출지표/자동갱신/390·320 가로넘침 없음/JS오류0 확인.
 - 운영 반영: 기존 owner70830의 모든 진행 결과 정상 저장 후 owner53229가 같은cycle d4686920261a4380bd467ed4ae1c6bda를 연속모드로 이어받았다. 첫20회차 중19개가running일 때4388번째회차(신규 실행의21번째)를 같은PID가 배정한 것을 확인했다. 현재원장 complete4451/failed1/needs_review1/pending3981/running20(8454), owner생존/pause_requested0. 근거 `.runtime/verification/continuous-rollout.json`, `throughput-metrics.png`. 30분 실시간 구간 전환이나 전체 처리량 개선 배율까지 관측 완료한 것은 아니다.
+
+
+## 2026-10-09 정기 수집·상세 분석 점검 및 관제 열기
+
+- 점검 시각 2026-10-09T22:02:35.894998+09:00. 사용자 요청으로 http://127.0.0.1:8001/workflow 를 기본 브라우저에서 열고 HTTP 200을 확인했다. 기존 서버46209/collector30511을 유지했다.
+- 정기 수집 스킬로 scheduled_collection.py를 실행했다. Telegram 마지막 확인22:01:49 KST, 추출18:02:54 KST complete/현재 고유9243건. 추출 기록의 증가18건을 이번 요청의 신규 수집량으로 간주하지 않는다.
+- 기본 run 5baf6c948e8644a5b94298bd4ae1181e는 verified8486/failed3/needs_review5, owner없음/requires_review. baseline_attention_required로 신규 기본 실행은 시작되지 않았으며 검토 이력과 시도를 초기화하지 않았다.
+- 상세 scheduled_risks.py --resume을 요청했지만 model_access_required로 실행되지 않았다. 모델 접근 검사 결과 Luna 통과, Sol/Astra circuit_open. 임의 모델 교체나 차단 초기화를 하지 않았다. 상세 원장 상태 needs_review, owner=None, 건수 {"complete": 8752, "needs_review": 1}. 기존 결과를 신규 처리 완료로 표시하지 않는다.
+- 소스 변경 없이 HTTP 응답·실프로세스·스케줄러 응답·DB 원장으로 확인했다. 모델 접근 복구 및 보류 기사 원인별 보완이 남아 있다.
+
+
+## 2026-10-09 모델 차단 복구·수동 재개 경로 수정
+
+- 공용 회로 차단 상태는 blocked1/timeout/자동 probe3회 소진이었다. 상세 명시 resume도 일반 모델 사전 검사 및 자동 probe를 사용해 운영자 복구에 도달하지 못했고, circuit_open 결과가 모델 접근 실패로 캐시됐다. 모델 자체의 사용 권한 거절로 확정할 근거는 없었다.
+- 명시 운영자 probe가 성공해 공용 차단을 복구했고, 강제 모델 접근 검사에서 gpt-6-luna/gpt-6.1-sol/gpt-6-astra 모두 실제 응답에 성공했다. 모델·검토 기준·문서 시도 이력을 변경하지 않았다.
+- scheduled_risks.py의 명시 resume은 모델 검사 전에 공용 operator probe(기존 lease/cooldown 유지)를 실행하고 접근 캐시를 갱신한다. 예약 자동 실행의 복구 상한·대기 정책과 사용자 중지/소유자 재확인은 유지한다. probe 실패 시 모델 검사·분석 실행을 하지 않는다.
+- 검증: 복구 순서/강제 캐시 갱신/실패 시 실행 금지 회귀 포함 전체847 tests+56subtests 통과(13.42초). 실운영 상세 driver18672가 동일cycle을 재개했다. 기본 보류8건은 repair_baseline으로 기존 사유를 반영해 순차 보완 시작했으며 이전 거절과 시도를 보존한다. 이 기록은 전체 잔여 완료를 의미하지 않는다.
