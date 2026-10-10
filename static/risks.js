@@ -158,6 +158,7 @@
       b = node('button', 'risk-title', r.title);
     b.addEventListener('click', () => detail(r.id));
     h.append(b);
+    card.append(link('관련 뉴스·논문·지식', '/context?q=' + encodeURIComponent(r.title)));
     card.append(
       h,
       node(

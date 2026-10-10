@@ -241,7 +241,10 @@
     );
     const detail = el('button', 'button', '논문 근거·분석 보기');
     detail.addEventListener('click', () => openPaper(p));
-    actions.append(detail);
+    actions.append(
+      detail,
+      link('관련 뉴스·위험·지식', '/context?q=' + encodeURIComponent(p.title))
+    );
     box.append(actions);
     return box;
   }

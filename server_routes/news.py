@@ -18,6 +18,20 @@ def get(self, route, params):
         except (RuntimeError, sqlite3.OperationalError):
             self.send_json({'error': '근거 갱신 중입니다. 잠시 후 다시 조회해 주세요.'}, 503)
         return True
+    if route.path == '/api/context':
+        try:
+            from integrated_context import dossier
+            query=params.get('q',[''])[0].strip()
+            focus=params.get('node',[''])[0]
+            if len(query)>256 or len(focus)>120:raise ValueError('검색은 256자 이내로 입력하세요.')
+            if not query and not focus:
+                self.send_json(dossier_empty());return True
+            key,graph,pending=self.services.question_service.snapshots.request({'workspace':['1']})
+            if graph is None:result,status={'status':'preparing','message':'현재 근거의 통합 색인을 준비하고 있습니다.'},202
+            else:result,status=dict(dossier(graph,query,focus),revision=key,status='ready'),200
+        except ValueError as error:result,status={'error':str(error)},400
+        except (RuntimeError,sqlite3.OperationalError):result,status={'error':'저장소 갱신 중입니다. 잠시 후 다시 조회하세요.'},503
+        self.send_json(result,status);return True
     if route.path == '/api/graph/integrated':
         try:
             query=parse_qs(route.query)
@@ -155,3 +169,8 @@ def post(self, route, payload):
             self.send_json({'error': str(error)}, 429)
         return True
     return False
+
+
+def dossier_empty():
+    from integrated_context import LABELS
+    return {'status':'ready','groups':{k:[] for k in LABELS},'counts':{},'labels':LABELS,'scope':'주제나 기술·기관 이름을 검색하면 관련 근거를 연결합니다.'}

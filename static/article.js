@@ -60,6 +60,8 @@ if (url) {
       document.createTextNode(' · '),
       safeLink('이 기사를 연결한 지식 위키', '/wiki?source_url=' + encodeURIComponent(url)),
       document.createTextNode(' · '),
+      safeLink('통합 분석실에서 연결 탐색', '/context?q=' + encodeURIComponent(url)),
+      document.createTextNode(' · '),
       safeLink('공통 지식 지도', '/knowledge#source_url=' + encodeURIComponent(url))
     );
   }

@@ -6,7 +6,11 @@ from news_repository import read_news
 
 def get(self, route, params):
     status = 200
-    if route.path in {'/workflow', '/workflow-live.js', '/workflow-live.css'}:
+    if route.path in {'/context', '/context.js', '/context.css', '/context-forecast.js', '/context-question.js'}:
+        name='context.html' if route.path=='/context' else route.path[1:]
+        content=(self.services.ROOT/'static'/name).read_bytes()
+        mime='text/html; charset=utf-8' if name.endswith('.html') else 'text/css; charset=utf-8' if name.endswith('.css') else 'application/javascript; charset=utf-8'
+    elif route.path in {'/workflow', '/workflow-live.js', '/workflow-live.css'}:
         name = 'workflow-live.html' if route.path == '/workflow' else route.path[1:]
         content = (self.services.ROOT / 'static' / name).read_bytes()
         mime = 'text/html; charset=utf-8' if name.endswith('.html') else 'text/css; charset=utf-8' if name.endswith('.css') else 'application/javascript; charset=utf-8'

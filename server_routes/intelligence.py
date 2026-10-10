@@ -16,7 +16,7 @@ def get(self, route, params):
     return False
 
 def post(self, route, payload):
-    intelligence_action = re.fullmatch('/api/intelligence/(events|concepts|decisions|scenarios|profiles|experiments|research|query)', route.path)
+    intelligence_action = re.fullmatch('/api/intelligence/(events|concepts|decisions|scenarios|profiles|experiments|research|query|forecasts)', route.path)
     if intelligence_action:
         try:
             result = self.services.intelligence_service.mutate(intelligence_action.group(1), payload)

@@ -113,7 +113,14 @@
             exclude = node('button', 'button', '관측 제외');
           select.addEventListener('click', () => selectLens(item.id));
           exclude.addEventListener('click', () => changeTopic(exclude, item.id, 'exclude'));
-          actions.append(select, exclude);
+          actions.append(
+            select,
+            exclude,
+            link(
+              '통합 근거 탐색',
+              '/context?q=' + encodeURIComponent(item.name || item.title || item.id)
+            )
+          );
           card.append(actions);
           area.append(card);
         });

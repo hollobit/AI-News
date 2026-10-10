@@ -90,7 +90,9 @@
       esc(kinds[p.kind]) +
       '</span><h2>' +
       esc(p.title) +
-      '</h2><p class="meta">판 ' +
+      '</h2><p><a href="/context?q=' +
+      encodeURIComponent(p.title) +
+      '">관련 뉴스·전략·위험·논문 탐색</a></p><p class="meta">판 ' +
       p.revision +
       ' · ' +
       esc(date(p.updated_at)) +

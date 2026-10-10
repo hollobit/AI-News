@@ -158,6 +158,7 @@ class StrategicHub:
 
     def get(self,view='overview',params=None):
         params=params or {};identity=str(one(params,'id'))
+        if view=='forecasts':return {'items':[r for r in self.jobs.list(limit=100) if r['kind']=='forecast']}
         if view=='job':return {'item':self.jobs.get(identity)}
         if view=='experiments':return self._experiments_view(identity,params)
         with self.db() as db:
@@ -289,6 +290,13 @@ class StrategicHub:
     def mutate(self,resource,payload):
         if not isinstance(payload,dict):raise ValueError('객체 형식의 요청이 필요합니다.')
         action=payload.get('action','')
+        if resource=='forecasts':
+            from forecasting import VERSION
+            horizon=payload.get('horizon_days',180)
+            if type(horizon) is not int or horizon not in (90,180,365):raise ValueError('예측 기간은 90·180·365일입니다.')
+            snapshot=self._analysis_snapshot(payload)
+            snapshot.update(kind='forecast',as_of=date.today().isoformat(),horizon_days=horizon,forecast_version=VERSION)
+            return {'run':self.jobs.start(snapshot)}
         if resource=='query':return {'run':self.jobs.start(self._analysis_snapshot(payload))}
         if resource=='experiments':return self._experiment_action(action,payload)
         if resource=='scenarios' and action=='compare':

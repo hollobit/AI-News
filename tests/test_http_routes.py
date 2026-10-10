@@ -61,3 +61,16 @@ def test_compact_status_routes_precede_full_run_and_preserve_etag(server):
         assert status==200 and json.loads(body)['version']=='compact-v1'
         assert headers['ETag']=='"compact-v1"' and compact.call_count==1
         assert request(http,'GET','/api/baseline?view=status',headers={'If-None-Match':'"compact-v1"'})[0]==304
+
+
+def test_forecast_endpoint_has_transport_dispatch_and_origin_guards(server):
+    http,calls=server
+    service=SimpleNamespace(mutate=lambda resource,payload:calls.append((resource,payload)) or {'run':{'id':'f','status':'queued'}})
+    http.RequestHandlerClass.services=replace(http.RequestHandlerClass.services,intelligence_service=service)
+    headers={'Content-Type':'application/json','Origin':f'http://127.0.0.1:{http.server_port}'}
+    status,body,_=request(http,'POST','/api/intelligence/forecasts',{'question':'AI 인프라','horizon_days':180},headers)
+    assert status==202 and json.loads(body)['run']['id']=='f'
+    assert calls[0][0]=='forecasts'
+    assert request(http,'POST','/api/intelligence/forecasts',{},dict(headers,Origin='https://untrusted.example'))[0]==403
+    for path in ('/context','/context.js','/context-forecast.js','/context-question.js','/context.css'):
+        assert request(http,'GET',path)[0]==200

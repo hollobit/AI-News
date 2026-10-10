@@ -789,7 +789,8 @@
     inspect.addEventListener('click', () => openStory(item));
     foot.append(node('span', '', host), inspect);
     if (item.source_url)
-      foot.append(link('상세 해설 ↗', '/article?url=' + encodeURIComponent(item.source_url)));
+      foot.append(link('연결 분석', '/context?q=' + encodeURIComponent(item.title)));
+    foot.append(link('상세 해설 ↗', '/article?url=' + encodeURIComponent(item.source_url)));
     card.append(meta, title);
     if (analysis?.freshness === 'historical_unchecked')
       card.append(node('small', 'subtle', '저장된 연구 해석 · 현재 원문 일치 미확인'));

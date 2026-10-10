@@ -52,7 +52,7 @@ def make_handler(context):
 
         def do_POST(self):
             route = urlparse(self.path)
-            intelligence_action = re.fullmatch('/api/intelligence/(events|concepts|decisions|scenarios|profiles|experiments|research|query)', route.path)
+            intelligence_action = re.fullmatch('/api/intelligence/(events|concepts|decisions|scenarios|profiles|experiments|research|query|forecasts)', route.path)
             match = re.fullmatch('/api/links/([0-9a-f]{24})/analyze', route.path)
             incident_ack = re.fullmatch('/api/operations/incidents/([0-9]+)/ack', route.path)
             is_graph = route.path == '/api/graph/analyze'
