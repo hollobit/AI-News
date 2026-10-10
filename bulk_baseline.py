@@ -313,7 +313,7 @@ class BulkBaselineService:
             batch_settings=json.loads(db.execute('SELECT settings_json FROM bulk_baseline_runs WHERE id=?',(run_id,)).fetchone()[0])
         snapshots={r['document_id']:json.loads(r['snapshot_json']) for r in rows}
         preparations={r['document_id']:json.loads(r['prepared_json']) for r in rows}
-        from baseline_citations import candidates, generation_schema, materialize
+        from baseline_citations import candidates, generation_schema, materialize, bind_documents
         citation_options={key:candidates(snapshots[key],preparations[key]) for key in snapshots}
         inputs=[]
         for row in rows:
@@ -325,7 +325,7 @@ class BulkBaselineService:
         outcomes={};valid={};engine_failure=None
         try:
             phase=time.monotonic()
-            raw=self.analyzer(self._prompt('analysis',inputs),generation_schema(ANALYSIS_SCHEMA,[key for choices in citation_options.values() for key in choices]))
+            raw=self.analyzer(self._prompt('analysis',inputs),bind_documents(generation_schema(ANALYSIS_SCHEMA,[key for choices in citation_options.values() for key in choices]),snapshots))
             analysis_ms=round((time.monotonic()-phase)*1000);output_chars+=len(js(raw))
             entries=raw.get('documents',[]) if isinstance(raw,dict) else []
             for row in rows:
@@ -337,7 +337,7 @@ class BulkBaselineService:
             if valid:
                 review_inputs=[dict(snapshots[key],keyword_citations=citation_options[key],analysis=value) for key,value in valid.items()]
                 phase=time.monotonic()
-                response=self.analyzer(self._prompt('verification',review_inputs),REVIEW_SCHEMA)
+                response=self.analyzer(self._prompt('verification',review_inputs),bind_documents(REVIEW_SCHEMA,{key:snapshots[key] for key in valid},'reviews'))
                 review_ms=round((time.monotonic()-phase)*1000);output_chars+=len(js(response))
                 reviews=response.get('reviews',[]) if isinstance(response,dict) else []
                 for identity,record in valid.items():

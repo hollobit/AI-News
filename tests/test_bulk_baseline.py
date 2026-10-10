@@ -210,3 +210,29 @@ def test_explicit_single_document_repair_keeps_prior_attempts_and_review(monkeyp
             assert not unpack_json(db,prior['result_json'])['verification']['accepted']
             assert unpack_json(db,row['result_json'])['verification']['accepted']
     finally:case.tearDown()
+
+
+def test_batch_schema_binds_document_and_evidence_identifiers():
+    from baseline_citations import bind_documents
+    from bulk_baseline import ANALYSIS_SCHEMA, REVIEW_SCHEMA
+    snapshots={'https://nature.com/a':{'evidence':[{'id':'e1'}]},
+               'https://example.com/b':{'evidence':[{'id':'e2'}]}}
+    schema=bind_documents(ANALYSIS_SCHEMA,snapshots)
+    entries=schema['properties']['documents']
+    assert entries['minItems']==entries['maxItems']==2
+    assert entries['items']['properties']['document_id']['enum']==sorted(snapshots)
+    assert entries['items']['properties']['evidence_ids']['items']['enum']==['e1','e2']
+    assert 'enum' not in entries['items']['properties']['summary']
+    review=bind_documents(REVIEW_SCHEMA,{'https://nature.com/a':snapshots['https://nature.com/a']},'reviews')
+    assert review['properties']['reviews']['maxItems']==1
+    assert 'enum' not in review['properties']['reviews']['items']['properties']['issues']['items']
+    assert review['properties']['reviews']['items']['properties']['checked_evidence_ids']['items']['enum']==['e1']
+    assert 'enum' not in ANALYSIS_SCHEMA['properties']['documents']['items']['properties']['document_id']
+
+
+def test_explicit_repair_budget_is_bounded_before_database_access(tmp_path):
+    import pytest
+    from repair_baseline import repair
+    with pytest.raises(ValueError,match='4 또는 5'):
+        repair(tmp_path/'unused.db','run','doc','schema deployment recovery',attempt_limit=6)
+    assert not (tmp_path/'unused.db').exists()

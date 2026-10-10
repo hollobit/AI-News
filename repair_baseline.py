@@ -9,7 +9,8 @@ from recursive_improvement import owner_alive
 from improvement_selection import all_corpus_items
 
 
-def repair(path, run_id, document_id, reason):
+def repair(path, run_id, document_id, reason, *, attempt_limit=4):
+    if attempt_limit not in (4, 5): raise ValueError('보완 상한은 4 또는 5만 허용합니다.')
     if not reason.strip(): raise ValueError('보완 사유가 필요합니다.')
     with Path(str(Path(path).resolve())+'.baseline-worker.lock').open('a') as lease:
         fcntl.flock(lease,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -19,7 +20,7 @@ def repair(path, run_id, document_id, reason):
                 run=db.execute('SELECT * FROM bulk_baseline_runs WHERE id=?',(run_id,)).fetchone()
                 if not run or owner_alive(run['owner_pid']): raise RuntimeError('기존 기본 분석 소유자를 확인해 주세요.')
                 row=db.execute('SELECT * FROM bulk_baseline_documents WHERE run_id=? AND document_id=?',(run_id,document_id)).fetchone()
-                if not row or (row['status'] not in ('needs_review','failed') and not (row['status']=='pending' and row['attempts']>=2 and run['status']=='paused')) or row['attempts']>=4:
+                if not row or (row['status'] not in ('needs_review','failed') and not (row['status']=='pending' and row['attempts']>=2 and run['status']=='paused')) or row['attempts']>=attempt_limit:
                     raise ValueError('보완 대상이 없거나 추가 보완 상한에 도달했습니다.')
                 current=next((freeze_item(i) for i in all_corpus_items(db) if freeze_item(i)['document_id']==document_id),None)
                 if not current or current['input_hash']!=row['input_hash']:

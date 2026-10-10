@@ -61,3 +61,16 @@ def materialize(record, allowed):
             resolved.append(keyword)
     result['keywords'] = resolved
     return result
+
+
+def bind_documents(base, snapshots, collection='documents'):
+    """Constrain identifiers to this batch; per-document validators remain authoritative."""
+    schema = copy.deepcopy(base)
+    entries = schema['properties'][collection]
+    entries['minItems'] = entries['maxItems'] = len(snapshots)
+    fields = entries['items']['properties']
+    fields['document_id'] = dict(fields['document_id'], enum=sorted(snapshots))
+    field = 'checked_evidence_ids' if collection == 'reviews' else 'evidence_ids'
+    fields[field] = copy.deepcopy(fields[field])
+    fields[field]['items'] = dict(fields[field]['items'], enum=sorted({e['id'] for s in snapshots.values() for e in s['evidence']}))
+    return schema
