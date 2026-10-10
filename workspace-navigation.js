@@ -2,6 +2,7 @@
 (() => {
   'use strict';
   const entries = [
+    ['context', '통합 분석실', '/context', '읽기·탐색'],
     ['strategy', '전략 대시보드', '/strategy', '읽기·탐색'],
     ['news', '뉴스', '/news', '읽기·탐색'],
     ['archive', 'URL 보관함', '/archive', '읽기·탐색', '날짜별 아카이브'],
