@@ -867,7 +867,7 @@ DATA:
         return result
     # Include full review context: even a changed qualification outside the
     # generation excerpt invalidates the reviewed answer.
-    key=content_digest({'pipeline':'grounded-answer-v14-shared-sentences-patch','data':data,'review_evidence':original_evidence}) if getattr(graph,'search_key',None) is not None else None
+    key=content_digest({'pipeline':'grounded-answer-v15-cited-explanation-patch','data':data,'review_evidence':original_evidence}) if getattr(graph,'search_key',None) is not None else None
     if reuse_only is not None:
         from graph_answer_cache import AnswerInputsChanged
         if not key or key!=reuse_only.get('input_signature') or (detailed and not sufficient(reuse_only)):
@@ -963,7 +963,10 @@ def review_answer(result, data, previous=None):
             result['answer']=(prefix+' '+' '.join(claim['text'] for claim in claims[:3])).strip()
     result['claims']=claims
     retained_limitations=[] if explanation_review and not audit['answer_supported'] else result['limitations']
-    result['limitations']=list(dict.fromkeys(retained_limitations+audit['missing_information']))[:4]
+    # A passing explanation already contains reviewed limits. Reviewer notes
+    # are repair feedback, not newly cited prose to append after verification.
+    notes=[] if quality and quality['status'] in ('passed','evidence_limited') else audit['missing_information']
+    result['limitations']=list(dict.fromkeys(retained_limitations+notes))[:4]
     result['verification']={'method':'independent_evidence_review','checked_claims':len(indices),
                             'removed_unsupported_claims':removed,'summary_rebuilt':removed>0 or not audit['answer_supported'],
                             'context_signature':context_signature,'reused_claim_checks':len(reused)}

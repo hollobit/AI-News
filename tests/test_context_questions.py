@@ -24,7 +24,7 @@ def test_detailed_relational_answer_preserves_review_and_separate_cache(monkeypa
         if 'sentences' in fields:
             from test_answer_quality import wire_claim
             c=wire_claim(c)
-        value=dict(claims=[c],limitations=['조건부 해석'])
+        value=dict(claims=[c],limitations=[0] if 'paragraphs' in schema['properties'] else ['조건부 해석'])
         value.update(paragraphs=[[0]]) if 'paragraphs' in schema['properties'] else value.update(answer='근거에 따른 종합')
         return value
     monkeypatch.setattr('semantic.run_structured',runner)

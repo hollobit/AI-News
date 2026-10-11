@@ -95,7 +95,7 @@ def repair_prompt(candidate, reviewed, data, schema):
               '거절된 claim_index는 반드시 수정 또는 삭제한다. 올바른 주장은 changes에 넣지 않고 그대로 보존한다. '
               '새로 필요한 설명만 additions에 적는다. 기존 claim_index는 삭제해도 번호를 유지하며 additions 번호는 원래 claims 개수부터 시작한다. '
               'paragraphs는 남은 주장과 추가 주장을 정확히 한 번씩 배열한다. 총 주장은 최대8개다. '
-              'limitations는 수정이 필요할 때만 새 배열을 쓰고 그대로면 null이다. '
+              'limitations는 한계/공백을 설명한 claim 번호 배열이며 수정이 필요할 때만 쓰고 그대로면 null이다. '
               '제공된 전체 evidence와 상충 조건을 대조한다. 확인 불가능한 부분은 공백과 그 영향을 명시한다. '
               '자료를 추가로 검색하거나 도구를 호출하지 않는다. 부분 보완 JSON 스키마만 반환한다.\n' + GROUNDING + INSTRUCTIONS +
               '\nDATA:\n' + json.dumps(wire_data, ensure_ascii=False, separators=(',', ':')))

@@ -134,7 +134,8 @@
       }
       root.append(support);
     }
-    for (const text of data.limitations || []) root.append(el('p', text, 'legend'));
+    for (const text of data.limitations || [])
+      if (!(data.answer || '').includes(text)) root.append(el('p', text, 'legend'));
     const sources = el('details');
     sources.open = !complete;
     sources.append(

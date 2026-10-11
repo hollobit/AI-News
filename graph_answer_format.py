@@ -20,7 +20,8 @@ INSTRUCTIONS = '''
 반드시 sentences에서 설명하고 premises/uncertainty에 문장 번호를 연결한다. 추가 가정이 없으면 assumptions=[],
 반대 근거를 확보하지 못했으면 counterevidence=[]이다. 반대 근거가 없다고 단정하지 않는다.
 질문에 필요한 만큼만 설명하고 같은 조건·결론을 다른 주장으로 되풀이하지 않는다. 핵심 설명 4~6개로 구성하되
-질문의 필수 쟁점이 많으면 최대8개까지 쓴다. limitations의 질문별 근거 공백은 본문 마지막에 함께 표시된다.
+질문의 필수 쟁점이 많으면 최대8개까지 쓴다. limitations에는 한계/근거 공백을 설명한 claim 번호만 적는다.
+한계도 자기 인용을 갖춘 claim의 sentences에 먼저 작성하고 paragraphs에 포함한다. 새로운 한계 문장을 따로 생성하지 않는다.
 '''
 
 GROUNDING = '''
@@ -82,7 +83,8 @@ def generation_schema(original):
     for field in DETAIL_FIELDS:
         finding['properties'][field]={'anyOf':[deepcopy(base['properties'][field]),{'type':'null'}]}
     claims['items']={'anyOf':[finding,inference]}
-    return obj({'claims':claims,'paragraphs':paragraphs_schema(),'limitations':deepcopy(original['properties']['limitations'])})
+    return obj({'claims':claims,'paragraphs':paragraphs_schema(),
+                'limitations':{'type':'array','maxItems':8,'items':{'type':'integer','enum':list(range(8))}}})
 
 
 def validate_layout(paragraphs, identities):
@@ -97,7 +99,8 @@ def expand(payload):
         raise RuntimeError('종합 설명 출력 형식이 올바르지 않습니다.')
     claims=payload['claims'];limits=payload['limitations']
     if (not isinstance(claims,list) or not 1<=len(claims)<=8
-            or not isinstance(limits,list) or any(not isinstance(v,str) for v in limits)):
+            or not isinstance(limits,list) or any(type(v) is not int or not 0<=v<len(claims) for v in limits)
+            or len(set(limits))!=len(limits)):
         raise RuntimeError('종합 설명 출력 형식이 올바르지 않습니다.')
     validate_layout(payload['paragraphs'],range(len(claims)))
     claims=[expand_claim(c) for c in claims]
@@ -105,8 +108,7 @@ def expand(payload):
         claim=claims[i]
         return claim['text'].strip()+' '+''.join('['+ref+']' for ref in claim['evidence_ids'])
     paragraphs=[' '.join(passage(i) for i in indices) for indices in payload['paragraphs']]
-    if limits:paragraphs.append('확인 범위: '+' '.join(limits))
-    return dict(claims=claims,answer='\n\n'.join(paragraphs),limitations=deepcopy(limits))
+    return dict(claims=claims,answer='\n\n'.join(paragraphs),limitations=[claims[i]['text'] for i in limits])
 
 
 def expand_claim(claim):
@@ -139,7 +141,7 @@ def patch_schema(original, count):
             'replacement':{'anyOf':claim.get('anyOf',[claim])+[{'type':'null'}]}})},
         'additions':dict(deepcopy(original['properties']['claims']),minItems=0),
         'paragraphs':paragraphs_schema(count+8),
-        'limitations':{'anyOf':[deepcopy(original['properties']['limitations']),{'type':'null'}]},
+        'limitations':{'anyOf':[{'type':'array','maxItems':8,'items':{'type':'integer','enum':list(range(count+8))}},{'type':'null'}]},
     })
 
 
@@ -161,7 +163,11 @@ def apply_patch(original, patch, rejected):
     if not 1<=len(retained)<=8:raise RuntimeError('보완한 주장의 수가 허용 범위를 벗어났습니다.')
     validate_layout(patch['paragraphs'],retained)
     mapping={old:i for i,old in enumerate(retained)}
+    limits=original['limitations'] if patch['limitations'] is None else patch['limitations']
+    if (not isinstance(limits,list) or any(type(i) is not int or i not in mapping for i in limits)
+            or len(set(limits))!=len(limits)):
+        raise RuntimeError('한계 설명의 주장 연결이 올바르지 않습니다.')
     merged=dict(claims=list(retained.values()),paragraphs=[[mapping[i] for i in p] for p in patch['paragraphs']],
-                limitations=deepcopy(original['limitations'] if patch['limitations'] is None else patch['limitations']))
+                limitations=[mapping[i] for i in limits])
     return merged, dict(changed_claims=len(changes),added_claims=len(additions),
                         retained_claims=sum(i not in changed for i in range(count)))

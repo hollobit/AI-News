@@ -219,6 +219,13 @@ def test_review_reuse_requires_exact_full_context_and_never_skips_explanation(mo
     assert requests[-1]['review_claim_indices']==[0] and third['verification']['reused_claim_checks']==0
 
 
+def test_successful_review_does_not_append_new_uncited_reviewer_prose(monkeypatch):
+    value=audit();value['missing_information']=['검토자가 추가로 작성한 별도 사실 또는 작업 지시']
+    run,_=execute(monkeypatch,[draft(),value])
+    result=run()
+    assert sufficient(result) and result['limitations']==[]
+
+
 @pytest.mark.parametrize('no_hits',[False,True])
 def test_insufficient_job_is_terminal_and_legacy_completion_is_stale(tmp_path,monkeypatch,no_hits):
     from graph_questions import GraphQuestions
