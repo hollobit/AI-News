@@ -97,6 +97,15 @@
           ><button id="forecast-history">저장된 전망 보기</button>
         </div>
         <p id="forecast-status" role="status" aria-live="polite"></p>
+        <div id="forecast-metrics" hidden>
+          <ol id="forecast-progress" class="answer-progress" aria-label="전망 생성 단계"></ol>
+          <progress id="forecast-meter" max="100" aria-label="전망 완료 단계 비율"></progress>
+          <p id="forecast-count" class="legend"></p>
+          <p id="forecast-eta"></p>
+          <p class="legend">진행률은 완료 단계의 비율입니다. 단계마다 소요 시간은 다릅니다.</p>
+        </div>
+        <button type="button" id="forecast-resume" hidden>진행 상태 다시 확인</button>
+        <a id="forecast-login" href="" hidden>다시 로그인하고 전망 확인</a>
         <div id="forecast-results"></div>
       </section>
       <footer>

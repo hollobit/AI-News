@@ -7,6 +7,7 @@ import threading
 from uuid import uuid4
 
 from strategic_records import digest, now
+import forecast_progress
 
 
 def obj(properties):
@@ -75,9 +76,12 @@ class StrategicJobs:
             db.execute('''CREATE TABLE IF NOT EXISTS intel_analysis_jobs (
                 id TEXT PRIMARY KEY,kind TEXT NOT NULL,status TEXT NOT NULL,snapshot_json TEXT NOT NULL,
                 result_json TEXT NOT NULL,error TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,owner_pid INTEGER)''')
+            forecast_progress.setup(db)
             pending=[]
-            for row in db.execute("SELECT id,owner_pid FROM intel_analysis_jobs WHERE status IN ('running','queued')"):
-                if not alive(row['owner_pid']):pending.append(row['id'])
+            for row in db.execute("SELECT id,owner_pid,kind FROM intel_analysis_jobs WHERE status IN ('running','queued') ORDER BY created_at,id"):
+                if not alive(row['owner_pid']):
+                    pending.append(row['id'])
+                    if row['kind']=='forecast':forecast_progress.update(db,row['id'],'queue',restart=True)
             for identity in pending:db.execute("UPDATE intel_analysis_jobs SET status='queued',owner_pid=? WHERE id=?",(os.getpid(),identity))
         if self.enabled:
             for identity in pending:self._schedule(identity)
@@ -105,6 +109,7 @@ class StrategicJobs:
                 identity='analysis:'+uuid4().hex
                 db.execute('INSERT INTO intel_analysis_jobs VALUES (?,?,?,?,?,?,?,?,?)',
                     (identity,snapshot['kind'],'queued',json.dumps(snapshot,ensure_ascii=False),'{}','',now(),now(),os.getpid()))
+                if snapshot['kind']=='forecast':forecast_progress.update(db,identity,'queue')
             self._schedule(identity)
         return self.get(identity)
 
@@ -112,8 +117,15 @@ class StrategicJobs:
         self.futures[identity]=self.executor.submit(self._run,identity)
 
     def _write(self,identity,status,result,error=''):
-        with self.db() as db:db.execute('UPDATE intel_analysis_jobs SET status=?,result_json=?,error=?,updated_at=? WHERE id=?',
-            (status,json.dumps(result,ensure_ascii=False),error[:500],now(),identity))
+        with self.db() as db:
+            db.execute('UPDATE intel_analysis_jobs SET status=?,result_json=?,error=?,updated_at=? WHERE id=?',
+                (status,json.dumps(result,ensure_ascii=False),error[:500],now(),identity))
+            if db.execute('SELECT 1 FROM forecast_progress WHERE job_id=?',(identity,)).fetchone():
+                forecast_progress.update(db,identity,'finalize' if status=='complete' else None,
+                                         done=status=='complete',status=status)
+
+    def _progress(self,identity,stage,done=False):
+        with self.db() as db:forecast_progress.update(db,identity,stage,done=done)
 
     def _run(self,identity):
         with self.db() as db:row=db.execute('SELECT * FROM intel_analysis_jobs WHERE id=?',(identity,)).fetchone()
@@ -122,7 +134,8 @@ class StrategicJobs:
         try:
             if snapshot['kind']=='forecast':
                 from forecasting import run
-                result=run(snapshot,self.analyzer,result)
+                self._progress(identity,'queue',done=True)
+                result=run(snapshot,self.analyzer,result,progress=lambda stage,done=False:self._progress(identity,stage,done))
                 self._write(identity,'complete' if result['verified'] else 'needs_review',result)
                 return
             if not result.get('report'):
@@ -190,6 +203,10 @@ class StrategicJobs:
             if date.today()>date.fromisoformat(snapshot['as_of'])+timedelta(days=snapshot['horizon_days']):
                 value.update(archived_status='complete',status='needs_review',error='예측 기간이 종료됐습니다. 실제 결과를 판정하고 새 전망을 생성하세요.')
                 value['result']['verified']=False
+        if value['status'] in ('queued','running') and not alive(row['owner_pid']):
+            value.update(status='interrupted',error='실행 프로세스가 종료되었습니다. 서버 재개 후 상태를 다시 확인하세요.')
+        if snapshot.get('kind')=='forecast':
+            with self.db() as db:value['progress']=forecast_progress.view(db,value)
         return value
 
     def list(self,subject=None,limit=50):

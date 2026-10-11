@@ -241,19 +241,29 @@ button:disabled {
   background: #dcefe8;
   color: #226554;
 }
-#answer-status {
+#answer-status,
+#forecast-status {
   font-weight: 600;
 }
 #answer-detail {
   white-space: pre-line;
 }
-#answer-meter {
+#answer-meter,
+#forecast-meter {
   width: 100%;
   height: 14px;
   accent-color: #2958cf;
 }
-#answer-metrics p {
+#answer-metrics p,
+#forecast-metrics p {
   margin: 5px 0;
+}
+#forecast-eta {
+  font-weight: 600;
+}
+.answer-progress li[data-stopped='true'] {
+  background: #fff0db;
+  color: #805013;
 }
 .query-example {
   color: #c0e8f2;

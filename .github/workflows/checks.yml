@@ -40,6 +40,7 @@ jobs:
           python tests/ui_graph_race.py
           python tests/ui_context_recovery.py
           python tests/ui_answer_quality.py
+          python tests/ui_forecast_progress.py
           python tests/ui_menu_initialization.py
           python tests/ui_architecture.py
           python tests/ui_architecture_interactions.py
