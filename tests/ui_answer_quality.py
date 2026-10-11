@@ -12,7 +12,7 @@ from playwright.async_api import async_playwright, expect
 
 async def main():
     question='벤치마크 방법과 데이터 차이는?'
-    result=dict(answer='벤치마크는 평가 조건에 따라 비교 범위가 달라집니다.\n\n제공 자료의 차이가 해석에 미치는 의미를 설명합니다. <img src=x onerror=alert(1)>',
+    result=dict(answer='벤치마크는 평가 조건에 따라 비교 범위가 달라집니다. [e]\n\n제공 자료의 차이가 해석에 미치는 의미를 설명합니다. [unknown:source] <img src=x onerror=alert(1)>',
         verification=dict(method='independent_evidence_review',quality=dict(status='passed',revision_count=1,issues=[])),
         claims=[dict(text='평가 조건은 비교 범위를 제한합니다.',kind='connection',axis='비교 조건',evidence_ids=['e'])],
         evidence=[dict(id='e',title='공식 평가 자료',text='벤치마크 원문',source_url='https://example.org/source')],limitations=[])
@@ -38,9 +38,19 @@ async def main():
         await expect(page.locator('.answer-synthesis > p')).to_have_count(2)
         await expect(page.locator('.answer-synthesis > p').first.locator('mark')).to_have_text('벤치마크')
         assert await page.locator('.answer-synthesis img').count()==0
+        await expect(page.locator('.answer-citations a')).to_have_text('[1]')
+        await expect(page.locator('.answer-synthesis')).to_contain_text('[unknown:source]')
+        await page.locator('.answer-citations a').click()
+        await expect(page.locator('#answer-source-1')).to_be_visible()
         link=urlparse(await page.locator('.answer-section a').get_attribute('href'))
         assert link.path=='/context' and link.fragment=='answer-source-1'
         assert parse_qs(link.query)==dict(q=[question],answer=['b'*32])
+        assert not await page.locator('.answer-support').evaluate('(el)=>el.open')
+        await page.locator('.answer-support > summary').click()
+        await expect(page.locator('.answer-section .card')).to_be_visible()
+        await page.locator('.answer-section a').click()
+        await expect(page.locator('#answer-source-1')).to_be_visible()
+        assert urlparse(page.url).path=='/context' and not posts
         for width in (390,320):
             await page.set_viewport_size({'width':width,'height':844})
             assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
@@ -54,6 +64,7 @@ async def main():
         await expect(page.locator('#answer-retry')).to_be_visible()
         await expect(page.locator('.answer-quality')).to_contain_text('설명 충실도 검토 미완료')
         await expect(page.locator('.answer-quality')).to_contain_text('데이터 종류')
+        assert await page.locator('.answer-support').evaluate('(el)=>el.open')
         await expect(page.locator('.answer-section')).to_contain_text(['확인된 자료','자료 사이','핵심 의미'])
         count=len(polls);await page.clock.run_for(15000)
         assert len(polls)==count and not posts

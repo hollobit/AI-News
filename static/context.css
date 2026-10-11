@@ -406,6 +406,17 @@ mark.search-highlight {
   margin: 0 0 1em;
   overflow-wrap: anywhere;
 }
+.answer-citations {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  font-size: 12px;
+  vertical-align: baseline;
+}
+.answer-citations a {
+  color: #247366;
+  padding: 0 2px;
+}
 .answer-quality {
   margin: 12px 0 18px;
   padding: 10px 14px;
@@ -421,6 +432,17 @@ mark.search-highlight {
   border-color: #b46d17;
   background: #fff7e9;
   color: #80500f;
+}
+.answer-support {
+  margin: 16px 0;
+  border-top: 1px solid #d5e5e6;
+  border-bottom: 1px solid #d5e5e6;
+  padding: 12px 0;
+}
+.answer-support > summary {
+  color: #215c53;
+  font-weight: 700;
+  cursor: pointer;
 }
 .answer-section .card {
   border-top-color: #6488ba;

@@ -30,6 +30,27 @@
     } catch (_) {}
     return a;
   }
+  function explanationParagraph(text, references) {
+    const paragraph = el('p');
+    let cursor = 0;
+    for (const match of text.matchAll(/\[([^\]\n]+)\]/g)) {
+      const ids = [...new Set(match[1].split(',').map((id) => id.trim()))];
+      if (!ids.length || !ids.every((id) => references.has(id))) continue;
+      paragraph.append(document.createTextNode(text.slice(cursor, match.index)));
+      const citations = el('span', null, 'answer-citations');
+      for (const id of ids) {
+        const source = references.get(id);
+        const link = safeLink('[' + source.number + ']', '#answer-source-' + source.number);
+        link.title = source.title || '원자료';
+        link.setAttribute('aria-label', '인용 ' + source.number + ' · ' + link.title);
+        citations.append(link);
+      }
+      paragraph.append(citations);
+      cursor = match.index + match[0].length;
+    }
+    paragraph.append(document.createTextNode(text.slice(cursor)));
+    return paragraph;
+  }
   function render(data, complete = false) {
     const root = $('#context-answer');
     root.replaceChildren();
@@ -40,6 +61,9 @@
       );
     }
     const reviewed = complete && data.verification?.method === 'independent_evidence_review';
+    const references = new Map(
+      (data.evidence || []).map((e, i) => [e.id, { ...e, number: i + 1 }])
+    );
     const quality = data.verification?.quality;
     const incomplete = quality?.status === 'needs_review';
     if (reviewed) {
@@ -69,16 +93,18 @@
       }
       const explanation = el('div', null, 'answer-synthesis');
       for (const paragraph of (data.answer || '').split(/\n\s*\n/).filter(Boolean))
-        explanation.append(el('p', paragraph));
+        explanation.append(explanationParagraph(paragraph, references));
       root.append(explanation);
       if (data.analysis_plan?.axes?.length)
         root.append(el('p', '검토한 축 · ' + data.analysis_plan.axes.join(' / '), 'legend'));
     } else if (complete)
       root.append(el('p', data.answer || '현재 확보한 자료만으로는 질문에 답하기 어렵습니다.'));
-    const references = new Map(
-      (data.evidence || []).map((e, i) => [e.id, { ...e, number: i + 1 }])
-    );
     if (reviewed) {
+      const support = el('details', null, 'answer-support');
+      support.open = incomplete;
+      support.append(
+        el('summary', `검토한 근거·관계·통찰 ${(data.claims || []).length}건 자세히 보기`)
+      );
       for (const kind of ['finding', 'connection', 'insight']) {
         const items = (data.claims || []).filter((c) => (c.kind || 'finding') === kind);
         const section = el('section', null, 'answer-section');
@@ -104,8 +130,9 @@
           card.append(cites);
           section.append(card);
         }
-        root.append(section);
+        support.append(section);
       }
+      root.append(support);
     }
     for (const text of data.limitations || []) root.append(el('p', text, 'legend'));
     const sources = el('details');
