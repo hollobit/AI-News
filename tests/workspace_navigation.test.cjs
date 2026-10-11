@@ -55,10 +55,15 @@ test('exact source URLs, saved questions, graph view and forecast identity survi
   assert.equal(new URL(nav.remoteURL('https://live.test',bridge)).searchParams.get('url'),source);
   const q=new URL(nav.remoteURL('https://live.test','context.html?q=AI&answer=saved-id'));
   assert.equal(q.searchParams.get('answer'),'saved-id');
+  const edited=new URL(nav.remoteURL('https://live.test','context.html?q=edited&question=previous'));
+  assert.equal(edited.searchParams.get('q'),'edited');assert.equal(edited.searchParams.has('question'),false);
+  assert.equal(new URL(nav.remoteURL('https://live.test','context.html?question=legacy')).searchParams.get('q'),'legacy');
   const forecast=new URL(nav.remoteURL('https://live.test','context.html?destination=forecast&forecast=saved-forecast&q=AI'));
   assert.equal(forecast.hash,'#forecast-panel');assert.equal(forecast.searchParams.get('forecast'),'saved-forecast');
   const graph=new URL(nav.remoteURL('https://live.test',nav.gateway('knowledge', {q:'의료'}, 'https://public.test/knowledge.html#id=source%3Apaper%3A123&view=3d&dist=72')));
   const hash=new URLSearchParams(graph.hash.slice(1));assert.equal(hash.get('id'),'source:paper:123');assert.equal(hash.get('view'),'3d');assert.equal(hash.get('dist'),'72');assert.equal(hash.get('q'),'의료');
+  const updated=new URL(nav.snapshotHref('knowledge',{q:'edited'},'https://live.test/knowledge#q=previous&id=medical'),'https://public.test');
+  assert.equal(new URLSearchParams(updated.hash.slice(1)).get('q'),'edited');
 });
 
 test('switching to a compatible snapshot retains selections without leaking unrelated ids', () => {

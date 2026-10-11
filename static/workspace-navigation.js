@@ -258,11 +258,10 @@
           ? 'observatory.html'
           : 'index.html?view=' + encodeURIComponent(id);
   const extraKeys = {
-    context: ['answer', 'forecast', 'node', 'question'],
-    forecast: ['answer', 'forecast', 'question'],
+    context: ['answer', 'forecast', 'node'],
+    forecast: ['answer', 'forecast'],
     graph: ['channel', 'content_type'],
     knowledge: [
-      'q',
       'id',
       'source_url',
       'paper_id',
