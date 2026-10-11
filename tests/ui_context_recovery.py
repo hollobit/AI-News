@@ -44,6 +44,8 @@ async def main():
                     await r.abort('internetdisconnected')
                 elif isinstance(state, int):
                     await r.fulfill(status=state, json={'error': '연결 지연'})
+                elif isinstance(state, dict):
+                    await r.fulfill(json=state)
                 else:
                     await r.fulfill(json=dict(status=state, error='근거가 갱신되었습니다.' if state == 'stale' else '',
                         result=result if state in ('running', 'complete') else {}))
@@ -56,7 +58,26 @@ async def main():
 
         await page.route('http://test.local/**', route)
         await page.goto('http://test.local/context')
+        await expect(page.locator('#context-example')).to_have_count(0)
+        await expect(page.locator('#query-example')).to_contain_text('예시 질문')
+        await expect(page.locator('#query')).to_be_empty()
+        example=await page.locator('#query').get_attribute('placeholder')
+        await expect(page.locator('#query-use-example')).to_have_count(0)
+        for key in ('ArrowUp','ArrowDown','ArrowLeft','ArrowRight'):
+            await page.locator('#query').fill('')
+            await page.locator('#query').press(key)
+            await expect(page.locator('#query')).to_have_value(example)
+        await page.locator('#query').fill('편집 중인 질문')
+        await page.locator('#query').press('ArrowLeft')
+        await expect(page.locator('#query')).to_have_value('편집 중인 질문')
+        await page.locator('#query').fill('')
+        await page.locator('#query').press('Shift+ArrowRight')
+        await expect(page.locator('#query')).to_be_empty()
+        await page.locator('#query').dispatch_event('keydown',dict(key='ArrowRight',isComposing=True))
+        await expect(page.locator('#query')).to_be_empty()
+        assert not posts
         await page.locator('#query').fill(question)
+        await expect(page.locator('#query')).to_have_value(question)
         await page.locator('#context-ask-button').click()
         await expect(page.locator('#answer-status')).to_contain_text('연결 색인을 준비')
         await expect(page.locator('#answer-detail')).to_contain_text('수 분')
@@ -107,6 +128,35 @@ async def main():
         count = len(polls)
         await page.clock.run_for(60000)
         assert len(polls) == count and len(posts) == 2
+        # Server-recorded progress survives reload; a review in progress is not a published answer.
+        labels=['검색 근거 준비','질문 해석·검색 계획','관계 분석·답변 작성','독립 근거 검토','최신 근거 확인·완료']
+        progress=dict(completed=3,total=5,percent=60,elapsed_seconds=74,remaining_seconds=26,
+            estimate_samples=2,estimate_overdue=False,
+            stages=[dict(id=str(i),label=label,status='complete' if i<3 else 'running' if i==3 else 'pending',seconds=12 if i<4 else None) for i,label in enumerate(labels)])
+        responses[:]=[dict(status='running',result={'evidence':result['evidence']},progress=progress)]
+        await page.reload()
+        await expect(page.locator('#answer-count')).to_have_text('완료 단계 3/5 · 60% · 전체 경과 74초')
+        await expect(page.locator('#answer-eta')).to_contain_text('약 26초')
+        await expect(page.locator('#answer-progress [aria-current="step"]')).to_contain_text('독립 근거 검토')
+        await expect(page.locator('#context-answer')).not_to_contain_text('검토된 관계 분석')
+        assert await page.locator('#answer-meter').evaluate('(el)=>el.value')==60
+        await page.clock.run_for(3100)
+        await expect(page.locator('#context-answer')).to_contain_text('검토된 관계 분석')
+        assert len(posts)==2
+        await page.evaluate("localStorage.setItem('news.context.recent-queries.v1',JSON.stringify(Array.from({length:12},(_,i)=>({question:'저장 질의 '+i,used_at:100+i}))))")
+        await page.reload()
+        await expect(page.locator('#query-history-items button')).to_have_count(10)
+        await expect(page.locator('#query-history-items button').first).to_have_text('저장 질의 11')
+        await page.locator('#query-history-items button').nth(2).click()
+        await expect(page.locator('#query')).to_have_value('저장 질의 9')
+        assert len(posts)==2
+        await page.locator('#context-ask-button').click()
+        await expect(page.locator('#answer-status')).to_contain_text('독립 근거 검토 완료')
+        await expect(page.locator('#query-history-items button')).to_have_count(10)
+        await expect(page.locator('#query-history-items button').first).to_have_text('저장 질의 9')
+        await page.reload()
+        await expect(page.locator('#query-history-items button').first).to_have_text('저장 질의 9')
+        assert len(posts)==3
         assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
         assert not errors, errors
         print(json.dumps(dict(preparation_visible=True, transport_recovery=True, bfcache_resume=True,

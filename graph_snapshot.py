@@ -19,7 +19,7 @@ from projection_cache import revision_token, content_digest
 from graph_rag import GraphResult, load_integrated_graph
 from graph_retrieval import RetrievalIndex
 
-FORMAT='graph-qa-snapshot-2:'+VERSION
+FORMAT='graph-qa-snapshot-3-workspace-sources:'+VERSION
 
 def filters(params):
     result={}
@@ -35,7 +35,11 @@ def revision(path,params):
         token=revision_token(db)
         if token is None:raise RuntimeError('근거 저장소 갱신 중')
         from verified_cache import policy
-        return content_digest([FORMAT,policy(),token,correction_token(db),filters(params)])
+        wiki=None
+        if filters(params).get('workspace')==['1']:
+            from context_index import wiki_revision
+            wiki=wiki_revision(db)
+        return content_digest([FORMAT,policy(),token,correction_token(db),filters(params),wiki])
 
 def export_graph(graph):
     index=graph.prepared_index
@@ -73,6 +77,7 @@ class GraphSnapshots:
         self.isolated=builder is None
         self.lock=threading.RLock();self.ready=OrderedDict();self.pending={};self.errors={}
         self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='graph-snapshots')
+        self.workspace_executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='workspace-snapshots')
 
     def key(self,params):return revision(self.path,params)
 
@@ -86,7 +91,8 @@ class GraphSnapshots:
                 return key,None,None
             if key not in self.pending:
                 if len(self.pending)>=4:return key,None,None
-                future=self.executor.submit(self._prepare,key,params)
+                executor=self.workspace_executor if params=={'workspace':['1']} else self.executor
+                future=executor.submit(self._prepare,key,params)
                 self.pending[key]=future
                 future.add_done_callback(lambda f:self._finished(key,f))
             return key,None,self.pending.get(key)
@@ -133,6 +139,8 @@ class GraphSnapshots:
     def _prepare_disk(self,key,params):
         import subprocess,sys
         from graph_disk_index import read
+        if params=={'workspace':['1']}:
+            from context_index import read
         file=self.directory/(key+'.sqlite3')
         if file.exists():
             try:read(file,key)
@@ -159,7 +167,9 @@ class GraphSnapshots:
         prune(self.directory)
         return graph
 
-    def close(self):self.executor.shutdown(wait=False,cancel_futures=True)
+    def close(self):
+        self.executor.shutdown(wait=False,cancel_futures=True)
+        self.workspace_executor.shutdown(wait=False,cancel_futures=True)
 
 if __name__=='__main__':
     import sys
@@ -170,8 +180,12 @@ if __name__=='__main__':
     try:
         with sqlite3.connect(path,timeout=15) as db:
             db.row_factory=sqlite3.Row
-            graph=load_integrated_graph(db,params,for_retrieval=True)
-            write(temporary,graph,key)
+            if params=={'workspace':['1']}:
+                from context_index import write as write_context
+                write_context(temporary,db,key)
+            else:
+                graph=load_integrated_graph(db,params,for_retrieval=True)
+                write(temporary,graph,key)
         if revision(path,params)!=key:raise RuntimeError('Evidence changed during graph preparation')
         temporary.replace(target)
     finally:temporary.unlink(missing_ok=True)

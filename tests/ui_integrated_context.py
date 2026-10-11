@@ -53,7 +53,9 @@ async def main():
    await route.fulfill(json={'id':'context-test','status':'complete','result':{'answer':'방법과 데이터의 의존 관계를 종합했습니다.','verification':{'method':'independent_evidence_review'},'analysis_plan':{'axes':['벤치마크 방법','데이터세트','위험']},'claims':[{'text':'평가 조건에 따라 비교 범위가 제한됩니다.','kind':'connection','axis':'벤치마크와 데이터 관계','premises':'제공 원문의 실험 조건','assumptions':'동일 환경 비교','counterevidence':'미확보','uncertainty':'실세계 일반화 미확인','evidence_ids':['e']}],'evidence':[{'id':'e','title':'논문 근거','text':'초록 내용','source_kind':'paper','source_url':'https://example.org/paper'}],'limitations':['제한된 검색 근거']}})
   await page.route('**/api/graph/ask?workspace=1',ask)
   await page.route('**/api/graph/answers/ffffffffffffffffffffffffffffffff',answer)
-  await page.locator('#context-example').click()
+  await expect(page.locator('#context-example')).to_have_count(0)
+  await expect(page.locator('#query-example')).to_contain_text('예시 질문')
+  await page.locator('#query').fill('최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?')
   assert not asked
   await page.locator('#context-ask-button').click()
   await expect(page.locator('#answer-status')).to_contain_text('독립 근거 검토 완료')

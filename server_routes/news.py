@@ -11,6 +11,16 @@ from url_archive import archived_rows
 
 def get(self, route, params):
     status = 200
+    if route.path == '/api/context/history':
+        try:
+            with self.services.question_service.db() as db:
+                rows=db.execute('''SELECT json_extract(request_json,'$.question') AS question,MAX(created_at) AS used_at
+                    FROM graph_question_jobs WHERE json_extract(request_json,'$.params.workspace[0]')='1'
+                    GROUP BY question ORDER BY used_at DESC,question LIMIT 10''').fetchall()
+            self.send_json({'items':[dict(question=r['question'],used_at=r['used_at']) for r in rows]})
+        except (sqlite3.OperationalError,RuntimeError):
+            self.send_json({'error':'최근 질의를 불러오지 못했습니다.'},503)
+        return True
     if route.path.startswith('/api/graph/answers/'):
         try:
             result = self.services.question_service.get(route.path.rsplit('/', 1)[-1])
@@ -27,7 +37,9 @@ def get(self, route, params):
             if len(focus)>120:raise ValueError('선택 항목 식별자가 올바르지 않습니다.')
             if not query and not focus:
                 self.send_json(dossier_empty());return True
-            key,graph,pending=self.services.question_service.snapshots.request({'workspace':['1']})
+            scope={'workspace':['1']}
+            if focus and not query:scope['full_graph']=['1']
+            key,graph,pending=self.services.question_service.snapshots.request(scope)
             if graph is None:result,status={'status':'preparing','message':'현재 근거의 통합 색인을 준비하고 있습니다.'},202
             else:result,status=dict(dossier(graph,query,focus),revision=key,status='ready'),200
         except ValueError as error:result,status={'error':str(error)},400
@@ -36,6 +48,9 @@ def get(self, route, params):
     if route.path == '/api/graph/integrated':
         try:
             query=parse_qs(route.query)
+            # The map needs full graph records; only the question workspace uses
+            # the lightweight source index and materializes search candidates.
+            if query.get('workspace')==['1']:query['full_graph']=['1']
             key,graph,pending=self.services.question_service.snapshots.request(query)
             if graph is None:
                 result,status={'status':'preparing','nodes':[],'edges':[],'evidence':[],

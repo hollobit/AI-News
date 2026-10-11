@@ -6,7 +6,7 @@ import ast
 
 # Presentation/export modules cannot change evidence admission. Unknown new
 # modules stay included in validation until deliberately classified here.
-PRESENTATION = frozenset('source_titles news_views publication_state publication_assets public_site public_data export_wiki_site sync_wiki_pages export_staging static_dependencies site_templates'.split())
+PRESENTATION = frozenset('source_titles news_views publication_state publication_assets public_site public_data export_wiki_site sync_wiki_pages export_staging static_dependencies site_templates question_progress'.split())
 SOURCE = frozenset('code_policy source_projection source_changes news_repository classification url_parser url_context link_groups source_enrichment source_store source_navigation improvement_selection keyword_index keyword_registry keyword_rules agent_reach_runtime strategic_value reach_pipeline url_archive task_lifecycle'.split())
 
 

@@ -19,6 +19,57 @@
   let focus = params.get('node') || '';
   let activeQuery = (params.get('question') || params.get('q') || '').slice(0, 2000);
   $('#query').value = activeQuery;
+  const exampleTopics = ['Physical AI', '의료 AI', '공공 AX', '에이전트', 'AI 인프라', '소버린 AI'];
+  const exampleAngles = [
+    (topic) => `최근 ${topic} 관련 뉴스와 논문에서 공통으로 나타나는 변화와 쟁점은 무엇인가요?`,
+    (topic) => `${topic}의 실제 도입 사례와 연구 결과를 비교하고, 기대 효과와 위험을 분석해주세요.`,
+    (topic) => `${topic} 관련 자료들의 상충하는 주장은 무엇이며, 어떤 조건에서 판단이 달라지나요?`,
+    (topic) => `${topic}의 핵심 기술과 평가 방법, 데이터의 한계를 연결해 설명해주세요.`,
+  ];
+  let currentExample = '';
+  function showExample(topic) {
+    currentExample = exampleAngles[Math.floor(Math.random() * exampleAngles.length)](topic);
+    $('#query').placeholder = currentExample;
+    $('#query-example').textContent = '예시 질문 · ' + currentExample;
+  }
+  showExample(exampleTopics[Math.floor(Math.random() * exampleTopics.length)]);
+  const historyKey = 'news.context.recent-queries.v1';
+  let recentQueries = [];
+  function rememberQueries(items) {
+    const unique = new Map();
+    for (const item of [...recentQueries, ...items]) {
+      if (!item || typeof item.question !== 'string' || !Number.isFinite(item.used_at)) continue;
+      const question = item.question.trim();
+      if (question.length < 3 || question.length > 2000) continue;
+      if (!unique.has(question) || unique.get(question).used_at < item.used_at)
+        unique.set(question, { question, used_at: item.used_at });
+    }
+    recentQueries = [...unique.values()].sort((a, b) => b.used_at - a.used_at).slice(0, 10);
+    try {
+      localStorage.setItem(historyKey, JSON.stringify(recentQueries));
+    } catch (_) {}
+    $('#query-history').hidden = !recentQueries.length;
+    $('#query-history-items').replaceChildren(
+      ...recentQueries.map((item) => {
+        const entry = button(item.question, () => {
+          $('#query').value = item.question;
+          $('#query').focus();
+        });
+        entry.title = item.question;
+        return entry;
+      })
+    );
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(historyKey) || '[]');
+    if (Array.isArray(saved)) rememberQueries(saved);
+  } catch (_) {}
+  fetch('/api/context/history')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (Array.isArray(data?.items)) rememberQueries(data.items);
+    })
+    .catch(() => {});
   function link(text, url) {
     const a = make('a', text);
     try {
@@ -219,6 +270,7 @@
     }
     if ($('#context-ask-button').disabled) return;
     activeQuery = query;
+    rememberQueries([{ question: query, used_at: Date.now() / 1000 }]);
     focus = '';
     const p = new URLSearchParams(location.search);
     for (const key of ['answer', 'question', 'forecast']) p.delete(key);
@@ -227,11 +279,21 @@
     load();
     document.dispatchEvent(new CustomEvent('context:query', { detail: { query } }));
   };
-  $('#context-example').onclick = () => {
-    $('#query').value = '최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?';
-    $('#query').focus();
-  };
   $('#query').addEventListener('keydown', (e) => {
+    if (
+      ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
+      !e.isComposing &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey &&
+      !e.shiftKey &&
+      !e.currentTarget.value.trim()
+    ) {
+      e.preventDefault();
+      e.currentTarget.value = currentExample;
+      e.currentTarget.setSelectionRange(currentExample.length, currentExample.length);
+      return;
+    }
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing) {
       e.preventDefault();
       $('#search').requestSubmit();
@@ -247,6 +309,7 @@
     $('#suggestions').append(
       button(t, () => {
         $('#query').value = t;
+        showExample(t);
         $('#query').focus();
       })
     );
@@ -276,6 +339,5 @@
   addEventListener('pageshow', (event) => {
     if (event.persisted) load(true);
   });
-  $('#context-example').disabled = false;
   load();
 })();

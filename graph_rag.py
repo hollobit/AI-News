@@ -499,6 +499,11 @@ def _build_integrated_graph(db: sqlite3.Connection, params: dict[str, Any]) -> G
     if _one(params, "workspace") == "1":
         from integrated_context import enrich_sources
         sources = enrich_sources(db, sources)
+    return merge_sources(db, sources, shared_coverage, params)
+
+
+def merge_sources(db, sources, shared_coverage, params):
+    """Merge admitted sources after selection, sharing identifiers and citation rules."""
     coverage = dict(shared_coverage)
     evidence_by_id: dict[str, dict] = {}
     nodes: dict[str, dict] = {}
@@ -706,6 +711,9 @@ def _build_integrated_graph(db: sqlite3.Connection, params: dict[str, Any]) -> G
 def build_retrieval(graph: dict[str, Any], question: str,
                     node_ids: Iterable[str] | None = None) -> dict[str, Any]:
     """Retrieve relevant admitted source excerpts before expanding graph context."""
+    if hasattr(graph, 'workspace_store'):
+        from context_index import materialize
+        graph = materialize(graph, question)
     from graph_retrieval import retrieve
     return retrieve(graph, question, node_ids)
 
@@ -732,7 +740,7 @@ _ANSWER_SCHEMA = {
 
 
 def answer_question(graph: dict[str, Any], question: str,
-                    node_ids: Iterable[str] | None = None, *, retrieval=None, analysis_plan=None, detailed=False) -> dict[str, Any]:
+                    node_ids: Iterable[str] | None = None, *, retrieval=None, analysis_plan=None, detailed=False, progress=None) -> dict[str, Any]:
     question = _clean(question)
     if not question:
         raise ValueError("질문을 입력해 주세요.")
@@ -821,11 +829,14 @@ DATA:
         minItems=1,items={'type':'string','enum':[e['id'] for e in retrieval['evidence']]})
     started=time.monotonic()
     def generate():
+        if progress:progress('synthesis')
         result=run_structured(prompt,schema,role='graph_answer',timeout=150 if detailed else 75,queue_timeout=30 if detailed else 15,reasoning_effort='medium' if detailed else 'low')
         validate_answer(result, retrieval['evidence'])
+        if progress:progress('review')
         return review_answer(result,data)
     key=content_digest({'pipeline':'grounded-answer-v9-relational-synthesis','data':data}) if getattr(graph,'search_key',None) is not None else None
     result,reused=reuse_answer(key,generate)
+    if progress:progress('finalize', cached=reused)
     result.update(selected_nodes=retrieval['nodes'],selected_edges=retrieval['edges'],evidence=retrieval['evidence'],
                   retrieval=retrieval.get('retrieval',{}),
                   timing={'answer_ms':round((time.monotonic()-started)*1000,2),'answer_cache_hit':reused})

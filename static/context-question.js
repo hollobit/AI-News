@@ -100,6 +100,7 @@
     root.append(sources);
   }
   function progress(stage, message, detail = '') {
+    $('#answer-metrics').hidden = true;
     const steps = [...$('#answer-progress').children];
     const index = steps.findIndex((n) => n.dataset.stage === stage);
     $('#answer-progress').hidden = index < 0;
@@ -110,6 +111,44 @@
     });
     $('#answer-status').textContent = message;
     $('#answer-detail').textContent = detail;
+  }
+  function metrics(job) {
+    const data = job.progress;
+    if (!data) return;
+    $('#answer-metrics').hidden = false;
+    $('#answer-meter').value = data.percent;
+    $('#answer-count').textContent =
+      `완료 단계 ${data.completed}/${data.total} · ${data.percent}% · 전체 경과 ${data.elapsed_seconds}초`;
+    $('#answer-progress').hidden = false;
+    $('#answer-progress').replaceChildren(
+      ...data.stages.map((stage) => {
+        const item = el(
+          'li',
+          stage.label + (stage.seconds === null ? '' : ` · ${stage.seconds}초`)
+        );
+        item.dataset.stage = stage.id;
+        item.dataset.done = String(stage.status === 'complete');
+        if (stage.status === 'running') item.setAttribute('aria-current', 'step');
+        return item;
+      })
+    );
+    if (job.status === 'complete') {
+      $('#answer-eta').textContent = '모든 단계 완료';
+      return;
+    }
+    const current = data.stages
+      .filter((stage) => stage.status === 'running')
+      .map((stage) => stage.label);
+    $('#answer-status').textContent = current.length
+      ? current.join(' + ') + ' 진행 중'
+      : '분석 작업 순서를 기다리고 있습니다';
+    $('#answer-detail').textContent =
+      '진행률은 실제 완료한 단계의 비율입니다. 단계마다 소요 시간은 다릅니다.';
+    $('#answer-eta').textContent = data.estimate_overdue
+      ? '최근 작업보다 오래 걸리고 있습니다. 현재 단계가 끝나면 자동으로 갱신됩니다.'
+      : data.remaining_seconds === null
+        ? '남은 예상 시간 · 새 처리 경로의 실측 기록을 모으고 있습니다'
+        : `남은 예상 약 ${data.remaining_seconds}초 · 최근 ${data.estimate_samples}건 실측 기준의 참고값`;
   }
   function controls() {
     for (const id of ['answer-resume', 'answer-retry', 'answer-login']) $('#' + id).hidden = true;
@@ -157,6 +196,7 @@
       if (job.status === 'complete') {
         render(job.result, true);
         progress('complete', '관계 분석·독립 근거 검토 완료');
+        metrics(job);
         finish();
         return;
       }
@@ -200,6 +240,7 @@
           '검토를 통과한 종합 답변이 이곳에 자동으로 표시됩니다. 새로고침해도 같은 작업을 이어서 확인합니다.'
         );
       }
+      metrics(job);
       timer = setTimeout(() => poll(url, owner), 3000);
     } catch (e) {
       if (controller !== owner || owner.signal.aborted) return;

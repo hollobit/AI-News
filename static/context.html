@@ -27,18 +27,22 @@
             maxlength="2000"
             required
             placeholder="최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?"
-            aria-describedby="query-help"
+            aria-describedby="query-help query-example"
           ></textarea>
           <div class="toolbar query-actions">
             <button id="context-ask-button" type="submit" disabled>종합 질의</button>
-            <button type="button" id="context-example" disabled>Physical AI 예시 질문</button>
           </div>
+          <p id="query-example" class="query-example"></p>
           <p id="query-help">
-            한 번의 질의로 관련 자료 탐색부터 관계 분석·핵심 통찰까지 연결합니다. Ctrl/⌘ + Enter로
-            실행
+            빈 입력창에서 키보드 방향키(↑ ↓ ← →)로 예시 질문을 입력합니다. Ctrl/⌘ + Enter로 관련
+            자료 탐색부터 관계 분석·핵심 통찰까지 실행합니다.
           </p>
         </form>
         <nav id="suggestions" aria-label="추천 질의 주제"></nav>
+        <nav id="query-history" aria-label="최근 질의" hidden>
+          <span class="history-label">최근 질의 · 최대 10개</span>
+          <div id="query-history-items"></div>
+        </nav>
       </header>
       <section class="question-panel" aria-label="종합 질의 결과">
         <h2>종합 분석 결과</h2>
@@ -50,6 +54,11 @@
         </ol>
         <p id="answer-status" role="status" aria-live="polite"></p>
         <p id="answer-detail" class="legend"></p>
+        <div id="answer-metrics" hidden>
+          <progress id="answer-meter" max="100" value="0" aria-label="완료 단계 비율"></progress>
+          <p id="answer-count" class="legend"></p>
+          <p id="answer-eta" class="legend"></p>
+        </div>
         <button type="button" id="answer-resume" hidden>진행 상태 다시 확인</button>
         <button type="button" id="answer-retry" hidden>이 질문 다시 분석</button>
         <a id="answer-login" href="" hidden>다시 로그인하고 결과 확인</a>

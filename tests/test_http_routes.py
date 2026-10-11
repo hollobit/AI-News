@@ -87,3 +87,36 @@ def test_context_query_preserves_full_natural_language_question(server):
         assert dossier.call_args.args[1]==question.strip()
         assert request(http,'GET','/api/context?'+urlencode({'q':'a'*2001}))[0]==400
         assert dossier.call_count==1
+
+
+def test_context_history_is_bounded_unique_and_only_workspace_questions(server,tmp_path):
+    http,_=server
+    path=tmp_path/'history.db'
+    def db():
+        conn=sqlite3.connect(path);conn.row_factory=sqlite3.Row;return conn
+    with db() as conn:
+        conn.execute('CREATE TABLE graph_question_jobs(request_json,created_at)')
+        rows=[(json.dumps({'question':'질의 '+str(i),'params':{'workspace':['1']}}),i) for i in range(12)]
+        rows.append((rows[3][0],20))
+        rows.append((json.dumps({'question':'일반 그래프 질문','params':{}}),21))
+        conn.executemany('INSERT INTO graph_question_jobs VALUES(?,?)',rows)
+    http.RequestHandlerClass.services=replace(http.RequestHandlerClass.services,question_service=SimpleNamespace(db=db))
+    status,body,_=request(http,'GET','/api/context/history')
+    items=json.loads(body)['items']
+    assert status==200 and len(items)==10
+    assert items[0]['question']=='질의 3'
+    assert len({r['question'] for r in items})==10
+    assert '일반 그래프 질문' not in {r['question'] for r in items}
+
+
+def test_workspace_map_keeps_full_graph_preview(server):
+    http,calls=server
+    service=SimpleNamespace(snapshots=SimpleNamespace(request=lambda params:calls.append(params) or ('v',{},False)))
+    http.RequestHandlerClass.services=replace(http.RequestHandlerClass.services,question_service=service)
+    with patch('graph_disk_index.preview',return_value={'nodes':[]}) as preview:
+        assert request(http,'GET','/api/graph/integrated?workspace=1&max_nodes=20')[0]==200
+        assert calls==[{'workspace':['1'],'max_nodes':['20'],'full_graph':['1']}]
+        assert preview.call_count==1
+    with patch('integrated_context.dossier',return_value={'groups':{}}):
+        assert request(http,'GET','/api/context?node=selected')[0]==200
+        assert calls[-1]=={'workspace':['1'],'full_graph':['1']}

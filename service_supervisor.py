@@ -62,7 +62,9 @@ def run(service):
         child=None;failures=0;started=0;next_start=0
         while not stopping:
             if child is not None and child.poll() is not None:
-                failures=failures+1 if time.monotonic()-started<300 else 0
+                # An operator's graceful restart exits successfully; it must not
+                # consume the crash-loop budget or eventually disable service.
+                failures=failures+1 if child.returncode != 0 and time.monotonic()-started<300 else 0
                 next_start=time.monotonic()+min(900,30*2**min(failures,5))
                 print(json.dumps(dict(service=service,event='exited',code=child.returncode,failures=failures)),flush=True)
                 child=None
