@@ -86,7 +86,9 @@ async def main():
             await page.evaluate('PublicData.section("papers")') if first['papers']!=latest['papers'] else None
             # Force expiry of the lazy full-text index, which changed with text.
             await page.locator('#search').fill('갱신된')
-            await expect(page.locator('#content .card').first).to_be_visible(timeout=15000)
+            # The old card is already visible; wait for the replacement content
+            # before asserting that asynchronous manifest recovery took place.
+            await expect(page.locator('#content')).to_contain_text('갱신된 진단 근거',timeout=15000)
             await expect(page.locator('#search')).to_have_value('갱신된')
             assert requests.count('site-manifest.json')>old_manifest_count
             assert 'site.json' not in requests and 'knowledge.json' not in requests
