@@ -9,6 +9,7 @@
   const space = nav.spaces.find((s) => s.id === entry?.space);
   let origin = '';
   const query = $('#remote-query');
+  $('#remote-open').dataset.remoteDestination = destination;
   query.value = nav.context(location.href).q;
   $('#remote-title').textContent = entry?.label || '작업 공간 연결';
   $('#remote-subtitle').textContent =

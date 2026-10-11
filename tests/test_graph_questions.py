@@ -55,7 +55,12 @@ def test_concurrent_questions_share_one_analysis_and_cache(tmp_path):
     def analyze(*args):
         calls.append(1);gate.wait(2)
         return {'phase':'analysis','answer':'reviewed','evidence':[{'id':'e'}]}
-    q=GraphQuestions(tmp_path/'jobs.db',snapshots=Snapshots(),analyzer=analyze)
+    path=tmp_path/'jobs.db'
+    # Production prepare_database uses WAL. The rollback-journal default can
+    # block concurrent readers behind a commit on a loaded CI filesystem.
+    with sqlite3.connect(path) as db:
+        assert db.execute('PRAGMA journal_mode=WAL').fetchone()[0]=='wal'
+    q=GraphQuestions(path,snapshots=Snapshots(),analyzer=analyze)
     evidence={'phase':'evidence','evidence':[{'id':'e'}],'limitations':[]}
     try:
         with patch('graph_questions.quick_answer',side_effect=lambda *args:dict(evidence)):

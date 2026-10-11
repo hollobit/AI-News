@@ -20,7 +20,9 @@ async def main():
    if name=='remote-access.json':await route.fulfill(json={'origin':'https://live.example','mode':'configured'});return
    alias={'index.html':'public.html','context.html':'remote-context.html'}
    if name in alias:
-    await route.fulfill(content_type='text/html',body=public_html((ROOT/'static'/alias[name]).read_text()));return
+    html=public_html((ROOT/'static'/alias[name]).read_text())
+    if name=='context.html':html=html.replace('</body>','<script src="public-navigation.js"></script></body>')
+    await route.fulfill(content_type='text/html',body=html);return
    if name in ('knowledge.html','observatory.html') or name.endswith('.json'):
     file=ROOT/'.runtime/public-site'/name
    else:file=ROOT/'static'/name
@@ -57,6 +59,7 @@ async def main():
   await expect(page.locator('#notice')).to_contain_text('읽기 전용 공개 스냅샷',timeout=30000)
   await page.locator('.ws-subnav a[data-destination="archive"]').click()
   await expect(page.locator('#remote-title')).to_have_text('URL 수정 이력')
+  await expect(page.locator('#remote-open')).to_be_visible()
   u=urlparse(await page.locator('#remote-open').get_attribute('href'))
   assert u.path=='/archive' and 'date=2026-10-11' in u.query and 'q=AI' in u.query
   await page.goto(public_base+'context.html?destination=forecast&q=AI&forecast=saved123')
