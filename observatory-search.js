@@ -73,7 +73,7 @@
     );
   }
   // Build marks from text nodes only: query/source strings are never HTML.
-  function highlight(root, query) {
+  function highlight(root, query, options = {}) {
     const parsed = typeof query === 'string' ? parse(query) : query;
     if (parsed.error) return;
     const terms = [
@@ -89,13 +89,24 @@
     const nodes = [];
     while (walker.nextNode()) {
       const n = walker.currentNode;
-      if (!n.parentElement?.closest('mark,script,style,input,textarea,select,svg')) nodes.push(n);
+      if (
+        !n.parentElement?.closest('mark,script,style,input,textarea,select,svg') &&
+        !(
+          options.question &&
+          n.parentElement?.closest('button,.query-sentence,[data-highlight-skip]')
+        )
+      )
+        nodes.push(n);
     }
+    const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+    const sentences = options.question
+      ? new Intl.Segmenter('ko', { granularity: 'sentence' })
+      : null;
     for (const node of nodes) {
       const text = node.nodeValue;
       let normalized = '',
         offsets = [];
-      const segments = new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text);
+      const segments = graphemes.segment(text);
       for (const part of segments) {
         const value = normalize(part.segment);
         normalized += value;
@@ -106,7 +117,12 @@
       for (const term of terms) {
         let at = normalized.indexOf(term);
         while (at >= 0) {
-          ranges.push([offsets[at][0], offsets[at + term.length - 1][1]]);
+          // A question about AI must not mark the middle of "said" or "retail".
+          const embedded =
+            options.question &&
+            ((/^[a-z0-9]/.test(term) && /[a-z0-9]/.test(normalized[at - 1] || '')) ||
+              (/[a-z0-9]$/.test(term) && /[a-z0-9]/.test(normalized[at + term.length] || '')));
+          if (!embedded) ranges.push([offsets[at][0], offsets[at + term.length - 1][1]]);
           at = normalized.indexOf(term, at + term.length);
         }
       }
@@ -119,18 +135,77 @@
         else merged.push([...range]);
       }
       const fragment = document.createDocumentFragment();
-      let end = 0;
-      for (const [start, stop] of merged) {
-        fragment.append(document.createTextNode(text.slice(end, start)));
-        const mark = document.createElement('mark');
-        mark.className = 'search-highlight';
-        mark.textContent = text.slice(start, stop);
-        fragment.append(mark);
-        end = stop;
+      function appendMarked(parent, begin, end) {
+        let cursor = begin;
+        for (const [a, b] of merged) {
+          const start = Math.max(a, begin),
+            stop = Math.min(b, end);
+          if (start >= stop) continue;
+          parent.append(document.createTextNode(text.slice(cursor, start)));
+          const mark = document.createElement('mark');
+          mark.className = 'search-highlight';
+          mark.textContent = text.slice(start, stop);
+          parent.append(mark);
+          cursor = stop;
+        }
+        parent.append(document.createTextNode(text.slice(cursor, end)));
       }
-      fragment.append(document.createTextNode(text.slice(end)));
+      if (sentences && node.parentElement?.closest('p')) {
+        for (const part of sentences.segment(text)) {
+          const begin = part.index,
+            end = begin + part.segment.length;
+          if (!merged.some(([a, b]) => a < end && b > begin)) {
+            fragment.append(document.createTextNode(part.segment));
+            continue;
+          }
+          const sentence = document.createElement('span');
+          sentence.className = 'query-sentence';
+          appendMarked(sentence, begin, end);
+          fragment.append(sentence);
+        }
+      } else appendMarked(fragment, 0, text.length);
       node.replaceWith(fragment);
     }
   }
-  globalThis.ObservatorySearch = { parse, matches, highlight };
+  // Display-only terms: natural-language questions have a 2000-character
+  // contract separate from the existing boolean search parser.
+  const questionStop = new Set(
+    (
+      '최근 최신 관련 대한 대해 어떤 무엇 무엇인가요 무엇인가 무엇이며 어떻게 왜 알려주세요 알려 ' +
+      '주세요 설명해주세요 설명해 설명 분석해주세요 분석해 분석 종합적으로 자세히 함께 ' +
+      '해주세 해주세요 해줘 보여주세요 있는 있나요 있습니까 인가요 및 등 ' +
+      'the a an and or of to in on for with from is are what how about tell me please'
+    ).split(/\s+/)
+  );
+  const questionCache = new Map();
+  function questionTerms(input) {
+    const text = normalize(String(input || '').slice(0, 2000));
+    if (questionCache.has(text)) return questionCache.get(text);
+    const terms = new Set();
+    for (const match of text.matchAll(/["“]([^"”]+)["”]/g)) {
+      if (match[1].trim().length >= 2) terms.add(match[1].trim());
+    }
+    for (const word of text.match(/[a-z][a-z0-9]*(?:[.+-][a-z0-9]+|\+\+|#)?|[가-힣]{2,}|\d{4}/g) ||
+      []) {
+      const stem = /^[가-힣]+$/.test(word)
+        ? word.replace(
+            /(?:에서는|으로는|으로|에서|에게|까지|부터|보다|처럼|하고|이며|이라는|라는|에는|은|는|이|가|을|를|의|와|과|도|에)$/,
+            ''
+          )
+        : word;
+      if (questionStop.has(word) || questionStop.has(stem)) continue;
+      terms.add(stem.length >= 2 ? stem : word);
+    }
+    const query = {
+      groups: [[...terms].slice(0, 96).map((value) => ({ value, negative: false }))],
+      error: '',
+    };
+    questionCache.set(text, query);
+    if (questionCache.size > 8) questionCache.delete(questionCache.keys().next().value);
+    return query;
+  }
+  function highlightQuestion(root, question) {
+    highlight(root, questionTerms(question), { question: true });
+  }
+  globalThis.ObservatorySearch = { parse, matches, highlight, questionTerms, highlightQuestion };
 })();
