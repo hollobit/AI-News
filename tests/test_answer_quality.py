@@ -10,6 +10,14 @@ from graph_answer_quality import VERSION, assess, sufficient
 from graph_rag import GraphResult, answer_question
 
 
+def wire_claim(claim):
+    value=copy.deepcopy(claim)
+    value['sentences']=[value.pop('text')]
+    for field in ('premises','assumptions','counterevidence','uncertainty'):
+        value[field]=None if value['kind']=='finding' else [] if field in ('assumptions','counterevidence') else [0]
+    return value
+
+
 @pytest.fixture(autouse=True)
 def isolated_answer_cache(monkeypatch):
     monkeypatch.setattr('graph_answer_cache._CACHE',OrderedDict())
@@ -36,6 +44,18 @@ def execute(monkeypatch, responses, *, graph=None, events=None):
         calls.append((prompt, schema))
         value=responses.pop(0)
         if isinstance(value, Exception): raise value
+        if 'checks' in value:
+            value=copy.deepcopy(value)
+            requested=json.loads(prompt.split('\n',1)[1])['review_claim_indices']
+            value['checks']=[c for c in value['checks'] if c['claim_index'] in requested]
+        if 'answer' in value and 'paragraphs' in schema['properties']:
+            value=copy.deepcopy(value)
+            value['claims'][0]['text']=value['answer']
+            value['claims']=[wire_claim(c) for c in value['claims']]
+            if 'changes' in schema['properties']:
+                value=dict(changes=[dict(claim_index=0,replacement=value['claims'][0])],additions=[],
+                           paragraphs=[[0]],limitations=value['limitations'])
+            else:value=dict(claims=value['claims'],paragraphs=[[0]],limitations=value['limitations'])
         return copy.deepcopy(value)
     monkeypatch.setattr('semantic.run_structured', runner)
     evidence=[dict(id='source:e', title='평가 조건', text='평가 방법과 데이터의 범위가 다르다.', source_url='https://example.org/e')]
@@ -145,6 +165,58 @@ def test_repair_keeps_full_uncited_context_and_original_claim_ids(monkeypatch):
     assert payload['evidence'][0]['text']=='평가 방법과 데이터의 범위가 다르다.'
     assert payload['draft']['claims'][0]['evidence_ids']==[payload['evidence'][0]['id']]
     assert result['claims'][0]['evidence_ids']==['source:e']
+
+
+def test_patch_only_adds_missing_explanation_and_full_merged_answer_is_reviewed(monkeypatch):
+    first=draft('평가 조건이 다르므로 점수를 바로 비교할 수 없습니다.')
+    missing=audit(axes=('addressed','missing'))
+    added=copy.deepcopy(first['claims'][0]);added['text']='데이터 범위의 차이 때문에 적용 가능성을 별도로 판단해야 합니다.'
+    patch=dict(changes=[],additions=[wire_claim(added)],paragraphs=[[0],[1]],limitations=None)
+    final=audit();final['checks'].append(dict(claim_index=1,supported=True,reason=None))
+    run,calls=execute(monkeypatch,[first,missing,patch,final])
+    result=run()
+    assert sufficient(result) and len(calls)==4
+    assert result['claims'][0]['text']==first['answer']
+    checked=json.loads(calls[3][0].split('\n',1)[1])
+    assert len(checked['claims'])==2 and result['answer'] in checked['answer']
+    assert result['verification']['quality']['patch']==dict(changed_claims=0,added_claims=1,retained_claims=1)
+    assert checked['review_claim_indices']==[1] and checked['previously_supported_indices']==[0]
+    assert result['verification']['reused_claim_checks']==1
+    assert [s['stage'] for s in result['timing']['stages']]==['generation','review','repair','recheck']
+
+
+def test_claim_rejection_with_no_reason_cannot_pass_as_compact_audit(monkeypatch):
+    rejected=audit(supported=False);rejected['checks'][0]['reason']=None
+    run,calls=execute(monkeypatch,[draft(),rejected])
+    with pytest.raises(RuntimeError,match='검토가 완결되지'):run()
+    assert len(calls)==2
+
+
+def test_review_reuse_requires_exact_full_context_and_never_skips_explanation(monkeypatch):
+    from graph_rag import review_answer
+    from graph_answer_quality import PROFILE
+    data=dict(question='평가 방법과 데이터 차이는?',evidence=[dict(id='source:e',text='원문 조건')],
+              analysis_plan=dict(axes=['방법','데이터']),answer_profile=PROFILE)
+    requests=[];reject_explanation=False
+    def runner(prompt,schema,**kwargs):
+        payload=json.loads(prompt.split('\n',1)[1]);requests.append(payload)
+        value=audit()
+        value['checks']=[c for c in value['checks'] if c['claim_index'] in payload['review_claim_indices']]
+        value['answer_supported']=not reject_explanation
+        return value
+    monkeypatch.setattr('semantic.run_structured',runner)
+    candidate=draft();first=review_answer(copy.deepcopy(candidate),data)
+    previous=dict(candidate=candidate,verification=first['verification'])
+    second=review_answer(copy.deepcopy(candidate),data,previous=previous)
+    assert requests[-1]['review_claim_indices']==[] and second['verification']['reused_claim_checks']==1
+    reject_explanation=True
+    invalid=review_answer(dict(candidate,answer='근거 없는 새 정의'),data,previous=previous)
+    assert not sufficient(invalid) and invalid['verification']['reused_claim_checks']==1
+    assert requests[-1]['answer']=='근거 없는 새 정의'
+    reject_explanation=False
+    data['evidence'][0]['text']+=' 바뀐 제한 조건'
+    third=review_answer(copy.deepcopy(candidate),data,previous=previous)
+    assert requests[-1]['review_claim_indices']==[0] and third['verification']['reused_claim_checks']==0
 
 
 @pytest.mark.parametrize('no_hits',[False,True])

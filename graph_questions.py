@@ -87,9 +87,12 @@ def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,pr
     from graph_plans import prepare
     plan = plan if plan is not None else prepare(question, path)[0]
     from graph_question_context import compose
+    retrieval_started=time.monotonic()
     retrieval = compose(graph, question, ids, plan, path, scoped)
+    compose_ms=round((time.monotonic()-retrieval_started)*1000,2)
     # Pass the fixed retrieved bundle directly; do not rerank away a missing side.
     answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress,reuse_only=reuse_only)
+    answer.setdefault('timing',{})['compose_ms']=compose_ms
     answer.update(phase='analysis',analysis_plan=plan)
     return answer
 
@@ -101,6 +104,7 @@ class GraphQuestions:
         self.analyzer=analyzer
         self.enricher=enricher
         self.lock=threading.RLock();self.active=set();self.closed=False
+        self.warm_stop=threading.Event();self.warm_thread=None
         self.executor=ThreadPoolExecutor(max_workers=2,thread_name_prefix='graph-answers')
         self.planners=ThreadPoolExecutor(max_workers=2,thread_name_prefix='question-plans')
         with self.db() as db:
@@ -121,8 +125,18 @@ class GraphQuestions:
         db=sqlite3.connect(self.path,timeout=timeout);db.row_factory=sqlite3.Row;return db
 
     def warm(self):
+        """Keep revisions prepared after ingestion, without any model calls."""
+        if self.closed:return
         try:self.snapshots.request({'workspace':['1']})
         except (RuntimeError,sqlite3.OperationalError):pass
+        with self.lock:
+            if self.warm_thread is None and not self.closed:
+                def refresh():
+                    while not self.warm_stop.wait(30):
+                        try:self.snapshots.request({'workspace':['1']})
+                        except (RuntimeError,sqlite3.OperationalError):pass
+                self.warm_thread=threading.Thread(target=refresh,name='question-index-warmup',daemon=True)
+                self.warm_thread.start()
 
     def ask(self,question,ids=None,params=None):
         started=time.monotonic();ids=ids or [];params=filters(params or {})
@@ -364,5 +378,7 @@ class GraphQuestions:
         return result
 
     def close(self):
-        self.closed=True;self.executor.shutdown(wait=False,cancel_futures=True)
+        self.closed=True;self.warm_stop.set()
+        if self.warm_thread:self.warm_thread.join(timeout=2)
+        self.executor.shutdown(wait=False,cancel_futures=True)
         self.planners.shutdown(wait=False,cancel_futures=True);self.snapshots.close()

@@ -3,6 +3,7 @@ from collections import defaultdict
 from copy import deepcopy
 import re
 import sqlite3
+import hashlib
 
 from evidence_search import terms, query_anchors
 from link_groups import canonical_url
@@ -47,7 +48,11 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
     queries = list(dict.fromkeys([question] + plan['queries']))
     facets=requested_facets(question)
     expansions=' '.join(words for _,words in facets)
-    groups = [build_retrieval(graph, query+' '+expansions if expansions else query, ids) for query in queries]
+    searches = [query+' '+expansions if expansions else query for query in queries]
+    if hasattr(graph, 'workspace_store'):
+        from context_index import materialize_many
+        graph = materialize_many(graph, searches)
+    groups = [build_retrieval(graph, query, ids) for query in searches]
     groups = [dict(g,evidence=focused_candidates(g['evidence'],question,facets)) for g in groups]
     selected = {}; documents = set()
     # Reserve space for each search axis BEFORE adding longer source passages.
@@ -80,10 +85,10 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
     # An identical/contained passage is one source, not corroboration. A longer
     # passage can replace an exact contained excerpt without losing its context.
     for item in sorted(supplements, key=relevance, reverse=True):
-        key = document(item); text = item.get('text', '').strip()
+        key = document(item); text = normalized(item.get('text', ''))
         siblings = by_document[key]
-        if not text or any(text in e.get('text', '') for e in siblings): continue
-        contained = [e for e in siblings if e.get('text', '').strip() and e['text'].strip() in text]
+        if not text or any(text in normalized(e.get('text', '')) for e in siblings): continue
+        contained = [e for e in siblings if normalized(e.get('text', '')) and normalized(e['text']) in text]
         if contained:
             for previous in contained:
                 selected.pop(previous['id'], None); siblings.remove(previous)
@@ -125,29 +130,68 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
                                evidence_characters=sum(len(e.get('text', '')) for e in evidence)))
 
 
-def focus(evidence, question, budget=1600):
-    """One contiguous sentence window; the independent reviewer gets the full text.
+def normalized(text):
+    """Only layout whitespace is equivalent; numbers, case and wording survive."""
+    return re.sub(r'\s+', ' ', text).strip()
 
-    Never join distant sentences or remove a qualifier from inside a sentence.
-    Budget is soft: an indivisible long sentence remains intact.
+
+DETAILS = tuple(re.compile(pattern, re.I) for pattern in (
+    r'\d+(?:[.,]\d+)?\s*(?:%|건|명|개|배|images?|users?|records?|samples?)\b',
+    r'\b(?:20\d\d|January|February|March|April|May|June|July|August|September|October|November|December)\b|\d+월\s*\d+일',
+    r'유출|탈취|피해|사고|실패|성공률|정확도|\b(?:leak\w*|expos\w*|stole|stolen|breach\w*|accuracy|failure\w*)\b',
+    r'통해|때문|자격증명|프롬프트|\b(?:via|because|credential\w*|injection|mechanism)\b',
+    r'다만|그러나|제외|한계|조건|미검증|\b(?:but|however|unless|only|except|limitation\w*)\b',
+))
+
+
+def focus(evidence, question, budget=1800):
+    """Select diverse verbatim windows, retaining neighbors and explicit gaps.
+
+    The budget is soft: sentences and adjacent qualifications are never cut.
+    Offsets/hash refer to the unchanged source; the reviewer still sees it all.
     """
     text = evidence.get('text') or ''
-    if len(text) <= budget: return dict(evidence)
+    # Short excerpts are cheaper to read intact than to repair a false claim
+    # about missing context. Only longer sources need window selection.
+    if len(text) <= max(budget,min(3600,budget*2)): return dict(evidence)
     boundaries = sorted(set([0, len(text)] + [m.end() for m in re.finditer(r'(?<=[.!?。])\s+|\n+', text)]))
     spans = list(zip(boundaries, boundaries[1:]))
     query = set(terms(question))
     hits = [set(terms(text[start:end])) & query for start, end in spans]
-    best = None
+    if not any(hits): return dict(evidence)
+    detail = [{j for j, pattern in enumerate(DETAILS) if pattern.search(text[start:end])} for start,end in spans]
+    candidates = []
     for i in range(len(spans)):
-        if not hits[i]: continue
-        # Include the preceding and following sentences for qualifications.
+        if not hits[i] and not detail[i]: continue
         start = max(0, i-1); end = min(len(spans), i+2)
-        while end < len(spans) and spans[end][1]-spans[start][0] <= budget: end += 1
-        if end < len(spans) and hits[end-1]: end += 1
-        covered = set().union(*hits[start:end])
-        score = (len(covered), sum(len(h) for h in hits[start:end]), -start)
-        if best is None or score > best[0]: best = (score, spans[start][0], spans[end-1][1])
-    if best is None: return dict(evidence)
-    _, start, end = best
-    return dict(evidence, text=text[start:end], excerpt_scope='contiguous_query_context',
-                excerpt_start=start, excerpt_end=end)
+        # A qualification can continue beyond the first neighboring sentence.
+        while end < len(spans) and DETAILS[-1].search(text[spans[end][0]:spans[end][1]]) and end < i+5:
+            end += 1
+        candidates.append((start,end))
+    chosen=set(); covered=set(); seen_details=set()
+    for _ in range(3):
+        available=[]
+        for start,end in candidates:
+            new=set(range(start,end))-chosen
+            if not new:continue
+            cost=sum(spans[i][1]-spans[i][0] for i in chosen|new)
+            if chosen and cost>budget:continue
+            words=set().union(*(hits[i] for i in new))
+            details=set().union(*(detail[i] for i in new))
+            score=(3*len(words-covered)+5*len(details-seen_details),len(words),-cost,-start)
+            available.append((score,new,words,details))
+        if not available:break
+        score,new,words,details=max(available,key=lambda x:x[0])
+        if chosen and score[0]<=0:break
+        chosen|=new;covered|=words;seen_details|=details
+    windows=[]
+    for i in sorted(chosen):
+        start,end=spans[i]
+        if windows and windows[-1]['end']==start:windows[-1]['end']=end
+        else:windows.append(dict(start=start,end=end))
+    result=dict(evidence,text='\n[중간 문맥 생략]\n'.join(text[w['start']:w['end']] for w in windows),
+                excerpt_scope='verbatim_windows_with_gaps',excerpt_segments=windows,
+                source_text_hash=hashlib.sha256(text.encode()).hexdigest())
+    if len(windows)==1:
+        result.update(excerpt_start=windows[0]['start'],excerpt_end=windows[0]['end'],excerpt_scope='contiguous_query_context')
+    return result

@@ -247,3 +247,22 @@ def test_completed_bounded_answer_checks_its_sources_not_unrelated_graph_revisio
         with patch('graph_questions.question_evidence',return_value=({},'changed')):
             assert q.get('id')['status']=='stale'
     finally:q.close()
+
+
+def test_background_warmup_is_idempotent_and_stops_without_analysis(tmp_path):
+    from graph_questions import GraphQuestions
+    class Snapshots:
+        def __init__(self):self.calls=0;self.closed=False
+        def request(self,params):
+            assert params=={'workspace':['1']}
+            self.calls+=1
+        def close(self):self.closed=True
+    snapshots=Snapshots()
+    service=GraphQuestions(tmp_path/'warm.sqlite3',snapshots=snapshots)
+    service.warm();worker=service.warm_thread;service.warm()
+    assert service.warm_thread is worker and worker.is_alive()
+    assert snapshots.calls==2 and not service.active
+    service.close()
+    assert not worker.is_alive() and snapshots.closed
+    service.warm()
+    assert snapshots.calls==2

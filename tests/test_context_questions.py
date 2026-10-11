@@ -16,18 +16,24 @@ def test_detailed_relational_answer_preserves_review_and_separate_cache(monkeypa
                 count=schema['properties']['quality']['properties']['axes']['minItems']
                 value['quality']=audit(axes=('addressed',)*count)['quality']
             return value
-        fields=schema['properties']['claims']['items']['properties']
+        item=schema['properties']['claims']['items']
+        fields=item.get('anyOf',[item])[0]['properties']
         c=dict(text='실험 조건에 따른 비교 한계',evidence_ids=['e'])
         if 'premises' in fields:c.update(premises='원문 조건',assumptions='새 환경에 동일 적용한다는 가정',counterevidence='미확보',uncertainty='범위 제한')
         if 'kind' in fields:c.update(kind='connection',axis='방법과 데이터 의존성')
-        return dict(answer='근거에 따른 종합',claims=[c],limitations=['조건부 해석'])
+        if 'sentences' in fields:
+            from test_answer_quality import wire_claim
+            c=wire_claim(c)
+        value=dict(claims=[c],limitations=['조건부 해석'])
+        value.update(paragraphs=[[0]]) if 'paragraphs' in schema['properties'] else value.update(answer='근거에 따른 종합')
+        return value
     monkeypatch.setattr('semantic.run_structured',runner)
     result=answer_question(graph,'Physical AI 연구',retrieval=retrieval,analysis_plan={'axes':['방법','데이터']},detailed=True)
     assert result['verification']['method']=='independent_evidence_review'
     assert result['claims'][0]['kind']=='connection'
     assert calls[0][1]['properties']['claims']['maxItems']==8
     assert calls[0][2]['reasoning_effort']=='medium'
-    assert '자료간' in calls[0][0] and '원문' in calls[1][0]
+    assert '자료 사이' in calls[0][0] and '원문' in calls[1][0]
     answer_question(graph,'Physical AI 연구',retrieval=retrieval,analysis_plan={'axes':['방법','데이터']})
     assert len(calls)==4
     assert calls[2][1]['properties']['claims']['maxItems']==4

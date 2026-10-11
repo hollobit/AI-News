@@ -163,3 +163,40 @@ def test_obsolete_base_cannot_be_read_even_with_its_old_key(tmp_path,monkeypatch
     assert previous_index(tmp_path)==old
     with sqlite3.connect(':memory:') as db:write(new,db,'new',old)
     assert read(new,'new').search_key=='new'
+
+
+def test_query_batch_preserves_candidates_from_every_axis_and_builds_once(tmp_path,monkeypatch):
+    from context_index import materialize_many
+    from graph_retrieval import RetrievalIndex
+    sources=[source('baseline','a','반도체 평가','반도체 조건'),source('paper','b','로봇 데이터','로봇 실험')]
+    monkeypatch.setattr('graph_rag._analysis_sources',lambda db:(sources,{}))
+    path=tmp_path/'index.sqlite3'
+    with sqlite3.connect(':memory:') as db:write(path,db,'current')
+    graph=read(path,'current');built=[]
+    def index(g):built.append(1);return RetrievalIndex(g)
+    monkeypatch.setattr('graph_retrieval.RetrievalIndex',index)
+    value=materialize_many(graph,['반도체 평가','로봇 데이터'])
+    assert {e['title'] for e in value.full_evidence}=={'반도체 평가','로봇 데이터'}
+    assert materialize_many(graph,['반도체 평가','로봇 데이터']) is value
+    assert len(built)==1
+
+
+def test_clone_modifications_never_change_published_index(tmp_path):
+    from context_index import clone_index
+    old=tmp_path/'old';new=tmp_path/'new'
+    old.write_bytes(b'original')
+    clone_index(old,new)
+    new.write_bytes(b'changed')
+    assert old.read_bytes()==b'original' and old.stat().st_ino!=new.stat().st_ino
+    with pytest.raises(FileExistsError):clone_index(old,old)
+    assert old.read_bytes()==b'original'
+
+
+def test_clone_failure_falls_back_to_separate_copy(tmp_path,monkeypatch):
+    import sys
+    from context_index import clone_index
+    old=tmp_path/'old';new=tmp_path/'new';old.write_bytes(b'original')
+    # Force the portable fallback on every CI operating system.
+    monkeypatch.setattr(sys,'platform','unsupported')
+    clone_index(old,new)
+    assert old.read_bytes()==new.read_bytes() and old.stat().st_ino!=new.stat().st_ino

@@ -59,6 +59,26 @@ def test_focus_is_contiguous_and_keeps_qualifying_sentence():
     assert original['text'].startswith(prefix)
 
 
+def test_focus_preserves_incident_outcome_beyond_keyword_heavy_introduction():
+    intro='AI security incidents and agent security research overview. '*28
+    result_text='In September 2026 the attack leaked 53 images. However, the researchers did not establish wider exposure. '
+    source=evidence('incident',intro+'General discussion of the industry. '*50+result_text+'Background context. '*100)
+    result=focus(source,'최근 AI 보안 사고 AI security incidents agent injection')
+    assert '53 images' in result['text'] and 'did not establish wider exposure' in result['text']
+    segments=result['excerpt_segments']
+    assert result['text']=='\n[중간 문맥 생략]\n'.join(source['text'][s['start']:s['end']] for s in segments)
+    assert len(segments)<=3 and result['source_text_hash']
+
+
+def test_layout_duplicates_are_removed_but_distinct_qualifications_survive(tmp_path):
+    short=evidence('short','실험에서 90% 성공했다.\n현장 적용은 미검증이다.')
+    same=evidence('layout','실험에서 90% 성공했다.   현장 적용은 미검증이다.',short['source_url'])
+    other=evidence('other','다른 환경에서는 40% 성공했다. 현장 적용은 미검증이다.',short['source_url'])
+    with patch('graph_rag.build_retrieval',return_value=group([short])),patch('source_store.search',return_value=[same,other]):
+        result=compose({},'실험 성공률',[],dict(queries=[]),tmp_path/'db',True)
+    assert {e['id'] for e in result['evidence']}=={'short','other'}
+
+
 def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeypatch):
     original = evidence('support', '배경입니다. '*300+'벤치마크 실험 성공률은 90%다. 현장 일반화는 미검증이다. '+'기타 배경입니다. '*300)
     conflict = evidence('conflict', '다른 환경에서 벤치마크 성공률은 40%였다.')
@@ -81,8 +101,8 @@ def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeyp
             return value
         data=json.JSONDecoder().raw_decode(prompt.split('\nDATA:\n')[1])[0]
         support_id=next(e['id'] for e in data['evidence'] if e['source_url']==original['source_url'])
-        return dict(answer='환경에 따라 달라 일반화할 수 없다.', claims=[dict(text='실험 성공률90%, 현장은 미검증', evidence_ids=[support_id],
-                    kind='finding',axis='성공률',premises='실험 조건',assumptions='해당 없음',counterevidence='다른 환경 자료 확인 필요',uncertainty='현장 일반화 미검증')],limitations=[])
+        return dict(paragraphs=[[0]], claims=[dict(sentences=['실험 성공률90%, 현장은 미검증'], evidence_ids=[support_id],
+                    kind='finding',axis='성공률',premises=None,assumptions=None,counterevidence=None,uncertainty=[0])],limitations=[])
     monkeypatch.setattr('semantic.run_structured', runner)
     def run():return answer_question(graph,'벤치마크 성공률',retrieval=bundle,analysis_plan=dict(axes=['성공률'],queries=['성공률']),detailed=True)
     first=run()

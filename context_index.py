@@ -13,6 +13,7 @@ import threading
 import hashlib
 from pathlib import Path
 import shutil
+from contextlib import closing
 
 from graph_disk_index import Store, encode
 from task_lifecycle import checkpoint
@@ -54,7 +55,7 @@ def write(path, db, key, previous=None):
     finals = {r[0]: r[1] for r in db.execute("SELECT run_id,payload_json FROM strategic_workflow_artifacts WHERE stage='final'")} if db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_artifacts'").fetchone() else {}
     sources = sources + enrich_sources(db, [])
     if previous:
-        shutil.copyfile(previous, path)
+        clone_index(previous, path)
     with sqlite3.connect(path) as store:
         # This is a disposable, unpublished copy. Failure deletes it; rollback
         # journals only duplicate the large index and can outlive a killed child.
@@ -117,6 +118,33 @@ def write(path, db, key, previous=None):
     return stats
 
 
+def clone_index(previous, path):
+    """Copy-on-write on supported filesystems, portable byte-copy fallback.
+
+    Never hard-link: the unpublished generation will be modified independently.
+    """
+    import sys
+    import os
+    if Path(path).exists():raise FileExistsError(path)
+    try:
+        if sys.platform=='darwin':
+            import ctypes
+            libc=ctypes.CDLL(None,use_errno=True)
+            clone=libc.clonefile
+            clone.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int]
+            clone.restype=ctypes.c_int
+            if clone(os.fsencode(previous),os.fsencode(path),0):raise OSError(ctypes.get_errno(),'clonefile')
+            return
+        if sys.platform.startswith('linux'):
+            import fcntl
+            with open(previous,'rb') as source,open(path,'xb') as target:
+                fcntl.ioctl(target.fileno(),0x40049409,source.fileno())  # FICLONE
+            return
+    except (OSError,AttributeError):
+        Path(path).unlink(missing_ok=True)
+    shutil.copyfile(previous,path)
+
+
 def read(path, key):
     from graph_rag import GraphResult
     store = Store(path)
@@ -147,6 +175,13 @@ def expressions(question):
 
 
 def materialize(graph, question):
+    return materialize_many(graph,[question])
+
+
+def materialize_many(graph, questions):
+    """Reserve candidates per query/kind, build their shared graph only once."""
+    questions=tuple(dict.fromkeys(questions))
+    question=questions
     with graph.workspace_lock:
         if question in graph.workspace_cache:
             graph.workspace_cache.move_to_end(question)
@@ -155,10 +190,11 @@ def materialize(graph, question):
         future = graph.workspace_flights.setdefault(question, Future())
     if not owner: return future.result()
     try:
-        result = _materialize(graph, question)
+        result = _materialize(graph, questions)
         with graph.workspace_lock:
             graph.workspace_cache[question] = result
-            while len(graph.workspace_cache) > 8:
+            while len(graph.workspace_cache)>1 and (len(graph.workspace_cache)>8 or
+                    sum(g['coverage'].get('selected_source_records',0) for g in graph.workspace_cache.values())>1200):
                 graph.workspace_cache.popitem(last=False)
         future.set_result(result)
         return result
@@ -169,23 +205,32 @@ def materialize(graph, question):
         with graph.workspace_lock: graph.workspace_flights.pop(question, None)
 
 
-def _materialize(graph, question):
+def _materialize(graph, questions):
     from graph_rag import merge_sources
     from graph_retrieval import RetrievalIndex
     from integrated_context import enrich_sources
     from projection_cache import content_digest
-    expression, short = expressions(question)
     selected = {}
-    for kind in KINDS:
-        if expression:
-            rows = graph.workspace_store.rows('''SELECT s.id,s.body FROM search JOIN sources s ON s.id=search.rowid
-                WHERE search MATCH ? AND s.kind=? ORDER BY bm25(search,3,1),s.id LIMIT 48''', (expression, kind))
-            selected.update(rows)
-        if short:
-            clauses = ' OR '.join('(title LIKE ? OR text LIKE ?)' for _ in short)
-            args = [v for word in short for v in ('%' + word + '%', '%' + word + '%')]
-            selected.update(graph.workspace_store.rows(
-                'SELECT id,body FROM sources WHERE kind=? AND (' + clauses + ') ORDER BY id LIMIT 16', [kind] + args))
+    # One connection/SQLite page cache for the query batch; fetch large source
+    # bodies only once, after selecting the union of per-axis candidate IDs.
+    with closing(sqlite3.connect(Path(graph.workspace_store.path).as_uri()+'?mode=ro',uri=True,timeout=2)) as store:
+        identities=set()
+        for question in questions:
+            expression, short = expressions(question)
+            for kind in KINDS:
+                checkpoint()
+                if expression:
+                    identities.update(r[0] for r in store.execute('''SELECT s.id FROM search JOIN sources s ON s.id=search.rowid
+                        WHERE search MATCH ? AND s.kind=? ORDER BY bm25(search,3,1),s.id LIMIT 48''',(expression,kind)))
+                if short:
+                    clauses=' OR '.join('(title LIKE ? OR text LIKE ?)' for _ in short)
+                    args=[v for word in short for v in ('%'+word+'%','%'+word+'%')]
+                    identities.update(r[0] for r in store.execute(
+                        'SELECT id FROM sources WHERE kind=? AND ('+clauses+') ORDER BY id LIMIT 16',[kind]+args))
+        ordered=sorted(identities)
+        for offset in range(0,len(ordered),400):
+            batch=ordered[offset:offset+400]
+            selected.update(store.execute('SELECT id,body FROM sources WHERE id IN ('+','.join('?' for _ in batch)+')',batch))
     sources = [json.loads(body) for _, body in sorted(selected.items())]
     # Reuse enrichment against only the immutable selected workflow artifacts.
     # Wiki entries already have their original source links in this generation.
@@ -200,6 +245,6 @@ def _materialize(graph, question):
         result = merge_sources(db, sources, graph['coverage'], {})
     result['coverage'].update(scope='질문별 관련 자료의 연결 분석', selected_source_records=len(sources))
     result['limitations'][0] = '분야별 검색 상위 후보의 인용·관계를 종합합니다. 자료 전체를 전수 독해하거나 모든 관계를 열거한 결과가 아닙니다.'
-    result.search_key = content_digest([graph.search_key, question, VERSION])
+    result.search_key = content_digest([graph.search_key, questions, VERSION,'query-batch-v1'])
     result.prepared_index = RetrievalIndex(result)
     return result
