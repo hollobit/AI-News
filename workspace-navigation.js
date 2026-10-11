@@ -299,7 +299,7 @@
       if (u.pathname.endsWith('knowledge.html') || u.hash.includes('view=3d')) return 'knowledge';
       if (u.pathname.endsWith('observatory.html')) return 'observatory';
       const view = u.searchParams.get('view') || 'strategy';
-      return publicIds[view] || (byId[view] ? view : 'services');
+      return Object.hasOwn(publicIds, view) ? publicIds[view] : byId[view] ? view : 'services';
     }
     if (u.pathname === '/context' && u.hash === '#forecast-panel') return 'forecast';
     if (u.pathname === '/sources' && u.hash === '#subscription-form') return 'subscriptions';

@@ -49,7 +49,7 @@
       if (v) u.searchParams.set(k, v);
     if (u.href !== location.href) history.pushState(null, '', u);
   }
-  if (!names[view]) view = 'services';
+  if (!Object.hasOwn(names, view)) view = 'services';
   $('search').value = new URLSearchParams(location.search).get('q') || '';
   const url = WorkspaceNavigation.publicURL;
   const link = (text, href) => {
