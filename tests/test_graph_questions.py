@@ -77,6 +77,28 @@ def test_concurrent_questions_share_one_analysis_and_cache(tmp_path):
     finally:gate.set();q.close()
 
 
+def test_worker_can_observe_job_on_its_first_instruction(tmp_path):
+    path=tmp_path/'committed.db'
+    with sqlite3.connect(path) as db:db.execute('PRAGMA journal_mode=WAL')
+    q=GraphQuestions(path,snapshots=Snapshots(),analyzer=lambda *args:{'phase':'analysis','answer':'reviewed','evidence':[{'id':'e'}]})
+    q.executor.shutdown(wait=True)
+    class ImmediateWorker:
+        def submit(self,fn,identity,*args):
+            # A separate worker connection must see the job before any work.
+            with sqlite3.connect(path) as db:
+                row=db.execute('SELECT status FROM graph_question_jobs WHERE id=?',(identity,)).fetchone()
+            assert row is not None, 'Worker started before the job was committed'
+            assert row[0]=='queued'
+            fn(identity,*args)
+        def shutdown(self,**kwargs):pass
+    q.executor=ImmediateWorker()
+    try:
+        with patch('graph_questions.quick_answer',return_value={'phase':'evidence','evidence':[{'id':'e'}],'limitations':[]}):
+            answer=q.ask('저장 후 실행하는 질문')
+            assert q.get(answer['job']['id'])['status']=='complete'
+    finally:q.close()
+
+
 def test_revision_invalidates_job(tmp_path):
     snapshots=Snapshots();q=GraphQuestions(tmp_path/'jobs.db',enabled=False,snapshots=snapshots)
     try:

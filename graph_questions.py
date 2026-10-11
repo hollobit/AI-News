@@ -177,8 +177,10 @@ class GraphQuestions:
                             job={'id':identity,'status':'queued' if graph else 'preparing'}
                             db.execute('INSERT INTO graph_question_jobs VALUES (?,?,?,?,?,?,?,?,?)',
                                 (identity,key,revision,json.dumps(request,ensure_ascii=False),job['status'],json.dumps(answer,ensure_ascii=False),'',time.time(),os.getpid()))
-                    if job and job['id'] not in self.active:
-                        self.active.add(job['id']);self.executor.submit(self._run,job['id'],revision,request)
+                # Commit before another connection reads the job. Keep the
+                # scheduling lock until launch so concurrent callers still share it.
+                if job and job['id'] not in self.active:
+                    self.active.add(job['id']);self.executor.submit(self._run,job['id'],revision,request)
             if job:answer['job']={'id':job['id'],'status':job['status'],'url':'/api/graph/answers/'+job['id']}
         answer['timing']={'total_ms':round((time.monotonic()-started)*1000,2),'answer_cache_hit':False}
         return answer
