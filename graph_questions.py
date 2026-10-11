@@ -82,37 +82,14 @@ def question_evidence(path,request,expected_ids=None):
     return graph,signature
 
 
-def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,progress=None):
+def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,progress=None,reuse_only=None):
     """Question planning adds no facts: retrieve each requested axis separately."""
     from graph_plans import prepare
     plan = plan if plan is not None else prepare(question, path)[0]
-    groups=[build_retrieval(graph,q,ids) for q in [question]+plan['queries']]
-    selected={};nodes={};edges={};documents=set()
-    # Round-robin prevents one comparison axis from consuming the whole context.
-    for position in range(12):
-        for group in groups:
-            if position>=len(group['evidence']) or len(selected)>=16:continue
-            e=group['evidence'][position];document=e.get('document_id') or e['id']
-            if document in documents:continue
-            selected[e['id']]=e;documents.add(document)
-    for group in groups:
-        nodes.update({n['id']:n for n in group['nodes']});edges.update({e['id']:e for e in group['edges']})
-    if path:
-        from source_store import search
-        with sqlite3.connect(path,timeout=.5) as db:
-            db.row_factory=sqlite3.Row
-            allowed={e.get('source_url','') for e in selected.values()} if ids or scoped else None
-            paragraphs=search(db,question,limit=8,urls=allowed)
-            from knowledge_wiki import retrieve as wiki_sources
-            wiki=[] if ids or scoped else wiki_sources(db,question,limit=1)
-        # Keep multiple relevant passages of long documents, rather than only their first 3,500 characters.
-        selected={**{e['id']:e for e in paragraphs+wiki},**selected}
-    retrieval={'nodes':list(nodes.values())[:24],'edges':list(edges.values())[:40],
-               'evidence':list(selected.values())[:20],'no_hits':not selected,'limitations':[]}
-    for item in retrieval['nodes']+retrieval['edges']:
-        item['evidence_ids']=[r for r in item.get('evidence_ids',[]) if r in {e['id'] for e in retrieval['evidence']}]
+    from graph_question_context import compose
+    retrieval = compose(graph, question, ids, plan, path, scoped)
     # Pass the fixed retrieved bundle directly; do not rerank away a missing side.
-    answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress)
+    answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress,reuse_only=reuse_only)
     answer.update(phase='analysis',analysis_plan=plan)
     return answer
 
@@ -166,9 +143,9 @@ class GraphQuestions:
         job=None
         with self.lock:
             with self.db() as db:
-                row=db.execute("SELECT * FROM graph_question_jobs WHERE key=? AND status IN ('preparing','queued','running','complete') ORDER BY created_at DESC LIMIT 1",(key,)).fetchone()
+                row=db.execute("SELECT * FROM graph_question_jobs WHERE (key=? AND status='complete') OR (request_json=? AND owner_pid=? AND status IN ('preparing','queued','running')) ORDER BY created_at DESC LIMIT 1",(key,json.dumps(request,ensure_ascii=False),os.getpid())).fetchone()
                 if row:job=dict(row)
-        if job and job['status']=='complete':
+        if job:
             return self._cached_answer(job,started)
         answer=quick_answer(graph,question,ids) if graph else cold_answer(self.path,question,ids,params)
         if answer is None:answer={
@@ -186,7 +163,7 @@ class GraphQuestions:
         if not graph or (self.enabled and (answer.get('evidence') or self.enricher)):
             with self.lock:
                 with self.db() as db:
-                    existing=db.execute("SELECT * FROM graph_question_jobs WHERE key=? AND status IN ('preparing','queued','running','complete') ORDER BY created_at DESC LIMIT 1",(key,)).fetchone()
+                    existing=db.execute("SELECT * FROM graph_question_jobs WHERE (key=? AND status='complete') OR (request_json=? AND owner_pid=? AND status IN ('preparing','queued','running')) ORDER BY created_at DESC LIMIT 1",(key,json.dumps(request,ensure_ascii=False),os.getpid())).fetchone()
                     if existing:
                         job=dict(existing)
                         if job['status']=='complete':
@@ -233,13 +210,15 @@ class GraphQuestions:
         self._progress(identity,'plan',done=True,cached=cached)
         return plan
 
-    def _run(self,identity,revision,request,retries=1):
+    def _run(self,identity,revision,request,retries=1,reviewed=None,checks=2,attempts=None):
         with self.db(timeout=10) as db:
-            stored=db.execute('SELECT result_json FROM graph_question_jobs WHERE id=?',(identity,)).fetchone()
+            stored=db.execute('SELECT result_json,created_at FROM graph_question_jobs WHERE id=?',(identity,)).fetchone()
         result=json.loads(stored[0]) if stored else {}
         planned=None
+        attempts=list(attempts or [])
         try:
             begun=time.monotonic();deadline=begun+(300 if request['params'].get('workspace')==['1'] else 120);bounded_signature=None;fallback_checked=False
+            deadline=min(deadline,begun+max(0,420-(time.time()-stored['created_at'])))
             detailed=request['params'].get('workspace')==['1']
             tracked=detailed and self.enabled and not self.analyzer
             if tracked:
@@ -270,8 +249,8 @@ class GraphQuestions:
                 if time.monotonic()>deadline:raise RuntimeError('검색 근거 준비 시간이 초과되었습니다.')
                 time.sleep(.1)
             if self.closed:return
-            retrieval_ms=round((time.monotonic()-begun)*1000,2)
             result=quick_answer(graph,request['question'],request['node_ids'])
+            retrieval_ms=round((time.monotonic()-begun)*1000,2)
             if tracked:self._progress(identity,'evidence',done=True,cached=retrieval_ms<1000)
             self._save(identity,'running' if self.enabled else 'evidence_only',result)
             if not self.enabled or (not result.get('evidence') and not self.enricher):
@@ -292,13 +271,19 @@ class GraphQuestions:
                         self._progress(identity,'review',done=True,**detail)
                     self._progress(identity,stage,**detail)
                 if tracked:self._progress(identity,'synthesis')
-                answer=self.analyzer(graph,request['question'],request['node_ids']) if self.analyzer else deepen(graph,request['question'],request['node_ids'],path=self.path,scoped=bool(request['params']),detailed=detailed,plan=plan,progress=progress if tracked else None)
+                answer=self.analyzer(graph,request['question'],request['node_ids']) if self.analyzer else deepen(graph,request['question'],request['node_ids'],path=self.path,scoped=bool(request['params']),detailed=detailed,plan=plan,progress=progress if tracked else None,reuse_only=reviewed)
+            attempts.append(dict(evidence_retrieval_ms=retrieval_ms,answer_ms=answer.get('timing',{}).get('answer_ms'),
+                                 answer_cache_hit=answer.get('timing',{}).get('answer_cache_hit',False),
+                                 attempt_ms=round((time.monotonic()-begun)*1000,2)))
             latest=question_evidence(self.path,request,[e['id'] for e in graph['evidence']]) if bounded_signature else None
             changed=(not latest or latest[1]!=bounded_signature) if bounded_signature else self.snapshots.key(request['params'])!=revision
             if changed:
                 if retries:
                     self._save(identity,'preparing',{},'근거 갱신으로 한 번 자동 재검토합니다.')
-                    self._run(identity,revision,request,retries-1);return
+                    self._run(identity,revision,request,retries-1,attempts=attempts);return
+                if detailed and not self.analyzer and answer.get('input_signature') and checks:
+                    self._save(identity,'preparing',{},'최신 자료에서 동일 근거인지 확인합니다.')
+                    self._run(identity,revision,request,0,reviewed=answer,checks=checks-1,attempts=attempts);return
                 self._save(identity,'stale',{},'분석 중 근거가 갱신되어 새 해석을 표시하지 않습니다. 다시 질문해 주세요.');return
             gap=not answer.get('claims') or bool(re.search(r'미확보|자료.{0,20}부족|비교.{0,20}(불가|없)|판단.{0,20}없',str(answer.get('answer',''))+' '+str(answer.get('limitations',''))))
             if gap and self.enricher and not request['node_ids'] and not request['params']:
@@ -306,9 +291,13 @@ class GraphQuestions:
                 answer['enrichment']={'status':task['status'],'task_id':task['id'],'note':'부족한 비교·반대 근거를 공개 검색하여 독립 검토합니다.'}
 
             answer.setdefault('timing',{}).update(evidence_retrieval_ms=retrieval_ms,
-                completion_ms=round((time.monotonic()-begun)*1000,2))
+                attempt_ms=round((time.monotonic()-begun)*1000,2),
+                completion_ms=round((time.time()-stored['created_at'])*1000,2),attempts=attempts)
             self._save(identity,'complete',answer)
         except Exception as error:
+            from graph_answer_cache import AnswerInputsChanged
+            if isinstance(error,AnswerInputsChanged):
+                self._save(identity,'stale',{},str(error));return
             if isinstance(error,sqlite3.OperationalError):
                 from engine_errors import EngineError
                 message=str(EngineError('database_locked')) if 'locked' in str(error).lower() else '근거 저장소 조회 오류로 분석을 완료하지 못했습니다.'
@@ -353,6 +342,9 @@ class GraphQuestions:
             return result
         if self.snapshots.key(request['params'])!=row['revision']:
             if row['status'] in ('preparing','queued','running'):
+                # Prepare the new index while generation/review is still in
+                # flight, rather than add its cost after the model finishes.
+                self.snapshots.request(request['params'])
                 return {'id':identity,'status':'preparing','result':{},'error':'최신 근거를 준비하고 있습니다.'}
             return {'id':identity,'status':'stale','result':{},'error':'근거가 갱신되었습니다. 다시 질문해 주세요.'}
         return result

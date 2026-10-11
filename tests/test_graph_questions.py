@@ -106,6 +106,60 @@ def test_analysis_retries_once_after_revision_change(tmp_path):
     finally:q.close()
 
 
+def test_inflight_same_question_is_shared_across_corpus_revisions(tmp_path):
+    gate=threading.Event();entered=threading.Event();calls=[]
+    class ChangingSnapshots(Snapshots):
+        revision='r1'
+        def request(self,params):return self.revision,object(),None
+        def key(self,params):return self.revision
+    snapshots=ChangingSnapshots()
+    def analyze(*args):
+        calls.append(1);entered.set();gate.wait(3)
+        return {'answer':'reviewed','claims':[{'text':'fact'}],'evidence':[{'id':'e'}]}
+    q=GraphQuestions(tmp_path/'share.db',snapshots=snapshots,analyzer=analyze)
+    try:
+        with patch('graph_questions.quick_answer',return_value={'evidence':[{'id':'e'}],'limitations':[]}):
+            first=q.ask('같은 질문 재사용')
+            assert entered.wait(2)
+            snapshots.revision='r2'
+            second=q.ask('같은 질문 재사용')
+            assert first['job']['id']==second['job']['id'] and len(calls)==1
+            gate.set()
+            deadline=time.monotonic()+3
+            while q.active and time.monotonic()<deadline:time.sleep(.01)
+            done=q.get(first['job']['id'])
+            assert done['status']=='complete' and len(calls)==2
+            assert done['result']['timing']['completion_ms'] >= done['result']['timing']['attempt_ms']
+    finally:gate.set();q.close()
+
+
+def test_final_revision_check_can_reuse_review_without_third_generation(tmp_path):
+    class ChangingSnapshots(Snapshots):
+        revision='r1'
+        def request(self,params):return self.revision,object(),None
+        def key(self,params):return self.revision
+    snapshots=ChangingSnapshots();calls=[]
+    reviewed={'answer':'검토된 답변','claims':[{'text':'근거'}], 'input_signature':'same',
+              'verification':{'method':'independent_evidence_review'}}
+    def analyze(*args,reuse_only=None,**kwargs):
+        calls.append(reuse_only)
+        if len(calls)<3:snapshots.revision='r'+str(len(calls)+1)
+        else:assert reuse_only['input_signature']=='same'
+        return dict(reviewed,timing={'answer_cache_hit':reuse_only is not None,'answer_ms':1})
+    q=GraphQuestions(tmp_path/'confirm.db',snapshots=snapshots)
+    try:
+        with patch('graph_questions.deepen',side_effect=analyze),patch('graph_plans.prepare',return_value=({'queries':['근거'],'axes':['조건']},True)),patch('graph_questions.quick_answer',return_value={'evidence':[{'id':'e'}],'limitations':[]}):
+            first=q.ask('최종 근거 확인',params={'workspace':['1']})
+            deadline=time.monotonic()+3
+            while q.active and time.monotonic()<deadline:time.sleep(.01)
+            done=q.get(first['job']['id'])
+            assert done['status']=='complete' and len(calls)==3
+            assert calls[:2]==[None,None]
+            assert len(done['result']['timing']['attempts'])==3
+            assert done['result']['verification']==reviewed['verification']
+    finally:q.close()
+
+
 def test_incremental_cold_index_tracks_edits_and_deletions(tmp_path):
     from graph_quick_sources import setup_source_search
     path=tmp_path/'sources.db';source_db(path)

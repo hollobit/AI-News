@@ -10,6 +10,10 @@ _CACHE = OrderedDict()
 _FLIGHTS = {}
 
 
+class AnswerInputsChanged(RuntimeError):
+    """A reviewed answer cannot be reused with the newly retrieved context."""
+
+
 def reuse_answer(key, build):
     if key is None:return build(), False
     with _LOCK:

@@ -10,11 +10,14 @@ import json
 import re
 import sqlite3
 import threading
+import hashlib
+from pathlib import Path
+import shutil
 
 from graph_disk_index import Store, encode
 from task_lifecycle import checkpoint
 
-VERSION = 'workspace-sources-v1'
+VERSION = 'workspace-sources-v2-incremental'
 KINDS = ('graph', 'research', 'workflow', 'paper', 'baseline', 'external', 'wiki')
 
 
@@ -31,7 +34,18 @@ def wiki_revision(db):
     return content_digest(records)
 
 
-def write(path, db, key):
+def previous_index(directory):
+    """A disposable base may be obsolete; every source is re-admitted on update."""
+    for path in sorted(Path(directory).glob('*.sqlite3'), key=lambda p:p.stat().st_mtime, reverse=True):
+        try:
+            with sqlite3.connect(path.resolve().as_uri()+'?mode=ro', uri=True) as store:
+                row=store.execute("SELECT body FROM meta WHERE key='workspace_format'").fetchone()
+                if row and row[0]==VERSION:return path
+        except sqlite3.Error:continue
+    return None
+
+
+def write(path, db, key, previous=None):
     from graph_rag import _analysis_sources
     from integrated_context import enrich_sources
     sources, coverage = _analysis_sources(db)
@@ -39,17 +53,33 @@ def write(path, db, key):
     # final artifact mixed with an older source index.
     finals = {r[0]: r[1] for r in db.execute("SELECT run_id,payload_json FROM strategic_workflow_artifacts WHERE stage='final'")} if db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_artifacts'").fetchone() else {}
     sources = sources + enrich_sources(db, [])
+    if previous:
+        shutil.copyfile(previous, path)
     with sqlite3.connect(path) as store:
-        store.executescript('''CREATE TABLE meta(key TEXT PRIMARY KEY,body TEXT);
-            CREATE TABLE sources(id INTEGER PRIMARY KEY,kind TEXT,body TEXT,title TEXT,text TEXT);
+        # This is a disposable, unpublished copy. Failure deletes it; rollback
+        # journals only duplicate the large index and can outlive a killed child.
+        store.execute('PRAGMA journal_mode=OFF')
+        if not previous:store.executescript('''CREATE TABLE meta(key TEXT PRIMARY KEY,body TEXT);
+            CREATE TABLE sources(id INTEGER PRIMARY KEY,kind TEXT,body TEXT,title TEXT,text TEXT,source_key TEXT UNIQUE,digest TEXT);
             CREATE INDEX source_kind ON sources(kind);
             CREATE VIRTUAL TABLE search USING fts5(title,text,content='sources',content_rowid='id',tokenize='trigram');''')
-        store.execute('INSERT INTO meta VALUES(?,?)', ('key', key))
-        store.execute('INSERT INTO meta VALUES(?,?)', ('coverage', encode(coverage)))
+        existing={r[0]:(r[1],r[2]) for r in store.execute('SELECT source_key,id,digest FROM sources')}
+        store.executemany('INSERT OR REPLACE INTO meta VALUES(?,?)',
+                          [('key',key),('coverage',encode(coverage)),('workspace_format',VERSION),('servable','1')])
+        changed=0
+        def unindex(identity):
+            row=store.execute('SELECT title,text FROM sources WHERE id=?',(identity,)).fetchone()
+            store.execute("INSERT INTO search(search,rowid,title,text) VALUES('delete',?,?,?)",(identity,*row))
         for source in sources:
             checkpoint()
             source = dict(source)
-            result = source['result']
+            result = dict(source['result'])
+            # Graph sets have no presentation order. Stable serialization avoids
+            # reindexing thousands of identical graphs in a fresh Python process.
+            for field in ('nodes','edges','evidence'):
+                if field in result:result[field]=sorted(result[field],key=lambda item:
+                    str(item.get('id') or json.dumps(item,ensure_ascii=False,sort_keys=True)))
+            source['result']=result
             title = ' '.join(n.get('name', '') for n in result.get('nodes', []))
             title += ' ' + ' '.join(e.get('title', '') for e in result.get('evidence', []))
             text = ' '.join(n.get('summary', '') for n in result.get('nodes', []))
@@ -60,15 +90,38 @@ def write(path, db, key):
                 # Candidate matching only; the original risk gate still runs
                 # before a risk or scenario can enter the materialized graph.
                 text += ' ' + encode(payload.get('risk_report', {}))
-            store.execute('INSERT INTO sources(kind,body,title,text) VALUES(?,?,?,?)',
-                          (source['kind'], encode(source), title, text))
-        store.execute("INSERT INTO search(search) VALUES('rebuild')")
+            body=encode(source)
+            source_key=encode([source['kind'],source['id'],source.get('row',{}).get('run_id')])
+            digest=hashlib.sha256(body.encode()).hexdigest()
+            old=existing.pop(source_key,None)
+            if old and old[1]==digest:continue
+            changed+=1
+            update_search=True
+            if old:
+                previous_text=store.execute('SELECT title,text FROM sources WHERE id=?',(old[0],)).fetchone()
+                update_search=previous_text!=(title,text)
+                if update_search:unindex(old[0])
+                store.execute('UPDATE sources SET kind=?,body=?,title=?,text=?,digest=? WHERE id=?',
+                              (source['kind'],body,title,text,digest,old[0]))
+                identity=old[0]
+            else:
+                identity=store.execute('INSERT INTO sources(kind,body,title,text,source_key,digest) VALUES(?,?,?,?,?,?)',
+                                      (source['kind'],body,title,text,source_key,digest)).lastrowid
+            if previous and update_search:store.execute('INSERT INTO search(rowid,title,text) VALUES(?,?,?)',(identity,title,text))
+        for identity,_ in existing.values():
+            unindex(identity)
+            store.execute('DELETE FROM sources WHERE id=?',(identity,))
+        if not previous:store.execute("INSERT INTO search(search) VALUES('rebuild')")
+        stats=dict(mode='incremental' if previous else 'full',sources=len(sources),changed=changed,removed=len(existing))
+        store.execute('INSERT OR REPLACE INTO meta VALUES(?,?)',('build',encode(stats)))
+    return stats
 
 
 def read(path, key):
     from graph_rag import GraphResult
     store = Store(path)
-    if store.rows("SELECT body FROM meta WHERE key='key'")[0][0] != key:
+    metadata=dict(store.rows("SELECT key,body FROM meta WHERE key IN ('key','servable')"))
+    if metadata.get('key') != key or metadata.get('servable')=='0':
         raise ValueError('Obsolete workspace index')
     coverage = json.loads(store.rows("SELECT body FROM meta WHERE key='coverage'")[0][0])
     graph = GraphResult(nodes=[], edges=[], evidence=[], coverage=coverage)

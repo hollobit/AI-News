@@ -73,3 +73,93 @@ def test_published_wiki_edits_invalidate_workspace_but_not_unrelated_history():
         assert wiki_revision(db)==key
         db.execute("UPDATE wiki_revisions SET result_json='edited' WHERE id=1")
         assert wiki_revision(db)!=key
+
+
+def test_incremental_index_revalidates_changes_removals_and_matches_full_build(tmp_path,monkeypatch):
+    import json
+    from context_index import previous_index
+    sources=[source('baseline','stable','반도체 평가','동일 원문'),
+             source('paper','changed','반도체 방법','폐기된 실험 조건'),
+             source('baseline','withdrawn','반도체 결과','철회된 근거')]
+    checked=[]
+    def admitted(db):checked.append(1);return sources,{'sources':len(sources)}
+    monkeypatch.setattr('graph_rag._analysis_sources',admitted)
+    old=tmp_path/'old.sqlite3'
+    with sqlite3.connect(':memory:') as db:assert write(old,db,'old')['mode']=='full'
+    assert previous_index(tmp_path)==old
+    sources[1]=source('paper','changed','반도체 방법','현재 검토된 조건')
+    sources.pop();sources.append(source('baseline','added','반도체 신규','새 관측'))
+    new=tmp_path/'new.sqlite3';full=tmp_path/'full.sqlite3'
+    with sqlite3.connect(':memory:') as db:
+        assert write(new,db,'new',old)==dict(mode='incremental',sources=3,changed=2,removed=1)
+        write(full,db,'new')
+    assert len(checked)==3
+    for query in ('반도체','폐기된','철회된','현재','새 관측'):
+        actual=materialize(read(new,'new'),query)
+        expected=materialize(read(full,'new'),query)
+        assert actual.full_evidence==expected.full_evidence
+    # The earlier published file and its readers remain untouched.
+    with sqlite3.connect(old) as db:
+        assert json.loads(db.execute("SELECT body FROM meta WHERE key='build'").fetchone()[0])['mode']=='full'
+        assert db.execute("SELECT 1 FROM sources WHERE text LIKE '%철회된%'").fetchone()
+    unchanged=tmp_path/'unchanged.sqlite3'
+    with sqlite3.connect(':memory:') as db:
+        assert write(unchanged,db,'newer',new)==dict(mode='incremental',sources=3,changed=0,removed=0)
+
+
+def test_incremental_research_preserves_different_runs_for_same_document(tmp_path,monkeypatch):
+    sources=[dict(source('research','same','반도체','첫 관측'),row={'run_id':'first'}),
+             dict(source('research','same','반도체','다른 관측'),row={'run_id':'second'})]
+    monkeypatch.setattr('graph_rag._analysis_sources',lambda db:(sources,{}))
+    old=tmp_path/'old.sqlite3';new=tmp_path/'new.sqlite3'
+    with sqlite3.connect(':memory:') as db:
+        write(old,db,'old')
+        sources.pop(0)
+        assert write(new,db,'new',old)['removed']==1
+    with sqlite3.connect(new) as db:
+        assert db.execute('SELECT count(*) FROM sources').fetchone()[0]==1
+        assert '다른 관측' in db.execute('SELECT text FROM sources').fetchone()[0]
+
+
+def test_graph_set_order_does_not_reindex_identical_sources(tmp_path,monkeypatch):
+    entry=source('workflow','run','반도체','실험 조건')
+    entry['result']['nodes'] += [dict(id='other',name='두번째',evidence_ids=['run'])]
+    entry['result']['edges'] = [dict(source='run',target='other'),dict(source='other',target='run')]
+    monkeypatch.setattr('graph_rag._analysis_sources',lambda db:([entry],{}))
+    old=tmp_path/'old.sqlite3';new=tmp_path/'new.sqlite3'
+    with sqlite3.connect(':memory:') as db:
+        write(old,db,'old')
+        entry['result']['nodes'].reverse();entry['result']['edges'].reverse()
+        assert write(new,db,'new',old)['changed']==0
+
+
+def test_obsolete_cold_workspace_is_retained_only_as_refresh_base(tmp_path,monkeypatch):
+    from app import connect
+    from graph_snapshot import GraphSnapshots
+    from context_index import previous_index
+    path=tmp_path/'news.sqlite3';connect(path).close()
+    snapshots=GraphSnapshots(path)
+    params={'workspace':['1']};key=snapshots.key(params)
+    calls=[]
+    def current(params):
+        calls.append(1)
+        return key if len(calls)==1 else 'new-revision'
+    monkeypatch.setattr(snapshots,'key',current)
+    try:
+        with pytest.raises(RuntimeError,match='갱신'):
+            snapshots._prepare_disk(key,params)
+        assert not snapshots.ready
+        assert previous_index(snapshots.directory).name==key+'.sqlite3'
+    finally:snapshots.close()
+
+
+def test_obsolete_base_cannot_be_read_even_with_its_old_key(tmp_path,monkeypatch):
+    from context_index import previous_index
+    monkeypatch.setattr('graph_rag._analysis_sources',lambda db:([source('baseline','x','제목','원문')],{}))
+    old=tmp_path/'old.sqlite3';new=tmp_path/'new.sqlite3'
+    with sqlite3.connect(':memory:') as db:write(old,db,'old')
+    with sqlite3.connect(old) as db:db.execute("UPDATE meta SET body='0' WHERE key='servable'")
+    with pytest.raises(ValueError,match='Obsolete'):read(old,'old')
+    assert previous_index(tmp_path)==old
+    with sqlite3.connect(':memory:') as db:write(new,db,'new',old)
+    assert read(new,'new').search_key=='new'

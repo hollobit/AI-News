@@ -75,7 +75,7 @@ class GraphSnapshots:
         self.directory.mkdir(parents=True,exist_ok=True)
         self.builder=builder or load_integrated_graph
         self.isolated=builder is None
-        self.lock=threading.RLock();self.ready=OrderedDict();self.pending={};self.errors={}
+        self.lock=threading.RLock();self.ready=OrderedDict();self.pending={};self.errors={};self.latest={}
         self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='graph-snapshots')
         self.workspace_executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='workspace-snapshots')
 
@@ -84,6 +84,12 @@ class GraphSnapshots:
     def request(self,params):
         params=filters(params);key=self.key(params)
         with self.lock:
+            group=content_digest(params)
+            previous=self.latest.get(group)
+            self.latest[group]=key
+            if previous and previous!=key and previous in self.pending:
+                # Queued generations have no readers and need not be built.
+                self.pending[previous].cancel()
             if key in self.ready:
                 self.ready.move_to_end(key)
                 return key,self.ready[key],None
@@ -105,6 +111,7 @@ class GraphSnapshots:
                 while len(self.errors)>16:self.errors.pop(next(iter(self.errors)))
 
     def _prepare(self,key,params):
+        self._check_current(key,params)
         if self.isolated:return self._prepare_disk(key,params)
         file=self.directory/(content_digest(params)+'.json.gz')
         graph=None
@@ -136,21 +143,37 @@ class GraphSnapshots:
             while len(self.ready)>3:self.ready.popitem(last=False)
         return graph
 
+    def _check_current(self,key,params):
+        from concurrent.futures import CancelledError
+        checkpoint()
+        with self.lock:latest=self.latest.get(content_digest(params),key)
+        if latest!=key or self.key(params)!=key:
+            raise CancelledError('Obsolete graph preparation skipped')
+
     def _prepare_disk(self,key,params):
         import subprocess,sys
         from graph_disk_index import read
         if params=={'workspace':['1']}:
             from context_index import read
+        self._check_current(key,params)
         file=self.directory/(key+'.sqlite3')
         if file.exists():
             try:read(file,key)
             except (sqlite3.DatabaseError,ValueError,KeyError,IndexError):file.unlink(missing_ok=True)
         if not file.exists():
+            from context_index import previous_index
+            # Keep one cold workspace build as an incremental base even if the
+            # corpus moves during it. It is never served as a current snapshot.
+            cold_workspace=params=={'workspace':['1']} and previous_index(self.directory) is None
             process=subprocess.Popen([sys.executable,__file__,'--build',self.path,str(file),key,json.dumps(params)],
                                      stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             try:
+                checked=time.monotonic()
                 while process.poll() is None:
                     checkpoint()
+                    if time.monotonic()-checked>=2:
+                        if not cold_workspace:self._check_current(key,params)
+                        checked=time.monotonic()
                     time.sleep(.1)
                 if process.returncode:raise RuntimeError('Graph index preparation failed')
             finally:
@@ -158,6 +181,9 @@ class GraphSnapshots:
                     process.terminate()
                     try:process.wait(timeout=3)
                     except subprocess.TimeoutExpired:process.kill();process.wait()
+                # SIGTERM cannot run the child's finally block. Only delete the
+                # temporary file owned by this child, never a published index.
+                file.with_suffix('.'+str(process.pid)+'.tmp').unlink(missing_ok=True)
         if self.key(params)!=key:raise RuntimeError('저장 근거가 갱신되었습니다.')
         graph=read(file,key)
         with self.lock:
@@ -181,11 +207,16 @@ if __name__=='__main__':
         with sqlite3.connect(path,timeout=15) as db:
             db.row_factory=sqlite3.Row
             if params=={'workspace':['1']}:
-                from context_index import write as write_context
-                write_context(temporary,db,key)
+                from context_index import write as write_context,previous_index
+                write_context(temporary,db,key,previous_index(target.parent))
             else:
                 graph=load_integrated_graph(db,params,for_retrieval=True)
                 write(temporary,graph,key)
-        if revision(path,params)!=key:raise RuntimeError('Evidence changed during graph preparation')
+        if revision(path,params)!=key:
+            if params!={'workspace':['1']}:raise RuntimeError('Evidence changed during graph preparation')
+            with sqlite3.connect(temporary) as marker:
+                marker.execute("INSERT OR REPLACE INTO meta VALUES('servable','0')")
+        # The parent checks the current revision before publishing to readers.
+        # A workspace base can be refreshed after unrelated corpus activity.
         temporary.replace(target)
     finally:temporary.unlink(missing_ok=True)
