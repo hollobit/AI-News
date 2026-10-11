@@ -21,8 +21,11 @@ async def main():
   await expect(page.locator('textarea')).to_have_count(1)
   await expect(page.locator('#context-question')).to_have_count(0)
   await expect(page.locator('.lane')).to_have_count(6)
+  await expect(page.locator('.lane h3 mark')).to_have_count(6)
+  await page.locator('#query').fill('아직 제출하지 않은 전력 질의')
   await page.locator('.lane').first.get_by_role('button',name='비교에 담기').click()
   await expect(page.locator('#comparison')).to_be_visible()
+  await expect(page.locator('#comparison .card h3 mark')).to_have_text('의료')
   await page.locator('.lane').nth(4).get_by_role('button',name='이 항목 중심으로').click()
   await expect(page.locator('#back')).to_be_visible()
   await expect(page.locator('#comparison .card')).to_have_count(1)
@@ -37,13 +40,16 @@ async def main():
    assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   async def forecast(route):
    if route.request.method=='POST':await route.fulfill(json={'run':{'id':'test-forecast'}});return
-   job={'id':'test-forecast','title':'의료 AI 전망','status':'complete','result':{'verified':True,'as_of':'2026-10-11','horizon_days':180,'basis':'주관적 미보정 추정','evidence':[],'report':{'summary':'조건부 전망','limitations':['통계 신뢰구간 아님'],'comparisons':[{'title':'조건부 사건','assessment':'예측이며 관측 사실 아님','method':'subjective','probability_percent':50,'probability_lower':25,'probability_upper':75,'window_start':'2026-11-01','window_end':'2027-01-01','probability_basis':'가정 기반','resolution_criterion':'공식 발표','assumptions':['성립 조건'],'counter_evidence':['반대 근거'],'update_signals':['새 발표'],'evidence_ids':[]}]}}}
+   job={'id':'test-forecast','title':'의료 AI 전망','status':'complete','result':{'verified':True,'as_of':'2026-10-11','horizon_days':180,'basis':'주관적 미보정 추정','evidence':[],'report':{'summary':'의료 AI 활용의 조건부 전망','limitations':['통계 신뢰구간 아님'],'comparisons':[{'title':'조건부 사건','assessment':'예측이며 관측 사실 아님','method':'subjective','probability_percent':50,'probability_lower':25,'probability_upper':75,'window_start':'2026-11-01','window_end':'2027-01-01','probability_basis':'가정 기반','resolution_criterion':'공식 발표','assumptions':['성립 조건'],'counter_evidence':['반대 근거'],'update_signals':['새 발표'],'evidence_ids':[]}]}}}
    await route.fulfill(json={'item':job})
   await page.route('**/api/intelligence**',forecast)
   await page.locator('#query').fill('의료 AI')
   await page.locator('#forecast-start').click()
   await expect(page.locator('#forecast-results')).to_contain_text('50% · 주관적 추정')
   await expect(page.locator('#forecast-results')).to_contain_text('25~75% · 폭 50%p')
+  await expect(page.locator('#forecast-results > p').nth(1).locator('mark')).to_have_text(['의료','AI','전망'])
+  await page.locator('#query').fill('아직 제출하지 않은 전력 질의')
+  await expect(page.locator('#forecast-results > p').nth(1).locator('mark')).to_have_text(['의료','AI','전망'])
   assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   asked=[]
   async def ask(route):
@@ -61,6 +67,8 @@ async def main():
   await expect(page.locator('#answer-status')).to_contain_text('독립 근거 검토 완료')
   await expect(page.locator('#context-answer')).to_contain_text('자료 사이의 관계')
   await expect(page.locator('#context-answer')).to_contain_text('실세계 일반화 미확인')
+  await expect(page.locator('#context-answer .answer-synthesis mark')).to_have_text('방법')
+  await expect(page.locator('#context-answer .answer-synthesis .query-sentence')).to_contain_text('의존 관계')
   assert 'Physical AI' in asked[0]['question']
   assert parse_qs(urlparse(calls[-1]).query)['q'][0]==asked[0]['question']
   long_query='Physical AI 방법과 데이터 간 차이를 분석하고 ' * 20
@@ -73,6 +81,7 @@ async def main():
   await page.locator('.lane').first.get_by_role('button',name='이 항목 중심으로').click()
   assert parse_qs(urlparse(calls[-1]).query)['q'][0]==long_query.strip()
   assert len(asked)==2
+  assert '방법' in await page.locator('#context-answer .answer-synthesis mark').all_text_contents()
   await page.reload()
   await expect(page.locator('#answer-status')).to_contain_text('독립 근거 검토 완료')
   assert len(asked)==2

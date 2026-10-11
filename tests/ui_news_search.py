@@ -43,6 +43,21 @@ async def main():
           return {text:n.textContent, marks:[...n.querySelectorAll('mark')].map(n=>n.textContent),scripts:n.querySelectorAll('script').length};
         }''')
         assert result['marks']==['가','ＡＩ','C++'] and result['scripts']==0,result
+        natural=await page.evaluate('''() => {
+          const n=document.createElement('div'),p=document.createElement('p'),a=document.createElement('a');
+          p.textContent='가 의료 ＡＩ C++ 수출 통제를 검토합니다. 무관한 문장입니다. said retail. <img src=x onerror=alert(1)>';
+          a.href='https://example.org/?query=AI&article=1';a.textContent='AI 원자료';n.append(p,a);
+          const original=n.textContent,href=a.href;
+          const q='최근 의료의 “수출 통제”와 AI C++ 가 관련 이슈는 무엇인가요?';
+          ObservatorySearch.highlightQuestion(n,q);ObservatorySearch.highlightQuestion(n,q);
+          return {text:n.textContent,original,href:a.href,originalHref:href,
+            marks:[...n.querySelectorAll('mark')].map(n=>n.textContent),nested:n.querySelectorAll('mark mark,.query-sentence .query-sentence').length,
+            sentences:[...n.querySelectorAll('.query-sentence')].map(n=>n.textContent),imgs:n.querySelectorAll('img').length};
+        }''')
+        assert natural['text']==natural['original'] and natural['href']==natural['originalHref'],natural
+        assert natural['marks']==['의료','ＡＩ','C++','수출 통제','AI'],natural
+        assert len(natural['sentences'])==1 and '무관한 문장' not in natural['sentences'][0],natural
+        assert natural['nested']==0 and natural['imgs']==0,natural
         for width in [390,320]:
             await page.set_viewport_size(dict(width=width,height=850))
             assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth')

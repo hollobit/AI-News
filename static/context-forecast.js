@@ -107,6 +107,9 @@
       root.append(card);
     }
     for (const text of result.report.limitations) root.append(node('p', text, 'legend'));
+    // The stored title is the submitted forecast question, even after editing
+    // the input or opening a different saved forecast.
+    ObservatorySearch.highlightQuestion(root, job.title || '');
   }
   async function poll(id) {
     try {

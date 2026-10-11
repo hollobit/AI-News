@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/workspace-ui.css" />
     <link rel="stylesheet" href="/context.css" />
     <script src="/workspace-navigation.js" defer></script>
+    <script src="/observatory-search.js" defer></script>
     <script src="/context.js" defer></script>
     <script src="/context-forecast.js" defer></script>
     <script src="/context-question.js" defer></script>
@@ -46,6 +47,9 @@
       </header>
       <section class="question-panel" aria-label="종합 질의 결과">
         <h2>종합 분석 결과</h2>
+        <p class="legend query-highlight-help">
+          질의 핵심 표현은 진하게, 해당 표현을 포함한 문장은 옅게 강조합니다.
+        </p>
         <p id="active-question" class="legend"></p>
         <ol id="answer-progress" class="answer-progress" aria-label="분석 단계" hidden>
           <li data-stage="preparing">근거 준비</li>

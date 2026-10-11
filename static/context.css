@@ -259,6 +259,19 @@ button:disabled {
   color: #c0e8f2;
   font-size: 14px;
 }
+.query-sentence {
+  background: #fff8df;
+  border-radius: 3px;
+  box-decoration-break: clone;
+}
+mark.search-highlight {
+  background: #ffe08a;
+  color: #302400;
+  font-weight: 700;
+}
+.query-highlight-help {
+  font-size: 13px;
+}
 #query-history {
   margin-top: 18px;
 }

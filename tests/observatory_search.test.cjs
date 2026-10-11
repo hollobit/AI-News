@@ -19,3 +19,13 @@ for(const q of ['AI OR','OR AI','"닫히지않음','-','AI AND OR 반도체'])as
 assert(!match('AI OR',['AI']));
 assert(match('',['anything']));
 console.log('Compound search: AND, OR, phrases, exclusions, precedence, malformed input passed');
+
+const words=(q)=>globalThis.ObservatorySearch.questionTerms(q).groups.flat().map(t=>t.value);
+assert.deepEqual(words('최근 의료의 이슈는 무엇인가요?'),['의료','이슈']);
+assert.deepEqual(words('종류들은 표준화로는'),['종류','표준화']);
+assert(words('“수출 통제”와 ＡＩ C++ GPT-6.1').includes('수출 통제'));
+for (const term of ['ai','c++','gpt-6.1']) assert(words('“수출 통제”와 ＡＩ C++ GPT-6.1').includes(term));
+assert(words('최근 알려주세요 '.repeat(60)+'의료').includes('의료'));
+assert(words('최근 알려주세요 '.repeat(60)+'의료').every(t=>t==='의료'));
+assert.deepEqual(words(''),[]);
+console.log('Natural-language display terms: particles, phrases, Unicode and long questions passed');

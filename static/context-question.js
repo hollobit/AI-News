@@ -98,6 +98,7 @@
       sources.append(item);
     }
     root.append(sources);
+    ObservatorySearch.highlightQuestion(root, lastQuestion);
   }
   function progress(stage, message, detail = '') {
     $('#answer-metrics').hidden = true;

@@ -122,6 +122,7 @@
       details.append(row);
     }
     e.append(details);
+    ObservatorySearch.highlightQuestion(e, activeQuery);
     const actions = make('div', null, 'actions'),
       pick = button(selected.has(c.id) ? '비교에서 제거' : '비교에 담기', () => choose(c));
     pick.setAttribute('aria-pressed', String(selected.has(c.id)));
@@ -189,6 +190,7 @@
           make('span', `${source.day || '날짜 미상'} · ${source.uses > 1 ? '공유 출처 · ' : ''}`),
           link(source.title || '원자료', source.url)
         );
+        ObservatorySearch.highlightQuestion(row, activeQuery);
         timeline.append(row);
       }
       $('#comparison').append(timeline);

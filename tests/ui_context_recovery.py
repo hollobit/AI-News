@@ -15,8 +15,8 @@ async def main():
     question = 'Physical AI 벤치마크의 비교 기준은?'
     result = dict(answer='평가 환경의 차이에 따라 비교 범위가 달라집니다.',
         verification={'method': 'independent_evidence_review'},
-        claims=[dict(text='검토된 관계 분석', kind='connection', evidence_ids=['e'])],
-        evidence=[dict(id='e', title='공식 원자료', text='제공된 근거', source_url='https://example.org/a')])
+        claims=[dict(text='벤치마크의 검토된 관계 분석', kind='connection', evidence_ids=['e'])],
+        evidence=[dict(id='e', title='Physical AI 공식 원자료', text='제공된 벤치마크 근거', source_url='https://example.org/a')])
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         page = await browser.new_page(viewport={'width': 390, 'height': 844})
@@ -96,10 +96,17 @@ async def main():
         await page.evaluate("dispatchEvent(new PageTransitionEvent('pagehide')); dispatchEvent(new PageTransitionEvent('pageshow', {persisted:true}))")
         await expect(page.locator('#answer-status')).to_contain_text('독립 근거 검토 완료')
         await expect(page.locator('#context-answer')).to_contain_text('검토된 관계 분석')
+        await expect(page.locator('#context-answer .answer-section .card > p mark')).to_have_text('벤치마크')
+        await expect(page.locator('#context-answer .answer-section .query-sentence')).to_contain_text('검토된 관계 분석')
+        await expect(page.locator('#context-answer .source a mark')).to_have_count(2)
+        await expect(page.locator('#context-answer .source a')).to_have_attribute('href','https://example.org/a')
+        await page.locator('#query').fill('입력창만 수정한 별도 질의')
+        await expect(page.locator('#context-answer .answer-section .card > p mark')).to_have_text('벤치마크')
         assert len(posts) == 1 and len(polls) == 5
         assert len(dossier_calls) >= 3
         await page.reload()
         await expect(page.locator('#answer-status')).to_contain_text('독립 근거 검토 완료')
+        await expect(page.locator('#context-answer .answer-section .card > p mark')).to_have_text('벤치마크')
         assert len(posts) == 1
         # Stale results must not be displayed as current, and retry uses the submitted question.
         responses[:] = ['stale']
