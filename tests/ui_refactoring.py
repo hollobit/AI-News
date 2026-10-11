@@ -11,7 +11,7 @@ from playwright.async_api import async_playwright, expect
 
 
 async def main():
-    folder = Path(os.environ.get('PUBLIC_SITE_DIR', str(ROOT / '.runtime/refactored-site')))
+    folder = Path(os.environ.get('PUBLIC_SITE_DIR', str(ROOT / '.runtime/refactored-site'))).resolve()
     results, errors = {}, []
     async with async_playwright() as p:
         browser = await p.chromium.launch()
@@ -36,7 +36,18 @@ async def main():
         assert not {'site.json', 'knowledge.json'} & set(requests)
         manifest = json.loads((folder / 'site-manifest.json').read_text())
         assert manifest['graph']['bootstrap'] not in requests
-        results['public_initial'] = {'json_bytes': total, 'files': json_files, 'full_graph_requests': 0}
+        assert manifest['news']['index'] not in requests
+        assert manifest['news']['search'] not in requests
+        eager=total-(folder/manifest['news']['catalog']).stat().st_size+(folder/manifest['news']['index']).stat().st_size
+        results['public_initial'] = {'json_bytes': total, 'equivalent_eager_json_bytes':eager, 'files': json_files, 'full_graph_requests': 0}
+        # Date options cover the whole corpus even before titles/URLs load.
+        index=json.loads((folder/manifest['news']['index']).read_text())
+        assert set(await page.locator('#day option').evaluate_all('(items)=>items.map(o=>o.value).filter(Boolean)'))=={r[2] for r in index if r[2]}
+        older=index[-1]
+        await page.locator('#day').select_option(older[2])
+        await expect(page.locator('#result-count')).to_contain_text(f'{sum(r[2]==older[2] for r in index):,}개')
+        assert manifest['news']['index'] in requests
+        await expect(page.locator('#content .card h2').first).to_be_visible()
         requests.clear()
         await page.goto('http://public.test/AI-News/knowledge.html?mode=2d')
         await page.locator('#mode2d').click()
@@ -53,8 +64,8 @@ async def main():
             await page.set_viewport_size({'width': 1440, 'height': 1000})
             await page.goto(live + path)
             await expect(page.locator('html')).to_have_attribute('data-workspace', mode)
-            current = '/strategy#overview' if mode == 'reading' else '/operations'
-            await expect(page.locator(f'.sidebar a[href="{current}"]')).to_have_attribute('aria-current', 'page')
+            current = 'strategy' if mode == 'reading' else 'operations'
+            await expect(page.locator(f'.ws-subnav a[data-destination="{current}"]')).to_have_attribute('aria-current', 'page')
             expected = 'section[data-reading]' if mode == 'reading' else 'section[data-operations]'
             excluded = 'section[data-operations]' if mode == 'reading' else 'section[data-reading]'
             assert await page.locator(expected).first.is_visible()

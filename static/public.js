@@ -18,6 +18,7 @@
   let restoreFilters = true,
     renderToken = 0,
     splitMode = false,
+    newsMetadataOnly = false,
     newsSearch = null;
   function restoreURL() {
     const p = new URLSearchParams(location.search);
@@ -48,7 +49,7 @@
       if (v) u.searchParams.set(k, v);
     if (u.href !== location.href) history.pushState(null, '', u);
   }
-  if (!names[view]) view = 'services';
+  if (!Object.hasOwn(names, view)) view = 'services';
   $('search').value = new URLSearchParams(location.search).get('q') || '';
   const url = WorkspaceNavigation.publicURL;
   const link = (text, href) => {
@@ -57,6 +58,19 @@
     return a;
   };
   $('title').textContent = names[view];
+  document.body.dataset.publicView = view;
+  const descriptions = {
+    strategy: '관측된 변화에서 시작해, 근거와 판단으로 이어가세요.',
+    news: '원출처와 검토된 분석을 함께 읽고, 관련 지식으로 연결하세요.',
+    archive: '같은 뉴스 자료를 날짜별로 탐색합니다. URL 수정 이력은 별도 기능입니다.',
+    research: '분석이 연결된 뉴스를 모았습니다. 종합 보고서는 통합 분석실에서 확인하세요.',
+    papers: '연구의 주장과 확인된 근거를 읽고, 다음 질문을 찾아보세요.',
+    risks: '현재 위험과 조건부 전망을 구분해 읽고, 성립 조건과 불확실성을 확인하세요.',
+    wiki: '검토된 지식을 연결하고, 판단을 뒷받침하는 원자료를 확인하세요.',
+    sources: '뉴스의 원출처 목록입니다. 원문 읽기·구독·복구는 실시간에서 이어집니다.',
+  };
+  $('public-intro').textContent =
+    descriptions[view] || '공개 자료에서 실시간 작업 공간까지, 같은 흐름으로 이어집니다.';
   document.title = names[view] + ' · AI 뉴스';
   function safe(value) {
     try {
@@ -109,6 +123,15 @@
       link(
         '지식 연결',
         'knowledge.html#' + new URLSearchParams({ article_id: a.id, source_url: a.url })
+      ),
+      link('관련 자료 종합 탐색 →', WorkspaceNavigation.href('context', true, { q: a.title })),
+      link(
+        '실시간 기사 상세 ↗',
+        WorkspaceNavigation.gateway(
+          'article',
+          {},
+          'https://workspace.invalid/?' + new URLSearchParams({ url: a.url })
+        )
       )
     );
     n.append(links);
@@ -125,7 +148,16 @@
     n.append(
       external('논문 원출처', p.url),
       document.createTextNode(' · '),
-      link('지식 연결', 'knowledge.html#id=' + encodeURIComponent('source:paper:' + p.id))
+      link('지식 연결', 'knowledge.html#id=' + encodeURIComponent('source:paper:' + p.id)),
+      document.createTextNode(' · '),
+      link(
+        '논문 상세·관련 연구 ↗',
+        WorkspaceNavigation.gateway(
+          'papers',
+          {},
+          'https://workspace.invalid/?' + new URLSearchParams({ paper: p.id })
+        )
+      )
     );
     return n;
   }
@@ -365,6 +397,17 @@
         $('result-count').textContent = parsedSearch.error;
         return;
       }
+      if (
+        newsMetadataOnly &&
+        ($('search').value.trim() ||
+          $('day').value ||
+          $('topic').value ||
+          $('reviewed').checked ||
+          new URLSearchParams(location.search).has('id'))
+      ) {
+        site.news = await PublicData.news();
+        newsMetadataOnly = false;
+      }
       if (splitMode && $('search').value.trim() && site.news.length && !newsSearch)
         newsSearch = await PublicData.searchNews();
       if (token !== renderToken) return;
@@ -380,30 +423,23 @@
         intro.append(
           el(
             'p',
-            '공개 GitHub Pages에서는 엔진을 실행하지 않습니다. 아래에서 분석에 사용할 뉴스를 확인한 뒤, 이 컴퓨터의 로컬 실행 화면에서 자료 구성 → 실행을 진행하세요.'
-          ),
-          el(
-            'p',
-            '로컬 엔진에는 LLM 설정과 ZEP_API_KEY가 필요합니다. 비밀 키는 웹페이지나 채팅에 입력하지 말고 로컬 .env.mirofish에 설정하세요. 실행 화면이 열리지 않으면 로컬 서버가 실행 중인지 확인하세요.'
+            '뉴스와 검토 근거를 살펴본 뒤, 로그인한 작업 공간에서 가설을 구성하고 시뮬레이션을 실행합니다.'
           )
         );
-        const params = new URLSearchParams({
-          q: $('search').value,
-          ...($('day').value ? { date: $('day').value } : {}),
-          ...($('topic').value ? { topic: $('topic').value } : {}),
-        });
         const launch = link(
-          '로컬 MiroFish 실행 화면 열기',
-          'http://127.0.0.1:8001/simulation?' + params
+          '실시간 시뮬레이션 열기 ↗',
+          WorkspaceNavigation.href('simulation', true, {
+            q: $('search').value,
+            date: $('day').value,
+            topic: $('topic').value,
+          })
         );
-        launch.id = 'mirofish-local';
-        launch.target = '_blank';
-        launch.rel = 'noopener noreferrer';
-        intro.append(launch);
+        launch.id = 'mirofish-remote';
         intro.append(
+          launch,
           el(
             'p',
-            '이 링크는 방문자 자신의 컴퓨터를 엽니다. 공개 사이트에서 로컬 서버로 자동 요청하거나 실행 명령을 보내지 않습니다. 실행 초안·미검토 보고서는 공개 사실로 게시하지 않습니다.',
+            '입력한 검색 조건을 이어갑니다. 실행은 로그인 후 직접 시작하며, 시뮬레이션 결과는 검토된 사실이나 발생 확률과 구분합니다.',
             'muted'
           )
         );
@@ -412,15 +448,28 @@
       }
       if (view === 'services') {
         box.append(
-          card('공개 웹에서 가능한 기능', '조회·검색·필터·내려받기'),
+          card('하나의 작업 공간, 두 가지 이용 모드', '공개 자료 조회 · 로그인 후 실시간 분석'),
           el(
             'p',
-            '뉴스와 검토된 기본·심층 분석, 날짜별 아카이브, 14·30·90일 관측 곡선·관계 지도·히트맵·확장·날짜 재생, 검토 논문, 위키와 인용 관계 탐색을 제공합니다.'
+            '공개 스냅샷은 게시 시점의 뉴스·검토 분석·논문·지식과 관측 지도를 제공합니다. 화면 상단에서 자료 기준 시각을 확인할 수 있습니다.'
           ),
-          card('로컬 서버가 필요한 기능', '공개본에서는 실행하지 않음'),
           el(
             'p',
-            '뉴스 수집·원문 확보·LLM 질문 생성·재분석·주제 설정 변경·사건 병합·결정 편집·시뮬레이션 실행·내부 운영 로그는 공개 사이트에 연결하지 않습니다. 질문 대신 공개 검토 자료를 검색할 수 있습니다. 시뮬레이션 초안과 미검토 해석은 공개 사실로 게시하지 않습니다.'
+            '실시간으로 열기를 선택하면 같은 메뉴의 최신 서버 화면으로 이어집니다. 자연어 종합 질의, 검토된 전망, 전략 선택, 시뮬레이션과 수집·분석 운영을 로그인 후 사용할 수 있습니다.'
+          ),
+          card('자료를 비교할 때 확인할 기준', '날짜 · 범위 · 단위 · 검토 상태'),
+          el(
+            'p',
+            '고유 뉴스 수와 수정 이력을 포함한 URL 기록 수는 다릅니다. 기사 날짜, 분석 갱신일, 관측 기간과 공개 게시 시각을 구분합니다. 기본 분석이 연결됐다는 표시가 상세 분석 완료를 뜻하지는 않습니다.'
+          ),
+          card('빠르게 이동하기', '⌘/Ctrl K · 작업 공간 · 세부 기능 탭'),
+          el(
+            'p',
+            '빠른 찾기에서 기능 이름을 검색하거나 질문을 입력해 분석실로 이어가세요. 최근 사용한 기능은 최대 6개를 우선 표시합니다. 메뉴 이동으로 새로운 분석을 자동 실행하지 않습니다.'
+          ),
+          link(
+            '통합 분석실 열기 →',
+            WorkspaceNavigation.href('context', true, { q: $('search').value })
           )
         );
         $('result-count').textContent = '';
@@ -487,8 +536,27 @@
               ' · 분석 ' +
               (r.analysis_at ? r.analysis_at.slice(0, 10) : '날짜 미상') +
               ' · 검토된 해석 · 현재 위험 ' +
-              r.current_severity
+              ({ unknown: '미상', low: '낮음', moderate: '보통', high: '높음', critical: '심각' }[
+                r.current_severity
+              ] || '미상')
           );
+          const outlook = el('div', undefined, 'public-risk-outlook');
+          outlook.append(
+            el(
+              'span',
+              '미래 가능성 · ' +
+                ({ unknown: '산정 불가', low: '낮음', moderate: '보통', high: '높음' }[
+                  r.future_likelihood
+                ] || '산정 불가')
+            ),
+            el(
+              'span',
+              '예상 범위 · ' +
+                ({ '0-3mo': '0–3개월', '3-12mo': '3–12개월', '12-36mo': '1–3년' }[r.horizon] ||
+                  '미상')
+            )
+          );
+          n.append(outlook);
           for (const [k, label] of [
             ['current_basis', '현재 판단 근거'],
             ['scenario', '조건부 미래 시나리오'],
@@ -643,7 +711,10 @@
           };
           wiki = { pages: [], nodes: [] };
           obs = { nodes: [], edges: [], days: [] };
-          if (!['papers', 'wiki', 'services'].includes(view)) site.news = await PublicData.news();
+          if (!['papers', 'wiki', 'services'].includes(view)) {
+            newsMetadataOnly = view === 'strategy' && !!manifest.news.catalog;
+            site.news = await PublicData.news({ metadataOnly: newsMetadataOnly });
+          }
           if (view === 'papers') site.papers = await PublicData.section('papers');
           if (view === 'wiki') wiki = await PublicData.section('wiki');
           if (view === 'risks') {

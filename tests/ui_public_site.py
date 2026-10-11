@@ -7,7 +7,7 @@ os.environ['PLAYWRIGHT_BROWSERS_PATH']=str(ROOT/'.runtime/browsers')
 from playwright.async_api import async_playwright,expect
 
 async def main():
-    folder=Path(os.environ.get('PUBLIC_SITE_DIR',str(ROOT/'.runtime/public-site')));errors=[];requests=[]
+    folder=Path(os.environ.get('PUBLIC_SITE_DIR',str(ROOT/'.runtime/public-site'))).resolve();errors=[];requests=[]
     remote='--remote' in sys.argv
     if remote:expect.set_options(timeout=30000)
     base='https://hollobit.github.io/AI-News/' if remote else 'http://public.test/AI-News/'
@@ -27,10 +27,10 @@ async def main():
         for view in ('strategy','news','archive','research','risks','papers','wiki','sources','simulation','services'):
             await page.goto(base+'index.html?view='+view)
             await expect(page.locator('#notice')).to_contain_text('읽기 전용 공개 스냅샷',timeout=60000)
-            assert await page.locator('#menu a').count()==12
+            assert await page.locator('#menu a').count()==8
             if view=='simulation':
                 await page.locator('#search').fill('AI')
-                await expect(page.locator('#mirofish-local')).to_have_attribute('href','http://127.0.0.1:8001/simulation?q=AI')
+                await expect(page.locator('#mirofish-remote')).to_have_attribute('href',base+'context.html?destination=simulation&q=AI')
                 await page.reload()
                 await expect(page.locator('#search')).to_have_value('AI')
             if view!='services':
@@ -177,21 +177,23 @@ async def main():
         await page.goto(base+'index.html?view=strategy&q=AI')
         await expect(page.locator('#search')).to_have_value('AI')
         await page.set_viewport_size({'width':1440,'height':1000})
-        await page.locator('#menu').get_by_role('link',name='관계 탐색',exact=True).click()
+        await page.locator('#menu').get_by_role('link',name='지식',exact=True).click()
+        await page.locator('.ws-subnav').get_by_role('link',name='지식 관계 지도',exact=True).click()
         await expect(page.locator('#search')).to_have_value('AI')
         assert 'q=AI' in page.url
         await page.locator('#menu').get_by_role('link',name='전략 대시보드',exact=True).click()
         await expect(page.locator('#search')).to_have_value('AI')
-        await page.locator('#menu').get_by_role('link',name='논문',exact=True).click()
+        await page.locator('#menu').get_by_role('link',name='논문·연구',exact=True).click()
         await expect(page.locator('#search')).to_have_value('AI')
-        await page.locator('#menu').get_by_role('link',name='관측 지도',exact=True).click()
+        await page.locator('#menu').get_by_role('link',name='전략 대시보드',exact=True).click()
+        await page.locator('.ws-subnav').get_by_role('link',name='관측 지도',exact=True).click()
         await expect(page.locator('#theme-search')).to_have_value('AI')
         await page.locator('#search-clear').click()
         await page.get_by_role('link',name='전략 대시보드',exact=True).click()
         await expect(page.locator('#search')).to_have_value('')
         assert not any('/api/' in path for path in requests)
         assert not errors,errors
-        result={'remote':remote,'menus':12,'views':12,'article_knowledge_links':True,'mirofish_menu':True,'periods':[14,30,90],'expanded':True,'all_documents':full['count'],'pagination_search_download':True,'cross_page_search':True,'mobile':True,'deep_links':True,'reload_and_back':True,'missing_targets':True,'api_requests':0,'errors':errors}
+        result={'remote':remote,'menus':8,'views':12,'article_knowledge_links':True,'mirofish_menu':True,'periods':[14,30,90],'expanded':True,'all_documents':full['count'],'pagination_search_download':True,'cross_page_search':True,'mobile':True,'deep_links':True,'reload_and_back':True,'missing_targets':True,'api_requests':0,'errors':errors}
         report=Path(os.environ.get('UI_REPORT_PATH',str(ROOT/'.runtime/verification'/('public-remote-ui.json' if remote else 'public-local-ui.json'))))
         report.parent.mkdir(parents=True,exist_ok=True);report.write_text(json.dumps(result,ensure_ascii=False,indent=2))
         print(json.dumps(result))

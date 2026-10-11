@@ -25,6 +25,7 @@
   }
   function update() {
     for (const a of document.querySelectorAll('a[href]')) {
+      if (a.closest('.ws-header, .ws-palette') || a.dataset.remoteDestination) continue;
       if (!a.dataset.originalPublicHref) a.dataset.originalPublicHref = a.getAttribute('href');
       a.href = destination(a.dataset.originalPublicHref);
     }
@@ -33,7 +34,8 @@
     'click',
     (e) => {
       const a = e.target.closest('a[href]');
-      if (a) a.href = destination(a.href);
+      if (a && !a.closest('.ws-header, .ws-palette') && !a.dataset.remoteDestination)
+        a.href = destination(a.href);
     },
     true
   );

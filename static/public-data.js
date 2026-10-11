@@ -102,17 +102,19 @@
       value = Math.imul(value ^ byte, 16777619) >>> 0;
     return (value & 255).toString(16).padStart(2, '0');
   }
-  function news() {
+  function news({ metadataOnly = false } = {}) {
     return generation(async (m) =>
-      (await json(m.news.index)).map(([id, title, day, topic, url, count]) => ({
-        id,
-        title,
-        day,
-        topic,
-        url,
-        analyses: Array.from({ length: count }, () => ({})),
-        _compact: true,
-      }))
+      (await json(metadataOnly && m.news.catalog ? m.news.catalog : m.news.index)).map(
+        ([id, title, day, topic, url, count]) => ({
+          id,
+          title,
+          day,
+          topic,
+          url,
+          analyses: Array.from({ length: count }, () => ({})),
+          _compact: true,
+        })
+      )
     );
   }
   function articles(ids) {
@@ -121,7 +123,7 @@
         const wanted = new Set(ids);
         return (await json(m.news.bootstrap)).filter((row) => wanted.has(row.id));
       }
-      const index = await json(m.news.index),
+      const index = await json(m.news.catalog || m.news.index),
         wanted = new Set(ids);
       const keys = [...new Set(index.filter((row) => wanted.has(row[0])).map((row) => row[6]))];
       const rows = [];

@@ -201,3 +201,226 @@ button:focus-visible {
 .risk-similar-list a {
   margin-left: 6px;
 }
+
+/* Public reading uses the same workspace, with a distinct data boundary. */
+body.ws-shell {
+  background: #f4f7fa;
+}
+.public-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 30px 32px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  border: 1px solid #cddfdc;
+  background:
+    radial-gradient(ellipse at 95% 0, #bce1d570, transparent 60%),
+    linear-gradient(110deg, #eaf3f1, #eff4fa);
+  color: #25464a;
+}
+.public-hero .eyebrow {
+  margin: 0 0 10px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #648c86;
+  letter-spacing: 0.18em;
+}
+.public-hero h1 {
+  font-size: clamp(26px, 3vw, 37px);
+  margin: 0 0 10px;
+  letter-spacing: -0.05em;
+  color: #244a44;
+}
+#public-intro {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #66807f;
+  max-width: 640px;
+}
+.public-hero-art {
+  flex-shrink: 0;
+  width: 155px;
+  height: 110px;
+  position: relative;
+  opacity: 0.7;
+}
+.public-hero-art span {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border: 1px solid #448c7c50;
+  border-radius: 50%;
+  top: 5px;
+  left: 25px;
+  transform: scaleX(0.55) rotate(10deg);
+}
+.public-hero-art span:nth-child(2) {
+  transform: rotate(60deg) scaleX(0.55);
+}
+.public-hero-art span:nth-child(3) {
+  transform: rotate(-60deg) scaleX(0.55);
+}
+.public-hero-art b {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #28806c;
+  font-size: 35px;
+  font-weight: 400;
+}
+#notice {
+  font-size: 11px;
+  color: #728494;
+}
+#metrics {
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+#metrics .metric {
+  margin: 0 0 7px;
+  padding: 17px 19px;
+  border-radius: 10px;
+  border-color: #e0e7ed;
+}
+#metrics .metric strong {
+  font-size: 25px;
+  margin-top: 4px;
+  letter-spacing: -0.03em;
+  color: #285665;
+}
+#metrics .metric small {
+  font-size: 10px;
+  color: #7b8d9b;
+}
+.toolbar {
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid #e0e7ed;
+  border-radius: 11px;
+  gap: 12px;
+  margin: 18px 0 14px;
+}
+.toolbar label {
+  color: #657d8d;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.toolbar label:first-child {
+  flex: 1 1 260px;
+}
+.toolbar #search {
+  width: 100%;
+  min-width: 0;
+}
+#search-help {
+  font-size: 11px;
+  color: #81929f;
+}
+#result-count {
+  font-size: 12px;
+  color: #5e7e87;
+  margin: 17px 0;
+}
+#content > .card {
+  border-color: #e0e7ed;
+  border-radius: 12px;
+  box-shadow: 0 2px 9px #2c485c03;
+}
+#content .card h2 {
+  font-size: 17px;
+  letter-spacing: -0.025em;
+  line-height: 1.6;
+  margin: 8px 0 13px;
+}
+#content .card .tag {
+  font-size: 10px;
+  color: #79909a;
+}
+#content .card > p {
+  font-size: 13px;
+  color: #617889;
+  line-height: 1.85;
+}
+#content .card details {
+  border-top: 1px solid #edf1f4;
+  padding: 10px 0;
+  font-size: 13px;
+}
+#content .card summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #486965;
+}
+#content .card .links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 14px;
+}
+#content .card .links a {
+  font-size: 10px;
+  padding: 6px 10px;
+  border: 1px solid #dce8e4;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #477567;
+  background: #f8fbfa;
+}
+#dashboard-topics {
+  gap: 12px;
+}
+#dashboard-topics .card {
+  margin-bottom: 0;
+  padding: 18px;
+}
+.public-risk-outlook {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 9px 0 17px;
+}
+.public-risk-outlook span {
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: #f7f1e5;
+  color: #8c6b32;
+  font-size: 10px;
+}
+@media (max-width: 650px) {
+  main {
+    padding: 18px 12px;
+  }
+  .public-hero {
+    padding: 23px 20px;
+  }
+  .public-hero-art {
+    width: 60px;
+    margin-left: -30px;
+    opacity: 0.35;
+  }
+  #metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  #metrics .metric {
+    padding: 13px;
+  }
+  #metrics .metric strong {
+    font-size: 23px;
+  }
+  .toolbar {
+    padding: 12px;
+    gap: 9px;
+  }
+  .toolbar label {
+    flex: 1 1 110px;
+  }
+  #content .card {
+    padding: 17px;
+  }
+}

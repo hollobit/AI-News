@@ -68,3 +68,20 @@ test('initial article bootstrap avoids unrelated detail buckets', async () => {
   assert.deepEqual(JSON.parse(JSON.stringify(await api.articles(['second']))),[{id:'second'}]);
   assert.deepEqual(calls,['site-manifest.json',hashed(1)]);
 });
+
+test('dashboard metadata defers titles while detail lookup and full search retain the whole corpus', async () => {
+  const calls=[];
+  const m={schema_version:1,version:'v',news:{catalog:hashed(1),index:hashed(2),search:hashed(3),parts:{a:hashed(4)}}};
+  const api=setup(async path=>({ok:true,json:async()=>{
+    calls.push(path);
+    if(path==='site-manifest.json')return m;
+    if(path===hashed(1))return [['older','','2026-09-01','연구','',2,'a']];
+    if(path===hashed(2))return [['older','원제목','2026-09-01','연구','https://news.test/?id=19',2,'a']];
+    if(path===hashed(3))return {older:'전체 분석 검색어'};
+    if(path===hashed(4))return [{id:'older',title:'원제목',url:'https://news.test/?id=19',analyses:[{},{}]}];
+    throw Error('Unexpected shard');
+  }}));
+  const rows=await api.news({metadataOnly:true});assert.equal(rows[0].day,'2026-09-01');assert.equal(rows[0].analyses.length,2);
+  assert.equal((await api.articles(['older']))[0].url,'https://news.test/?id=19');assert.equal(calls.includes(hashed(2)),false);assert.equal(calls.includes(hashed(3)),false);
+  assert.equal((await api.news())[0].title,'원제목');assert.equal((await api.searchNews()).older,'전체 분석 검색어');
+});

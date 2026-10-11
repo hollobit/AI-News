@@ -126,6 +126,7 @@
         이력에서 확인할 수 있습니다. 제목은 메시지의 표현이며 기사 본문에서 검증한 제목은 아닙니다.
       </p>
       <form id="filters">
+        <input id="date" type="date" aria-label="기록 날짜" />
         <input
           id="query"
           type="search"
@@ -185,6 +186,7 @@
       function parameters() {
         const p = new URLSearchParams({ page: String(page), active: $('active').value });
         if ($('query').value.trim()) p.set('q', $('query').value.trim());
+        if ($('date').value) p.set('date', $('date').value);
         return p;
       }
       async function load(historyMode = 'replace') {
@@ -244,6 +246,7 @@
       }
       const initial = new URLSearchParams(location.search);
       $('query').value = initial.get('q') || '';
+      $('date').value = initial.get('date') || '';
       $('active').value = ['1', '0', 'all'].includes(initial.get('active'))
         ? initial.get('active')
         : '1';
@@ -251,6 +254,7 @@
       addEventListener('popstate', () => {
         const p = new URLSearchParams(location.search);
         $('query').value = p.get('q') || '';
+        $('date').value = p.get('date') || '';
         $('active').value = p.get('active') || '1';
         page = Math.max(1, Number(p.get('page')) || 1);
         load();

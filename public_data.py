@@ -93,6 +93,9 @@ def write_data(root, corpus, graph, observatory=None, *, now=None):
         groups[bucket(row['id'], 10)].append(row)
     news_parts = {key: put(sorted(rows, key=lambda n: n['id'])) for key, rows in groups.items()}
     news_index = put([[n['id'], n['title'], n['day'], n['topic'], n['url'], len(n['analyses']), bucket(n['id'], 10)] for n in corpus['news']])
+    # The first dashboard needs complete counts/filter options and the first
+    # forty articles, not every title and URL. Full-text search stays separate.
+    news_catalog = put([[n['id'], '', n['day'], n['topic'], '', len(n['analyses']), bucket(n['id'], 10)] for n in corpus['news']])
     # Keep all fields searched by the old UI; load this complete index only when
     # a query is entered. No partial-shard search is presented as global search.
     search = {}
@@ -130,7 +133,7 @@ def write_data(root, corpus, graph, observatory=None, *, now=None):
     wiki_sources = {sid for p in graph['pages'] for c in p['claims'] for sid in c['evidence_ids']}
     wiki_nodes = [n for n in graph['nodes'] if n['id'] in wiki_sources or n.get('page_ids')]
     manifest = dict(schema_version=1, exported_at=corpus['exported_at'], coverage=corpus['coverage'],
-        news=dict(index=news_index, search=put(search), parts=news_parts,
+        news=dict(index=news_index, catalog=news_catalog, search=put(search), parts=news_parts,
             bootstrap=put(corpus['news'][:40]), bootstrap_ids=news_ids[:40]),
         papers=put(corpus['papers']), risks=put(corpus['risks']), risk_graph=put(corpus.get('risk_graph', {})),
         wiki=put({'pages': graph['pages'], 'nodes': wiki_nodes}),
