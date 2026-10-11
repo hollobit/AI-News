@@ -13,7 +13,8 @@
     const u = new URL(href, location.href);
     if (u.origin !== location.origin) return href;
     const file = u.pathname.split('/').pop();
-    if (!['index.html', 'observatory.html', 'knowledge.html'].includes(file)) return href;
+    if (!['index.html', 'observatory.html', 'knowledge.html', 'context.html'].includes(file))
+      return href;
     const p = file === 'knowledge.html' ? new URLSearchParams(u.hash.slice(1)) : u.searchParams;
     if (p.has('q')) return u.href;
     const q = currentQuery();

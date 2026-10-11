@@ -23,7 +23,8 @@ def get(self, route, params):
             from integrated_context import dossier
             query=params.get('q',[''])[0].strip()
             focus=params.get('node',[''])[0]
-            if len(query)>256 or len(focus)>120:raise ValueError('검색은 256자 이내로 입력하세요.')
+            if len(query)>2000:raise ValueError('질의는 2000자 이내로 입력하세요.')
+            if len(focus)>120:raise ValueError('선택 항목 식별자가 올바르지 않습니다.')
             if not query and not focus:
                 self.send_json(dossier_empty());return True
             key,graph,pending=self.services.question_service.snapshots.request({'workspace':['1']})

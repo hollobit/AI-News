@@ -19,34 +19,30 @@
         <h1>흩어진 정보에서, 연결된 판단으로.</h1>
         <p>뉴스의 근거, 전략적 해석, 위험과 조건, 연구와 지식을 한 흐름으로 대조하세요.</p>
         <form id="search">
-          <label for="query">통합 탐색</label>
-          <div class="search-row">
-            <input
-              id="query"
-              maxlength="256"
-              placeholder="기술·기관·주제 검색, 예: 의료 AI"
-              autocomplete="off"
-            /><button>연결 탐색</button>
-          </div>
-        </form>
-        <nav id="suggestions" aria-label="추천 탐색 주제"></nav>
-      </header>
-      <section class="question-panel" aria-label="자연어 종합 분석">
-        <h2>질문으로 종합 분석</h2>
-        <p>뉴스·논문·위험·지식의 관계를 함께 분석해 핵심 의미와 통찰을 찾습니다.</p>
-        <form id="context-ask">
-          <label for="context-question">알고 싶은 내용을 자연어로 입력하세요</label
-          ><textarea
-            id="context-question"
+          <label for="query">주제나 질문을 입력하세요</label>
+          <textarea
+            id="query"
             rows="3"
+            minlength="3"
             maxlength="2000"
+            required
             placeholder="최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?"
+            aria-describedby="query-help"
           ></textarea>
-          <div class="toolbar">
-            <button id="context-ask-button">근거·관계·통찰 분석</button
-            ><button type="button" id="context-example">Physical AI 예시 질문</button>
+          <div class="toolbar query-actions">
+            <button id="context-ask-button" type="submit" disabled>종합 질의</button>
+            <button type="button" id="context-example" disabled>Physical AI 예시 질문</button>
           </div>
+          <p id="query-help">
+            한 번의 질의로 관련 자료 탐색부터 관계 분석·핵심 통찰까지 연결합니다. Ctrl/⌘ + Enter로
+            실행
+          </p>
         </form>
+        <nav id="suggestions" aria-label="추천 질의 주제"></nav>
+      </header>
+      <section class="question-panel" aria-label="종합 질의 결과">
+        <h2>종합 분석 결과</h2>
+        <p id="active-question" class="legend"></p>
         <p id="answer-status" role="status" aria-live="polite"></p>
         <div id="context-answer"></div>
       </section>
@@ -65,7 +61,7 @@
       <section id="forecast-panel" class="forecast-panel" aria-label="조건부 전망">
         <h2>다음에 일어날 일 · 조건부 전망</h2>
         <p>
-          현재 검색 주제의 검토된 자료를 종합해 판정 가능한 사건을 전망합니다. 발생 확률은
+          입력한 질의의 검토된 자료를 종합해 판정 가능한 사건을 전망합니다. 발생 확률은
           <strong>모델의 주관적·미보정 추정</strong>이며, 확률 범위는 통계적 신뢰구간이 아닙니다.
         </p>
         <div class="toolbar">
@@ -74,7 +70,7 @@
             <option value="90">향후 90일</option>
             <option value="180" selected>향후 180일</option>
             <option value="365">향후 365일</option></select
-          ><button id="forecast-start">현재 주제 종합 예측</button
+          ><button id="forecast-start">이 질의로 전망 생성</button
           ><button id="forecast-history">저장된 전망 보기</button>
         </div>
         <p id="forecast-status" role="status" aria-live="polite"></p>

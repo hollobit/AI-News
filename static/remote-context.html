@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko" data-public="true">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>원격 통합 분석실 · AI 전략 관측소</title>
+    <link rel="stylesheet" href="workspace.css" />
+    <link rel="stylesheet" href="workspace-ui.css" />
+    <link rel="stylesheet" href="remote-context.css" />
+    <script src="workspace-navigation.js" defer></script>
+    <script src="remote-context.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <header class="remote-hero">
+        <p>CONNECTED INTELLIGENCE</p>
+        <h1>어디서든, 근거에서 통찰까지.</h1>
+        <p>뉴스·논문·전략·위험·시나리오·지식을 연결하고 자연어로 질문하세요.</p>
+      </header>
+      <section class="remote-card">
+        <h2>원격 통합 분석실</h2>
+        <p id="remote-status" role="status">접속 정보를 확인하고 있습니다.</p>
+        <a id="remote-open" hidden rel="noreferrer">로그인하고 분석실 열기 →</a>
+        <p id="remote-address"></p>
+        <button id="remote-refresh" type="button">접속 정보 새로고침</button>
+        <p>소유자의 접속 암호가 필요합니다. 연결된 Mac과 분석 서버가 실행 중이어야 합니다.</p>
+        <p id="remote-mode"></p>
+      </section>
+      <div class="remote-features">
+        <section>
+          <h2>정보 사이의 관계</h2>
+          <p>
+            연결 이유와 원자료를 확인하고, 최대 4개 항목의 조건·반대 근거·불확실성을 비교합니다.
+          </p>
+        </section>
+        <section>
+          <h2>질문으로 종합 분석</h2>
+          <p>
+            “최근 Physical AI 벤치마크 방법과 데이터세트의 이슈는?”처럼 질문하면 사실·관계·통찰을
+            인용과 함께 제공합니다.
+          </p>
+        </section>
+        <section>
+          <h2>조건부 전망</h2>
+          <p>
+            예상 시기·주관적 확률·타당 범위·성립 조건을 확인합니다. 근거가 부족하면 산정 불가로
+            표시합니다.
+          </p>
+        </section>
+      </div>
+      <p>
+        공개 뉴스·검토 분석은 <a href="index.html">기존 사이트</a>에서도 계속 볼 수 있습니다. 새
+        분석 생성과 운영 기능은 로그인 후 이용합니다.
+      </p>
+    </main>
+  </body>
+</html>

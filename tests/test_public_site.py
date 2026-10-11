@@ -98,3 +98,16 @@ def test_public_content_uses_source_title_and_retains_briefing(tmp_path):
         assert article['briefing_title']=='브리핑 독파모 계속'
         assert article['title_origin']=='source_page'
         assert db.execute('SELECT title FROM articles').fetchone()[0]=='브리핑 독파모 계속'
+
+
+def test_remote_public_config_excludes_credentials_and_invalid_origins(tmp_path):
+    from public_site import remote_connection
+    directory=tmp_path/'.runtime/remote-access';directory.mkdir(parents=True)
+    p=directory/'public.json'
+    p.write_text(json.dumps({'origin':'https://news.example.org','password':'PRIVATE','pid':123,'cookie':'SECRET'}))
+    assert remote_connection(tmp_path)=={'origin':'https://news.example.org','mode':'configured'}
+    for origin in ['http://localhost:8001','https://user:secret@example.org','https://example.org/?token=SECRET']:
+        p.write_text(json.dumps({'origin':origin}))
+        assert remote_connection(tmp_path)=={}
+    p.write_text(json.dumps({'origin':'https://news-test.trycloudflare.com'}))
+    assert remote_connection(tmp_path)['mode']=='temporary'

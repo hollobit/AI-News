@@ -17,7 +17,8 @@
     serial = 0;
   const params = new URLSearchParams(location.search);
   let focus = params.get('node') || '';
-  $('#query').value = params.get('q') || '';
+  let activeQuery = (params.get('question') || params.get('q') || '').slice(0, 2000);
+  $('#query').value = activeQuery;
   function link(text, url) {
     const a = make('a', text);
     try {
@@ -149,9 +150,10 @@
     controller?.abort();
     controller = new AbortController();
     const version = ++serial;
-    const q = $('#query').value.trim();
+    const q = activeQuery;
     const p = new URLSearchParams(location.search);
     p.delete('q');
+    p.delete('question');
     p.delete('node');
     if (q) p.set('q', q);
     if (focus) p.set('node', focus);
@@ -167,7 +169,10 @@
     }
     $('#status').textContent = '현재 근거 연결을 확인하고 있습니다…';
     try {
-      const r = await fetch('/api/context?' + p, { signal: controller.signal });
+      const r = await fetch(
+        '/api/context?' + new URLSearchParams({ q, ...(focus ? { node: focus } : {}) }),
+        { signal: controller.signal }
+      );
       const data = await r.json();
       if (version !== serial) return;
       if (r.status === 202) {
@@ -186,15 +191,36 @@
       render();
     } catch (e) {
       if (e.name !== 'AbortError')
-        $('#status').textContent = e.message + ' 검색 버튼으로 다시 시도할 수 있습니다.';
+        $('#status').textContent = e.message + ' 종합 질의 버튼으로 다시 시도할 수 있습니다.';
     }
   }
   $('#search').onsubmit = (e) => {
     e.preventDefault();
+    const query = $('#query').value.trim();
+    if (query.length < 3 || query.length > 2000) {
+      $('#answer-status').textContent = '질의는 3~2000자로 입력하세요.';
+      return;
+    }
+    if ($('#context-ask-button').disabled) return;
+    activeQuery = query;
     focus = '';
+    const p = new URLSearchParams(location.search);
+    for (const key of ['answer', 'question', 'forecast']) p.delete(key);
+    history.replaceState(null, '', '/context?' + p);
     $('#citations-only').checked = false;
     load();
+    document.dispatchEvent(new CustomEvent('context:query', { detail: { query } }));
   };
+  $('#context-example').onclick = () => {
+    $('#query').value = '최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?';
+    $('#query').focus();
+  };
+  $('#query').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing) {
+      e.preventDefault();
+      $('#search').requestSubmit();
+    }
+  });
   $('#back').onclick = () => {
     focus = '';
     load();
@@ -204,8 +230,7 @@
     $('#suggestions').append(
       button(t, () => {
         $('#query').value = t;
-        focus = '';
-        load();
+        $('#query').focus();
       })
     );
   $('#export').onclick = () => {
@@ -231,5 +256,6 @@
     clearTimeout(timer);
     controller?.abort();
   });
+  $('#context-example').disabled = false;
   load();
 })();

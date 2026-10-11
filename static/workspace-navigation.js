@@ -27,6 +27,7 @@
     publicLabel: publicLabel || label,
   }));
   const publicOrder = [
+    'context',
     'strategy',
     'news',
     'archive',
@@ -44,11 +45,13 @@
     publicOrder.map((id) => [id, entries.find((e) => e.id === id).publicLabel])
   );
   const publicURL = (id) =>
-    id === 'observatory'
-      ? 'observatory.html'
-      : id === 'graph'
-        ? 'knowledge.html'
-        : 'index.html?view=' + id;
+    id === 'context'
+      ? 'context.html'
+      : id === 'observatory'
+        ? 'observatory.html'
+        : id === 'graph'
+          ? 'knowledge.html'
+          : 'index.html?view=' + id;
   window.WorkspaceNavigation = { entries, publicNames, publicURL };
   const isPublic = document.documentElement.dataset.public === 'true';
   const standalone =
@@ -61,11 +64,13 @@
   const current = standalone
     ? 'graph'
     : isPublic
-      ? path.endsWith('knowledge.html')
-        ? 'graph'
-        : path.endsWith('observatory.html')
-          ? 'observatory'
-          : new URLSearchParams(location.search).get('view') || 'strategy'
+      ? path.endsWith('context.html')
+        ? 'context'
+        : path.endsWith('knowledge.html')
+          ? 'graph'
+          : path.endsWith('observatory.html')
+            ? 'observatory'
+            : new URLSearchParams(location.search).get('view') || 'strategy'
       : isStrategy
         ? path === '/operations' ||
           ['#baseline', '#workflow', '#improvement'].includes(location.hash)

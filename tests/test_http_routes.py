@@ -74,3 +74,16 @@ def test_forecast_endpoint_has_transport_dispatch_and_origin_guards(server):
     assert request(http,'POST','/api/intelligence/forecasts',{},dict(headers,Origin='https://untrusted.example'))[0]==403
     for path in ('/context','/context.js','/context-forecast.js','/context-question.js','/context.css'):
         assert request(http,'GET',path)[0]==200
+
+
+def test_context_query_preserves_full_natural_language_question(server):
+    from urllib.parse import urlencode
+    http,calls=server
+    service=SimpleNamespace(snapshots=SimpleNamespace(request=lambda params:('v',{},False)))
+    http.RequestHandlerClass.services=replace(http.RequestHandlerClass.services,question_service=service)
+    question='방법과 데이터 간 관계를 분석하세요. ' * 35
+    with patch('integrated_context.dossier',return_value={'groups':{}}) as dossier:
+        assert request(http,'GET','/api/context?'+urlencode({'q':question}))[0]==200
+        assert dossier.call_args.args[1]==question.strip()
+        assert request(http,'GET','/api/context?'+urlencode({'q':'a'*2001}))[0]==400
+        assert dossier.call_count==1

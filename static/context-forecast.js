@@ -9,7 +9,8 @@
     };
   let timer = null,
     active = '',
-    busy = false;
+    busy = false,
+    epoch = 0;
   async function api(url, body) {
     const r = await fetch(
       url,
@@ -119,6 +120,7 @@
         $('#forecast-start').disabled = false;
       }
     } catch (e) {
+      if (id !== active) return;
       $('#forecast-status').textContent = e.message;
       busy = false;
       $('#forecast-start').disabled = false;
@@ -127,12 +129,13 @@
   $('#forecast-start').onclick = async () => {
     const question = $('#query').value.trim();
     if (question.length < 3) {
-      $('#forecast-status').textContent = '위 검색창에 3자 이상의 전망 주제를 입력하세요.';
+      $('#forecast-status').textContent = '위 질의창에 3자 이상의 주제나 질문을 입력하세요.';
       return;
     }
     if (busy) return;
     clearTimeout(timer);
     busy = true;
+    const version = epoch;
     $('#forecast-start').disabled = true;
     $('#forecast-results').replaceChildren();
     $('#forecast-status').textContent = '현재 검토된 근거를 모아 전망을 요청하고 있습니다…';
@@ -142,12 +145,14 @@
         horizon_days: Number($('#forecast-horizon').value),
         mode: 'hybrid',
       });
+      if (version !== epoch) return;
       active = d.run.id;
       const p = new URLSearchParams(location.search);
       p.set('forecast', active);
       history.replaceState(null, '', '/context?' + p);
       poll(active);
     } catch (e) {
+      if (version !== epoch) return;
       $('#forecast-status').textContent = e.message;
       busy = false;
       $('#forecast-start').disabled = false;
@@ -177,6 +182,15 @@
       $('#forecast-status').textContent = e.message;
     }
   };
+  document.addEventListener('context:query', () => {
+    epoch++;
+    clearTimeout(timer);
+    active = '';
+    busy = false;
+    $('#forecast-start').disabled = false;
+    $('#forecast-results').replaceChildren();
+    $('#forecast-status').textContent = '같은 질의로 조건부 전망을 생성할 수 있습니다.';
+  });
   const initial = new URLSearchParams(location.search).get('forecast') || '';
   if (/^analysis:[a-f0-9]{32}$/.test(initial)) {
     active = initial;

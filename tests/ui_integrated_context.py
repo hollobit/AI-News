@@ -1,5 +1,6 @@
 """Deterministic interaction checks; real data smoke is recorded separately."""
 import asyncio,json,os
+from urllib.parse import urlparse,parse_qs
 from pathlib import Path
 os.environ['PLAYWRIGHT_BROWSERS_PATH']=str(Path(__file__).resolve().parents[1]/'.runtime/browsers')
 from playwright.async_api import async_playwright,expect
@@ -17,6 +18,8 @@ async def main():
    await route.fulfill(json=data())
   await page.route('**/api/context?*',api)
   await page.goto('http://127.0.0.1:8001/context?q=의료')
+  await expect(page.locator('textarea')).to_have_count(1)
+  await expect(page.locator('#context-question')).to_have_count(0)
   await expect(page.locator('.lane')).to_have_count(6)
   await page.locator('.lane').first.get_by_role('button',name='비교에 담기').click()
   await expect(page.locator('#comparison')).to_be_visible()
@@ -45,17 +48,33 @@ async def main():
   asked=[]
   async def ask(route):
    asked.append(route.request.post_data_json)
-   await route.fulfill(json={'phase':'evidence','evidence':[],'job':{'url':'/api/graph/answers/context-test'}})
+   await route.fulfill(json={'phase':'evidence','evidence':[],'job':{'id':'ffffffffffffffffffffffffffffffff','url':'/api/graph/answers/ffffffffffffffffffffffffffffffff'}})
   async def answer(route):
    await route.fulfill(json={'id':'context-test','status':'complete','result':{'answer':'방법과 데이터의 의존 관계를 종합했습니다.','verification':{'method':'independent_evidence_review'},'analysis_plan':{'axes':['벤치마크 방법','데이터세트','위험']},'claims':[{'text':'평가 조건에 따라 비교 범위가 제한됩니다.','kind':'connection','axis':'벤치마크와 데이터 관계','premises':'제공 원문의 실험 조건','assumptions':'동일 환경 비교','counterevidence':'미확보','uncertainty':'실세계 일반화 미확인','evidence_ids':['e']}],'evidence':[{'id':'e','title':'논문 근거','text':'초록 내용','source_kind':'paper','source_url':'https://example.org/paper'}],'limitations':['제한된 검색 근거']}})
   await page.route('**/api/graph/ask?workspace=1',ask)
-  await page.route('**/api/graph/answers/context-test',answer)
+  await page.route('**/api/graph/answers/ffffffffffffffffffffffffffffffff',answer)
   await page.locator('#context-example').click()
+  assert not asked
   await page.locator('#context-ask-button').click()
   await expect(page.locator('#answer-status')).to_contain_text('독립 근거 검토 완료')
   await expect(page.locator('#context-answer')).to_contain_text('자료 사이의 관계')
   await expect(page.locator('#context-answer')).to_contain_text('실세계 일반화 미확인')
   assert 'Physical AI' in asked[0]['question']
+  assert parse_qs(urlparse(calls[-1]).query)['q'][0]==asked[0]['question']
+  long_query='Physical AI 방법과 데이터 간 차이를 분석하고 ' * 20
+  await page.locator('#query').fill(long_query)
+  await page.locator('#query').press('Control+Enter')
+  await expect(page.locator('#answer-status')).to_contain_text('독립 근거 검토 완료')
+  assert len(asked)==2 and asked[-1]['question']==long_query.strip()
+  assert parse_qs(urlparse(calls[-1]).query)['q'][0]==long_query.strip()
+  await page.locator('#query').fill('아직 제출하지 않은 질의')
+  await page.locator('.lane').first.get_by_role('button',name='이 항목 중심으로').click()
+  assert parse_qs(urlparse(calls[-1]).query)['q'][0]==long_query.strip()
+  assert len(asked)==2
+  await page.reload()
+  await expect(page.locator('#answer-status')).to_contain_text('독립 근거 검토 완료')
+  assert len(asked)==2
+  await expect(page.locator('#query')).to_have_value(long_query.strip())
   assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   await page.screenshot(path='.runtime/verification/integrated-context-mobile.png',full_page=True)
   assert not errors,errors

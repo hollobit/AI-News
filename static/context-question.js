@@ -126,9 +126,9 @@
       $('#context-ask-button').disabled = false;
     }
   }
-  $('#context-ask').onsubmit = async (e) => {
-    e.preventDefault();
-    const question = $('#context-question').value.trim();
+  document.addEventListener('context:query', async (e) => {
+    const question = e.detail.query;
+    $('#active-question').textContent = '분석 질의 · ' + question;
     if (question.length < 3) {
       $('#answer-status').textContent = '3자 이상 질문을 입력하세요.';
       return;
@@ -150,7 +150,8 @@
       if (d.job) {
         const p = new URLSearchParams(location.search);
         p.set('answer', d.job.id);
-        p.set('question', question);
+        p.set('q', question);
+        p.delete('question');
         history.replaceState(null, '', '/context?' + p);
         poll(d.job.url);
       } else {
@@ -164,20 +165,17 @@
       if (e.name !== 'AbortError') $('#answer-status').textContent = e.message;
       $('#context-ask-button').disabled = false;
     }
-  };
-  $('#context-example').onclick = () => {
-    $('#context-question').value =
-      '최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?';
-    $('#context-question').focus();
-  };
+  });
   const initial = new URLSearchParams(location.search);
-  if (initial.get('question'))
-    $('#context-question').value = initial.get('question').slice(0, 2000);
+  const initialQuery = $('#query').value;
+  if (initialQuery) $('#active-question').textContent = '질의 · ' + initialQuery;
   if (/^[a-f0-9]{32}$/.test(initial.get('answer') || '')) {
     controller = new AbortController();
     started = Date.now();
     $('#context-ask-button').disabled = true;
     poll('/api/graph/answers/' + initial.get('answer'));
+  } else {
+    $('#context-ask-button').disabled = false;
   }
   addEventListener('pagehide', () => {
     controller?.abort();

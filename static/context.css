@@ -309,7 +309,7 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 16px;
 }
-#context-question {
+#query {
   display: block;
   width: 100%;
   min-height: 90px;
@@ -346,4 +346,25 @@ button:disabled {
   .question-panel {
     padding: 15px;
   }
+}
+
+.hero #query {
+  color: #15253c;
+  background: white;
+  max-width: 900px;
+}
+.query-actions {
+  margin: 14px 0;
+}
+.query-actions button[type='submit'] {
+  background: #69ddd2;
+  border-color: #69ddd2;
+  font-weight: 700;
+}
+#query-help {
+  font-size: 13px;
+  color: #c7dce9;
+}
+#active-question {
+  overflow-wrap: anywhere;
 }

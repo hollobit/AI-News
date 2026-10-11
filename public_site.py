@@ -3,11 +3,11 @@ import hashlib
 import json
 from pathlib import Path
 
-ASSETS=('workspace-navigation.js','workspace-ui.css','public.html','public.js','public.css','public-data.js','workspace.js','workspace.css','news-network.js','news-network.css','risk-network.js','risk-network.css','observatory.html','observatory.js','observatory.css','observatory-search.js','public-navigation.js')
-DATA_FILES=('site.json','site-manifest.json','build.json')+tuple(f'observatory-{days}-{mode}.json' for days in (14,30,90) for mode in ('default','expanded'))
+ASSETS=('remote-context.html','remote-context.js','remote-context.css','workspace-navigation.js','workspace-ui.css','public.html','public.js','public.css','public-data.js','workspace.js','workspace.css','news-network.js','news-network.css','risk-network.js','risk-network.css','observatory.html','observatory.js','observatory.css','observatory-search.js','public-navigation.js')
+DATA_FILES=('remote-access.json','site.json','site-manifest.json','build.json')+tuple(f'observatory-{days}-{mode}.json' for days in (14,30,90) for mode in ('default','expanded'))
 PUBLIC_FILES=tuple(dict.fromkeys(
     ('knowledge.html','wiki-network.js','wiki-network-3d.js','wiki-network.css','three.module.js','three.core.js','three.LICENSE','knowledge.json','.nojekyll','README.md')
-    +tuple('index.html' if name=='public.html' else name for name in ASSETS)+DATA_FILES))
+    +tuple('index.html' if name=='public.html' else 'context.html' if name=='remote-context.html' else name for name in ASSETS)+DATA_FILES))
 
 
 def published_files(root):
@@ -148,7 +148,7 @@ def write_site(db_path,target,root,stamp,data=None,*,assets=None,observations=No
     data['exported_at']=stamp
     (target/'site.json').write_text(json.dumps(data,ensure_ascii=False))
     for name in ASSETS:
-        dest='index.html' if name=='public.html' else name
+        dest='index.html' if name=='public.html' else 'context.html' if name=='remote-context.html' else name
         text=assets[name].decode() if assets is not None else (root/'static'/name).read_text()
         if name=='observatory.html':
             import re
@@ -162,9 +162,24 @@ def write_site(db_path,target,root,stamp,data=None,*,assets=None,observations=No
             text=public_html(text)
             text=text.replace('</body>','<script src="public-navigation.js"></script></body>')
         (target/dest).write_text(text)
+    (target/'remote-access.json').write_text(json.dumps(remote_connection(root),ensure_ascii=False))
     for days in (14,30,90):
         for mode in ('default','expanded'):
             path=Path(str(db_path)+'.observatory')/f'{days}-{mode}-v2.json'
             raw=observations[f'observatory-{days}-{mode}.json'] if observations is not None else (json.loads(path.read_text()) if path.exists() else {})
             (target/f'observatory-{days}-{mode}.json').write_text(json.dumps(observation(raw),ensure_ascii=False))
     return data['coverage']
+
+
+def remote_connection(root):
+    """Publish only a credential-free HTTPS origin, never runtime configuration."""
+    from urllib.parse import urlsplit
+    try:
+        value=json.loads((Path(root)/'.runtime/remote-access/public.json').read_text())
+        u=urlsplit(value['origin'])
+        if (u.scheme!='https' or not u.hostname or u.username or u.password or u.path not in ('','/')
+                or u.query or u.fragment or u.port not in (None,443)):
+            return {}
+        return dict(origin='https://'+u.netloc,mode='temporary' if u.hostname.endswith('.trycloudflare.com') else 'configured')
+    except (OSError,ValueError,KeyError,TypeError):
+        return {}
