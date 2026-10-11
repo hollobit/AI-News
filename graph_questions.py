@@ -139,7 +139,7 @@ class GraphQuestions:
                 checked=self.get(candidate['id'])
                 if checked['status']=='complete':return self._cached_answer(dict(candidate),started,checked)
         revision,graph,_=self.snapshots.request(params)
-        key=content_digest(['two-phase-2-bounded',revision,request])
+        key=content_digest(['two-phase-3-explanatory',revision,request])
         job=None
         with self.lock:
             with self.db() as db:
@@ -200,6 +200,9 @@ class GraphQuestions:
             if status=='complete' and db.execute('SELECT 1 FROM graph_question_progress WHERE job_id=?',(identity,)).fetchone():
                 from question_progress import update
                 update(db,identity,'finalize',done=True)
+            elif status=='needs_review':
+                from question_progress import update
+                update(db,identity,'review',done=True,phase='incomplete')
 
     def _progress(self,identity,stage,**detail):
         from question_progress import update
@@ -240,7 +243,7 @@ class GraphQuestions:
                     revision=current
                     with self.db(timeout=10) as db:
                         db.execute('UPDATE graph_question_jobs SET revision=?,key=? WHERE id=?',
-                            (revision,content_digest(['two-phase-2-bounded',revision,request]),identity))
+                            (revision,content_digest(['two-phase-3-explanatory',revision,request]),identity))
                 if graph:break
                 if not fallback_checked and time.monotonic()-begun>=5:
                     fallback_checked=True
@@ -295,7 +298,10 @@ class GraphQuestions:
             answer.setdefault('timing',{}).update(evidence_retrieval_ms=retrieval_ms,
                 attempt_ms=round((time.monotonic()-begun)*1000,2),
                 completion_ms=round((time.time()-stored['created_at'])*1000,2),attempts=attempts)
-            self._save(identity,'complete',answer)
+            from graph_answer_quality import sufficient
+            if detailed and not sufficient(answer):
+                self._save(identity,'needs_review',answer,'보완 후에도 질문을 충분히 설명하지 못한 부분이 있습니다. 검토 결과를 확인해 주세요.')
+            else:self._save(identity,'complete',answer)
         except Exception as error:
             from graph_answer_cache import AnswerInputsChanged
             if isinstance(error,AnswerInputsChanged):
@@ -327,6 +333,10 @@ class GraphQuestions:
             result['result']={}
             return result
         request=json.loads(row['request_json'])
+        if row['status']=='complete' and request['params'].get('workspace')==['1']:
+            from graph_answer_quality import sufficient
+            if not sufficient(result['result']):
+                return {'id':identity,'status':'stale','result':{},'error':'질문 적합성·설명 충실도 검토가 추가되었습니다. 같은 질문을 다시 분석해 주세요.'}
         enrichment=result['result'].get('enrichment')
         if enrichment and self.enricher:
             task=self.enricher.get(enrichment['task_id'])

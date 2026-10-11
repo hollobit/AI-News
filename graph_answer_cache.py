@@ -28,9 +28,10 @@ def reuse_answer(key, build):
     if not owner:return deepcopy(future.result()), True
     try:
         value=build()
-        with _LOCK:
-            _CACHE[key]=(time.monotonic(),deepcopy(value))
-            while len(_CACHE)>32:_CACHE.popitem(last=False)
+        if value.get('verification',{}).get('quality',{}).get('status')!='needs_review':
+            with _LOCK:
+                _CACHE[key]=(time.monotonic(),deepcopy(value))
+                while len(_CACHE)>32:_CACHE.popitem(last=False)
         future.set_result(deepcopy(value))
         return value,False
     except BaseException as error:

@@ -48,6 +48,23 @@ def test_progress_eta_uses_recorded_stages_and_parallel_preparation():
         assert view(db,'previous','complete',100)['elapsed_seconds']==131
 
 
+def test_repair_and_recheck_are_live_review_phases_not_completed_work():
+    db=sqlite3.connect(':memory:');setup(db)
+    db.execute('CREATE TABLE graph_question_jobs(id,status)')
+    with patch('question_progress.time.time',return_value=100):
+        for stage in ('evidence','plan','synthesis'):update(db,'j',stage,done=True)
+        update(db,'j','review',phase='repair')
+    with patch('question_progress.time.time',return_value=130):
+        progress=view(db,'j','running',100)
+        assert progress['percent']==60 and progress['stages'][3]['label']=='부족한 설명 보완'
+        update(db,'j','review',phase='recheck')
+        assert view(db,'j','running',100)['stages'][3]['label']=='보완 답변 독립 재검토'
+        update(db,'j','review',done=True,phase='incomplete')
+    with patch('question_progress.time.time',return_value=200):
+        terminal=view(db,'j','needs_review',100)
+        assert terminal['elapsed_seconds']==30 and terminal['percent']==80
+
+
 @pytest.mark.parametrize('params',[{'workspace':['1']},{'workspace':['1'],'date':['2026-10-11']}])
 def test_workspace_plan_overlaps_index_preparation_and_preserves_review(tmp_path,params):
     import threading,time
@@ -62,7 +79,7 @@ def test_workspace_plan_overlaps_index_preparation_and_preserves_review(tmp_path
         assert kw['plan']['axes']==['조건']
         assert kw['detailed']
         progress('synthesis');progress('review');progress('finalize',cached=False)
-        return {'answer':'검토 답변','claims':[{'text':'조건'}],'verification':{'method':'independent_evidence_review'}}
+        return {'answer':'검토 답변','claims':[{'text':'조건'}],'verification':{'method':'independent_evidence_review','quality':{'policy':'question-explanation-v1','status':'passed'}}}
     q=GraphQuestions(tmp_path/'jobs.db',snapshots=Snapshots())
     try:
         with patch('graph_plans.prepare',side_effect=plan),patch('graph_questions.deepen',side_effect=analyze),patch('graph_questions.quick_answer',return_value={'evidence':[{'id':'e'}],'limitations':[]}):

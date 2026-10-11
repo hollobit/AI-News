@@ -22,7 +22,7 @@
   function safeLink(text, url) {
     const a = el('a', text);
     try {
-      const u = new URL(url, location.origin);
+      const u = new URL(url, location.href);
       if (['http:', 'https:'].includes(u.protocol)) {
         a.href = u.href;
         a.rel = 'noopener noreferrer';
@@ -40,8 +40,37 @@
       );
     }
     const reviewed = complete && data.verification?.method === 'independent_evidence_review';
+    const quality = data.verification?.quality;
+    const incomplete = quality?.status === 'needs_review';
     if (reviewed) {
-      root.append(el('h3', '종합 판단'), el('p', data.answer, 'answer-synthesis'));
+      root.append(el('h3', incomplete ? '종합 설명 보완 필요' : '질문에 대한 종합 설명'));
+      if (quality) {
+        const status = el('div', null, 'answer-quality');
+        status.dataset.status = quality.status;
+        status.append(
+          el(
+            'strong',
+            incomplete
+              ? '설명 충실도 검토 미완료'
+              : quality.revision_count
+                ? '보완 후 재검토 완료'
+                : '질문 적합성·설명 충실도 확인'
+          )
+        );
+        if (quality.status === 'evidence_limited')
+          status.append(
+            el(
+              'p',
+              '확보한 근거 범위의 답변입니다. 확인할 수 없는 쟁점과 판단의 한계를 함께 설명합니다.'
+            )
+          );
+        if (incomplete) for (const issue of quality.issues || []) status.append(el('p', issue));
+        root.append(status);
+      }
+      const explanation = el('div', null, 'answer-synthesis');
+      for (const paragraph of (data.answer || '').split(/\n\s*\n/).filter(Boolean))
+        explanation.append(el('p', paragraph));
+      root.append(explanation);
       if (data.analysis_plan?.axes?.length)
         root.append(el('p', '검토한 축 · ' + data.analysis_plan.axes.join(' / '), 'legend'));
     } else if (complete)
@@ -199,6 +228,17 @@
         progress('complete', '관계 분석·독립 근거 검토 완료');
         metrics(job);
         finish();
+        return;
+      }
+      if (job.status === 'needs_review') {
+        render(job.result, true);
+        progress(
+          '',
+          job.error || '질문에 대한 설명을 더 보완해야 합니다.',
+          '근거 검토를 통과한 부분과 남은 쟁점을 확인할 수 있습니다.'
+        );
+        finish();
+        $('#answer-retry').hidden = !lastQuestion;
         return;
       }
       if (['failed', 'stale', 'interrupted'].includes(job.status)) {

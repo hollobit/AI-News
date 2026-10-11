@@ -167,7 +167,7 @@ def test_final_revision_check_can_reuse_review_without_third_generation(tmp_path
         def key(self,params):return self.revision
     snapshots=ChangingSnapshots();calls=[]
     reviewed={'answer':'검토된 답변','claims':[{'text':'근거'}], 'input_signature':'same',
-              'verification':{'method':'independent_evidence_review'}}
+              'verification':{'method':'independent_evidence_review','quality':{'policy':'question-explanation-v1','status':'passed'}}}
     def analyze(*args,reuse_only=None,**kwargs):
         calls.append(reuse_only)
         if len(calls)<3:snapshots.revision='r'+str(len(calls)+1)

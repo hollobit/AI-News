@@ -402,6 +402,26 @@ mark.search-highlight {
   font-size: 16px;
   line-height: 1.9;
 }
+.answer-synthesis > p {
+  margin: 0 0 1em;
+  overflow-wrap: anywhere;
+}
+.answer-quality {
+  margin: 12px 0 18px;
+  padding: 10px 14px;
+  border-left: 3px solid #17877c;
+  background: #eef8f5;
+  color: #215c53;
+  font-size: 13px;
+}
+.answer-quality p {
+  margin: 5px 0 0;
+}
+.answer-quality[data-status='needs_review'] {
+  border-color: #b46d17;
+  background: #fff7e9;
+  color: #80500f;
+}
 .answer-section .card {
   border-top-color: #6488ba;
 }

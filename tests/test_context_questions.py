@@ -10,7 +10,12 @@ def test_detailed_relational_answer_preserves_review_and_separate_cache(monkeypa
     def runner(prompt,schema,**kwargs):
         calls.append((prompt,schema,kwargs))
         if 'checks' in schema['properties']:
-            return dict(checks=[dict(claim_index=0,supported=True,reason='원문 대조')],answer_supported=True,missing_information=[])
+            value=dict(checks=[dict(claim_index=0,supported=True,reason='원문 대조')],answer_supported=True,missing_information=[])
+            if 'quality' in schema['properties']:
+                from test_answer_quality import audit
+                count=schema['properties']['quality']['properties']['axes']['minItems']
+                value['quality']=audit(axes=('addressed',)*count)['quality']
+            return value
         fields=schema['properties']['claims']['items']['properties']
         c=dict(text='실험 조건에 따른 비교 한계',evidence_ids=['e'])
         if 'premises' in fields:c.update(premises='원문 조건',assumptions='새 환경에 동일 적용한다는 가정',counterevidence='미확보',uncertainty='범위 제한')

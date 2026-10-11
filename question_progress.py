@@ -5,8 +5,9 @@ from statistics import median
 
 STAGES = ('evidence', 'plan', 'synthesis', 'review', 'finalize')
 LABELS = dict(evidence='검색 근거 준비', plan='질문 해석·검색 계획', synthesis='관계 분석·답변 작성',
-              review='독립 근거 검토', finalize='최신 근거 확인·완료')
-VERSION = 'workspace-progress-v1'
+              review='근거·설명 충실도 검토', finalize='최신 근거 확인·완료')
+REVIEW_LABELS = dict(repair='부족한 설명 보완', recheck='보완 답변 독립 재검토', incomplete='설명 검토 미완료')
+VERSION = 'workspace-progress-v2'
 
 
 def setup(db):
@@ -29,13 +30,13 @@ def view(db, identity, status, created_at):
     row = db.execute('SELECT body FROM graph_question_progress WHERE job_id=?', (identity,)).fetchone()
     if not row: return None
     body = json.loads(row[0]); now = time.time(); stages = body['stages']
-    if status == 'complete':
+    if status not in ('preparing', 'queued', 'running'):
         now = stages.get('finalize', {}).get('completed_at', body['updated_at'])
     complete = [s for s in STAGES if 'completed_at' in stages.get(s, {})]
     active = [s for s in STAGES if s in stages and s not in complete]
     result = dict(completed=len(complete), total=len(STAGES), percent=len(complete)*100//len(STAGES),
         elapsed_seconds=round(max(0, now-created_at)), active=active,
-        stages=[dict(id=s, label=LABELS[s], status='complete' if s in complete else 'running' if s in active else 'pending',
+        stages=[dict(id=s, label=REVIEW_LABELS.get(stages.get(s,{}).get('phase'),LABELS[s]) if s=='review' else LABELS[s], status='complete' if s in complete else 'running' if s in active else 'pending',
                      seconds=round(max(0, stages[s].get('completed_at', now)-stages[s]['started_at']),1) if s in stages else None) for s in STAGES],
         remaining_seconds=None, estimate_samples=0, estimate_overdue=False)
     if status not in ('preparing', 'queued', 'running'): return result
