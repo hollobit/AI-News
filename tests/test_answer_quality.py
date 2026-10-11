@@ -80,6 +80,16 @@ def test_grounding_failure_triggers_repair_even_if_explanation_criteria_pass(mon
     assert result['claims'][0]['evidence_ids']==['source:e']
 
 
+def test_new_definition_in_prose_cannot_pass_even_when_all_claims_are_supported(monkeypatch):
+    ungrounded=audit();ungrounded['answer_supported']=False
+    ungrounded['quality']['criteria']['scope']=dict(passed=False,reason='원문에 없는 용어 정의를 삭제해야 합니다.')
+    run,calls=execute(monkeypatch,[draft(),audit(explanation=False),draft('few-shot의 미확인 정의'),ungrounded])
+    result=run()
+    assert not sufficient(result) and result['verification']['removed_unsupported_claims']==0
+    assert 'few-shot' not in result['answer']
+    assert '용어 정의' in result['verification']['quality']['issues'][0]
+
+
 def test_repair_budget_exhausted_keeps_partial_separate_and_is_not_cached(monkeypatch):
     graph=GraphResult();graph.search_key='inadequate-answer'
     responses=[draft('단순 나열'),audit(explanation=False)]*4
@@ -137,13 +147,15 @@ def test_repair_keeps_full_uncited_context_and_original_claim_ids(monkeypatch):
     assert result['claims'][0]['evidence_ids']==['source:e']
 
 
-def test_insufficient_job_is_terminal_and_legacy_completion_is_stale(tmp_path,monkeypatch):
+@pytest.mark.parametrize('no_hits',[False,True])
+def test_insufficient_job_is_terminal_and_legacy_completion_is_stale(tmp_path,monkeypatch,no_hits):
     from graph_questions import GraphQuestions
     class Snapshots:
         def request(self,params):return 'rev',object(),None
         def key(self,params):return 'rev'
         def close(self):pass
     result=draft();result['verification']=dict(method='independent_evidence_review',quality=dict(policy=VERSION,status='needs_review'))
+    if no_hits:result=dict(answer='질문에 답할 근거가 없습니다.',claims=[],evidence=[],limitations=[])
     monkeypatch.setattr('graph_plans.prepare',lambda *a:({'queries':['방법'],'axes':['방법','데이터']},False))
     monkeypatch.setattr('graph_questions.quick_answer',lambda *a:{'evidence':[{'id':'source:e'}]})
     def analyze(*args,progress=None,**kw):
@@ -155,7 +167,7 @@ def test_insufficient_job_is_terminal_and_legacy_completion_is_stale(tmp_path,mo
         deadline=time.monotonic()+3
         while service.active and time.monotonic()<deadline:time.sleep(.01)
         identity=response['job']['id'];job=service.get(identity)
-        assert job['status']=='needs_review' and job['progress']['percent']<100
+        assert job['status']==('evidence_only' if no_hits else 'needs_review') and job['progress']['percent']<100
         assert not sufficient(job['result'])
         with service.db() as db:
             db.execute("UPDATE graph_question_jobs SET status='complete',result_json=? WHERE id=?",(json.dumps(draft()),identity))

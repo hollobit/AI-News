@@ -841,6 +841,9 @@ DATA:
             '제공된 전체 근거를 대조해 상충하는 자료나 답변을 제한하는 조건을 누락하지 않는다. '
             'excerpt_scope가 있으면 원문의 일부 문맥이며 발췌에 없다는 이유만으로 전체 문서에 없다고 단정하지 않는다.')
         prompt += WRITING
+        # Grounded findings precede prose in the model's structured response.
+        # The explanation must not introduce facts absent from those findings.
+        schema['properties']={key:schema['properties'][key] for key in ('claims','answer','limitations')}
     schema['properties']['claims']['items']['properties']['evidence_ids'].update(
         minItems=1,items={'type':'string','enum':[e['id'] for e in retrieval['evidence']]})
     from graph_citations import pack,restore

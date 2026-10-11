@@ -299,7 +299,9 @@ class GraphQuestions:
                 attempt_ms=round((time.monotonic()-begun)*1000,2),
                 completion_ms=round((time.time()-stored['created_at'])*1000,2),attempts=attempts)
             from graph_answer_quality import sufficient
-            if detailed and not sufficient(answer):
+            if detailed and not answer.get('verification') and not answer.get('claims'):
+                self._save(identity,'evidence_only',answer)
+            elif detailed and not sufficient(answer):
                 self._save(identity,'needs_review',answer,'보완 후에도 질문을 충분히 설명하지 못한 부분이 있습니다. 검토 결과를 확인해 주세요.')
             else:self._save(identity,'complete',answer)
         except Exception as error:
