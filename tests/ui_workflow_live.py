@@ -41,7 +41,8 @@ async def main():
   await page.locator('[data-stage="baseline"]').focus();await page.keyboard.press('Enter');await expect(page.locator('#detail-title')).to_have_text('기본 검토')
   await page.locator('#filter-attention').click();assert await page.locator('.stage.dim').count()==8
   await page.locator('#filter-all').click();await page.locator('[data-stage="deep"]').click()
-  await expect(page.locator('.ws-global-menu a')).to_have_count(15)
+  await expect(page.locator('.ws-global-menu a')).to_have_count(8)
+  await expect(page.locator('.ws-global-menu a[data-space="operations"]')).to_have_attribute('aria-current','page')
   await expect(page.locator('#chart-value')).to_have_text('5건')
   await expect(page.locator('#chart-empty')).to_be_hidden()
   assert len((await page.locator('#chart-line').get_attribute('points')).split())==3
