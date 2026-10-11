@@ -9,7 +9,11 @@
     };
   let controller = null,
     timer = null,
-    started = 0;
+    started = 0,
+    activeUrl = '',
+    lastQuestion = '',
+    failures = 0,
+    shownEvidence = '';
   const labels = {
     finding: '확인된 자료의 내용',
     connection: '자료 사이의 관계',
@@ -29,6 +33,7 @@
   function render(data, complete = false) {
     const root = $('#context-answer');
     root.replaceChildren();
+    if (!complete && !data.evidence?.length) return;
     if (!complete) {
       root.append(
         el('p', '관련 원문을 먼저 제공합니다. 아래 발췌는 최종 종합 답변이 아닙니다.', 'legend')
@@ -94,37 +99,145 @@
     }
     root.append(sources);
   }
-  async function get(url, options = {}) {
-    const r = await fetch(url, { ...options, signal: controller.signal });
-    const d = await r.json();
-    if (!r.ok) throw Error(d.error || '분석 요청 실패');
-    return d;
+  function progress(stage, message, detail = '') {
+    const steps = [...$('#answer-progress').children];
+    const index = steps.findIndex((n) => n.dataset.stage === stage);
+    $('#answer-progress').hidden = index < 0;
+    steps.forEach((node, i) => {
+      node.dataset.done = String(i < index);
+      if (i === index) node.setAttribute('aria-current', 'step');
+      else node.removeAttribute('aria-current');
+    });
+    $('#answer-status').textContent = message;
+    $('#answer-detail').textContent = detail;
   }
-  async function poll(url) {
+  function controls() {
+    for (const id of ['answer-resume', 'answer-retry', 'answer-login']) $('#' + id).hidden = true;
+  }
+  function finish() {
+    activeUrl = '';
+    clearTimeout(timer);
+    $('#context-ask-button').disabled = false;
+  }
+  function retryQuestion() {
+    $('#query').value = lastQuestion;
+    $('#search').requestSubmit();
+  }
+  async function get(url, owner, options = {}) {
+    if (owner.signal.aborted) throw new DOMException('Aborted', 'AbortError');
+    const request = new AbortController();
+    const abort = () => request.abort();
+    owner.signal.addEventListener('abort', abort, { once: true });
+    const timeout = setTimeout(abort, 20000);
     try {
-      const job = await get(url);
+      const r = await fetch(url, { ...options, signal: request.signal });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !Object.keys(d).length)
+        throw Object.assign(Error(d.error || '결과 조회 연결이 지연되고 있습니다.'), {
+          retryable: [408, 429].includes(r.status) || r.status >= 500 || r.ok,
+          unauthorized: r.status === 401,
+        });
+      return d;
+    } catch (e) {
+      if (owner.signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      if (e.retryable === undefined) e.retryable = true;
+      throw e;
+    } finally {
+      clearTimeout(timeout);
+      owner.signal.removeEventListener('abort', abort);
+    }
+  }
+  async function poll(url, owner = controller) {
+    if (controller !== owner || owner.signal.aborted) return;
+    try {
+      const job = await get(url, owner);
+      if (controller !== owner || owner.signal.aborted) return;
+      failures = 0;
+      controls();
       if (job.status === 'complete') {
         render(job.result, true);
-        $('#answer-status').textContent = '관계 분석·독립 근거 검토 완료';
-        $('#context-ask-button').disabled = false;
+        progress('complete', '관계 분석·독립 근거 검토 완료');
+        finish();
         return;
       }
-      if (['failed', 'stale', 'interrupted'].includes(job.status))
-        throw Error(job.error || '분석이 중단되었습니다. 다시 요청하세요.');
-      if (job.result?.evidence?.length) render(job.result, false);
+      if (['failed', 'stale', 'interrupted'].includes(job.status)) {
+        $('#context-answer').replaceChildren();
+        progress(
+          '',
+          job.error || '분석이 중단되었습니다.',
+          '아래 버튼으로 같은 질문을 다시 분석할 수 있습니다.'
+        );
+        finish();
+        $('#answer-retry').hidden = !lastQuestion;
+        return;
+      }
+      if (job.result?.evidence?.length) {
+        const signature = JSON.stringify(job.result.evidence);
+        if (shownEvidence !== signature) render(job.result, false);
+        shownEvidence = signature;
+      }
       if (job.status === 'evidence_only') {
         render(job.result, true);
-        $('#answer-status').textContent = '원자료만 제공 · 검토된 종합 답변 없음';
-        $('#context-ask-button').disabled = false;
+        progress('', '원자료만 제공 · 검토된 종합 답변 없음');
+        finish();
         return;
       }
-      $('#answer-status').textContent =
-        `근거 검색 → 분석 축별 종합 → 관계·통찰 검토 중 · ${Math.floor((Date.now() - started) / 1000)}초`;
-      timer = setTimeout(() => poll(url), 3000);
+      const elapsed = `조회 ${Math.floor((Date.now() - started) / 1000)}초`;
+      if (job.status === 'preparing') {
+        shownEvidence = '';
+        $('#context-answer').replaceChildren();
+        progress(
+          'preparing',
+          '최신 근거의 연결 색인을 준비하고 있습니다 · ' + elapsed,
+          '자료가 갱신되면 색인 준비에 수 분이 걸릴 수 있습니다. 준비가 끝나면 종합 분석이 자동으로 이어집니다.'
+        );
+      } else if (job.status === 'queued') {
+        progress('running', '근거 준비 완료 · 분석 작업 순서를 기다리고 있습니다 · ' + elapsed);
+      } else {
+        progress(
+          'running',
+          '답변 생성·관계 분석·독립 근거 검토 중 · ' + elapsed,
+          '검토를 통과한 종합 답변이 이곳에 자동으로 표시됩니다. 새로고침해도 같은 작업을 이어서 확인합니다.'
+        );
+      }
+      timer = setTimeout(() => poll(url, owner), 3000);
     } catch (e) {
-      if (e.name !== 'AbortError') $('#answer-status').textContent = e.message;
+      if (controller !== owner || owner.signal.aborted) return;
+      if (e.retryable && ++failures <= 8) {
+        const delay = Math.min(15000, 2000 * failures);
+        $('#answer-status').textContent =
+          '연결이 잠시 끊겼습니다 · 기존 분석 결과를 다시 조회합니다';
+        $('#answer-detail').textContent =
+          `${delay / 1000}초 후 자동 연결 · 새 분석을 중복 실행하지 않습니다.`;
+        timer = setTimeout(() => poll(url, owner), delay);
+        return;
+      }
+      progress(
+        '',
+        e.unauthorized ? '원격 로그인 시간이 만료되었습니다.' : e.message,
+        '저장된 작업의 진행 상태를 다시 확인할 수 있습니다.'
+      );
       $('#context-ask-button').disabled = false;
+      if (e.unauthorized) {
+        $('#answer-login').href = location.href;
+        $('#answer-login').hidden = false;
+        activeUrl = '';
+      } else if (e.retryable) $('#answer-resume').hidden = false;
+      else {
+        activeUrl = '';
+        $('#answer-retry').hidden = !lastQuestion;
+      }
     }
+  }
+  function resume() {
+    if (!activeUrl) return;
+    controller?.abort();
+    clearTimeout(timer);
+    controller = new AbortController();
+    failures = 0;
+    controls();
+    $('#context-ask-button').disabled = true;
+    poll(activeUrl);
   }
   document.addEventListener('context:query', async (e) => {
     const question = e.detail.query;
@@ -136,16 +249,23 @@
     controller?.abort();
     clearTimeout(timer);
     controller = new AbortController();
+    const owner = controller;
     started = Date.now();
+    lastQuestion = question;
+    activeUrl = '';
+    shownEvidence = '';
+    failures = 0;
+    controls();
     $('#context-ask-button').disabled = true;
-    $('#answer-status').textContent = '뉴스·논문·위험·지식의 최신 연결 근거를 찾고 있습니다…';
+    progress('preparing', '뉴스·논문·위험·지식의 최신 연결 근거를 찾고 있습니다…');
     $('#context-answer').replaceChildren();
     try {
-      const d = await get('/api/graph/ask?workspace=1', {
+      const d = await get('/api/graph/ask?workspace=1', owner, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question, node_ids: [] }),
       });
+      if (controller !== owner || owner.signal.aborted) return;
       render(d, Boolean(d.verification?.method === 'independent_evidence_review'));
       if (d.job) {
         const p = new URLSearchParams(location.search);
@@ -153,30 +273,44 @@
         p.set('q', question);
         p.delete('question');
         history.replaceState(null, '', '/context?' + p);
-        poll(d.job.url);
+        activeUrl = '/api/graph/answers/' + d.job.id;
+        poll(activeUrl, owner);
       } else {
-        $('#context-ask-button').disabled = false;
-        $('#answer-status').textContent =
-          d.verification?.method === 'independent_evidence_review'
-            ? '검토된 종합 답변'
-            : '현재 확보된 근거 범위의 응답';
+        finish();
+        const reviewed = d.verification?.method === 'independent_evidence_review';
+        progress(
+          reviewed ? 'complete' : '',
+          reviewed ? '검토된 종합 답변' : '현재 확보된 근거 범위의 응답'
+        );
       }
     } catch (e) {
-      if (e.name !== 'AbortError') $('#answer-status').textContent = e.message;
-      $('#context-ask-button').disabled = false;
+      if (controller !== owner || owner.signal.aborted) return;
+      progress('', e.unauthorized ? '원격 로그인이 필요합니다.' : e.message);
+      finish();
+      if (e.unauthorized) {
+        $('#answer-login').href = location.href;
+        $('#answer-login').hidden = false;
+      } else $('#answer-retry').hidden = false;
     }
   });
   const initial = new URLSearchParams(location.search);
   const initialQuery = $('#query').value;
+  lastQuestion = initialQuery;
   if (initialQuery) $('#active-question').textContent = '질의 · ' + initialQuery;
   if (/^[a-f0-9]{32}$/.test(initial.get('answer') || '')) {
-    controller = new AbortController();
     started = Date.now();
-    $('#context-ask-button').disabled = true;
-    poll('/api/graph/answers/' + initial.get('answer'));
+    activeUrl = '/api/graph/answers/' + initial.get('answer');
+    progress('preparing', '저장된 분석 작업의 진행 상태를 확인합니다…');
+    resume();
   } else {
     $('#context-ask-button').disabled = false;
   }
+  $('#answer-resume').onclick = resume;
+  $('#answer-retry').onclick = retryQuestion;
+  addEventListener('pageshow', (event) => {
+    if (event.persisted) resume();
+  });
+  addEventListener('online', resume);
   addEventListener('pagehide', () => {
     controller?.abort();
     clearTimeout(timer);

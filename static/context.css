@@ -219,6 +219,34 @@ button:disabled {
 [hidden] {
   display: none !important;
 }
+.answer-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+.answer-progress li {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e8edf4;
+  color: var(--muted);
+  font-size: 13px;
+}
+.answer-progress li[aria-current='step'] {
+  background: #214a73;
+  color: white;
+}
+.answer-progress li[data-done='true'] {
+  background: #dcefe8;
+  color: #226554;
+}
+#answer-status {
+  font-weight: 600;
+}
+#answer-detail {
+  white-space: pre-line;
+}
 @media (max-width: 1000px) {
   .groups {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -43,10 +43,20 @@
       <section class="question-panel" aria-label="종합 질의 결과">
         <h2>종합 분석 결과</h2>
         <p id="active-question" class="legend"></p>
+        <ol id="answer-progress" class="answer-progress" aria-label="분석 단계" hidden>
+          <li data-stage="preparing">근거 준비</li>
+          <li data-stage="running">종합 분석·독립 검토</li>
+          <li data-stage="complete">결과 확인</li>
+        </ol>
         <p id="answer-status" role="status" aria-live="polite"></p>
+        <p id="answer-detail" class="legend"></p>
+        <button type="button" id="answer-resume" hidden>진행 상태 다시 확인</button>
+        <button type="button" id="answer-retry" hidden>이 질문 다시 분석</button>
+        <a id="answer-login" href="" hidden>다시 로그인하고 결과 확인</a>
         <div id="context-answer"></div>
       </section>
       <p id="status" role="status" aria-live="polite"></p>
+      <button type="button" id="context-reload" hidden>관련 자료 다시 조회</button>
       <div class="toolbar">
         <button id="back" hidden>전체 검색 결과로</button
         ><label><input id="citations-only" type="checkbox" /> 직접 인용·동일 발췌만 보기</label

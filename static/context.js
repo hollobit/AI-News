@@ -167,14 +167,23 @@
       $('#comparison').hidden = true;
       $('#export').disabled = true;
     }
+    $('#context-reload').hidden = true;
     $('#status').textContent = '현재 근거 연결을 확인하고 있습니다…';
     try {
       const r = await fetch(
         '/api/context?' + new URLSearchParams({ q, ...(focus ? { node: focus } : {}) }),
         { signal: controller.signal }
       );
-      const data = await r.json();
+      const data = await r.json().catch(() => ({}));
       if (version !== serial) return;
+      if ([408, 429].includes(r.status) || r.status >= 500) {
+        if (++retries <= 60) {
+          $('#status').textContent =
+            '자료 조회 연결이 지연되고 있습니다. 기존 질의를 자동으로 다시 조회합니다.';
+          timer = setTimeout(() => load(true), 5000);
+          return;
+        }
+      }
       if (r.status === 202) {
         if (++retries > 60) throw Error('색인 준비가 길어지고 있습니다. 잠시 후 다시 조회하세요.');
         $('#status').textContent = data.message + ' 자동 갱신 중';
@@ -190,8 +199,15 @@
         : '검색 관련성 후보입니다. 항목을 선택해 실제 근거 연결을 확인하세요.';
       render();
     } catch (e) {
-      if (e.name !== 'AbortError')
-        $('#status').textContent = e.message + ' 종합 질의 버튼으로 다시 시도할 수 있습니다.';
+      if (version !== serial || e.name === 'AbortError') return;
+      if (e instanceof TypeError && ++retries <= 60) {
+        $('#status').textContent =
+          '자료 조회 연결을 복구하고 있습니다. 잠시 후 자동으로 다시 조회합니다.';
+        timer = setTimeout(() => load(true), 5000);
+        return;
+      }
+      $('#status').textContent = e.message;
+      $('#context-reload').hidden = false;
     }
   }
   $('#search').onsubmit = (e) => {
@@ -225,6 +241,7 @@
     focus = '';
     load();
   };
+  $('#context-reload').onclick = () => load();
   $('#citations-only').onchange = render;
   for (const t of ['의료 AI', '공공 AX', '에이전트', 'AI 인프라', '소버린 AI'])
     $('#suggestions').append(
@@ -255,6 +272,9 @@
   addEventListener('pagehide', () => {
     clearTimeout(timer);
     controller?.abort();
+  });
+  addEventListener('pageshow', (event) => {
+    if (event.persisted) load(true);
   });
   $('#context-example').disabled = false;
   load();
