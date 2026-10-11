@@ -15,9 +15,7 @@ def question_draft_role(question, plan=None):
     axes=(plan or {}).get('axes',[])
     focused=re.search(r'차이|비교|작동\s*(?:방식|원리)|벤치마크|데이터세트|데이터셋|\b(?:compare|comparison|benchmark|dataset)',question,re.I)
     broad=re.search(r'대응|전략|예측|전망|추천|정책|국제|\b(?:strategy|forecast|recommend|policy)',question,re.I)
-    # The planner may add a fourth integration axis to a three-part comparison;
-    # that does not turn the same focused question into broad strategic advice.
-    return 'graph_draft' if focused and not broad and 1<=len(axes)<=4 and len(question)<=250 else 'graph_answer'
+    return 'graph_draft' if focused and not broad and 1<=len(axes)<=3 and len(question)<=250 else 'graph_answer'
 
 
 class StructuredResult(dict):

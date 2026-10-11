@@ -62,7 +62,7 @@ def test_only_question_drafts_use_luna_and_review_and_repair_remain_sol():
     ('A와 B의 비교',2,'graph_draft'),
     ('최근 보안 사고 유형은?',2,'graph_answer'),
     ('벤치마크 차이에 따른 대응 전략은?',3,'graph_answer'),
-    ('데이터세트와 성능 비교',4,'graph_draft'),
+    ('데이터세트와 성능 비교',4,'graph_answer'),
     ('데이터세트와 성능 비교',5,'graph_answer'),
     ('데이터세트와 성능 비교',0,'graph_answer'),
 ])
