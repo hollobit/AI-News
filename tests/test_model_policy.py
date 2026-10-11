@@ -49,6 +49,28 @@ def test_latest_models_do_not_allow_older_env_override(monkeypatch):
     with pytest.raises(ValueError):policy('baseline_analysis')
 
 
+def test_only_question_drafts_use_luna_and_review_and_repair_remain_sol():
+    from llm_runtime import INTERACTIVE_ROLES
+    assert policy('graph_draft')['model']=='gpt-6-luna'
+    assert policy('graph_draft')['reasoning_effort']=='medium'
+    assert policy('graph_answer')['model']=='gpt-6.1-sol'
+    assert 'graph_draft' in INTERACTIVE_ROLES
+
+
+@pytest.mark.parametrize('question,axes,expected',[
+    ('Physical AI 벤치마크와 데이터세트 차이가 성능 해석에 주는 의미는?',3,'graph_draft'),
+    ('A와 B의 비교',2,'graph_draft'),
+    ('최근 보안 사고 유형은?',2,'graph_answer'),
+    ('벤치마크 차이에 따른 대응 전략은?',3,'graph_answer'),
+    ('데이터세트와 성능 비교',4,'graph_draft'),
+    ('데이터세트와 성능 비교',5,'graph_answer'),
+    ('데이터세트와 성능 비교',0,'graph_answer'),
+])
+def test_question_routing_keeps_broad_or_unplanned_synthesis_on_sol(question,axes,expected):
+    from model_policy import question_draft_role
+    assert question_draft_role(question,{'axes':['축']*axes})==expected
+
+
 def test_access_preflight_caches_failure_and_never_downgrades(tmp_path):
     from model_access import ensure_model_access
     from engine_errors import EngineError
@@ -102,3 +124,34 @@ def test_announcement_execution_matches_policy_and_restores_wire_ids(monkeypatch
     assert result.provenance['policy_version']=='news-models-announcement-v1'
     assert result.provenance['role']=='integrated_analysis'
     assert result.provenance['wire_format']=='short-evidence-ids-v1'
+
+
+def test_question_only_instructions_keep_model_review_and_isolation(monkeypatch,tmp_path):
+    import tomllib
+    from semantic import QUESTION_INSTRUCTIONS
+    monkeypatch.setenv('NEWS_EXTERNAL_ANALYSIS_ENABLED','1')
+    monkeypatch.setenv('NEWS_LLM_RUNTIME_DB',str(tmp_path/'runtime.db'))
+    monkeypatch.setenv('TELEGRAM_API_HASH','test-private-secret')
+    monkeypatch.setattr('semantic.codex_executable',lambda:'codex')
+    instruction_files=[]
+    def execute(command,**kwargs):
+        assert command[command.index('--model')+1]=='gpt-6.1-sol'
+        assert 'model_reasoning_effort="medium"' in command
+        assert '--ignore-user-config' in command and '--ephemeral' in command
+        assert command[command.index('--sandbox')+1]=='read-only'
+        assert 'TELEGRAM_API_HASH' not in kwargs['env']
+        instructions=[a for a in command if a.startswith('model_instructions_file=')]
+        if kwargs['input']=='question':
+            file=Path(tomllib.loads(instructions[0])['model_instructions_file'])
+            assert file.read_text()==QUESTION_INSTRUCTIONS
+            assert 'independently check the complete answer' in file.read_text()
+            instruction_files.append(file)
+        else:assert instructions==[]
+        Path(command[command.index('--output-last-message')+1]).write_text('{"ok":true}')
+        return SimpleNamespace(returncode=0,stderr='')
+    monkeypatch.setattr('semantic.subprocess.run',execute)
+    question=run_structured('question',{},role='graph_answer')
+    other=run_structured('other',{},role='baseline_verification')
+    assert question.provenance['instruction_profile']=='grounded-question-v1'
+    assert other.provenance['instruction_profile']=='default'
+    assert instruction_files and all(not p.exists() for p in instruction_files)

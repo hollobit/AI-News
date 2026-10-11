@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import pytest
 
-from graph_answer_format import apply_patch, expand
+from graph_answer_format import apply_patch, expand, review_view, citation_corrections
 from graph_answer_quality import assess
 from graph_rag import validate_answer
 from test_answer_quality import audit
@@ -87,3 +87,68 @@ def test_compact_audit_still_requires_every_check_and_failure_explanation():
 @pytest.mark.parametrize('limits',[['인용 없는 새로운 설명'],[1],[True],[0,0]])
 def test_limitations_cannot_introduce_prose_outside_cited_claims(limits):
     with pytest.raises(RuntimeError):expand(dict(claims=[claim()],paragraphs=[[0]],limitations=limits))
+
+
+def test_review_representation_preserves_every_published_sentence_and_condition_once():
+    item=claim(kind='connection')
+    item.update(sentences=['방법 A와 방법 B는 데이터의 범위가 다르다.','같은 조건의 결과는 미확보여서 우열을 확정할 수 없다.'],
+                premises=[0],assumptions=[],counterevidence=[],uncertainty=[1])
+    authored=dict(claims=[item,claim('확인한 발췌의 범위에 한정한 설명이다.')],paragraphs=[[1],[0]],limitations=[1])
+    candidate=expand(authored)
+    view=review_view(candidate,authored)
+    assert expand({k:v for k,v in view.items() if k!='answer_format'})==candidate
+    assert 'answer' not in view and 'text' not in view['claims'][0]
+    assert view['claims'][0]['uncertainty']==[1]
+    assert review_view(candidate)==candidate
+    view['claims'][0]['sentences'][0]='외부 변경'
+    assert authored['claims'][0]['sentences'][0]==item['sentences'][0]
+
+
+@pytest.mark.parametrize('field',['answer','claims','limitations'])
+def test_compact_review_cannot_hide_different_publication_content(field):
+    authored=dict(claims=[claim()],paragraphs=[[0]],limitations=[])
+    candidate=expand(authored)
+    if field=='claims':candidate[field][0]['text']='검토를 피하려는 새 사실'
+    elif field=='limitations':candidate[field]=['검토를 피하려는 새 사실']
+    else:candidate[field]+=' 검토를 피하려는 새 사실'
+    with pytest.raises(RuntimeError,match='일치하지'):review_view(candidate,authored)
+
+
+@pytest.mark.parametrize('fixes,supported',[
+    ([dict(claim_index=0,evidence_ids=['new'])],False),
+    ([dict(claim_index=0,evidence_ids=['invented'])],True),
+    ([dict(claim_index=True,evidence_ids=['new'])],True),
+    ([dict(claim_index=0,evidence_ids=[])],True),
+    ([dict(claim_index=0,evidence_ids=['new','new'])],True),
+    ([dict(claim_index=0,evidence_ids=['new'])]*2,True),
+    ([dict(claim_index=0,evidence_ids=['new'],text='교체 문장')],True),
+    (None,True),
+])
+def test_citation_fix_must_be_approved_unique_and_from_real_context(fixes,supported):
+    original=dict(claims=[claim()],paragraphs=[[0]],limitations=[])
+    with pytest.raises(RuntimeError):citation_corrections(original,fixes,
+        [dict(claim_index=0,supported=supported)],[dict(id='e'),dict(id='new')])
+
+
+def test_passage_parts_preserve_explanation_without_positional_annotations():
+    authored=dict(claims=[dict(kind='insight',axis='조건',evidence_ids=['e'],passage=dict(
+        premises='A와 B의 시험 조건이 다르다.',explanation='따라서 점수를 바로 비교하기 어렵다.',
+        uncertainty='공통 조건의 검증은 미확보다.',assumptions=None,counterevidence=None))],
+        paragraphs=[[0]],limitations=[0])
+    result=expand(authored)
+    assert result['claims'][0]['premises']=='A와 B의 시험 조건이 다르다.'
+    assert result['claims'][0]['uncertainty']=='공통 조건의 검증은 미확보다.'
+    assert result['claims'][0]['counterevidence']=='미확보'
+    assert result['answer']=='A와 B의 시험 조건이 다르다. 따라서 점수를 바로 비교하기 어렵다. 공통 조건의 검증은 미확보다. [e]'
+    validate_answer(result,[dict(id='e')])
+    review_view(result,authored)
+
+
+@pytest.mark.parametrize('change',[
+    {'premises':None},{'uncertainty':''},{'explanation':False},{'assumptions':1},{'counterevidence':[]},{'invented':'x'},
+])
+def test_passage_cannot_drop_inference_requirements_or_invent_fields(change):
+    passage=dict(premises='원문 전제',explanation='조건부 해석',uncertainty='한계',assumptions=None,counterevidence=None)
+    passage.update(change)
+    authored=dict(claims=[dict(kind='insight',axis='조건',evidence_ids=['e'],passage=passage)],paragraphs=[[0]],limitations=[])
+    with pytest.raises(RuntimeError):expand(authored)

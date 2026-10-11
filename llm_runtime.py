@@ -8,7 +8,7 @@ import time
 
 DEFAULT_PATH = Path(__file__).resolve().parent / 'data' / 'llm_runtime.sqlite3'
 DEFAULT_LIMIT = 6
-INTERACTIVE_ROLES = ('graph_answer', 'strategic_question', 'strategic_question_verification', 'engine_probe')
+INTERACTIVE_ROLES = ('graph_answer', 'graph_draft', 'strategic_question', 'strategic_question_verification', 'engine_probe')
 
 
 class ClosingConnection(sqlite3.Connection):
@@ -141,9 +141,10 @@ class LLMRuntime:
                     active = db.execute("SELECT COUNT(*) FROM llm_calls WHERE status='running'").fetchone()[0]
                     # Interactive questions wait for a free slot ahead of bulk jobs;
                     # old jobs age into that tier after 60 seconds to prevent starvation.
-                    bulk_active = db.execute("SELECT COUNT(*) FROM llm_calls WHERE status='running' AND role NOT IN (?,?,?,?)",
+                    interactive_slots=','.join('?' for _ in INTERACTIVE_ROLES)
+                    bulk_active = db.execute(f"SELECT COUNT(*) FROM llm_calls WHERE status='running' AND role NOT IN ({interactive_slots})",
                                              INTERACTIVE_ROLES).fetchone()[0]
-                    analysis_active = db.execute("SELECT COUNT(*) FROM llm_calls WHERE status='running' AND role NOT LIKE '%verification' AND role NOT IN (?,?,?,?)", INTERACTIVE_ROLES).fetchone()[0]
+                    analysis_active = db.execute(f"SELECT COUNT(*) FROM llm_calls WHERE status='running' AND role NOT LIKE '%verification' AND role NOT IN ({interactive_slots})", INTERACTIVE_ROLES).fetchone()[0]
                     from llm_priority import queue_key
                     waiting = sorted(db.execute("SELECT id,role,queued_at FROM llm_calls WHERE status='queued'").fetchall(),
                                      key=lambda row: queue_key(row, stamp, INTERACTIVE_ROLES))

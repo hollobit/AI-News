@@ -12,6 +12,7 @@ import uuid
 from evidence_search import terms, query_anchors
 from graph_snapshot import GraphSnapshots, filters
 from graph_rag import answer_question, build_retrieval, GraphResult
+from graph_answer_format import PIPELINE
 from projection_cache import content_digest
 from graph_quick_sources import cold_answer, setup_source_search
 
@@ -153,7 +154,7 @@ class GraphQuestions:
                 checked=self.get(candidate['id'])
                 if checked['status']=='complete':return self._cached_answer(dict(candidate),started,checked)
         revision,graph,_=self.snapshots.request(params)
-        key=content_digest(['two-phase-3-explanatory',revision,request])
+        key=content_digest([PIPELINE,revision,request])
         job=None
         with self.lock:
             with self.db() as db:
@@ -257,7 +258,7 @@ class GraphQuestions:
                     revision=current
                     with self.db(timeout=10) as db:
                         db.execute('UPDATE graph_question_jobs SET revision=?,key=? WHERE id=?',
-                            (revision,content_digest(['two-phase-3-explanatory',revision,request]),identity))
+                            (revision,content_digest([PIPELINE,revision,request]),identity))
                 if graph:break
                 if not fallback_checked and time.monotonic()-begun>=5:
                     fallback_checked=True

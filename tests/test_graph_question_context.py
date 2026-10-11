@@ -93,7 +93,7 @@ def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeyp
             support_id=next(e['id'] for e in data['evidence'] if e['source_url']==original['source_url'])
             assert data['claims'][0]['evidence_ids']==[support_id]
             assert data['axes'] == ['성공률'] and data['as_of']
-            value=dict(checks=[dict(claim_index=0,supported=True,reason='조건부 해석')],answer_supported=True,missing_information=[])
+            value=dict(checks=[dict(claim_index=0,supported=True,reason='조건부 해석')],answer_supported=True,missing_information=[],citation_corrections=[])
             if 'quality' in schema['properties']:
                 from test_answer_quality import audit
                 count=schema['properties']['quality']['properties']['axes']['minItems']

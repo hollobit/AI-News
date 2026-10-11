@@ -25,7 +25,7 @@ def isolated_answer_cache(monkeypatch):
 
 def audit(*, explanation=True, supported=True, axes=('addressed', 'addressed')):
     return dict(checks=[dict(claim_index=0, supported=supported, reason='원문 조건 대조')],
-        answer_supported=supported, missing_information=[], quality=dict(
+        answer_supported=supported, missing_information=[], citation_corrections=[], quality=dict(
             criteria={key: dict(passed=explanation if key == 'explanation' else True,
                 reason='이름 나열 대신 방법과 데이터의 차이가 평가에 미치는 의미를 설명하세요.' if key == 'explanation' and not explanation else '질문의 요구와 원문 범위를 충족합니다.')
                 for key in ('direct_answer', 'coverage', 'explanation', 'integration', 'scope')},
@@ -38,9 +38,20 @@ def draft(text='평가 방법과 데이터의 범위가 달라 비교 조건을 
         counterevidence='미확보', uncertainty='공통 조건 실험 미확보')], limitations=[])
 
 
+def review_explanation(prompt):
+    from graph_answer_format import expand
+    from graph_citations import restore
+    data=json.loads(prompt.split('\n',1)[1])
+    assert data['answer_format']=='sentence-references-v1'
+    payload={k:data[k] for k in ('claims','paragraphs','limitations')}
+    return expand(restore(payload,{data['evidence'][0]['id']:'source:e'}))
+
+
 def execute(monkeypatch, responses, *, graph=None, events=None):
     calls=[]
     def runner(prompt, schema, **kwargs):
+        initial='paragraphs' in schema['properties'] and 'changes' not in schema['properties'] and '\nFORMAT_REPAIR:\n' not in prompt
+        assert kwargs['role']==('graph_draft' if initial else 'graph_answer')
         calls.append((prompt, schema))
         value=responses.pop(0)
         if isinstance(value, Exception): raise value
@@ -87,7 +98,7 @@ def test_list_only_answer_is_repaired_and_independently_rechecked(monkeypatch):
     assert quality['revision_count']==1
     assert [r['status'] for r in quality['review_rounds']]==['needs_review','passed']
     assert '차이가 평가에 미치는 의미' in calls[2][0]
-    assert 'checks' in calls[3][1]['properties'] and result['answer'] in json.loads(calls[3][0].split('\n',1)[1])['answer']
+    assert 'checks' in calls[3][1]['properties'] and result['answer']==review_explanation(calls[3][0])['answer']
     assert ('review', {'phase':'repair'}) in events and ('review', {'phase':'recheck'}) in events
     assert events[-1][0]=='finalize'
 
@@ -178,7 +189,7 @@ def test_patch_only_adds_missing_explanation_and_full_merged_answer_is_reviewed(
     assert sufficient(result) and len(calls)==4
     assert result['claims'][0]['text']==first['answer']
     checked=json.loads(calls[3][0].split('\n',1)[1])
-    assert len(checked['claims'])==2 and result['answer'] in checked['answer']
+    assert len(checked['claims'])==2 and result['answer']==review_explanation(calls[3][0])['answer']
     assert result['verification']['quality']['patch']==dict(changed_claims=0,added_claims=1,retained_claims=1)
     assert checked['review_claim_indices']==[1] and checked['previously_supported_indices']==[0]
     assert result['verification']['reused_claim_checks']==1
@@ -224,6 +235,76 @@ def test_successful_review_does_not_append_new_uncited_reviewer_prose(monkeypatc
     run,_=execute(monkeypatch,[draft(),value])
     result=run()
     assert sufficient(result) and result['limitations']==[]
+
+
+def test_citation_only_repair_uses_the_same_independent_review_without_rewriting(monkeypatch):
+    from graph_answer_format import expand
+    original=dict(claims=[wire_claim(draft()['claims'][0])],paragraphs=[[0]],limitations=[])
+    original['claims'][0]['evidence_ids']=['CITE1']
+    value=audit();value['citation_corrections']=[dict(claim_index=0,evidence_ids=['CITE2'])]
+    seen=[]
+    def runner(prompt,schema,**kwargs):
+        seen.append((prompt,schema))
+        return copy.deepcopy(original if len(seen)==1 else value)
+    monkeypatch.setattr('semantic.run_structured',runner)
+    evidence=[dict(id='a',text='別の話題'),dict(id='b',text='평가 방법과 데이터의 범위가 다릅니다.')]
+    result=answer_question(GraphResult(),'평가 방법과 데이터 차이는?',detailed=True,
+        retrieval=dict(nodes=[],edges=[],evidence=evidence,no_hits=False),analysis_plan={'axes':['방법','데이터']})
+    assert sufficient(result) and len(seen)==2
+    assert result['claims'][0]['evidence_ids']==['b']
+    assert result['claims'][0]['text']==expand(original)['claims'][0]['text']
+    assert '[b]' in result['answer'] and '[a]' not in result['answer']
+    assert result['verification']['citation_corrections']==[dict(claim_index=0,evidence_ids=['b'])]
+    assert result['verification']['quality']['review_rounds'][0]['citation_changes']==[
+        dict(claim_index=0,original_evidence_ids=['a'],evidence_ids=['b'])]
+    assert result['verification']['quality']['revision_count']==0
+
+
+def test_citation_fix_survives_prose_repair_and_is_reused_only_after_independent_pass(monkeypatch):
+    original=dict(claims=[wire_claim(draft()['claims'][0])],paragraphs=[[0]],limitations=[])
+    original['claims'][0]['evidence_ids']=['CITE1']
+    first=audit(explanation=False);first['citation_corrections']=[dict(claim_index=0,evidence_ids=['CITE2'])]
+    addition=copy.deepcopy(original['claims'][0]);addition.update(evidence_ids=['CITE2'],sentences=['데이터 범위가 달라 일반화할 수 없습니다.'])
+    patch=dict(changes=[],additions=[addition],paragraphs=[[0],[1]],limitations=None)
+    final=audit();final['checks']=[dict(claim_index=1,supported=True,reason=None)]
+    responses=[original,first,patch,final];calls=[]
+    def runner(prompt,schema,**kwargs):
+        calls.append(prompt);return copy.deepcopy(responses.pop(0))
+    monkeypatch.setattr('semantic.run_structured',runner)
+    result=answer_question(GraphResult(),'평가 방법과 데이터 차이는?',detailed=True,
+        retrieval=dict(nodes=[],edges=[],evidence=[dict(id='a',text='별도 자료'),dict(id='b',text='조건과 데이터 차이')],no_hits=False),
+        analysis_plan={'axes':['방법','데이터']})
+    assert sufficient(result) and len(calls)==4
+    assert all(c['evidence_ids']==['b'] for c in result['claims'])
+    recheck=json.loads(calls[3].split('\n',1)[1])
+    assert recheck['review_claim_indices']==[1] and recheck['previously_supported_indices']==[0]
+    assert result['verification']['quality']['review_rounds'][0]['citation_changes']
+
+
+def test_missing_citation_audit_cannot_publish_a_compact_answer(monkeypatch):
+    value=audit();value.pop('citation_corrections')
+    run,_=execute(monkeypatch,[draft(),value])
+    with pytest.raises(RuntimeError,match='교정 검토'):run()
+
+
+@pytest.mark.parametrize('quality_passes',[True,False])
+def test_invalid_luna_format_uses_one_sol_repair_then_independent_review(monkeypatch,quality_passes):
+    broken=dict(claims=[wire_claim(draft()['claims'][0])],paragraphs=[[0]],limitations=[])
+    broken['claims'][0]['uncertainty']=[]
+    run,calls=execute(monkeypatch,[broken,draft(),audit(explanation=quality_passes)])
+    result=run()
+    assert len(calls)==3 and sufficient(result)==quality_passes
+    assert [s['stage'] for s in result['timing']['stages']]==['generation','generation_repair','review']
+    assert result['timing']['stages'][0]['error_code']=='invalid_answer_format'
+    assert '\nFORMAT_REPAIR:\n' in calls[1][0]
+    assert result['verification']['quality']['revision_count']==1
+
+
+def test_engine_outage_does_not_trigger_question_model_fallback(monkeypatch):
+    from engine_errors import EngineError
+    run,calls=execute(monkeypatch,[EngineError('rate_limit')])
+    with pytest.raises(EngineError):run()
+    assert len(calls)==1
 
 
 @pytest.mark.parametrize('no_hits',[False,True])
