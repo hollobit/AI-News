@@ -374,6 +374,7 @@
     const host = new URL(origin);
     if (
       host.protocol !== 'https:' ||
+      ['api.trycloudflare.com', 'www.trycloudflare.com'].includes(host.hostname) ||
       host.username ||
       host.password ||
       host.pathname !== '/' ||

@@ -61,10 +61,16 @@
     }
   }
   query.addEventListener('input', update);
-  $('#remote-query-form').addEventListener('submit', (event) => {
+  async function connect(event) {
     event.preventDefault();
-    update();
-    if (!$('#remote-open').hidden) location.assign($('#remote-open').href);
+    if ($('#remote-refresh').disabled) return;
+    if (await load()) location.assign($('#remote-open').href);
+  }
+  $('#remote-query-form').addEventListener('submit', connect);
+  $('#remote-open').addEventListener('click', (event) => {
+    // Keep native new-tab behavior; ordinary navigation re-resolves the destination.
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    connect(event);
   });
   async function load() {
     origin = '';
@@ -91,12 +97,14 @@
         data.mode === 'temporary'
           ? '임시 연결 · 주소가 바뀌면 이 페이지에서 다시 연결할 수 있습니다.'
           : '연결된 서버가 실행 중일 때 이용할 수 있습니다.';
+      return true;
     } catch (error) {
       $('#remote-status').textContent =
         error.name === 'TimeoutError'
           ? '접속 정보 확인이 지연되고 있습니다. 다시 확인해 주세요.'
           : error.message;
       $('#remote-address').textContent = '';
+      return false;
     } finally {
       $('#remote-refresh').disabled = false;
     }
