@@ -73,8 +73,8 @@ def prompt(service, role, evidence, payload, *, extra_instructions=""):
 
 
 def execute(service, run_id, evidence, request, enrichment):
-    from strategic_workflow import REPORT, AUDIT, object_schema, evidence_schema, now
-    from event_observations import report_schema, audit_schema
+    from strategic_workflow import REPORT, object_schema, evidence_schema
+    from event_observations import report_schema
     from risk_analysis import RISK_SCHEMA, validate_risk_report
     schema = evidence_schema(object_schema({'report': report_schema(REPORT, evidence), 'risk_report': RISK_SCHEMA}), evidence)
     generation = prompt(service, 'integrated_analysis', evidence, {'coverage': enrichment['coverage']})
@@ -89,41 +89,5 @@ def execute(service, run_id, evidence, request, enrichment):
     # Revalidate checkpoint artifacts too; never trust status alone.
     generated = validate_generation(generated)
     report, risk_report = generated['report'], generated['risk_report']
-    review_schema = evidence_schema(object_schema({'verification': audit_schema(AUDIT, report['event_observations']),
-                                                   'risk_verification': AUDIT}), evidence)
-    critical = any(r.get('current_severity') in ('high', 'critical') for r in risk_report['risks'])
-
-    def validate_review(value):
-        return {'verification': service._validate_audit(value['verification'], evidence, report, require_all_news=True),
-                'risk_verification': service._validate_audit(value['risk_verification'], evidence, risk_report, risk=True, require_all_news=True)}
-
-    reviewed = service._stage(run_id, 'integrated_verification', lambda: cached_call(
-        service, run_id, 'integrated_verification', prompt(service, 'integrated_verification', evidence, generated),
-        review_schema, validate_review, escalation=critical),
-        dependencies=[prompt(service, 'integrated_verification', evidence, generated),review_schema,policy('integrated_verification',escalation=critical)])
-    audit = service._current_audit(reviewed['verification'], evidence, report)
-    risk_audit = service._current_audit(reviewed['risk_verification'], evidence, risk_report,
-                                      required_checked=risk_report['not_assessable_evidence_ids'])
-    accepted = audit.get('accepted') is True and risk_audit.get('accepted') is True
-    for stage, value in [('synthesis', report), ('risk_assessment', risk_report),
-                         ('verification', audit), ('risk_verification', risk_audit)]:
-        service._save(run_id, stage, value)
-    final = dict(report=report, verification=audit, risk_report=risk_report, risk_verification=risk_audit,
-                 verified=accepted, risk_verified=risk_audit.get('accepted') is True,
-                 evidence=evidence, event_observations=report['event_observations'], coverage=enrichment['coverage'],
-                 model_provenance=service._model_provenance(run_id), basis='snapshot_excerpt_analysis', completed_at=now(),
-                 orchestration={'pattern': VERSION, 'generation_calls_max': 1, 'review_calls_max': 1,
-                                'independent_role_reports': False,
-                                'reused_stages': {stage: service._artifact(run_id, 'reuse_' + stage) for stage in ('integrated_analysis','integrated_verification') if service._artifact(run_id, 'reuse_' + stage)}, 'mirofish_simulation_executed': False})
-    from graph_rag import validated_workflow_content
-    from risk_analysis import validated_risk_content
-    if accepted and not (validated_workflow_content(final, run_id) and validated_risk_content(final, run_id)):
-        accepted = False
-        audit = dict(audit, accepted=False, issues=list(audit.get('issues', [])) + ['공개 근거 계약을 만족하지 않습니다.'])
-        final.update(verified=False, verification=audit)
-        service._save(run_id, 'verification', audit)
-    service._save(run_id, 'final', final)
-    from review_routing import route_review
-    service._save(run_id, 'review_plan', route_review({'id': run_id, 'results': final}))
-    # Rejection is preserved for the existing bounded completion retry policy.
-    service._status(run_id, 'complete' if accepted else 'needs_review')
+    from workflow_joint import finish
+    finish(service,run_id,evidence,request,enrichment,report,risk_report,pattern=VERSION,normal_calls=2)

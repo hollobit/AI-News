@@ -18,6 +18,8 @@ class Model:
     def __call__(self, prompt, schema):
         role=prompt.splitlines()[0][6:];self.calls.append(role)
         data=json.loads(prompt.split('DATA:\n')[1]);ids=[e['id'] for e in data['evidence']]
+        if role in ('revision','risk_revision'):
+            return data['context']['report' if role=='revision' else 'risk_report']
         if role=='integrated_analysis':
             return dict(report=dict(summary='개발 도구 공개', claims=[dict(title='도구 공개', detail='기업이 AI 도구를 공개했다.', category='watch_signal', evidence_ids=[ids[0]], uncertainty='사용 성과는 미확인')], limitations=['성과 미확인'], event_observations=[]), risk_report=dict(summary='위험 판단 근거 부족',risks=[],assessed_evidence_ids=[],not_assessable_evidence_ids=ids,limitations=['피해 근거 없음']))
         audit=dict(accepted=not self.reject,issues=['근거 부족'] if self.reject else [],checked_evidence_ids=[] if self.omit else ids,limitations=[])
@@ -42,7 +44,8 @@ def test_two_calls_keep_independent_risk_and_strategy_gates(tmp_path,reject,omit
     m=Model(reject,omit);s=WorkflowService(tmp_path/'db',sources=Sources(),analyzer=m,enabled=True)
     try:
         result=run(s)
-        assert m.calls==['integrated_analysis','integrated_verification']
+        assert m.calls[:2]==['integrated_analysis','integrated_verification']
+        assert len(m.calls)==(5 if reject or omit else 2)
         assert result['status']==('needs_review' if reject or omit else 'complete'),result['error']
         from graph_rag import validated_workflow_content
         assert bool(validated_workflow_content(result['results'],result['id'])) == (not reject and not omit)
@@ -69,7 +72,8 @@ def test_rejected_review_is_not_cached_but_draft_can_be_reused(tmp_path):
         assert run(s)['status']=='needs_review'
         m.reject=False
         assert run(s)['status']=='complete'
-        assert m.calls==['integrated_analysis','integrated_verification','integrated_verification']
+        assert m.calls.count('integrated_analysis')==1
+        assert m.calls.count('integrated_verification')==3
     finally:s.close()
 
 

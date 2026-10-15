@@ -54,7 +54,8 @@ def get(self, route, params):
         return True
     if route.path == '/api/runtime/analysis':
         from llm_runtime import runtime_status as analysis_runtime_status
-        self.send_json(analysis_runtime_status())
+        from system_one import status as decision_status
+        self.send_json(dict(analysis_runtime_status(),system_one=decision_status(self.services.path)))
         return True
     if route.path == '/api/baseline' or baseline_match:
         if baseline_match:

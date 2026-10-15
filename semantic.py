@@ -9,6 +9,7 @@ import sqlite3
 import subprocess
 import tempfile
 import threading
+import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -197,10 +198,11 @@ def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_t
                            model=selected['model'], reasoning_effort=reasoning_effort) as ticket:
         result = _run_structured_cli(wire_prompt, wire_schema, executable, ticket, timeout=timeout,
                                      reasoning_effort=reasoning_effort, model=selected['model'],
-                                     analysis_instructions=role in ('graph_answer','graph_draft'))
+                                     analysis_instructions=True)
         return StructuredResult(restore(result,aliases), dict(selected, role=role, reasoning_effort=reasoning_effort,
             call_id=ticket.id, input_hash=input_digest(prompt),usage=ticket.usage,
-            instruction_profile='grounded-question-v1' if role in ('graph_answer','graph_draft') else 'default',
+            phase_ms=getattr(ticket,'phase_ms',{}),
+            instruction_profile=selected['instruction_profile'],
             wire_format='short-evidence-ids-v1' if aliases else 'original',wire_input_hash=input_digest(wire_prompt)))
 
 
@@ -212,6 +214,8 @@ Write explanations in Korean, retaining proper names and technical terms. Explai
 
 
 def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=240, reasoning_effort='medium', model=None, analysis_instructions=False):
+    started=time.monotonic()
+    ticket.phase_ms={}
     # Child only needs authentication, TLS and executable paths, not Telegram secrets.
     environment = {key: value for key, value in os.environ.items()
                    if key in {"PATH", "HOME", "TMPDIR", "LANG", "LC_ALL", "CODEX_HOME", "SSL_CERT_FILE"}}
@@ -227,7 +231,7 @@ def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=2
             command.extend(['--model', model])
         if analysis_instructions:
             # This request is analysis, not a coding session. Replace the
-            # built-in coding instructions only for the interactive role.
+            # built-in coding instructions for every excerpt-only analysis role.
             instructions = work / 'analysis-instructions.txt'
             instructions.write_text(QUESTION_INSTRUCTIONS, encoding='utf-8')
             command.extend(['-c', 'model_instructions_file=' + json.dumps(str(instructions))])
@@ -235,6 +239,8 @@ def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=2
                         "browser_use", "image_generation", "view_image", "code_mode_host"):
             command.extend(["--disable", feature])
         command.extend(["--enable", "skip_host_skill_discovery", "-"])
+        cli_started=time.monotonic()
+        ticket.phase_ms['prepare']=round((cli_started-started)*1000,2)
         try:
             # JSON events can contain article text. Retain numeric usage only;
             # the temporary stream is closed/deleted even on timeout or failure.
@@ -243,6 +249,9 @@ def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=2
                     process = subprocess.run(command, input=prompt, text=True, cwd=work, env=environment,
                                              stdout=events, stderr=subprocess.PIPE, timeout=timeout)
                 finally:
+                    # Includes CLI initialization and provider execution. Do not
+                    # label this as pure model or pure startup latency.
+                    ticket.phase_ms['cli_inclusive']=round((time.monotonic()-cli_started)*1000,2)
                     from llm_usage import read_usage, failure_code
                     events.seek(0)
                     ticket.usage=read_usage(events)
@@ -264,9 +273,11 @@ def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=2
             ticket.error_code = event_error or classify_failure(diagnostic, process.returncode)
             raise EngineError(ticket.error_code, process.returncode)
         try:
+            parse_started=time.monotonic()
             raw = output.read_text(encoding="utf-8")
             ticket.output_chars = len(raw)
             result = json.loads(raw)
+            ticket.phase_ms['parse']=round((time.monotonic()-parse_started)*1000,2)
         except (ValueError, TypeError):
             ticket.error_code = 'invalid_output'
             raise RuntimeError("분석 결과의 형식 또는 근거 검증에 실패했습니다. 다시 분석해 주세요.") from None

@@ -29,10 +29,19 @@ def test_unknown_review_or_custom_task_retry_source_failure_keep_full_path():
     for mutate in (
         lambda r:r['improvement_context']['review_issues'].append('위험 시나리오 누락'),
         lambda r:r['improvement_context']['followup_tasks'].append(dict(kind='custom',text='추가 질문')),
-        lambda r:r.update(completion_attempt=2),
+        lambda r:r.update(completion_attempt=4),
         lambda r:r.update(question='별도 질문'),
     ):
         r=request();mutate(r)
         assert select([e['evidence'][0]],r,e)['path']=='multi-role'
     e['coverage']['failed_urls']=['https://example.com']
     assert select([e['evidence'][0]],request(),e)['path']=='multi-role'
+
+
+def test_operational_retry_revalidates_without_full_role_reentry():
+    e=dict(evidence=[dict(id='e',origin='telegram_excerpt',text='일반 연구 비교 결과')],coverage={})
+    for attempt in (2,3):
+        r=request();r['completion_attempt']=attempt
+        assert select([e['evidence'][0]],r,e)['path']=='parallel-drafts-v1'
+        r['improvement_context']['review_issues'].append('반대 근거 누락')
+        assert select([e['evidence'][0]],r,e)['path']=='multi-role'

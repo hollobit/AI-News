@@ -86,6 +86,7 @@ def test_access_preflight_caches_failure_and_never_downgrades(tmp_path):
     assert [c['ok'] for c in result['checks']]==[False,False,True]
     assert ensure_model_access(caller=unavailable,state_path=path,stamp=1001)==result
     assert len(calls)==3
+    assert all(c['reasoning_effort']=='low' for c in calls)
 
 
 def test_cli_update_invalidates_cached_model_rejection(monkeypatch,tmp_path):
@@ -126,7 +127,7 @@ def test_announcement_execution_matches_policy_and_restores_wire_ids(monkeypatch
     assert result.provenance['wire_format']=='short-evidence-ids-v1'
 
 
-def test_question_only_instructions_keep_model_review_and_isolation(monkeypatch,tmp_path):
+def test_analysis_instructions_keep_model_review_and_isolation(monkeypatch,tmp_path):
     import tomllib
     from semantic import QUESTION_INSTRUCTIONS
     monkeypatch.setenv('NEWS_EXTERNAL_ANALYSIS_ENABLED','1')
@@ -141,17 +142,17 @@ def test_question_only_instructions_keep_model_review_and_isolation(monkeypatch,
         assert command[command.index('--sandbox')+1]=='read-only'
         assert 'TELEGRAM_API_HASH' not in kwargs['env']
         instructions=[a for a in command if a.startswith('model_instructions_file=')]
-        if kwargs['input']=='question':
+        if instructions:
             file=Path(tomllib.loads(instructions[0])['model_instructions_file'])
             assert file.read_text()==QUESTION_INSTRUCTIONS
             assert 'independently check the complete answer' in file.read_text()
             instruction_files.append(file)
-        else:assert instructions==[]
+        else:raise AssertionError("Analysis instructions missing")
         Path(command[command.index('--output-last-message')+1]).write_text('{"ok":true}')
         return SimpleNamespace(returncode=0,stderr='')
     monkeypatch.setattr('semantic.subprocess.run',execute)
     question=run_structured('question',{},role='graph_answer')
     other=run_structured('other',{},role='baseline_verification')
-    assert question.provenance['instruction_profile']=='grounded-question-v1'
-    assert other.provenance['instruction_profile']=='default'
+    assert question.provenance['instruction_profile']=='grounded-analysis-v1'
+    assert other.provenance['instruction_profile']=='grounded-analysis-v1'
     assert instruction_files and all(not p.exists() for p in instruction_files)

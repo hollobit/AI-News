@@ -77,10 +77,35 @@
         const usage = await Workspace.request('/api/runtime/analysis', { timeout: 15000 });
         const calls = host.querySelector('[data-pipeline-calls]');
         calls.replaceChildren();
+        const decision = usage.system_one;
+        if (decision) {
+          const state =
+            decision.mode === 'invalid'
+              ? '설정 확인 필요'
+              : decision.mode === 'off'
+                ? '중지'
+                : !decision.configured
+                  ? 'API 키 설정 대기'
+                  : '백그라운드 비교 평가';
+          const note = el('p', `Jev · ${state} · 기존 분석·독립 검토 유지`, calls);
+          note.dataset.decisionStatus = decision.enabled ? 'shadow' : 'inactive';
+          if (decision.provider_wait)
+            el(
+              'p',
+              `Jev 연결 재시도 대기 · ${date(decision.provider_wait.retry_at * 1000)} · 기본 분석은 계속 진행`,
+              calls
+            );
+          if (decision.last)
+            el(
+              'p',
+              `최근 Jev 평가: ${decision.last.status === 'complete' ? '완료' : '연결·응답 확인 필요'} · ${date(decision.last.created_at * 1000)}`,
+              calls
+            );
+        }
         for (const call of usage.recent.slice(0, 8))
           el(
             'p',
-            `${call.model || '모델 기록 없음'} · ${call.role} · ${labels[call.status] || call.status}${call.error_code ? ' · ' + call.error_code : ''}`,
+            `${call.model || '모델 기록 없음'} · ${call.role} · ${labels[call.status] || call.status}${call.error_code ? ' · ' + call.error_code : ''}${call.run_ms != null ? ' · 실행 ' + (call.run_ms / 1000).toFixed(1) + '초' : ''}${call.input_tokens != null ? ' · 입력 ' + call.input_tokens.toLocaleString() + '토큰' : ''}`,
             calls
           );
       } catch (_) {

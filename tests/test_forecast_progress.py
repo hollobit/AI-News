@@ -111,6 +111,28 @@ def test_legacy_jobs_do_not_invent_stages_and_restart_keeps_prior_attempt(db):
     assert body['attempts'][0]['stages']['generation']['started_at'] == 300
 
 
+def test_reused_generation_does_not_shorten_new_generation_estimate(db):
+    for i in range(3):
+        identity=str(i)
+        job(db,identity,'complete',100,161)
+        update(db,100,identity,'generation',done=True,reused=True)
+        update(db,100,identity,'review')
+        update(db,160,identity,'review',done=True)
+        update(db,160,identity,'finalize')
+        update(db,161,identity,'finalize',done=True)
+    current=job(db)
+    update(db,300,'new','queue',done=True)
+    update(db,300,'new','generation')
+    with patch('forecast_progress.time.time',return_value=310):
+        value=progress.view(db,current)
+    assert value['remaining_seconds'] is None and value['typical_seconds'] is None
+    update(db,300,'new','generation',done=True,reused=True)
+    update(db,300,'new','review')
+    with patch('forecast_progress.time.time',return_value=310):
+        value=progress.view(db,current)
+    assert value['remaining_seconds']==51 and value['estimate_basis']=='stages'
+
+
 @pytest.mark.parametrize('outcome', ['complete', 'needs_review', 'failed'])
 def test_live_stages_publication_gate_and_no_additional_model_calls(tmp_path, outcome):
     entered = threading.Event()

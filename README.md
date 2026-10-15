@@ -706,3 +706,26 @@ CLI의 `turn.completed.usage`에서 제공된 입력·캐시 입력·출력·추
 - `AI 반도체 OR 로봇 -중국`: AND를 먼저 계산한 두 조건 중 하나.
 
 대소문자와 전각/반각을 정규화한 부분 문자열 검색이며 256자/20개 용어까지 지원합니다. 괄호·정규식 문법은 없습니다. 원문 미확보 자료는 보유한 내용만 검색하며 추가 수집/분석 호출을 만들지 않습니다. 공개 페이지는 게시된 제목·검토 분석과 `--include-excerpts`로 공개한 원문 발췌만 검색합니다.
+
+
+## System One 비교 평가와 분석 비용 최적화
+
+조건부 전망의 초안 저장·검토 재개, 일반/복합 분석의 공동 검토·부분 보완, 원문 복구 선행, 단일 주제 뉴스 질문의 계획 호출 생략은 기본 적용된다. 전망·전략 작업은 최대2개가 병행하며 전체 모델 동시 한도20과 독립 검토/현재 근거/인용 검증을 유지한다. 운영 화면(`/operations`)에서 호출의 실행시간·입력 토큰과 Jev 상태를 확인한다.
+
+Jev는 정해진 항목의 분류를 위한 선택적 **비교 평가** 도구다. 답변·예측 수치를 작성하거나 검토를 통과시키지 않는다. 키가 없으면 요청을 보내지 않는다. 키는 `.env`의 `TYPESAFE_API_KEY`로 설정하고 서버·백그라운드 작업자를 정상 재기동한다. 대화·로그에 키를 적지 않는다.
+
+```dotenv
+NEWS_SYSTEM_ONE_MODE=shadow
+NEWS_SYSTEM_ONE_MODEL=jev-1.14.0
+```
+
+`NEWS_SYSTEM_ONE_MODE=off`로 비교 호출을 중지할 수 있다. 모델 별칭과 활성 자동 분기 모드는 허용하지 않는다. 분류 기준이 달라지면 캐시를 재사용하지 않으며, 429/503의 Retry-After를 지키고 장애 시 원래 분석을 계속한다. 상태와 숫자 사용량은 원본 DB 옆 `.decisions.sqlite3`에 별도 저장한다. shadow는 처리시간을 단축하는 활성 분기가 아니라 향후 적용 범위를 검증하기 위한 기록이다.
+
+```bash
+.venv/bin/python system_one_eval.py
+.venv/bin/python system_one_eval.py --input .runtime/verification/jev-holdout.jsonl --output .runtime/verification/jev-evaluation.json
+```
+
+평가 JSONL의 각 행은 `id`, 서로 중복되지 않는 사건 `group`, `split: "holdout"`, `purpose`, `state`, `questions`, `expected`를 가진다. `questions`는 [공식 Choice 규격](https://docs.typesafe.ai/api)의 질문 ID→`type/instructions/criteria` 매핑, `expected`는 같은 ID→독립적으로 검토한 정답 라벨 매핑이다. 정답을 모델 응답에서 만들지 않는다. 같은 사례를 고정된 모델 버전별로 비교하고 시간 분리/근접 사건 중복 제거, 한국어·혼합 언어·상충 근거·민감 사례를 포함한다. 분류 정확도/기권/위험한 선택 수와 비캐시 시간을 기록하며, 활성 분기 전에는 인용·위험 회수율·설명 품질·전체 완료시간도 별도로 평가해야 한다.
+
+공식 규격: [TypeSafe API](https://docs.typesafe.ai/api), [모델 버전](https://docs.typesafe.ai/models), [신뢰도 의미](https://docs.typesafe.ai/confidence). 분석 전용 지시는 OpenAI의 [model_instructions_file](https://learn.chatgpt.com/docs/config-file/config-reference)을 사용한다. Jev의 confidence는 사건 발생 확률이나 독립 검증 정확도가 아니다.

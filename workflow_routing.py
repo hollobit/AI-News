@@ -16,4 +16,4 @@ def select(snapshot, request, enrichment):
         elif enrichment['coverage'].get('failed_urls'):reason='source_unavailable'
         elif request.get('completion_attempt',1)>1:reason='review_retry'
         else:reason='sensitive_complex_or_custom_scope'
-    return dict(path=path,reason=reason,content_route=route,routing_version='adaptive-v5')
+    return dict(path=path,reason=reason,content_route=route,routing_version='adaptive-v6')

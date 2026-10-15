@@ -48,7 +48,7 @@ def ensure_model_access(*, force=False, state_path=STATE, caller=None, stamp=Non
         from engine_errors import infrastructure_error
         for (role,escalation),model in zip(selected,expected):
             try:
-                result=caller('Return {"ok":true}. No tools or external facts.',schema,role=role,escalation=escalation,timeout=30,queue_timeout=10)
+                result=caller('Return {"ok":true}. No tools or external facts.',schema,role=role,escalation=escalation,timeout=30,queue_timeout=10,reasoning_effort='low')
                 checks.append({'model':model,'ok':result=={'ok':True},'error_code':'' if result=={'ok':True} else 'invalid_output'})
             except Exception as exc:checks.append({'model':model,'ok':False,'error_code':infrastructure_error(str(exc)) or 'request_failed'})
         result={'ready':all(c['ok'] for c in checks),'models':expected,'checks':checks,'checked_at':stamp,'policy_version':VERSION,'client':client}

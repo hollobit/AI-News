@@ -18,7 +18,7 @@ def setup(db):
         job_id TEXT PRIMARY KEY, profile TEXT NOT NULL, body TEXT NOT NULL, updated_at REAL NOT NULL)''')
 
 
-def update(db, identity, stage=None, *, done=False, restart=False, status=None):
+def update(db, identity, stage=None, *, done=False, restart=False, status=None, reused=False):
     row = db.execute('SELECT body FROM forecast_progress WHERE job_id=?', (identity,)).fetchone()
     body = json.loads(row[0]) if row else {'stages': {}}
     stamp = time.time()
@@ -28,6 +28,7 @@ def update(db, identity, stage=None, *, done=False, restart=False, status=None):
     body.setdefault('attempt_started_at', stamp)
     if stage:
         entry = body['stages'].setdefault(stage, {'started_at': stamp})
+        if reused:entry['reused']=True
         if done:
             entry.setdefault('completed_at', stamp)
     if status and status not in ACTIVE:
@@ -59,7 +60,8 @@ def view(db, job):
     for s in STAGES if row else ():
         entry = stages.get(s)
         state = 'complete' if s in completed else 'running' if entry and active else 'stopped' if entry else 'pending'
-        result['stages'].append(dict(id=s, label=LABELS[s], status=state,
+        result['stages'].append(dict(id=s, label=LABELS[s]+(' · 저장 결과 재사용' if entry and entry.get('reused') else ''), status=state,
+            reused=bool(entry and entry.get('reused')),
             seconds=round(max(0, entry.get('completed_at', stamp)-entry['started_at']), 1) if entry else None))
     if not active:
         return result
@@ -68,7 +70,8 @@ def view(db, job):
         WHERE j.kind='forecast' AND j.status='complete' AND j.id<>?
           AND json_extract(j.snapshot_json,'$.forecast_version')=?
         ORDER BY j.updated_at DESC LIMIT 12''', (PROFILE, job['id'], VERSION)).fetchall()
-    totals = [max(0, timestamp(r[1])-timestamp(r[0])) for r in records]
+    totals = [max(0, timestamp(r[1])-timestamp(r[0])) for r in records
+              if not any(e.get('reused') for e in json.loads(r[2] or '{}').get('stages',{}).values())]
     result['estimate_samples'] = len(totals)
     if len(totals) >= 3:
         result['typical_seconds'] = max(1, round(median(totals)))
@@ -81,7 +84,7 @@ def view(db, job):
     durations = {s: [] for s in pending}
     for record in records:
         for s, entry in json.loads(record[2] or '{}').get('stages', {}).items():
-            if s in durations and 'completed_at' in entry:
+            if s in durations and 'completed_at' in entry and not entry.get('reused'):
                 durations[s].append(max(0, entry['completed_at']-entry['started_at']))
     if pending and all(len(durations[s]) >= 3 for s in pending):
         elapsed = {s: max(0, stamp-stages[s]['started_at']) if s in stages else 0 for s in pending}

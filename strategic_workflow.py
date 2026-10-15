@@ -450,7 +450,14 @@ class WorkflowService:
             for raw_url in extract_links(item.get('text') or ''):
                 if target and canonical_url(raw_url) == target:
                     retrieval_urls.setdefault(target, raw_url)
-        retry_urls = set(retry['coverage']['failed_urls']) if retry is not None else None
+        retry_urls = None
+        if retry is not None:
+            retry_urls=set(retry['coverage']['failed_urls'])
+            for source in retry['sources']:
+                if source.get('next_retry'):
+                    try:waiting=datetime.fromisoformat(source['next_retry'])>datetime.now(timezone.utc)
+                    except (ValueError,TypeError):waiting=True
+                    if waiting:retry_urls.discard(source['url'])
         def fetch(url):
             try:
                 retrieval_url = retrieval_urls.get(url, url)
@@ -512,10 +519,19 @@ class WorkflowService:
                 row = db.execute('SELECT snapshot_json,request_json FROM strategic_workflow_runs WHERE id=?', (run_id,)).fetchone()
                 snapshot, request = json.loads(row[0]), json.loads(row[1])
             enrichment = self._stage(run_id, 'enrichment', lambda: self._enrich(snapshot))
+            if self._artifact(run_id,'source_preflight'):
+                enrichment=self._artifact(run_id,'source_repair') or enrichment
+            if enrichment['coverage']['failed_urls'] and self._artifact(run_id,'execution_plan') is None:
+                # Repair eligible source failures BEFORE spending model calls.
+                # Existing runs keep their exact saved stage dependency graph.
+                enrichment=self._stage(run_id,'source_repair',lambda:self._enrich(snapshot,retry=enrichment))
+                self._save(run_id,'source_preflight',True)
             evidence = enrichment['evidence']
             from workflow_routing import select
             plan=select(snapshot,request,enrichment)
             self._save(run_id,'execution_plan',plan)
+            from decision_tasks import workflow as observe_decision
+            observe_decision(self.path,run_id,evidence,plan)
             if plan['path']=='compact-v1':
                 from workflow_compact import execute
                 execute(self,run_id,evidence,request,enrichment)

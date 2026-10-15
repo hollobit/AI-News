@@ -38,6 +38,7 @@ def policy(role, *, escalation=False, prompt=None):
     if model not in ALLOWED[tier]:
         raise ValueError('지원되지 않는 뉴스 분석 모델 설정: ' + tier)
     return {'policy_version': 'news-models-question-v1' if role=='graph_draft' else 'news-models-announcement-v1' if announcement else VERSION, 'tier': tier, 'model': model,
+            'instruction_profile':'grounded-analysis-v1',
             'reasoning_effort': 'medium' if announcement or role=='graph_draft' else 'high' if tier == 'luna' else 'medium' if tier == 'sol' else 'low'}
 
 

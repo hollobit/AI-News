@@ -9,7 +9,7 @@ ADMISSION_ISSUES = frozenset({
 
 
 def operational_feedback_only(request):
-    if not request.get('completion') or request.get('completion_attempt', 1) != 1:return False
+    if not request.get('completion') or not 1<=request.get('completion_attempt',1)<=3:return False
     context = request.get('improvement_context') or {}
     issues = context.get('review_issues') or []
     # Require the exact known stale/engine admission bundle. Unknown or additional

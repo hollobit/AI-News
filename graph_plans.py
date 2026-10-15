@@ -2,10 +2,20 @@
 from datetime import date
 import json
 import sqlite3
+import re
 
 from projection_cache import content_digest
 
-VERSION = 'question-plan-v1'
+VERSION = 'question-plan-v2'
+
+
+def simple_plan(question):
+    """Only explicit single-topic news lookups; compound questions keep planning."""
+    match=re.fullmatch(r'\s*(?:최근\s+)?([A-Za-z0-9가-힣+.\- ]{2,45}?)\s+(?:관련\s+)?뉴스(?:\s*(?:현황|소식))?\s*(?:알려\s*줘|알려\s*주세요|보여\s*줘|보여\s*주세요)?\s*[?.]?\s*',question)
+    if not match:return None
+    subject=match[1].strip()
+    if re.search(r'및|그리고|비교|차이|(?:와|과)\s',subject) or len(subject.split())>4:return None
+    return {'queries':[subject,subject+' 상충 근거 관계 시사점'],'axes':[question.strip()]}
 
 
 def valid(plan):
@@ -24,7 +34,7 @@ def prepare(question, path=None):
             if row:
                 plan = json.loads(row[0])
                 if valid(plan): return plan, True
-    plan = run_structured('질문을 분석할 검색 계획만 작성한다. 사실에 답하거나 전제를 새로 만들지 않는다. '
+    plan = simple_plan(question) or run_structured('질문을 분석할 검색 계획만 작성한다. 사실에 답하거나 전제를 새로 만들지 않는다. '
         '질문에 명시된 대상과 비교 기준을 빠짐없이 나누어 최대 4개의 짧은 검색어를 queries에 적는다. '
         '등록 표현과 다른 한국어·영어 표현도 검색어로 사용할 수 있다. 필요한 반대 근거도 포함한다. '
         'axes에는 실제 질문의 비교 기준을 적는다. 통합 분석에서는 개별 사실뿐 아니라 자료간 공통점·상충 근거·의존 관계와 시사점을 찾을 검색어도 포함한다.\n질문: ' + question,

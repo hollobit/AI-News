@@ -218,9 +218,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(run['coverage']['failed_urls'], [])
         self.assertEqual(run['coverage']['fetched_urls'], 2)
         audits = [ev for role, ev in observations if role == 'ROLE: verification']
-        self.assertEqual([len(ev) for ev in audits], [3, 4])
+        self.assertEqual([len(ev) for ev in audits], [4, 4])
         self.assertEqual(model.calls.count('revision'), 1)
-        self.assertNotEqual(run['artifacts']['verification']['evidence_hash'], run['results']['verification']['evidence_hash'])
+        self.assertEqual(run['artifacts']['verification']['evidence_hash'], run['results']['verification']['evidence_hash'])
         self.assertTrue(service._current_audit(run['results']['verification'], run['results']['evidence'], run['results']['report'])['accepted'])
 
     def test_close_pauses_and_resume_reuses_snapshot(self):
@@ -434,7 +434,7 @@ class RiskReuseTests(unittest.TestCase):
         self.assertEqual(model.calls.count('verification'),1)
         self.assertEqual(model.calls.count('risk_revision'),1)
 
-    def test_fresh_source_observation_forces_strategy_reverification(self):
+    def test_source_preflight_avoids_repeating_already_current_strategy_review(self):
         model=Model()
         class RepairedSource:
             def fetch(self,url,refresh=False):
@@ -445,9 +445,9 @@ class RiskReuseTests(unittest.TestCase):
             return response
         service=self.service(analyzer,sources=RepairedSource())
         run=self.done(service,service.create_run(self.items(),{})['id'])
-        self.assertEqual(model.calls.count('revision'),1)
-        self.assertEqual(model.calls.count('verification'),2)
-        self.assertFalse(run['results']['verification'].get('reused',False))
+        self.assertEqual(model.calls.count('revision'),0)
+        self.assertEqual(model.calls.count('verification'),1)
+        self.assertTrue(run['results']['verification'].get('reused',False))
 
     def test_completion_checks_unassessable_evidence_without_promoting_it(self):
         model=Model()

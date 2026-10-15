@@ -22,6 +22,10 @@ def read_usage(stream):
 
 
 def persist(db, ticket):
+    phases=getattr(ticket,'phase_ms',{})
+    if phases:
+        db.execute('CREATE TABLE IF NOT EXISTS llm_call_phases(call_id INTEGER PRIMARY KEY,phase_json TEXT NOT NULL)')
+        db.execute('INSERT OR REPLACE INTO llm_call_phases VALUES(?,?)',(ticket.id,json.dumps(phases)))
     usage=getattr(ticket,'usage',{}) or {}
     if usage:
         db.execute('UPDATE llm_calls SET input_tokens=?,cached_input_tokens=?,output_tokens=?,reasoning_output_tokens=? WHERE id=?',

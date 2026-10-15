@@ -332,6 +332,9 @@ class KnowledgeWiki:
             structure = json.loads(cached[0]) if cached else analyze(bundle,self.runner or run_structured)
             validate_structure(structure,bundle)
             if not cached:
+                from decision_tasks import structure as observe_decision
+                observe_decision(self.path,bundle,structure['notes'])
+            if not cached:
                 with self.db() as db:db.execute('INSERT OR REPLACE INTO wiki_structures VALUES (?,?)',(skey,js(structure)))
             from wiki_reuse import reviewed_hints
             with self.db() as db:hints=reviewed_hints(db,bundle)

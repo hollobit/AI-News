@@ -70,7 +70,7 @@ class StrategicJobs:
         self.path=str(path);self.analyzer=analyzer or run_structured
         self.enabled=os.getenv('NEWS_EXTERNAL_ANALYSIS_ENABLED')=='1' if enabled is None else enabled
         self.current_evidence=current_evidence;self.lock=threading.Lock();self.closed=False
-        self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='strategic-comparison')
+        self.executor=ThreadPoolExecutor(max_workers=2,thread_name_prefix='strategic-comparison')
         self.futures={}
         with self.db() as db:
             db.execute('''CREATE TABLE IF NOT EXISTS intel_analysis_jobs (
@@ -107,8 +107,19 @@ class StrategicJobs:
                 if db.execute("SELECT count(*) FROM intel_analysis_jobs WHERE status IN ('queued','running')").fetchone()[0]>=8:
                     raise ValueError('전략 비교 대기열이 가득 찼습니다.')
                 identity='analysis:'+uuid4().hex
+                initial={}
+                if snapshot['kind']=='forecast':
+                    from forecasting import reusable_draft
+                    # A transport failure may resume a saved draft. A semantic
+                    # rejection must never be retried as if it had no feedback.
+                    for prior in db.execute("SELECT id,result_json FROM intel_analysis_jobs WHERE kind='forecast' AND snapshot_json=? AND status='failed' ORDER BY created_at DESC LIMIT 8",
+                                            (json.dumps(snapshot,ensure_ascii=False),)):
+                        saved=json.loads(prior['result_json'])
+                        if reusable_draft(snapshot,saved) and not saved.get('audit'):
+                            initial=dict(saved,resumed_from=prior['id'],verified=False)
+                            break
                 db.execute('INSERT INTO intel_analysis_jobs VALUES (?,?,?,?,?,?,?,?,?)',
-                    (identity,snapshot['kind'],'queued',json.dumps(snapshot,ensure_ascii=False),'{}','',now(),now(),os.getpid()))
+                    (identity,snapshot['kind'],'queued',json.dumps(snapshot,ensure_ascii=False),json.dumps(initial,ensure_ascii=False),'',now(),now(),os.getpid()))
                 if snapshot['kind']=='forecast':forecast_progress.update(db,identity,'queue')
             self._schedule(identity)
         return self.get(identity)
@@ -124,8 +135,14 @@ class StrategicJobs:
                 forecast_progress.update(db,identity,'finalize' if status=='complete' else None,
                                          done=status=='complete',status=status)
 
-    def _progress(self,identity,stage,done=False):
-        with self.db() as db:forecast_progress.update(db,identity,stage,done=done)
+    def _progress(self,identity,stage,done=False,reused=False):
+        with self.db() as db:forecast_progress.update(db,identity,stage,done=done,reused=reused)
+
+    def _current(self,snapshot):
+        if not self.current_evidence:return True
+        def signatures(rows):
+            return {e['id']:[e.get('version'),e.get('source_hash'),e.get('status','current')] for e in rows}
+        return signatures(snapshot['evidence'])==signatures(self.current_evidence([e['id'] for e in snapshot['evidence']]))
 
     def _run(self,identity):
         with self.db() as db:row=db.execute('SELECT * FROM intel_analysis_jobs WHERE id=?',(identity,)).fetchone()
@@ -134,8 +151,12 @@ class StrategicJobs:
         try:
             if snapshot['kind']=='forecast':
                 from forecasting import run
+                if not self._current(snapshot):raise ValueError('근거 문서가 변경되었습니다. 현재 근거로 새 전망을 생성하세요.')
                 self._progress(identity,'queue',done=True)
-                result=run(snapshot,self.analyzer,result,progress=lambda stage,done=False:self._progress(identity,stage,done))
+                result=run(snapshot,self.analyzer,result,
+                    progress=lambda stage,done=False:self._progress(identity,stage,done,reused=stage=='generation' and result.get('generation_reused',False)),
+                    checkpoint=lambda value:self._write(identity,'running',value))
+                if not self._current(snapshot):raise ValueError('검토 중 근거 문서가 변경되었습니다. 현재 근거로 새 전망을 생성하세요.')
                 self._write(identity,'complete' if result['verified'] else 'needs_review',result)
                 return
             if not result.get('report'):
@@ -207,6 +228,10 @@ class StrategicJobs:
             value.update(status='interrupted',error='실행 프로세스가 종료되었습니다. 서버 재개 후 상태를 다시 확인하세요.')
         if snapshot.get('kind')=='forecast':
             with self.db() as db:value['progress']=forecast_progress.view(db,value)
+            if value['status']!='complete':
+                # Checkpoints are private working state, not published forecasts.
+                value['result']={k:v for k,v in value['result'].items() if k in ('audit','resumed_from','generation_reused')}
+                value['result']['verified']=False
         return value
 
     def list(self,subject=None,limit=50):

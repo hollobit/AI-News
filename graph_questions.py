@@ -90,6 +90,8 @@ def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,pr
     from graph_question_context import compose
     retrieval_started=time.monotonic()
     retrieval = compose(graph, question, ids, plan, path, scoped)
+    from decision_tasks import retrieval as observe_decision
+    observe_decision(path,question,plan,retrieval['evidence'])
     compose_ms=round((time.monotonic()-retrieval_started)*1000,2)
     # Pass the fixed retrieved bundle directly; do not rerank away a missing side.
     answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress,reuse_only=reuse_only)

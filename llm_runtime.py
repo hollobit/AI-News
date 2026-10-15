@@ -1,6 +1,7 @@
 """Process-shared model admission and content-free execution telemetry."""
 from contextlib import contextmanager
 from pathlib import Path
+import json
 import os
 import re
 import sqlite3
@@ -8,7 +9,8 @@ import time
 
 DEFAULT_PATH = Path(__file__).resolve().parent / 'data' / 'llm_runtime.sqlite3'
 DEFAULT_LIMIT = 6
-INTERACTIVE_ROLES = ('graph_answer', 'graph_draft', 'strategic_question', 'strategic_question_verification', 'engine_probe')
+INTERACTIVE_ROLES = ('graph_answer', 'graph_draft', 'strategic_question', 'strategic_question_verification',
+                     'strategic_forecast', 'strategic_forecast_verification', 'engine_probe')
 
 
 class ClosingConnection(sqlite3.Connection):
@@ -204,6 +206,9 @@ def runtime_status(path=None):
             FROM llm_calls GROUP BY role ORDER BY calls DESC''')]
         recent = [dict(row) for row in db.execute('''SELECT id,role,status,queued_at,started_at,finished_at,input_chars,schema_chars,
             output_chars,wait_ms,run_ms,error_code,model,reasoning_effort,input_tokens,cached_input_tokens,output_tokens,reasoning_output_tokens FROM llm_calls ORDER BY id DESC LIMIT 40''')]
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='llm_call_phases'").fetchone():
+            phases={row[0]:json.loads(row[1]) for row in db.execute('SELECT call_id,phase_json FROM llm_call_phases WHERE call_id IN (SELECT id FROM llm_calls ORDER BY id DESC LIMIT 40)')}
+            for call in recent:call['phase_ms']=phases.get(call['id'],{})
         from llm_usage import totals
         usage=totals(db)
         model_usage=[dict(r) for r in db.execute('SELECT model,reasoning_effort,count(*) calls,count(input_tokens) measured_calls,sum(input_tokens) input_tokens,sum(output_tokens) output_tokens FROM llm_calls GROUP BY model,reasoning_effort')]
