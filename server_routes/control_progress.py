@@ -27,7 +27,7 @@ def current(db, tables, kind, identity, status):
         if 'strategic_workflow_artifacts' in tables:
             row=db.execute("SELECT json_extract(payload_json,'$.path') FROM strategic_workflow_artifacts WHERE run_id=? AND stage='execution_plan'",(identity,)).fetchone()
             route=row[0] if row else None
-        known=route in PATHS and not bounded
+        known=route in PATHS and bool(rows) and not bounded
         expected=PREFIX+PATHS.get(route,[])+[s for s in steps if s in EXTRAS]+['final']
     elif kind=='question' and 'graph_question_progress' in tables:
         from question_progress import STAGES

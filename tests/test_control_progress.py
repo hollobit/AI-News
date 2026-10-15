@@ -6,6 +6,16 @@ from server_routes.decision_control import overview, detail
 from server_routes.control_progress import current
 
 
+def test_missing_stage_history_does_not_invent_a_percentage():
+    db=sqlite3.connect(':memory:');db.row_factory=sqlite3.Row
+    db.executescript('''CREATE TABLE strategic_workflow_events(seq,run_id,stage,status,created_at);
+        CREATE TABLE strategic_workflow_artifacts(run_id,stage,payload_json);
+        INSERT INTO strategic_workflow_artifacts VALUES('old','execution_plan','{"path":"compact-v1"}');''')
+    result=current(db,{'strategic_workflow_events','strategic_workflow_artifacts'},'workflow','old','complete')
+    assert result['percent'] is None and result['total'] is None
+    db.close()
+
+
 def test_progress_tracks_parallel_stages_retries_and_dead_owners(tmp_path):
     path=tmp_path/'news.sqlite3'
     with sqlite3.connect(path) as db:
