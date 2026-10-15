@@ -11,14 +11,67 @@ import re
 import select
 import secrets
 import signal
+import socket
 import subprocess
 import sys
+import threading
 import time
+from queue import Empty, SimpleQueue
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / '.runtime/remote-access'
 children = []
 stopping = False
+
+
+def dns_health(origin, resolver=socket.getaddrinfo):
+    """Only a missing origin with working general DNS warrants a new tunnel."""
+    try:
+        resolver(urlsplit(origin).hostname, 443)
+        return True
+    except socket.gaierror as error:
+        if error.errno != socket.EAI_NONAME:
+            return None
+    except OSError:
+        return None
+    try:
+        resolver('www.cloudflare.com', 443)
+    except OSError:
+        return None
+    return False
+
+
+class OriginHealth:
+    """One nonblocking DNS probe at a time, with two confirmed failures."""
+    def __init__(self, probe=dns_health, clock=time.monotonic):
+        self.probe, self.clock = probe, clock
+        self.results = SimpleQueue()
+        self.worker = None
+        self.watch('')
+
+    def watch(self, origin):
+        self.origin, self.failures = origin, 0
+        self.next_at = self.clock() + 30
+
+    def _check(self, origin):
+        self.results.put((origin, self.probe(origin)))
+
+    def poll(self):
+        try:
+            while True:
+                origin, healthy = self.results.get_nowait()
+                if origin == self.origin:
+                    self.failures = self.failures + 1 if healthy is False else 0
+        except Empty:
+            pass
+        if self.failures >= 2:
+            return True
+        if self.origin and self.clock() >= self.next_at and (not self.worker or not self.worker.is_alive()):
+            self.next_at = self.clock() + 60
+            self.worker = threading.Thread(target=self._check, args=(self.origin,), daemon=True)
+            self.worker.start()
+        return False
 
 
 def stop(*_):
@@ -56,6 +109,7 @@ def main():
         time.sleep(1)
         if gateway.poll() is not None:
             raise RuntimeError('Remote ingress failed to start; check port 8002')
+        health = OriginHealth()
         while not stopping:
             (STATE/'public.json').unlink(missing_ok=True)
             tunnel = subprocess.Popen([str(STATE/'cloudflared'),'tunnel','--no-autoupdate',
@@ -67,12 +121,15 @@ def main():
             while tunnel.poll() is None:
                 if stopping or gateway.poll() is not None:
                     tunnel.terminate();break
+                if published and health.poll():
+                    print('{"status":"reconnecting","reason":"origin_dns_missing"}',flush=True)
+                    tunnel.terminate();break
                 ready,_,_ = select.select([tunnel.stdout],[],[],1)
                 if ready:
                     output = (output+os.read(tunnel.stdout.fileno(),65536).decode(errors='replace'))[-65536:]
                     match = re.search(r'https://[a-z0-9-]+\.trycloudflare\.com\b',output)
                     if match and not published:
-                        publish(match.group());published = True
+                        publish(match.group());health.watch(match.group());published = True
             tunnel.wait()
             children.remove(tunnel)
             if not stopping and gateway.poll() is not None:
