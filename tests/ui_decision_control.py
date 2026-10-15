@@ -10,6 +10,32 @@ os.environ.setdefault('PLAYWRIGHT_BROWSERS_PATH',str(ROOT/'.runtime/browsers'))
 from playwright.async_api import async_playwright,expect
 
 
+async def login_handoff(browser):
+    # Exercise the gateway's real login script, preserving path/query/hash.
+    import sys
+    sys.path.insert(0,str(ROOT))
+    from ops.remote_access import LOGIN
+    for suffix in ('/workflow?view=control&task=workflow%3Aa','/knowledge#id=source%3Apaper%3A123&view=3d'):
+        page=await browser.new_page();authenticated=False;submitted=[]
+        async def gateway(route):
+            nonlocal authenticated
+            if route.request.method=='POST':
+                assert urlparse(route.request.url).path=='/_remote/login'
+                submitted.append(route.request.post_data_json)
+                authenticated=True
+                await route.fulfill(json={'ok':True})
+            else:
+                await route.fulfill(content_type='text/html',body='<main id="ready">선택한 작업 공간</main>' if authenticated else LOGIN)
+        await page.route('https://gateway.test/**',gateway)
+        destination='https://gateway.test'+suffix
+        await page.goto(destination)
+        await page.locator('#password').fill('test-only-password')
+        await page.get_by_role('button',name='로그인',exact=True).click()
+        await expect(page.locator('#ready')).to_be_visible()
+        assert page.url==destination and submitted==[{'password':'test-only-password'}]
+        await page.close()
+
+
 def fixture():
     start=1792031000
     jobs=[dict(id=k,key='workflow:'+k,kind='workflow',title=t,status='complete',recorded_status='complete',created_at=start,updated_at=start+70,href='/operations#workflow') for k,t in [('a','Physical AI · 로봇 벤치마크와 안전 검토'),('b','의료 AI · 임상 검증 근거 비교')]]
@@ -93,6 +119,7 @@ async def main():
         await expect(page.locator('#control-inspector')).to_contain_text('실행자 없음')
         await expect(page.locator('#control-inspector')).not_to_contain_text('평가 요청 처리 중')
         assert not errors and not posts,(errors,posts)
+        await login_handoff(browser)
         print(json.dumps(dict(keyboard=True,source_query_preserved=True,selection_race=True,replay_hides_future=True,reload_selection=True,pause_recovery=True,mobile=[390,320],errors=errors,analysis_posts=posts)))
         await browser.close()
 
