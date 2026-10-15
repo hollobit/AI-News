@@ -54,7 +54,8 @@ def load_local_env(path=ROOT / ".env"):
     for line in path.read_text(encoding="utf-8").splitlines():
         key, separator, value = line.partition("=")
         key = key.strip()
-        if separator and key in {"TELEGRAM_BOT_TOKEN", "TELEGRAM_CHANNEL_IDS", "SSL_CERT_FILE", "NEWS_EXTERNAL_ANALYSIS_ENABLED"}:
+        if separator and key in {"TELEGRAM_BOT_TOKEN", "TELEGRAM_CHANNEL_IDS", "SSL_CERT_FILE", "NEWS_EXTERNAL_ANALYSIS_ENABLED",
+                                 "TYPESAFE_API_KEY", "NEWS_SYSTEM_ONE_MODE", "NEWS_SYSTEM_ONE_MODEL"}:
             os.environ.setdefault(key, value.strip())
 
 
