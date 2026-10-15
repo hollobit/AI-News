@@ -170,6 +170,109 @@
     detailLoading = false,
     detailFresh = false,
     detailSignature = '';
+  let zoom = 1,
+    panX = 0,
+    panY = 0,
+    drag = null,
+    dragMoved = false;
+  function theme(value) {
+    document.body.dataset.labTheme = value === 'dark' ? 'dark' : 'light';
+    $('lab-light').setAttribute('aria-pressed', String(value !== 'dark'));
+    $('lab-dark').setAttribute('aria-pressed', String(value === 'dark'));
+    try {
+      localStorage.setItem('news-workflow-theme', value);
+    } catch {
+      /* Storage can be disabled. */
+    }
+  }
+  let storedTheme = 'light';
+  try {
+    storedTheme = localStorage.getItem('news-workflow-theme') || 'light';
+  } catch {
+    /* Use the default. */
+  }
+  theme(storedTheme);
+  $('lab-light').onclick = () => theme('light');
+  $('lab-dark').onclick = () => theme('dark');
+  function setZoom(value) {
+    zoom = Math.max(1, Math.min(3, value));
+    const w = 1200 / zoom,
+      h = 560 / zoom;
+    panX = Math.max(-(1200 - w) / 2, Math.min((1200 - w) / 2, panX));
+    panY = Math.max(-(560 - h) / 2, Math.min((560 - h) / 2, panY));
+    $('control-graph').setAttribute(
+      'viewBox',
+      `${(1200 - w) / 2 + panX} ${(560 - h) / 2 + panY} ${w} ${h}`
+    );
+    $('control-graph').dataset.zoomed = String(zoom > 1);
+    $('lab-zoom').textContent = Math.round(zoom * 100) + '%';
+    $('lab-zoom-out').disabled = zoom === 1;
+    $('lab-zoom-in').disabled = zoom === 3;
+  }
+  function focusCanvas(value) {
+    $('control-room').dataset.focus = String(value);
+    $('lab-focus').setAttribute('aria-pressed', String(value));
+    $('lab-focus').textContent = value ? '전체 보기 ↙' : '집중 보기 ⤢';
+  }
+  $('lab-focus').onclick = () => focusCanvas($('control-room').dataset.focus !== 'true');
+  $('lab-zoom-in').onclick = () => setZoom(zoom + 0.5);
+  $('lab-zoom-out').onclick = () => setZoom(zoom - 0.5);
+  $('lab-fit').onclick = () => setZoom(1);
+  $('lab-detail').onclick = () => {
+    focusCanvas(false);
+    $('control-inspector').scrollIntoView({ block: 'center' });
+    $('control-inspector').focus({ preventScroll: true });
+  };
+  setZoom(1);
+  const viewport = $('lab-viewport');
+  if (matchMedia('(max-width: 760px)').matches) viewport.scrollLeft = 210;
+  const canvas = $('control-graph');
+  canvas.addEventListener('pointerdown', (e) => {
+    dragMoved = false;
+    if (zoom <= 1 || e.button !== 0) return;
+    drag = { x: e.clientX, y: e.clientY, panX, panY };
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    if (!dragMoved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 5) return;
+    dragMoved = true;
+    canvas.setPointerCapture(e.pointerId);
+    canvas.dataset.dragging = 'true';
+    const matrix = canvas.getScreenCTM();
+    if (!matrix) return;
+    panX = drag.panX - (e.clientX - drag.x) / matrix.a;
+    panY = drag.panY - (e.clientY - drag.y) / matrix.d;
+    setZoom(zoom);
+  });
+  const endDrag = (e) => {
+    drag = null;
+    canvas.dataset.dragging = 'false';
+    if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    // Keep the drag guard through the synthetic click, but allow later keyboard selection.
+    setTimeout(() => {
+      dragMoved = false;
+    }, 0);
+  };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('keydown', (e) => {
+    const directions = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    };
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setZoom(1);
+      focusCanvas(false);
+    } else if (zoom > 1 && directions[e.key]) {
+      e.preventDefault();
+      panX += (directions[e.key][0] * 45) / zoom;
+      panY += (directions[e.key][1] * 45) / zoom;
+      setZoom(zoom);
+    }
+  });
   function follow(value) {
     following = value;
     $('control-follow').setAttribute('aria-pressed', String(value));
@@ -196,6 +299,7 @@
   follow(following);
   function mode(value) {
     view = value;
+    document.body.dataset.labView = value;
     $('flow-board').hidden = value !== 'board';
     $('control-room').hidden = value !== 'control';
     $('view-control').setAttribute('aria-pressed', String(value === 'control'));
@@ -284,6 +388,7 @@
     cursor = null;
     selectedNode = null;
     lastEvent = null;
+    setZoom(1);
     const url = new URL(location.href);
     url.searchParams.set('task', key);
     url.searchParams.set('view', 'control');
@@ -491,7 +596,7 @@
       fetchDetail();
     }
   }
-  function node(parent, x, y, title, color, key, kind) {
+  function node(parent, x, y, title, key, kind, subtitle = '') {
     const g = svg(
       'g',
       {
@@ -499,19 +604,38 @@
         tabindex: 0,
         role: 'button',
         'aria-label': title,
+        'data-kind': kind,
         'data-selected': String(selectedNode?.key === key),
       },
       parent
     );
-    svg('circle', { cx: x, cy: y, r: 5, fill: color, stroke: color, 'stroke-width': 1 }, g);
+    const left = kind === 'source';
+    svg(
+      'rect',
+      { x: x - (left ? 202 : 12), y: y - 11, width: 216, height: 26, rx: 2, class: 'lab-node-hit' },
+      g
+    );
+    svg('circle', { cx: x, cy: y, r: 4 }, g);
     svg('title', {}, g, title);
     svg(
       'text',
-      { x: x + (x < 420 ? -11 : 11), y: y + 4, 'text-anchor': x < 420 ? 'end' : 'start' },
+      { x: x + (left ? -12 : 12), y: y - 1, 'text-anchor': left ? 'end' : 'start' },
       g,
-      title.length > 17 ? title.slice(0, 16) + '…' : title
+      title.length > (left ? 19 : 14) ? title.slice(0, left ? 18 : 13) + '…' : title
+    );
+    svg(
+      'text',
+      {
+        x: x + (left ? -12 : 12),
+        y: y + 12,
+        'text-anchor': left ? 'end' : 'start',
+        class: 'lab-node-meta',
+      },
+      g,
+      subtitle
     );
     const choose = () => {
+      if (dragMoved) return;
       follow(false);
       selectedNode = { key, kind };
       renderDetail();
@@ -529,49 +653,89 @@
     const focus = document.activeElement?.getAttribute('aria-label');
     g.replaceChildren();
     $('control-graph-empty').hidden = true;
-    svg('circle', { cx: 420, cy: 250, r: 245, fill: 'url(#control-glow)' }, g);
-    for (const r of [100, 153, 206, 242])
-      svg(
-        'circle',
-        {
-          cx: 420,
-          cy: 250,
-          r,
-          fill: 'none',
-          stroke: '#233d48',
-          'stroke-width': 0.7,
-          'stroke-dasharray': r === 242 ? '2 9' : '',
-        },
-        g
-      );
-    svg('path', { d: 'M30 250H810 M420 12V485', stroke: '#203540', 'stroke-width': 0.6 }, g);
     const sources = (detail.sources || []).slice(0, 16),
       related = (detail.related || []).slice(0, 10),
       at = selectedAt();
-    const decisions = detail.decisions.filter(
-      (d) => d.finished_at && d.finished_at <= at && d.status === 'complete'
-    );
-    const observation = decisions.at(-1);
+    const observation = detail.decisions
+      .filter((d) => d.finished_at && d.finished_at <= at && d.status === 'complete')
+      .at(-1);
     const answers = Object.entries(observation?.result?.answers || {}).slice(0, 6);
-    const latestStages = new Map();
-    displayEvents().forEach((e) => latestStages.set(e.stage, e));
+    const events = displayEvents(),
+      latestStages = new Map();
+    events.forEach((e) => latestStages.set(e.stage, e));
     const runningStages = [...latestStages.values()].filter((e) => visibleStatus(e) === 'running');
-    const center = runningStages.at(-1) || displayEvents().at(-1),
-      changed = cursor === null && !offline && center && lastEvent && center.id !== lastEvent;
-    const executing = cursor === null && runningStages.length > 0;
+    const center = runningStages.at(-1) || events.at(-1),
+      changed = cursor === null && !offline && center && lastEvent && center.id !== lastEvent,
+      executing = cursor === null && runningStages.length > 0;
+    // Architectural grid, not synthetic evidence or inferred relationships.
+    const grid = svg('g', { 'aria-hidden': 'true' }, g);
+    for (const r of [170, 260, 350, 420])
+      svg('circle', { cx: 28, cy: 280, r, class: 'lab-grid' }, grid);
+    for (const rx of [80, 180, 285, 370])
+      svg('ellipse', { cx: 28, cy: 280, rx, ry: 420, class: 'lab-grid' }, grid);
+    for (const ry of [70, 180, 290])
+      svg('ellipse', { cx: 28, cy: 280, rx: 420, ry, class: 'lab-grid' }, grid);
+    svg('circle', { cx: -42, cy: 280, r: 500, class: 'lab-ring-band' }, grid);
+    for (const r of [449, 454, 545, 551])
+      svg('circle', { cx: -42, cy: 280, r, class: 'lab-ring' }, grid);
+    const polar = (radius, angle) => [
+      -42 + radius * Math.cos(angle),
+      280 + radius * Math.sin(angle),
+    ];
+    for (let i = -36; i <= 36; i++) {
+      const a = (i * Math.PI) / 180,
+        [x, y] = polar(547, a),
+        [xx, yy] = polar(i % 5 ? 553 : 560, a);
+      svg('path', { d: `M${x} ${y}L${xx} ${yy}`, class: 'lab-tick' }, grid);
+    }
+    svg('text', { x: 28, y: 34, class: 'lab-field-title' }, g, '01 / EVIDENCE FIELD');
+    svg(
+      'text',
+      { x: 28, y: 105, class: 'lab-count' },
+      g,
+      String(detail.sources.length).padStart(2, '0')
+    );
+    svg('text', { x: 28, y: 127 }, g, `저장 입력 근거 · 화면 ${sources.length}개`);
+    svg(
+      'text',
+      { x: 28, y: 146, class: 'lab-node-meta' },
+      g,
+      `검색 단서 ${related.length} / ${detail.related.length}개`
+    );
+    svg('text', { x: 595, y: 34, class: 'lab-field-title' }, g, '02 / DECISION GATE');
     const points = new Map();
+    for (const [i, n] of related.entries()) {
+      const x = 35 + (i % 3) * 12,
+        y = 200 + i * 30;
+      points.set(n.id, [x, y]);
+      svg('path', { d: `M${x} ${y}C310 ${y} 260 280 490 280`, class: 'control-edge hint' }, g);
+    }
+    for (const edge of detail.relations || []) {
+      const a = points.get(edge.source),
+        b = points.get(edge.target);
+      if (!a || !b) continue;
+      const line = svg(
+        'path',
+        { d: `M${a[0]} ${a[1]}Q280 280 ${b[0]} ${b[1]}`, class: 'control-edge hint' },
+        g
+      );
+      svg('title', {}, line, '당시 검색 관계 · ' + (edge.relation || edge.type || '연결'));
+    }
     for (const [i, s] of sources.entries()) {
-      const angle =
-        ((112 + (sources.length === 1 ? 68 : (i * 136) / Math.max(1, sources.length - 1))) *
-          Math.PI) /
-        180;
-      const x = 420 + 182 * Math.cos(angle),
-        y = 250 + 222 * Math.sin(angle),
+      // Two arcs leave the decision gate readable even with the maximum input count.
+      const half = Math.ceil(sources.length / 2),
+        top = i < half,
+        slot = top ? i : i - half,
+        count = top ? half : sources.length - half,
+        degrees = top
+          ? -28 + (slot * 24) / Math.max(1, count - 1)
+          : 4 + (slot * 24) / Math.max(1, count - 1),
+        [x, y] = polar(500, (degrees * Math.PI) / 180),
         key = 'source:' + i;
       svg(
         'path',
         {
-          d: `M${x} ${y} Q365 ${y} 355 250`,
+          d: `M${x} ${y}C${x + 100} ${y} 420 280 510 280`,
           class:
             'control-edge' +
             (selectedNode?.key === key ? ' selected' : '') +
@@ -580,78 +744,103 @@
         },
         g
       );
-      node(g, x, y, s.title || s.id, '#69e1c1', key, 'source');
-    }
-    const right = related.length
-      ? related
-      : answers.map(([key, a]) => ({
-          id: 'answer:' + key,
-          name: choices[a.choice] || a.choice || key,
-          type: 'decision',
-        }));
-    for (const [i, n] of right.entries()) {
-      const angle = ((-68 + (i * 136) / Math.max(1, right.length - 1)) * Math.PI) / 180,
-        x = 420 + 182 * Math.cos(angle),
-        y = 250 + 222 * Math.sin(angle);
-      points.set(n.id, [x, y]);
-      const key = n.type === 'decision' ? n.id : 'related:' + i;
-      svg(
-        'path',
-        {
-          d: `M485 250 Q475 ${y} ${x} ${y}`,
-          class: 'control-edge hint' + (selectedNode?.key === key ? ' selected' : ''),
-        },
-        g
-      );
       node(
         g,
         x,
         y,
-        n.name || n.id,
-        n.type === 'decision' ? '#b5a2ed' : '#8baac7',
+        s.title || s.id,
         key,
-        n.type === 'decision' ? 'decision' : 'related'
+        'source',
+        `${String(i + 1).padStart(2, '0')} / ${
+          {
+            stored_news_excerpt: '저장 뉴스',
+            telegram_excerpt: 'Telegram 발췌',
+            arxiv_abstract: '공식 논문 초록',
+            fetched_url_excerpt: '확보 원문 발췌',
+            news: '뉴스',
+            retrieval_node: '검색 근거',
+            paper: '논문',
+            external: '외부 원문',
+          }[s.kind] || '저장 근거'
+        }`
       );
     }
-    for (const edge of detail.relations || []) {
-      const a = points.get(edge.source),
-        b = points.get(edge.target);
-      if (!a || !b) continue;
-      const line = svg(
+    for (const [i, n] of related.entries()) {
+      const [x, y] = points.get(n.id);
+      node(g, x, y, n.name || n.id, 'related:' + i, 'related', n.type || '검색 단서');
+    }
+    // One trace per stored event; no invented signal density or probability values.
+    const traces = events.slice(-12),
+      first = traces[0]?.at,
+      last = traces.at(-1)?.at;
+    const traceTop = answers.length ? 355 : 350;
+    svg('text', { x: 760, y: traceTop - 19, class: 'lab-field-title' }, g, '03 / EVENT TRACE');
+    svg(
+      'text',
+      { x: 1168, y: traceTop - 19, 'text-anchor': 'end', class: 'lab-node-meta' },
+      g,
+      '저장된 단계 발생 시점'
+    );
+    traces.forEach((e, i) => {
+      const y = traceTop + i * 14,
+        phase = e.status,
+        x = 995 + (last > first ? (e.at - first) / (last - first) : 1) * 170;
+      svg(
         'path',
-        { d: `M${a[0]} ${a[1]} Q590 250 ${b[0]} ${b[1]}`, class: 'control-edge hint' },
+        {
+          d: `M560 ${205 + i * 13}C650 ${205 + i * 13} 665 ${y} 746 ${y}`,
+          class: 'lab-record-link',
+        },
         g
       );
-      svg('title', {}, line, '당시 검색 관계 · ' + (edge.relation || edge.type || '연결'));
-    }
-    svg(
-      'circle',
-      { cx: 420, cy: 250, r: 71, fill: '#102b30', stroke: '#58d7be', 'stroke-width': 1.5 },
-      g
-    );
+      svg(
+        'text',
+        { x: 760, y: y + 3, class: 'lab-trace-time' },
+        g,
+        `${shortTime(e.at)} / ${(names[e.stage] || e.stage).slice(0, 12)}`
+      );
+      svg('path', { d: `M995 ${y}H1170`, class: 'lab-trace-line' }, g);
+      const mark = svg(
+        'rect',
+        {
+          x,
+          y: y - 3,
+          width: 4,
+          height: 6,
+          class: 'lab-event-mark',
+          'data-attention': String(attention(phase)),
+        },
+        g
+      );
+      svg('title', {}, mark, `${names[e.stage] || e.stage} · ${status(phase)} · ${time(e.at)}`);
+    });
+    if (!traces.length)
+      svg('text', { x: 760, y: traceTop + 8 }, g, '이 시점에 저장된 단계 기록 없음');
+    // The aperture is a visual stage marker, not an additional agent/model.
+    svg('path', { d: 'M510 228L555 254V306L510 332L465 306V254Z', class: 'lab-hub' }, g);
+    svg('path', { d: 'M510 247L538 296H482Z', class: 'lab-aperture' }, g);
+    svg('circle', { cx: 510, cy: 280, r: 9, class: 'lab-aperture-core' }, g);
     svg(
       'circle',
       {
-        cx: 420,
-        cy: 250,
-        r: 80,
-        fill: 'none',
-        stroke: '#375a62',
-        'stroke-width': 1,
-        'stroke-dasharray': '3 6',
-        class: executing ? 'control-orbit' : '',
+        cx: 510,
+        cy: 280,
+        r: 62,
+        class: 'lab-ring' + (executing ? ' control-orbit' : ''),
+        'stroke-dasharray': '2 8',
       },
       g
     );
+    svg('path', { d: 'M573 280H730', class: 'control-edge' }, g);
     svg(
       'text',
-      { x: 420, y: 231, 'text-anchor': 'middle', class: 'control-core-sub' },
+      { x: 600, y: 237, class: 'control-core-sub' },
       g,
-      'EVIDENCE / DECISION'
+      cursor === null ? 'CURRENT CHECKPOINT' : 'RECORDED CHECKPOINT'
     );
     svg(
       'text',
-      { x: 420, y: 254, 'text-anchor': 'middle', class: 'control-core-title' },
+      { x: 600, y: 265, class: 'control-core-title' },
       g,
       runningStages.length > 1
         ? runningStages.length + '개 단계 병행'
@@ -661,22 +850,66 @@
     );
     svg(
       'text',
-      { x: 420, y: 275, 'text-anchor': 'middle', class: 'control-core-sub' },
+      { x: 600, y: 302, class: 'control-core-sub' },
       g,
       center ? status(visibleStatus(center)) : '관측된 작업만 표시'
     );
-    svg('text', { x: 28, y: 25 }, g, `INPUTS ${sources.length} / ${detail.sources.length}`);
+    if (answers.length) {
+      answers.forEach(([key, a], i) => {
+        const x = 790,
+          y = 63 + i * 40,
+          title = questionName(key),
+          value = choices[a.choice] || a.choice || '예 판단값 ' + a.noul;
+        svg(
+          'path',
+          { d: `M555 280C690 280 680 ${y + 16} ${x} ${y + 16}`, class: 'control-edge hint' },
+          g
+        );
+        const b = svg(
+          'g',
+          {
+            class: 'lab-answer',
+            tabindex: 0,
+            role: 'button',
+            'aria-label': title + ' · ' + value,
+            'data-selected': String(selectedNode?.key === 'answer:' + key),
+            'data-attention': String(['required', 'present', 'unclear'].includes(a.choice)),
+          },
+          g
+        );
+        svg('rect', { x, y, width: 380, height: 34 }, b);
+        svg('text', { x: x + 10, y: y + 13, class: 'lab-answer-label' }, b, title);
+        svg(
+          'text',
+          { x: x + 10, y: y + 27, class: 'lab-answer-value' },
+          b,
+          String(value).slice(0, 42)
+        );
+        const choose = () => {
+          if (dragMoved) return;
+          follow(false);
+          selectedNode = { key: 'answer:' + key, kind: 'decision' };
+          renderDetail();
+        };
+        b.onclick = choose;
+        b.onkeydown = (e) => {
+          if (['Enter', ' '].includes(e.key)) {
+            e.preventDefault();
+            choose();
+          }
+        };
+      });
+    } else {
+      svg('text', { x: 790, y: 100, class: 'lab-output-title' }, g, '판단 기록 대기');
+      svg('text', { x: 790, y: 128 }, g, '이 시점의 Jev 완료 판단 없음');
+      svg('text', { x: 790, y: 149 }, g, '저장된 작업 이력은 아래에 표시됩니다');
+    }
+    svg('text', { x: 28, y: 550, class: 'lab-field-title' }, g, 'SAVED INPUTS / RETRIEVAL CONTEXT');
     svg(
       'text',
-      { x: 810, y: 25, 'text-anchor': 'end' },
+      { x: 1168, y: 550, 'text-anchor': 'end', class: 'lab-field-title' },
       g,
-      related.length ? 'RETRIEVAL CONTEXT' : 'JEV OBSERVATIONS'
-    );
-    svg(
-      'text',
-      { x: 420, y: 490, 'text-anchor': 'middle' },
-      g,
-      '저장 근거 · 비교 판단 · 독립 검토'
+      'JEV SHADOW · INDEPENDENT REVIEW'
     );
     if (cursor === null) lastEvent = center?.id;
     if (focus)

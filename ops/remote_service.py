@@ -25,6 +25,20 @@ children = []
 stopping = False
 
 
+def ready_tunnel_origin(output):
+    """Accept an issued hostname only after a tunnel connection is registered.
+
+    Cloudflared error messages contain api.trycloudflare.com/tunnel, which is
+    the provisioning endpoint, not a site visitors can log into.
+    """
+    if 'Registered tunnel connection' not in output:
+        return ''
+    for match in re.finditer(r'https://([a-z0-9-]+)\.trycloudflare\.com(?=[\s|"\']|$)', output):
+        if match.group(1) not in ('api', 'www'):
+            return match.group()
+    return ''
+
+
 def dns_health(origin, resolver=socket.getaddrinfo):
     """Only a missing origin with working general DNS warrants a new tunnel."""
     try:
@@ -127,9 +141,9 @@ def main():
                 ready,_,_ = select.select([tunnel.stdout],[],[],1)
                 if ready:
                     output = (output+os.read(tunnel.stdout.fileno(),65536).decode(errors='replace'))[-65536:]
-                    match = re.search(r'https://[a-z0-9-]+\.trycloudflare\.com\b',output)
-                    if match and not published:
-                        publish(match.group());health.watch(match.group());published = True
+                    origin = ready_tunnel_origin(output)
+                    if origin and not published:
+                        publish(origin);health.watch(origin);published = True
             tunnel.wait()
             children.remove(tunnel)
             if not stopping and gateway.poll() is not None:

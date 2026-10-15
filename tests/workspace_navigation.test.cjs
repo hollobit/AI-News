@@ -43,7 +43,7 @@ test('a long analysis question survives navigation without submitting an invalid
 });
 
 test('only allowlisted paths and HTTPS origins can become remote handoffs', () => {
-  for(const origin of ['http://live.test','https://user:pass@live.test','https://live.test/path','https://live.test/?token=secret','javascript:alert(1)']) assert.throws(()=>nav.remoteURL(origin,'context.html'));
+  for(const origin of ['http://live.test','https://api.trycloudflare.com','https://www.trycloudflare.com','https://user:pass@live.test','https://live.test/path','https://live.test/?token=secret','javascript:alert(1)']) assert.throws(()=>nav.remoteURL(origin,'context.html'));
   for(const id of ['//evil.test','https://evil.test','../../private','constructor','__proto__']) assert.throws(()=>nav.remoteURL('https://live.test','context.html?destination='+encodeURIComponent(id)));
   const u=new URL(nav.remoteURL('https://live.test','context.html?destination=operations&next=https://evil.test&token=SECRET'));
   assert.equal(u.pathname,'/operations');assert.equal(u.search,'');

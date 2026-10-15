@@ -1,7 +1,21 @@
 import socket
 import threading
 
-from ops.remote_service import OriginHealth, dns_health
+from ops.remote_service import OriginHealth, dns_health, ready_tunnel_origin
+
+
+def test_provisioning_error_is_never_a_public_site():
+    error = 'ERR Post "https://api.trycloudflare.com/tunnel": request failed'
+    assert ready_tunnel_origin(error) == ''
+    assert ready_tunnel_origin(error + '\nRegistered tunnel connection') == ''
+    assert ready_tunnel_origin('https://api.trycloudflare.com\nRegistered tunnel connection') == ''
+
+
+def test_tunnel_waits_for_registration_and_preserves_hostname_across_chunks():
+    banner = '| https://four-word-public-site.trycloudflare.com |'
+    assert ready_tunnel_origin(banner) == ''
+    assert ready_tunnel_origin(banner + '\nINF Registered tunnel connection connIndex=0') == 'https://four-word-public-site.trycloudflare.com'
+    assert ready_tunnel_origin('ERR https://api.trycloudflare.com/tunnel\n' + banner + '\nRegistered tunnel connection') == 'https://four-word-public-site.trycloudflare.com'
 
 
 def test_dns_expiry_requires_missing_origin_and_working_network():

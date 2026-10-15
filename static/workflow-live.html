@@ -20,7 +20,7 @@
     <main id="main" class="flow-main">
       <header class="flow-hero">
         <div>
-          <p class="eyebrow">WORKFLOW TERMINAL · LIVE</p>
+          <p class="eyebrow">AI NEWS / RESEARCH ENGINE</p>
           <h1>뉴스 분석 관제실</h1>
           <p class="intro">수집 · 분석 · 검토 · 게시의 실시간 운영 현황</p>
         </div>
@@ -41,32 +41,15 @@
         <span>기록을 따라가며 판단과 근거를 확인합니다</span>
       </div>
       <section id="control-room" aria-label="실시간 분석 관제">
+        <div class="lab-toolbar">
+          <div class="lab-identity"><b>ANALYSIS / LAB</b><span>실제 기록 · 자동 관측</span></div>
+          <div class="lab-themes" role="group" aria-label="관제 화면 색상">
+            <button id="lab-light" aria-pressed="true">◐ 연구 화면</button>
+            <button id="lab-dark" aria-pressed="false">◑ 야간 관제</button>
+          </div>
+          <button id="control-follow" aria-pressed="true">자동 따라가기 켜짐</button>
+        </div>
         <div class="control-metrics" id="control-metrics"></div>
-        <section class="auto-panel" aria-label="자동 분석 실시간 흐름">
-          <div class="auto-heading">
-            <div>
-              <span class="eyebrow">AUTOMATIC ANALYSIS · LIVE</span>
-              <h2>자동 분석 흐름</h2>
-            </div>
-            <p id="auto-summary" role="status">실제 처리 상태를 확인합니다</p>
-            <button id="control-follow" aria-pressed="true">자동 따라가기 켜짐</button>
-          </div>
-          <div id="auto-pipeline" class="auto-pipeline" aria-label="수집과 뉴스 분석"></div>
-          <div
-            id="auto-support"
-            class="auto-pipeline auto-support"
-            aria-label="병행 근거 보강과 게시"
-          ></div>
-          <div class="auto-stage-info">
-            <span id="auto-stage-note">단계별 대상과 집계 범위가 다릅니다.</span
-            ><a id="auto-stage-link" hidden>단계 상세 ↗</a>
-          </div>
-          <div class="auto-model-heading">
-            <strong>모델 호출 현황</strong><span id="auto-model-count"></span>
-          </div>
-          <div id="auto-models" class="auto-models"></div>
-          <div id="auto-changes" class="auto-changes" aria-label="이 화면에서 확인된 변화"></div>
-        </section>
         <div class="control-layout">
           <section class="control-visual" aria-labelledby="control-title">
             <div class="control-heading">
@@ -77,22 +60,27 @@
               <span id="control-mode" class="control-badge">상태 확인 중</span>
             </div>
             <div class="control-canvas">
-              <svg
-                id="control-graph"
-                viewBox="0 0 840 510"
-                role="group"
-                aria-label="선택한 작업의 입력 근거와 판단 관계"
-              >
-                <defs>
-                  <radialGradient id="control-glow">
-                    <stop stop-color="#24d8bd" stop-opacity=".16" />
-                    <stop offset="1" stop-color="#24d8bd" stop-opacity="0" />
-                  </radialGradient>
-                </defs>
-                <g id="control-graph-content"></g>
-              </svg>
+              <div class="lab-canvas-tools" role="group" aria-label="관계망 보기 조절">
+                <button id="lab-zoom-out" aria-label="관계망 축소">−</button>
+                <output id="lab-zoom" aria-live="polite">100%</output>
+                <button id="lab-zoom-in" aria-label="관계망 확대">+</button>
+                <button id="lab-fit">맞춤</button>
+                <button id="lab-focus" aria-pressed="false">집중 보기 ⤢</button>
+              </div>
+              <div class="lab-viewport" id="lab-viewport">
+                <svg
+                  id="control-graph"
+                  viewBox="0 0 1200 560"
+                  tabindex="0"
+                  role="group"
+                  aria-label="선택한 작업의 입력 근거와 판단 관계. 확대 후 드래그 또는 방향키로 이동, Escape로 맞춤"
+                >
+                  <g id="control-graph-content"></g>
+                </svg>
+              </div>
               <div id="control-graph-empty">실제 작업 기록을 불러오고 있습니다.</div>
             </div>
+            <p class="lab-mobile-hint">관계망을 좌우로 밀어 탐색하세요 · +로 확대</p>
             <div
               id="control-progress"
               class="control-progress"
@@ -102,11 +90,12 @@
             <div id="control-signals" class="control-signals" aria-label="Jev 판단 선택"></div>
             <div class="control-legend">
               <span>● 입력 근거</span><span>● Jev 비교 판단</span><span>┄ 당시 검색 단서</span
-              ><span>선택 · Enter로 상세 보기</span>
+              ><span>선택 · Enter로 상세 보기</span
+              ><button id="lab-detail">선택 근거 상세 ↓</button>
             </div>
             <p class="control-caption">
-              선은 입력·검색·판단의 연결입니다. 인과관계를 뜻하지 않습니다. 관계망은 저장된 입력,
-              시간 재생은 단계 이력을 보여줍니다.
+              선은 저장된 입력·검색 연결이며 인과관계가 아닙니다. 배경 격자는 배치 가이드입니다.
+              관계망은 저장 입력, 재생은 단계 이력 기준 · 확대 후 드래그/방향키 이동
             </p>
           </section>
           <aside class="control-queue" aria-labelledby="control-queue-title">
@@ -135,13 +124,37 @@
           <output id="control-clock" for="control-time">이력 대기</output>
         </div>
         <p id="control-message" class="control-caption" role="status" aria-live="polite"></p>
+        <section class="auto-panel" aria-label="자동 분석 실시간 흐름">
+          <div class="auto-heading">
+            <div>
+              <span class="eyebrow">AUTOMATIC ANALYSIS · LIVE</span>
+              <h2>자동 분석 흐름</h2>
+            </div>
+            <p id="auto-summary" role="status">실제 처리 상태를 확인합니다</p>
+          </div>
+          <div id="auto-pipeline" class="auto-pipeline" aria-label="수집과 뉴스 분석"></div>
+          <div
+            id="auto-support"
+            class="auto-pipeline auto-support"
+            aria-label="병행 근거 보강과 게시"
+          ></div>
+          <div class="auto-stage-info">
+            <span id="auto-stage-note">단계별 대상과 집계 범위가 다릅니다.</span
+            ><a id="auto-stage-link" hidden>단계 상세 ↗</a>
+          </div>
+          <div class="auto-model-heading">
+            <strong>모델 호출 현황</strong><span id="auto-model-count"></span>
+          </div>
+          <div id="auto-models" class="auto-models"></div>
+          <div id="auto-changes" class="auto-changes" aria-label="이 화면에서 확인된 변화"></div>
+        </section>
         <div class="control-detail-layout">
           <section class="control-inspector">
             <div class="control-heading">
               <h2>판단 · 근거 상세</h2>
               <a id="control-result" hidden>결과 화면 ↗</a>
             </div>
-            <div id="control-inspector">작업 또는 관계망의 점을 선택하세요.</div>
+            <div id="control-inspector" tabindex="-1">작업 또는 관계망의 점을 선택하세요.</div>
           </section>
           <section class="control-timeline">
             <div class="control-heading">

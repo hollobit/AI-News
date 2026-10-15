@@ -15,7 +15,7 @@ async def login_handoff(browser):
     import sys
     sys.path.insert(0,str(ROOT))
     from ops.remote_access import LOGIN
-    for suffix in ('/workflow?view=control&task=workflow%3Aa','/knowledge#id=source%3Apaper%3A123&view=3d'):
+    for suffix in ('/intelligence?q=AI&date=2026-10-15', '/workflow?view=control&task=workflow%3Aa','/knowledge#id=source%3Apaper%3A123&view=3d'):
         page=await browser.new_page();authenticated=False;submitted=[]
         async def gateway(route):
             nonlocal authenticated
@@ -78,6 +78,31 @@ async def main():
         await expect(page.locator('.control-job')).to_have_count(2)
         await expect(page.locator('#flow-board')).to_be_hidden()
         assert await page.locator('#control-graph .control-node').count()==8
+        # Theme, optical zoom and focus are local UI actions: they never rerun analysis.
+        await expect(page.locator('body')).to_have_attribute('data-lab-theme','light')
+        assert await page.locator('h1').evaluate('(e)=>getComputedStyle(e).color')=='rgb(27, 36, 34)'
+        await page.locator('#lab-dark').click()
+        await expect(page.locator('body')).to_have_attribute('data-lab-theme','dark')
+        await page.reload();await expect(page.locator('#control-title')).to_have_text(data['job']['title'])
+        await expect(page.locator('#lab-dark')).to_have_attribute('aria-pressed','true')
+        out=ROOT/'.runtime/verification';out.mkdir(parents=True,exist_ok=True)
+        await page.evaluate('scrollTo(0,0)');await page.screenshot(path=str(out/'research-lab-dark.png'),full_page=True)
+        await page.locator('#lab-light').click()
+        await page.locator('#lab-zoom-in').click();await expect(page.locator('#lab-zoom')).to_have_text('150%')
+        canvas=page.locator('#control-graph');before=await canvas.get_attribute('viewBox')
+        await canvas.focus();await page.keyboard.press('ArrowRight')
+        assert before!=await canvas.get_attribute('viewBox')
+        box=await canvas.bounding_box();before=await canvas.get_attribute('viewBox')
+        await page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2)
+        await page.mouse.down();await page.mouse.move(box['x']+box['width']/2+70,box['y']+box['height']/2+20,steps=8);await page.mouse.up()
+        assert before!=await canvas.get_attribute('viewBox')
+        await page.locator('#lab-fit').click();await expect(page.locator('#lab-zoom')).to_have_text('100%')
+        await page.locator('#lab-focus').click();await expect(page.locator('.control-queue')).to_be_hidden()
+        await canvas.focus();await page.keyboard.press('Escape')
+        await expect(page.locator('.control-queue')).to_be_visible()
+        await page.locator('#lab-focus').click();await page.locator('#lab-detail').click()
+        await expect(page.locator('#control-inspector')).to_be_focused()
+        await expect(page.locator('#lab-focus')).to_have_attribute('aria-pressed','false')
         source=page.locator('#control-graph [role="button"]').first
         await source.focus();await page.keyboard.press('Enter')
         await expect(page.locator('#control-inspector')).to_contain_text('원출처 열기')
@@ -92,9 +117,10 @@ async def main():
         await page.locator('#control-events button').first.click()
         await expect(page.locator('#control-inspector')).to_contain_text('이 시점에는 Jev 판단 기록이 없습니다')
         assert await page.locator('#control-inspector').get_by_text('상세 위험 검토 필요',exact=True).count()==0
+        await expect(page.locator('.lab-answer')).to_have_count(0)
         await page.locator('#control-play').click()
         await expect(page.locator('#control-play')).to_have_attribute('aria-pressed','true')
-        await expect(page.locator('#control-inspector')).to_contain_text('상세 위험 검토 필요',timeout=4000)
+        await expect(page.locator('#control-inspector')).to_contain_text('상세 위험 검토 필요',timeout=8000)
         await page.locator('#control-live').click()
         await expect(page.locator('#control-clock')).to_contain_text('최신 기록')
         await page.locator('#control-search').fill('의료');await expect(page.locator('.control-job')).to_have_count(1)
@@ -106,11 +132,13 @@ async def main():
         await page.locator('#view-board').click();await expect(page.locator('#flow-board')).to_be_visible()
         await page.locator('#view-control').click();await expect(page.locator('#control-room')).to_be_visible()
         out=ROOT/'.runtime/verification';out.mkdir(parents=True,exist_ok=True)
-        await page.screenshot(path=str(out/'decision-control-desktop.png'),full_page=True)
+        await page.evaluate('scrollTo(0,0)');await page.screenshot(path=str(out/'decision-control-desktop.png'),full_page=True)
         for width in (390,320):
             await page.set_viewport_size({'width':width,'height':844})
             assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
-        await page.screenshot(path=str(out/'decision-control-mobile.png'),full_page=True)
+        await page.locator('#lab-viewport').evaluate('(e)=>e.scrollLeft=210')
+        assert await page.locator('#lab-viewport').evaluate('(e)=>e.scrollWidth>e.clientWidth && e.scrollLeft>0')
+        await page.evaluate('scrollTo(0,0)');await page.screenshot(path=str(out/'decision-control-mobile.png'),full_page=True)
         await page.reload();await expect(page.locator('#control-title')).to_have_text(data['job']['title'])
         # A dead Jev owner without a finish event is not still evaluating.
         data['decisions'][0].update(status='owner_missing',finished_at=None,result={})
@@ -118,9 +146,23 @@ async def main():
         await page.reload()
         await expect(page.locator('#control-inspector')).to_contain_text('실행자 없음')
         await expect(page.locator('#control-inspector')).not_to_contain_text('평가 요청 처리 중')
+        # Production-sized records must stay bounded and labels must not overlap.
+        _,dense=fixture();data.update(dense)
+        data['sources']=[dict(dense['sources'][i%5],id='source-'+str(i),title=str(i+1)+' · '+dense['sources'][i%5]['title']) for i in range(24)]
+        data['related']=[dict(id='related-'+str(i),name='관련 검색 근거 '+str(i),type='Topic') for i in range(20)]
+        base=flow['control']['jobs'][0]
+        flow['control']['jobs']=[base]+[dict(base,id='extra-'+str(i),key='workflow:extra-'+str(i)) for i in range(63)]
+        await page.set_viewport_size({'width':1440,'height':1100});await page.reload()
+        await expect(page.locator('.control-job')).to_have_count(64)
+        await expect(page.locator('.control-node')).to_have_count(26)
+        assert (await page.locator('.control-queue').bounding_box())['height']<900
+        assert await page.evaluate('document.documentElement.scrollHeight<2400')
+        boxes=await page.locator('.control-node[data-kind="source"] .lab-node-hit').evaluate_all('(es)=>es.map(e=>e.getBBox()).map(b=>({y:b.y,height:b.height})).sort((a,b)=>a.y-b.y)')
+        assert all(b['y']+b['height']<=n['y']+1 for b,n in zip(boxes,boxes[1:])),boxes
+        await page.evaluate('scrollTo(0,0)');await page.screenshot(path=str(out/'research-lab-dense.png'),full_page=True)
         assert not errors and not posts,(errors,posts)
         await login_handoff(browser)
-        print(json.dumps(dict(keyboard=True,source_query_preserved=True,selection_race=True,replay_hides_future=True,reload_selection=True,pause_recovery=True,mobile=[390,320],errors=errors,analysis_posts=posts)))
+        print(json.dumps(dict(themes=True,zoom_pan=True,focus_mode=True,keyboard=True,source_query_preserved=True,selection_race=True,replay_hides_future=True,reload_selection=True,pause_recovery=True,mobile=[390,320],errors=errors,analysis_posts=posts)))
         await browser.close()
 
 asyncio.run(main())
