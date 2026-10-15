@@ -26,6 +26,7 @@ async def main():
    if f.is_file():await r.fulfill(path=str(f))
    else:await r.fulfill(status=404,body='not found')
   await page.route('http://test.local/**',route);await page.goto('http://test.local/workflow')
+  await page.locator('#view-board').click()
   await expect(page.locator('.stage')).to_have_count(8);await expect(page.locator('#done')).to_have_text('3')
   await page.locator('#tasks summary').click()
   await expect(page.locator('#tasks details')).to_have_attribute('open','')

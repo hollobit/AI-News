@@ -10,7 +10,7 @@ def get(self, route, params):
         name='context.html' if route.path=='/context' else route.path[1:]
         content=(self.services.ROOT/'static'/name).read_bytes()
         mime='text/html; charset=utf-8' if name.endswith('.html') else 'text/css; charset=utf-8' if name.endswith('.css') else 'application/javascript; charset=utf-8'
-    elif route.path in {'/workflow', '/workflow-live.js', '/workflow-live.css'}:
+    elif route.path in {'/workflow', '/workflow-live.js', '/workflow-live.css', '/workflow-control.js', '/workflow-control.css'}:
         name = 'workflow-live.html' if route.path == '/workflow' else route.path[1:]
         content = (self.services.ROOT / 'static' / name).read_bytes()
         mime = 'text/html; charset=utf-8' if name.endswith('.html') else 'text/css; charset=utf-8' if name.endswith('.css') else 'application/javascript; charset=utf-8'

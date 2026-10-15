@@ -13,6 +13,10 @@ VERSION = 'workspace-progress-v2'
 def setup(db):
     db.execute('''CREATE TABLE IF NOT EXISTS graph_question_progress(
         job_id TEXT PRIMARY KEY,profile TEXT NOT NULL,body TEXT NOT NULL,updated_at REAL NOT NULL)''')
+    db.execute('''CREATE TABLE IF NOT EXISTS graph_question_events(
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,job_id TEXT NOT NULL,stage TEXT NOT NULL,
+        status TEXT NOT NULL,phase TEXT NOT NULL,created_at REAL NOT NULL)''')
+    db.execute('CREATE INDEX IF NOT EXISTS question_events_job ON graph_question_events(job_id,seq)')
 
 
 def update(db, identity, stage, *, done=False, reset=False, **detail):
@@ -24,6 +28,10 @@ def update(db, identity, stage, *, done=False, reset=False, **detail):
     entry.update(detail)
     body['updated_at'] = now
     db.execute('INSERT OR REPLACE INTO graph_question_progress VALUES(?,?,?,?)', (identity, VERSION, json.dumps(body), now))
+    status='complete' if done else 'running';phase=str(detail.get('phase',''))
+    previous=db.execute('SELECT stage,status,phase FROM graph_question_events WHERE job_id=? ORDER BY seq DESC LIMIT 1',(identity,)).fetchone()
+    if reset or not previous or tuple(previous)!=(stage,status,phase):
+        db.execute('INSERT INTO graph_question_events(job_id,stage,status,phase,created_at) VALUES(?,?,?,?,?)',(identity,stage,status,phase,now))
 
 
 def view(db, identity, status, created_at):

@@ -100,9 +100,11 @@ def retry_after(value, stamp):
         except (ValueError,TypeError,OverflowError):return 60
 
 
-def evaluate(path,purpose,state,questions,baseline=None,*,caller=None):
+def _evaluate(path,purpose,state,questions,baseline=None,*,caller=None):
     settings=config()
     if not settings['enabled']:return dict(status='disabled',**settings)
+    baseline={k:v for k,v in (baseline or {}).items() if k in ('run_id','path','reason','types','retained_ids','synthetic','expected')
+              or k in questions and isinstance(v,str) and v in questions[k].get('criteria',{})}
     body=json.dumps(dict(model=settings['model'],state=state,questions=questions),ensure_ascii=False,allow_nan=False).encode()
     if len(body)>64000 or not 1<=len(questions)<=24:return {'status':'input_limit'}
     key=hashlib.sha256(VERSION.encode()+body).hexdigest()
@@ -133,11 +135,33 @@ def evaluate(path,purpose,state,questions,baseline=None,*,caller=None):
     except (OSError,sqlite3.Error):return {'status':'storage_unavailable'}
 
 
-def observe(path,purpose,state,questions,baseline=None):
+def evaluate(path,purpose,state,questions,baseline=None,*,caller=None,subject=None):
+    from decision_journal import begin, finish, safely
+    identity=safely(begin,path,purpose,state,questions,baseline,config(),subject) if config()['enabled'] else None
+    try:
+        result=_evaluate(path,purpose,state,questions,baseline,caller=caller)
+    except (ValueError,KeyError,TypeError):
+        result={'status':'invalid_input'}
+    finally:
+        safely(finish,path,identity,locals().get('result',{'status':'interrupted'}))
+    return result
+
+
+def skipped(path,purpose,reason,subject=None):
+    if not path or not config()['enabled']:return
+    from decision_journal import begin, finish, safely
+    identity=safely(begin,path,purpose,{}, {}, {},config(),subject)
+    safely(finish,path,identity,{'status':'skipped','reason':reason})
+
+
+def observe(path,purpose,state,questions,baseline=None,*,subject=None):
     """Bounded background shadow: no queue growth and no added model wait."""
-    if not path or not config()['enabled'] or not PENDING.acquire(blocking=False):return None
+    if not path or not config()['enabled']:return None
+    if not PENDING.acquire(blocking=False):
+        skipped(path,purpose,'pending_limit',subject)
+        return None
     def work():
-        try:return evaluate(path,purpose,state,questions,baseline)
+        try:return evaluate(path,purpose,state,questions,baseline,subject=subject)
         finally:PENDING.release()
     try:return POOL.submit(work)
     except RuntimeError:PENDING.release();return None

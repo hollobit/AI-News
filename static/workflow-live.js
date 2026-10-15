@@ -248,6 +248,7 @@
   }
   function render(data) {
     current = data;
+    window.WorkflowControl?.update(data);
     if (!data.stages.some((s) => s.id === selected)) selected = 'deep';
     data.stages.forEach(card);
     detail(data.stages.find((s) => s.id === selected));
@@ -490,6 +491,7 @@
   function connection() {
     const stale = !lastSuccess || Date.now() - lastSuccess > 12000;
     $('main').dataset.offline = String(stale || paused);
+    window.WorkflowControl?.connection(stale || paused || document.hidden);
     $('connection').textContent = paused
       ? '화면 갱신 일시정지'
       : document.hidden

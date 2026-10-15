@@ -109,6 +109,7 @@ def snapshot(path):
                     if not call['owner_alive']:call['status']='owner_missing'
         except sqlite3.Error:runtime_error=True
     for task in tasks: task.pop('call_ids', None)
-    return dict(observed_at=datetime.fromtimestamp(stamp,timezone.utc).isoformat(),stages=stages,events=events,tasks=tasks,
+    from .decision_control import overview
+    return dict(observed_at=datetime.fromtimestamp(stamp,timezone.utc).isoformat(),stages=stages,events=events,tasks=tasks,control=overview(path),
                 calls=calls,call_counts=call_counts,call_limit=limit,runtime_error=runtime_error,schedule=schedule,
                 scope='각 단계의 원장·확보 기록입니다. 서로 다른 대상을 합산한 전체 완료율은 제공하지 않습니다.')

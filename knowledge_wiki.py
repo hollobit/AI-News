@@ -333,7 +333,7 @@ class KnowledgeWiki:
             validate_structure(structure,bundle)
             if not cached:
                 from decision_tasks import structure as observe_decision
-                observe_decision(self.path,bundle,structure['notes'])
+                observe_decision(self.path,bundle,structure['notes'],topic=topic)
             if not cached:
                 with self.db() as db:db.execute('INSERT OR REPLACE INTO wiki_structures VALUES (?,?)',(skey,js(structure)))
             from wiki_reuse import reviewed_hints

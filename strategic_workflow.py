@@ -160,6 +160,7 @@ class WorkflowService:
                 run_id TEXT NOT NULL, stage TEXT NOT NULL, payload_json TEXT NOT NULL,
                 PRIMARY KEY (run_id,stage))''')
             db.execute('CREATE INDEX IF NOT EXISTS workflow_events_run ON strategic_workflow_events(run_id,seq)')
+            db.execute('CREATE INDEX IF NOT EXISTS workflow_status_recent ON strategic_workflow_runs(status,created_at)')
             db.execute("CREATE INDEX IF NOT EXISTS workflow_round ON strategic_workflow_runs(json_extract(request_json,'$.recursive_round_id'),created_at)")
             # Only this workflow's interrupted rows are touched; other services own their lifecycle.
             if recover_interrupted:

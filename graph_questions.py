@@ -83,7 +83,7 @@ def question_evidence(path,request,expected_ids=None):
     return graph,signature
 
 
-def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,progress=None,reuse_only=None):
+def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,progress=None,reuse_only=None,job_id=None):
     """Question planning adds no facts: retrieve each requested axis separately."""
     from graph_plans import prepare
     plan = plan if plan is not None else prepare(question, path)[0]
@@ -91,7 +91,7 @@ def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,pr
     retrieval_started=time.monotonic()
     retrieval = compose(graph, question, ids, plan, path, scoped)
     from decision_tasks import retrieval as observe_decision
-    observe_decision(path,question,plan,retrieval['evidence'])
+    observe_decision(path,question,plan,retrieval['evidence'],job_id=job_id)
     compose_ms=round((time.monotonic()-retrieval_started)*1000,2)
     # Pass the fixed retrieved bundle directly; do not rerank away a missing side.
     answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress,reuse_only=reuse_only)
@@ -280,6 +280,8 @@ class GraphQuestions:
             if bounded_signature and not self.analyzer:
                 retrieval={'nodes':[],'edges':[],'evidence':graph['evidence'],'no_hits':False,
                     'limitations':['질문에 직접 관련된 뉴스·원문·검토 논문으로 분석했습니다. 전체 관계 및 기간별 변화는 이 검색만으로 확정할 수 없습니다.']}
+                from decision_tasks import retrieval as observe_decision
+                observe_decision(self.path,request['question'],{},retrieval['evidence'],job_id=identity)
                 answer=answer_question(graph,request['question'],retrieval=retrieval)
                 answer.update(phase='analysis',evidence_scope='question_specific_evidence',bounded_signature=bounded_signature,bounded_evidence_ids=[e['id'] for e in graph['evidence']])
                 answer.setdefault('limitations',[]).extend(retrieval['limitations'])
@@ -293,7 +295,7 @@ class GraphQuestions:
                         self._progress(identity,'review',done=True,**detail)
                     self._progress(identity,stage,**detail)
                 if tracked:self._progress(identity,'synthesis')
-                answer=self.analyzer(graph,request['question'],request['node_ids']) if self.analyzer else deepen(graph,request['question'],request['node_ids'],path=self.path,scoped=bool(request['params']),detailed=detailed,plan=plan,progress=progress if tracked else None,reuse_only=reviewed)
+                answer=self.analyzer(graph,request['question'],request['node_ids']) if self.analyzer else deepen(graph,request['question'],request['node_ids'],path=self.path,scoped=bool(request['params']),detailed=detailed,plan=plan,progress=progress if tracked else None,reuse_only=reviewed,job_id=identity)
             attempts.append(dict(evidence_retrieval_ms=retrieval_ms,answer_ms=answer.get('timing',{}).get('answer_ms'),
                                  answer_cache_hit=answer.get('timing',{}).get('answer_cache_hit',False),
                                  attempt_ms=round((time.monotonic()-begun)*1000,2)))

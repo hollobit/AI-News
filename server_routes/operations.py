@@ -5,6 +5,17 @@ from pathlib import Path
 from urllib.parse import parse_qs
 
 def get(self, route, params):
+    if route.path == '/api/operations/control':
+        from .decision_control import detail
+        kind=params.get('kind',[''])[0];identity=params.get('id',[''])[0]
+        if kind not in ('workflow','question','wiki') or not 1<=len(identity)<=200:
+            self.send_json({'error':'작업 식별자를 확인해 주세요.'},400)
+        else:
+            try:
+                result=detail(self.services.path,kind,identity)
+                self.send_json(result or {'error':'작업을 찾을 수 없습니다.'},200 if result else 404)
+            except sqlite3.Error:self.send_json({'error':'작업 이력을 읽는 중입니다. 잠시 후 다시 확인합니다.'},503)
+        return True
     if route.path == '/api/operations/flow':
         from .workflow_status import snapshot
         self.send_json(snapshot(self.services.path))
