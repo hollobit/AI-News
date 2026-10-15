@@ -6,7 +6,7 @@ import re
 
 from projection_cache import content_digest
 
-VERSION = 'question-plan-v2'
+VERSION = 'question-plan-v3'
 
 
 def simple_plan(question):
@@ -23,18 +23,30 @@ def valid(plan):
         and all(isinstance(v, str) and v.strip() and len(v) <= 300 for v in plan[k]) for k in ('queries', 'axes'))
 
 
-def prepare(question, path=None):
+def prepare(question, path=None, *, job_id=None, report=None):
     from semantic import run_structured
     from strategic_jobs import obj
-    key = content_digest([VERSION, date.today().isoformat(), question])
+    from graph_plan_router import select, VERSION as ROUTER_VERSION
+    from system_one import config
+    settings=config()
+    key = content_digest([VERSION, ROUTER_VERSION, date.today().isoformat(), question,
+                          settings['applies_question_plans'],settings['model']])
     if path:
         with sqlite3.connect(path, timeout=10) as db:
             db.execute('CREATE TABLE IF NOT EXISTS graph_question_plans(key TEXT PRIMARY KEY,plan_json TEXT NOT NULL,created_at TEXT NOT NULL)')
             row = db.execute('SELECT plan_json FROM graph_question_plans WHERE key=?', (key,)).fetchone()
             if row:
                 plan = json.loads(row[0])
-                if valid(plan): return plan, True
-    plan = simple_plan(question) or run_structured('질문을 분석할 검색 계획만 작성한다. 사실에 답하거나 전제를 새로 만들지 않는다. '
+                if valid(plan):
+                    if report:report(dict(method='cache',reason='exact_plan_cache'))
+                    return plan, True
+    plan=simple_plan(question)
+    if plan:
+        if report:report(dict(method='deterministic',reason='simple_news'))
+    else:
+        plan,route=select(question,path,job_id=job_id,report=report)
+        if report:report(route)
+    if plan is None:plan = run_structured('질문을 분석할 검색 계획만 작성한다. 사실에 답하거나 전제를 새로 만들지 않는다. '
         '질문에 명시된 대상과 비교 기준을 빠짐없이 나누어 최대 4개의 짧은 검색어를 queries에 적는다. '
         '등록 표현과 다른 한국어·영어 표현도 검색어로 사용할 수 있다. 필요한 반대 근거도 포함한다. '
         'axes에는 실제 질문의 비교 기준을 적는다. 통합 분석에서는 개별 사실뿐 아니라 자료간 공통점·상충 근거·의존 관계와 시사점을 찾을 검색어도 포함한다.\n질문: ' + question,

@@ -228,8 +228,12 @@ class GraphQuestions:
     def _plan(self,identity,question):
         from graph_plans import prepare
         self._progress(identity,'plan')
-        plan,cached=prepare(question,self.path)
-        self._progress(identity,'plan',done=True,cached=cached)
+        route={}
+        def report(detail):
+            route.update(detail)
+            self._progress(identity,'plan',phase=detail['method'],routing=dict(route))
+        plan,cached=prepare(question,self.path,job_id=identity,report=report)
+        self._progress(identity,'plan',done=True,cached=cached,phase=route.get('method',''),routing=route)
         return plan
 
     def _run(self,identity,revision,request,retries=1,reviewed=None,checks=2,attempts=None):
@@ -317,6 +321,13 @@ class GraphQuestions:
             answer.setdefault('timing',{}).update(evidence_retrieval_ms=retrieval_ms,
                 attempt_ms=round((time.monotonic()-begun)*1000,2),
                 completion_ms=round((time.time()-stored['created_at'])*1000,2),attempts=attempts)
+            if tracked:
+                with self.db(timeout=10) as db:
+                    progress_row=db.execute('SELECT body FROM graph_question_progress WHERE job_id=?',(identity,)).fetchone()
+                planning=json.loads(progress_row[0]).get('stages',{}).get('plan',{}) if progress_row else {}
+                if planning.get('routing') and planning.get('completed_at'):
+                    answer['timing']['planning']=dict(planning['routing'],
+                        elapsed_ms=round((planning['completed_at']-planning['started_at'])*1000,2))
             from graph_answer_quality import sufficient
             if detailed and not answer.get('verification') and not answer.get('claims'):
                 self._save(identity,'evidence_only',answer)

@@ -186,6 +186,9 @@
         );
         item.dataset.stage = stage.id;
         item.dataset.done = String(stage.status === 'complete');
+        if (stage.id === 'plan' && data.planning_note) {
+          item.append(el('br'), el('small', data.planning_note));
+        }
         if (stage.status === 'running') item.setAttribute('aria-current', 'step');
         return item;
       })

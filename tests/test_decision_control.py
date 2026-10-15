@@ -54,7 +54,8 @@ def test_exact_cache_attaches_to_each_subject_and_keeps_attempts(store):
     summary=overview(store)
     assert summary['metrics']['calls']==1 and summary['metrics']['cached']==2
     assert summary['metrics']['input_tokens']==100
-    assert not summary['settings']['applies_decisions']
+    assert not summary['settings']['applies_workflow_decisions']
+    assert not summary['settings']['applies_evidence_selection']
     assert mtimes==[p.stat().st_mtime_ns for p in (store,path_for(store))]
 
 

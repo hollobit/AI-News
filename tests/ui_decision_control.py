@@ -160,6 +160,14 @@ async def main():
         boxes=await page.locator('.control-node[data-kind="source"] .lab-node-hit').evaluate_all('(es)=>es.map(e=>e.getBBox()).map(b=>({y:b.y,height:b.height})).sort((a,b)=>a.y-b.y)')
         assert all(b['y']+b['height']<=n['y']+1 for b,n in zip(boxes,boxes[1:])),boxes
         await page.evaluate('scrollTo(0,0)');await page.screenshot(path=str(out/'research-lab-dense.png'),full_page=True)
+        flow['control']['settings']['applies_question_plans']=True
+        data['decisions'][0]['result']['application']=dict(scope='question_plan',applied=True,reason='template_selected')
+        await page.reload()
+        await expect(page.locator('#control-mode')).to_contain_text('질의 계획 적용')
+        await expect(page.locator('#control-inspector')).to_contain_text('검색 계획에 적용')
+        data['decisions'][0]['result']['application'].update(applied=False,reason='uncertain')
+        await page.reload()
+        await expect(page.locator('#control-inspector')).to_contain_text('기존 Sol 계획으로 복귀 · 판단 불확실')
         assert not errors and not posts,(errors,posts)
         await login_handoff(browser)
         print(json.dumps(dict(themes=True,zoom_pan=True,focus_mode=True,keyboard=True,source_query_preserved=True,selection_race=True,replay_hides_future=True,reload_selection=True,pause_recovery=True,mobile=[390,320],errors=errors,analysis_posts=posts)))

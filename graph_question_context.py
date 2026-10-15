@@ -8,6 +8,8 @@ import hashlib
 from evidence_search import terms, query_anchors
 from link_groups import canonical_url
 
+MAX_PASSAGES = 20
+
 # Search vocabulary, not inferred facts. Apply only facets the user requested.
 FACETS = (
     (r'벤치마크|\bbenchmarks?\b', 'benchmark benchmarks 벤치마크'),
@@ -93,7 +95,7 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
             for previous in contained:
                 selected.pop(previous['id'], None); siblings.remove(previous)
                 replacements[previous['id']] = item['id']
-        elif len(selected) >= 20 or len(siblings) >= 2:
+        elif len(selected) >= MAX_PASSAGES or len(siblings) >= 2:
             continue
         selected[item['id']] = item; siblings.append(item)
     refs = set(selected)

@@ -1,4 +1,4 @@
-"""Optional, bounded Jev shadow decisions. Never approve or publish an analysis.
+"""Bounded Jev decisions. Never approve or publish an analysis.
 
 The provider returns closed choices, not explanations. Confidence is a model
 distribution statistic, never an event probability or a quality guarantee.
@@ -18,7 +18,7 @@ import time
 import urllib.error
 import urllib.request
 
-VERSION = 'system-one-shadow-v1'
+VERSION = 'system-one-scoped-plan-v2'
 ENDPOINT = 'https://api.typesafe.ai/v1/systemone'
 DEFAULT_MODEL = 'jev-1.14.0'
 TIMEOUT = 2.0
@@ -30,12 +30,16 @@ def config():
     mode = os.getenv('NEWS_SYSTEM_ONE_MODE', 'shadow')
     model = os.getenv('NEWS_SYSTEM_ONE_MODEL', DEFAULT_MODEL)
     configured = bool(os.getenv('TYPESAFE_API_KEY'))
-    # Aliases may silently change calibration. Active routing is deliberately
-    # unavailable until paired Korean evaluations establish a safe scope.
+    # Pin calibration. Only the separately bounded search-plan selector may
+    # apply decisions; evidence selection and article analysis remain shadow.
     valid = mode in ('off', 'shadow') and bool(re.fullmatch(r'jev-\d+\.\d+\.\d+', model))
+    enabled = valid and mode=='shadow' and configured
+    plan_mode = os.getenv('NEWS_QUESTION_PLAN_MODE', 'jev')
+    plans = enabled and plan_mode=='jev' and model==DEFAULT_MODEL
     return dict(mode=mode if valid else 'invalid', model=model if valid else None,
-                configured=configured, enabled=valid and mode=='shadow' and configured,
-                applies_decisions=False, version=VERSION)
+                configured=configured, enabled=enabled, question_plan_mode=plan_mode if plan_mode in ('jev','off') else 'invalid',
+                applies_decisions=plans, applies_question_plans=plans,
+                applies_evidence_selection=False, applies_workflow_decisions=False, version=VERSION)
 
 
 def db_path(path):
@@ -105,7 +109,7 @@ def _evaluate(path,purpose,state,questions,baseline=None,*,caller=None):
     if not settings['enabled']:return dict(status='disabled',**settings)
     baseline={k:v for k,v in (baseline or {}).items() if k in ('run_id','path','reason','types','retained_ids','synthetic','expected')
               or k in questions and isinstance(v,str) and v in questions[k].get('criteria',{})}
-    body=json.dumps(dict(model=settings['model'],state=state,questions=questions),ensure_ascii=False,allow_nan=False).encode()
+    body=json.dumps(dict(model=settings['model'],state=state,questions=questions),ensure_ascii=False,allow_nan=False,separators=(',',':')).encode()
     if len(body)>64000 or not 1<=len(questions)<=24:return {'status':'input_limit'}
     key=hashlib.sha256(VERSION.encode()+body).hexdigest()
     started=time.monotonic();stamp=time.time()
@@ -144,7 +148,22 @@ def evaluate(path,purpose,state,questions,baseline=None,*,caller=None,subject=No
         result={'status':'invalid_input'}
     finally:
         safely(finish,path,identity,locals().get('result',{'status':'interrupted'}))
+    if identity is not None:result['observation_id']=identity
     return result
+
+
+def decide(path,purpose,state,questions,baseline=None,*,subject=None):
+    """Synchronous planning shares shadow admission, lock and provider cooldown.
+
+    Never queue behind another decision or retry a failed provider call.
+    The caller must fall back to its existing planner on any noncomplete result.
+    """
+    if not path or not config()['enabled']:return {'status':'disabled'}
+    if not PENDING.acquire(blocking=False):
+        skipped(path,purpose,'pending_limit',subject)
+        return {'status':'busy'}
+    try:return evaluate(path,purpose,state,questions,baseline,subject=subject)
+    finally:PENDING.release()
 
 
 def skipped(path,purpose,reason,subject=None):

@@ -22,6 +22,7 @@
     rate_limit: '한도 대기',
     invalid_response: '응답 확인',
     invalid_input: '입력 확인',
+    input_limit: '입력 크기 상한으로 비교 생략',
     storage_unavailable: '저장 지연',
     pending: '기록 없음',
     paused: '일시중지',
@@ -57,7 +58,7 @@
     review_repair: '답변 설명 보완',
     review_recheck: '답변 독립 재검토',
     review_incomplete: '답변 검토 미완료',
-    jev: 'Jev 비교 평가',
+    jev: 'Jev 판단',
     wiki: '위키 편찬',
     strategy_audit_reuse: '검토 재사용',
   };
@@ -83,6 +84,11 @@
     event: '사건',
     claim: '주장',
     question: '질문',
+    trend: '공통 변화·쟁점',
+    priority: '이슈 우선순위',
+    other: '맞춤 해석 필요',
+    custom: '맞춤 검색 계획 필요',
+    complete: '질문 전체를 포함하는 계획',
   };
   const reasons = {
     pending_limit: '비교 작업 동시 한도',
@@ -90,6 +96,9 @@
     route_out_of_scope: '비교 대상 경로 밖',
     input_limit: '입력 크기 상한',
     candidate_limit: '근거 후보 수 상한',
+    no_candidates: '분류할 근거 없음',
+    template_selected: '질문 유형·계획 적합성 확인',
+    uncertain: '판단 불확실',
   };
   const kinds = { workflow: '기사 분석', question: '종합 질의', wiki: '위키 편찬' };
   const status = (v) => states[v] || v || '기록 없음';
@@ -467,14 +476,14 @@
         number(data.call_counts?.running) + ' / ' + number(data.call_limit),
         '공유 모델 · 대기 ' + number(data.call_counts?.queued) + '개',
       ],
-      ['Jev 실제 완료', number(m.calls), '최근 ' + (control.window || 80) + '개 비교 기록 중'],
+      ['Jev 실제 완료', number(m.calls), '최근 ' + (control.window || 80) + '개 판단 기록 중'],
       [
         'Jev 처리시간',
         m.p50_ms == null ? '—' : number(Math.round(m.p50_ms)) + ' ms',
         '비캐시 완료 중앙값',
       ],
       ['Jev 입력 토큰', number(m.input_tokens), '같은 범위 · 캐시 제외'],
-      ['재사용 / 생략', number(m.cached) + ' / ' + number(m.skipped), '비교 평가 요청 기준'],
+      ['재사용 / 생략', number(m.cached) + ' / ' + number(m.skipped), 'Jev 판단 요청 기준'],
       [
         '경로 일치 / 비교',
         number(m.route_agreements) + ' / ' + number(m.route_compared),
@@ -489,7 +498,9 @@
     }
     const settings = control.settings || {};
     $('control-mode').textContent = settings.enabled
-      ? 'JEV · 비교 평가'
+      ? settings.applies_question_plans
+        ? 'JEV · 질의 계획 적용 / 근거 비교'
+        : 'JEV · 비교 평가'
       : settings.configured
         ? 'JEV · 중지'
         : 'JEV · 키 설정 대기';
@@ -966,6 +977,8 @@
         risk: '위험 검토 필요성',
         contradictions: '상충·조건',
         route: '처리 경로 제안',
+        intent: '질문 유형',
+        coverage: '검색 계획 적합성',
       }[key] || key.replace('candidate_', '근거 후보 ').replace('note_', '인용 후보 ')
     );
   }
@@ -1008,6 +1021,24 @@
     } else {
       const visible = detail.decisions.filter((d) => d.started_at <= at);
       const d = visible.at(-1);
+      const planning = visible
+        .filter(
+          (item) =>
+            item.finished_at &&
+            item.finished_at <= at &&
+            item.result.application?.scope === 'question_plan'
+        )
+        .at(-1);
+      if (planning) {
+        const application = planning.result.application;
+        el(
+          'p',
+          (application.applied ? '검색 계획에 적용' : '기존 Sol 계획으로 복귀') +
+            ' · ' +
+            (reasons[application.reason] || status(application.reason)),
+          root
+        );
+      }
       if (!d) {
         el(
           'p',

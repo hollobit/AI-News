@@ -316,7 +316,7 @@ def test_insufficient_job_is_terminal_and_legacy_completion_is_stale(tmp_path,mo
         def close(self):pass
     result=draft();result['verification']=dict(method='independent_evidence_review',quality=dict(policy=VERSION,status='needs_review'))
     if no_hits:result=dict(answer='질문에 답할 근거가 없습니다.',claims=[],evidence=[],limitations=[])
-    monkeypatch.setattr('graph_plans.prepare',lambda *a:({'queries':['방법'],'axes':['방법','데이터']},False))
+    monkeypatch.setattr('graph_plans.prepare',lambda *a,**kw:({'queries':['방법'],'axes':['방법','데이터']},False))
     monkeypatch.setattr('graph_questions.quick_answer',lambda *a:{'evidence':[{'id':'source:e'}]})
     def analyze(*args,progress=None,**kw):
         progress('synthesis');progress('review',phase='repair');return copy.deepcopy(result)

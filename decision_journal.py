@@ -68,6 +68,17 @@ def finish(path, identity, result):
             db.execute('DELETE FROM decision_observations WHERE id < ? AND finished_at IS NOT NULL', (identity-10000,))
 
 
+def application(path, identity, *, applied, reason):
+    """Record actual plan use separately from a model's suggested choice."""
+    if identity is None:return
+    with closing(sqlite3.connect(path_for(path), timeout=.2)) as db, db:
+        row=db.execute('SELECT result_json FROM decision_observations WHERE id=? AND purpose=\'question_plan\'',(identity,)).fetchone()
+        if not row:return
+        body=json.loads(row[0])
+        body['application']=dict(scope='question_plan',applied=bool(applied),reason=str(reason)[:80])
+        db.execute('UPDATE decision_observations SET result_json=? WHERE id=?',(json.dumps(body,ensure_ascii=False),identity))
+
+
 def safely(action, *args, **kwargs):
     # Optional telemetry must never fail primary analysis, including on a full disk.
     try:

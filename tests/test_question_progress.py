@@ -74,7 +74,7 @@ def test_workspace_plan_overlaps_index_preparation_and_preserves_review(tmp_path
         def request(self,params):return 'rev',object() if gate.is_set() else None,None
         def key(self,params):return 'rev'
         def close(self):pass
-    def plan(*args):entered.set();return {'queries':['자료'],'axes':['조건']},False
+    def plan(*args,**kwargs):entered.set();return {'queries':['자료'],'axes':['조건']},False
     def analyze(*args,progress=None,**kw):
         assert kw['plan']['axes']==['조건']
         assert kw['detailed']

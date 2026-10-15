@@ -75,6 +75,22 @@ async def main():
         await expect(page.locator('#answer-status')).to_contain_text('부족한 설명 보완 진행 중')
         await expect(page.locator('#answer-meter')).to_have_attribute('value','60')
         await expect(page.locator('.answer-quality')).to_have_count(0)
+        state['progress'].update(planning=dict(method='jev_template',reason='template_selected'),
+            planning_note='질문 유형·계획 적합성을 확인했습니다. 답변 작성과 독립 검토는 이어서 진행합니다.',
+            stages=[dict(id='plan',label='Jev 검색 계획 선택',status='complete',seconds=.2),
+                    dict(id='synthesis',label='관계 분석·답변 작성',status='running',seconds=2)])
+        await page.reload()
+        await expect(page.locator('[data-stage="plan"]')).to_contain_text('Jev 검색 계획 선택')
+        await expect(page.locator('[data-stage="plan"] small')).to_contain_text('독립 검토는 이어서 진행')
+        for width in (390,320):
+            await page.set_viewport_size({'width':width,'height':844})
+            assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
+        state['progress'].update(planning=dict(method='sol',reason='unavailable'),
+            planning_note='Jev 연결이 지연되어 Sol이 검색 계획을 작성합니다.',
+            stages=[dict(id='plan',label='Sol 질문 해석·검색 계획',status='running',seconds=2)])
+        await page.reload()
+        await expect(page.locator('#answer-progress')).to_contain_text('Jev 연결이 지연')
+        await expect(page.locator('#answer-status')).to_contain_text('Sol 질문 해석·검색 계획 진행 중')
         assert not errors and not posts,(errors,posts)
         print(json.dumps(dict(paragraphs=True,repair_status=True,evidence_gaps=True,incomplete_terminal=True,
             mobile=[390,320],errors=errors,model_posts=len(posts)),ensure_ascii=False))

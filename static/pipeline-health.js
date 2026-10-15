@@ -86,9 +86,15 @@
                 ? '중지'
                 : !decision.configured
                   ? 'API 키 설정 대기'
-                  : '백그라운드 비교 평가';
+                  : decision.applies_question_plans
+                    ? '질의 검색 계획 선택 · 근거·기사 비교 평가'
+                    : '백그라운드 비교 평가';
           const note = el('p', `Jev · ${state} · 기존 분석·독립 검토 유지`, calls);
-          note.dataset.decisionStatus = decision.enabled ? 'shadow' : 'inactive';
+          note.dataset.decisionStatus = decision.applies_question_plans
+            ? 'question-plans'
+            : decision.enabled
+              ? 'shadow'
+              : 'inactive';
           if (decision.provider_wait)
             el(
               'p',

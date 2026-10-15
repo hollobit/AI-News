@@ -25,9 +25,11 @@ def retrieval(path,question,plan,evidence,job_id=None):
     # Score the bounded selected bundle without dropping any query axis or
     # counterevidence. Candidate IDs are not instructions to create new sources.
     subject=context('question',job_id,question,evidence)
-    if len(evidence)>16:return skipped(path,'retrieval','candidate_limit',subject)
-    questions={f'candidate_{i}':choice(f'Assess candidate {i} against the user question and axes.',dict(direct='Directly answers an explicit axis',counter='Relevant counterevidence or limitation',context='Useful background or relationship',unrelated='Unrelated',unknown='Insufficient context')) for i in range(len(evidence))}
-    state=dict(question=question,axes=plan.get('axes',[]),candidates=[dict(index=i,id=e['id'],text=e.get('text','')) for i,e in enumerate(evidence)])
+    from graph_question_context import MAX_PASSAGES
+    if len(evidence)>MAX_PASSAGES:return skipped(path,'retrieval','candidate_limit',subject)
+    if not evidence:return skipped(path,'retrieval','no_candidates',subject)
+    questions={f'candidate_{i}':choice(f'Assess state.candidates[{i}] against question and axes. Title is a topic cue only. Partial support and missing comparison conditions can be relevant, not unrelated.',dict(direct='Facts addressing any part of an explicit axis',counter='Relevant counterevidence, qualification or comparison limitation',context='Useful background or relationship',unrelated='No relevance to any requested axis or its limitations',unknown='Insufficient context to classify')) for i in range(len(evidence))}
+    state=dict(question=question,axes=plan.get('axes',[]),candidates=[dict(index=i,**{k:e.get(k,'') for k in ('id','text','title','source_kind','day')}) for i,e in enumerate(evidence)])
     return observe(path,'retrieval',state,questions,{'retained_ids':[e['id'] for e in evidence]},subject=subject)
 
 
