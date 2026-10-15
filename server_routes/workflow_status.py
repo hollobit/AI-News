@@ -70,7 +70,11 @@ def snapshot(path):
             ('papers','논문 분석','arxiv_paper_analyses',('complete',),'/papers','등록된 논문 분석 행 기준입니다. 최신 입력 유효성은 논문 화면에서 확인합니다.'),
             ('wiki','지식 위키 편찬','wiki_topics',('complete',),'/wiki','등록된 주제의 편찬 상태입니다. 모든 기사의 위키 편찬 비율이 아닙니다.')]:
             values=dict(db.execute('SELECT last_status,count(*) FROM source_health GROUP BY last_status')) if table=='source_health' and table in tables else counts(table)
-            stage(identity,title,values,done,status='recorded' if values else 'unknown',note=note,href=href,unit='원문' if identity=='sources' else '논문' if identity=='papers' else '주제')
+            item=stage(identity,title,values,done,status='recorded' if values else 'unknown',note=note,href=href,unit='원문' if identity=='sources' else '논문' if identity=='papers' else '주제')
+            # A historical running row alone cannot animate live work.
+            fields={r[1] for r in db.execute('PRAGMA table_info('+table+')')} if table in tables else set()
+            if {'status','owner_pid'} <= fields:
+                item['active_count']=sum(r['n'] for r in db.execute("SELECT owner_pid,count(*) AS n FROM "+table+" WHERE status='running' GROUP BY owner_pid") if alive(r['owner_pid']))
         if 'risk_schedule' in tables:
             schedule=dict(db.execute('SELECT enabled,recoveries,stagnant,next_attempt_at FROM risk_schedule WHERE id=1').fetchone() or {})
         else:schedule={}
@@ -103,7 +107,7 @@ def snapshot(path):
                 for r in db.execute("SELECT owner_pid,status,COUNT(*) AS n FROM llm_calls WHERE status IN ('queued','running') GROUP BY owner_pid,status"):
                     if alive(r['owner_pid']):call_counts[r['status']]+=r['n']
                 calls=[dict(r) for r in db.execute('''SELECT id,role,model,status,owner_pid,started_at,queued_at,finished_at,error_code
-                    FROM llm_calls WHERE status IN ('queued','running') ORDER BY CASE status WHEN 'running' THEN 0 ELSE 1 END,id DESC LIMIT 12''')]
+                    FROM llm_calls WHERE status IN ('queued','running') ORDER BY CASE status WHEN 'running' THEN 0 ELSE 1 END,id DESC LIMIT 20''')]
                 for call in calls:
                     call['owner_alive']=alive(call.pop('owner_pid'));call['elapsed_seconds']=max(0,round(stamp-(call['started_at'] or call['queued_at'])))
                     if not call['owner_alive']:call['status']='owner_missing'

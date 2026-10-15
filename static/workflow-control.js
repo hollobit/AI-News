@@ -163,7 +163,37 @@
     requestId = 0,
     closed = false,
     offline = true,
-    lastEvent = null;
+    lastEvent = null,
+    following =
+      new URLSearchParams(location.search).get('follow') !== '0' &&
+      (new URLSearchParams(location.search).get('follow') === '1' || !selected),
+    detailLoading = false,
+    detailFresh = false,
+    detailSignature = '';
+  function follow(value) {
+    following = value;
+    $('control-follow').setAttribute('aria-pressed', String(value));
+    $('control-follow').textContent = value
+      ? '자동 따라가기 켜짐'
+      : '선택 작업 고정 · 자동 따라가기';
+    const url = new URL(location.href);
+    url.searchParams.set('follow', value ? '1' : '0');
+    history.replaceState(null, '', url);
+  }
+  function motion() {
+    const stopped = offline || document.hidden || view !== 'control';
+    $('control-room').dataset.motion = stopped || cursor !== null || !detailFresh ? 'off' : 'on';
+    $('control-room').dataset.pipelineMotion = stopped ? 'off' : 'on';
+    window.WorkflowAutomation?.connection(stopped);
+  }
+  $('control-follow').onclick = () => {
+    follow(!following);
+    if (following) {
+      cursor = null;
+      if (latest) update(latest);
+    }
+  };
+  follow(following);
   function mode(value) {
     view = value;
     $('flow-board').hidden = value !== 'board';
@@ -172,6 +202,7 @@
     $('view-board').setAttribute('aria-pressed', String(value === 'board'));
     if (value === 'board') stop();
     else if (latest) update(latest);
+    motion();
   }
   $('view-control').onclick = () => mode('control');
   $('view-board').onclick = () => mode('board');
@@ -191,6 +222,7 @@
     return cursor === null ? events : events.slice(0, events.findIndex((e) => e.id === cursor) + 1);
   }
   function gotoIndex(index) {
+    follow(false);
     stop();
     const events = detail?.events || [];
     cursor = events[index]?.id || null;
@@ -222,6 +254,7 @@
     }
     const events = detail?.events || [];
     if (events.length < 2) return;
+    follow(false);
     if (cursor === null || cursor === events.at(-1).id) cursor = events[0].id;
     $('control-play').textContent = 'Ⅱ 재생 멈춤';
     $('control-play').setAttribute('aria-pressed', 'true');
@@ -236,10 +269,15 @@
       renderDetail();
     }, 850);
   };
-  function select(key) {
+  function select(key, automatic = false) {
+    if (!automatic) follow(false);
     if (key === selected && detail) return;
     stop();
     controller?.abort();
+    requestId++;
+    detailLoading = false;
+    detailFresh = false;
+    detailSignature = '';
     selected = key;
     detail = null;
     detailVersion = '';
@@ -257,6 +295,9 @@
     $('control-graph-empty').hidden = false;
     $('control-graph-empty').textContent = '선택한 작업을 불러오고 있습니다.';
     $('control-lanes').replaceChildren();
+    $('control-signals').replaceChildren();
+    $('control-progress').replaceChildren();
+    motion();
     $('control-result').hidden = true;
     $('control-time').disabled = true;
     $('control-play').disabled = true;
@@ -292,6 +333,15 @@
         'control-job-status'
       );
       el('small', time(job.updated_at), button);
+      const p = job.progress;
+      if (p?.total) el('small', `기록 단계 ${p.completed} / ${p.total} · ${p.percent}%`, button);
+      if (p?.active?.length)
+        el(
+          'small',
+          p.active.map((s) => names[s.stage] || s.stage).join(' · '),
+          button,
+          'control-job-active'
+        );
       button.onclick = () => select(job.key);
       if (focus === job.key) button.focus({ preventScroll: true });
     }
@@ -340,13 +390,14 @@
         : 'JEV · 키 설정 대기';
   }
   async function fetchDetail() {
-    if (!selected || view !== 'control' || closed) return;
+    if (!selected || view !== 'control' || closed || detailLoading) return;
     const colon = selected.indexOf(':'),
       kind = selected.slice(0, colon),
       id = selected.slice(colon + 1);
     if (colon < 1) return;
     controller?.abort();
     const token = ++requestId;
+    detailLoading = true;
     controller = new AbortController();
     try {
       const data = await Workspace.request(
@@ -354,6 +405,13 @@
         { timeout: 10000, signal: controller.signal }
       );
       if (token !== requestId || closed) return;
+      detailFresh = true;
+      const signature = JSON.stringify(data);
+      if (detailSignature === signature) {
+        motion();
+        return;
+      }
+      detailSignature = signature;
       detail = data;
       if (cursor && !data.events.some((e) => e.id === cursor)) {
         stop();
@@ -364,17 +422,22 @@
     } catch (error) {
       if (token !== requestId || closed || error.name === 'AbortError') return;
       detailVersion = '';
+      detailFresh = false;
+      motion();
       $('control-message').textContent =
         '작업 이력 연결이 지연됩니다. 마지막 기록을 유지하고 다시 확인합니다.';
       if (!detail)
         $('control-graph-empty').textContent =
           '작업 기록을 읽지 못했습니다. 다음 갱신에서 다시 확인합니다.';
+    } finally {
+      if (token === requestId) detailLoading = false;
     }
   }
   function update(data) {
     latest = data;
     if (view !== 'control') return;
     metrics(data);
+    window.WorkflowAutomation?.update(data);
     renderJobs();
     if (!data.control) {
       $('control-message').textContent =
@@ -386,11 +449,22 @@
         '관제 기록 조회가 지연되고 있습니다. 다음 갱신에서 다시 확인합니다.';
       return;
     }
+    if (following && cursor === null) {
+      const current = data.control.jobs.find((j) => j.key === selected);
+      const next =
+        data.control.jobs.find((j) => ['running', 'preparing'].includes(j.status)) ||
+        data.control.jobs.find((j) => ['queued', 'planned'].includes(j.status));
+      if (next && !active(current?.status)) {
+        select(next.key, true);
+        return;
+      }
+    }
     if (!selected && data.control.jobs.length) {
       select(
         data.control.jobs.find((j) => j.decision)?.key ||
           data.control.jobs.find((j) => j.kind === 'workflow')?.key ||
-          data.control.jobs[0].key
+          data.control.jobs[0].key,
+        true
       );
       return;
     }
@@ -400,7 +474,13 @@
       return;
     }
     const job = data.control.jobs.find((j) => j.key === selected),
-      version = JSON.stringify([selected, job?.status, job?.updated_at, job?.decision]);
+      version = JSON.stringify([
+        selected,
+        job?.status,
+        job?.updated_at,
+        job?.decision,
+        job?.progress?.revision,
+      ]);
     if (
       version !== detailVersion ||
       active(job?.status) ||
@@ -432,6 +512,7 @@
       title.length > 17 ? title.slice(0, 16) + '…' : title
     );
     const choose = () => {
+      follow(false);
       selectedNode = { key, kind };
       renderDetail();
     };
@@ -472,8 +553,12 @@
     );
     const observation = decisions.at(-1);
     const answers = Object.entries(observation?.result?.answers || {}).slice(0, 6);
-    const center = displayEvents().at(-1),
+    const latestStages = new Map();
+    displayEvents().forEach((e) => latestStages.set(e.stage, e));
+    const runningStages = [...latestStages.values()].filter((e) => visibleStatus(e) === 'running');
+    const center = runningStages.at(-1) || displayEvents().at(-1),
       changed = cursor === null && !offline && center && lastEvent && center.id !== lastEvent;
+    const executing = cursor === null && runningStages.length > 0;
     const points = new Map();
     for (const [i, s] of sources.entries()) {
       const angle =
@@ -490,6 +575,7 @@
           class:
             'control-edge' +
             (selectedNode?.key === key ? ' selected' : '') +
+            (executing ? ' control-stream' : '') +
             (changed ? ' control-pulse' : ''),
         },
         g
@@ -553,6 +639,7 @@
         stroke: '#375a62',
         'stroke-width': 1,
         'stroke-dasharray': '3 6',
+        class: executing ? 'control-orbit' : '',
       },
       g
     );
@@ -566,7 +653,11 @@
       'text',
       { x: 420, y: 254, 'text-anchor': 'middle', class: 'control-core-title' },
       g,
-      center ? names[center.stage] || center.stage : '기록 대기'
+      runningStages.length > 1
+        ? runningStages.length + '개 단계 병행'
+        : center
+          ? names[center.stage] || center.stage
+          : '기록 대기'
     );
     svg(
       'text',
@@ -596,12 +687,15 @@
   function lanes() {
     const root = $('control-lanes');
     root.replaceChildren();
-    const events = displayEvents(),
-      statesBy = new Map();
-    events.forEach((e) => statesBy.set(groupFor(e.stage), e));
+    const stages = new Map();
+    displayEvents().forEach((e) => stages.set(e.stage, e));
     ['원문·입력', 'Jev 비교', '경로·검색', '분석 작성', '독립 검토', '확인·저장'].forEach(
       (title, i) => {
-        const e = statesBy.get(i);
+        const group = [...stages.values()].filter((e) => groupFor(e.stage) === i);
+        const e =
+          group.find((e) => visibleStatus(e) === 'running') ||
+          group.find((e) => attention(visibleStatus(e))) ||
+          group.at(-1);
         const state = visibleStatus(e);
         const box = el('div', title, root, 'control-lane');
         box.dataset.status = state;
@@ -624,6 +718,7 @@
       );
       b.setAttribute('aria-pressed', String(selectedNode?.key === 'answer:' + key));
       b.onclick = () => {
+        follow(false);
         selectedNode =
           selectedNode?.key === 'answer:' + key ? null : { kind: 'decision', key: 'answer:' + key };
         renderDetail();
@@ -802,6 +897,29 @@
   }
   function renderDetail() {
     if (!detail) return;
+    motion();
+    const progress = $('control-progress');
+    progress.replaceChildren();
+    if (cursor !== null) el('span', '과거 단계 기록 재생 · 자동 따라가기 중지', progress);
+    else {
+      const p = detail.job.progress,
+        running = p?.active || [];
+      el(
+        'strong',
+        running.length
+          ? running.map((s) => names[s.stage] || s.stage).join(' · ')
+          : status(detail.job.status),
+        progress
+      );
+      if (p?.total) {
+        const bar = el('progress', null, progress);
+        bar.max = 100;
+        bar.value = p.percent;
+        bar.setAttribute('aria-label', '현재 경로의 기록된 완료 단계');
+        el('span', `${p.completed} / ${p.total} 단계 · ${p.percent}%`, progress);
+      }
+      el('small', '저장된 단계 완료 기준 · 시간 비율 아님', progress);
+    }
     $('control-title').textContent = detail.job.title;
     $('control-result').hidden = false;
     $('control-result').href = detail.job.href;
@@ -838,8 +956,10 @@
   }
   window.WorkflowControl = {
     update,
+    select,
     connection(value) {
       offline = value;
+      motion();
     },
   };
   document.addEventListener('visibilitychange', () => {

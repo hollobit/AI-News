@@ -64,6 +64,8 @@ def subject(db, available, kind, identity):
     item.update(kind=kind,key=kind+':'+identity,href=href,title=str(item.get('title') or identity)[:240],recorded_status=item['status'])
     if item['status'] in ACTIVE and not alive(owner):item['status']='owner_missing'
     item['created_at']=stamp(item['created_at']);item['updated_at']=stamp(item['updated_at'])
+    from .control_progress import current
+    item['progress']=current(db,available,kind,identity,item['status'])
     return item
 
 

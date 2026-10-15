@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="/workspace-ui.css" />
     <link rel="stylesheet" href="/workflow-live.css" />
     <link rel="stylesheet" href="/workflow-control.css" />
+    <link rel="stylesheet" href="/workflow-automation.css" />
     <script src="/workspace.js" defer></script>
     <script src="/workspace-navigation.js" defer></script>
+    <script src="/workflow-automation.js" defer></script>
     <script src="/workflow-control.js" defer></script>
     <script src="/workflow-live.js" defer></script>
   </head>
@@ -40,6 +42,31 @@
       </div>
       <section id="control-room" aria-label="실시간 분석 관제">
         <div class="control-metrics" id="control-metrics"></div>
+        <section class="auto-panel" aria-label="자동 분석 실시간 흐름">
+          <div class="auto-heading">
+            <div>
+              <span class="eyebrow">AUTOMATIC ANALYSIS · LIVE</span>
+              <h2>자동 분석 흐름</h2>
+            </div>
+            <p id="auto-summary" role="status">실제 처리 상태를 확인합니다</p>
+            <button id="control-follow" aria-pressed="true">자동 따라가기 켜짐</button>
+          </div>
+          <div id="auto-pipeline" class="auto-pipeline" aria-label="수집과 뉴스 분석"></div>
+          <div
+            id="auto-support"
+            class="auto-pipeline auto-support"
+            aria-label="병행 근거 보강과 게시"
+          ></div>
+          <div class="auto-stage-info">
+            <span id="auto-stage-note">단계별 대상과 집계 범위가 다릅니다.</span
+            ><a id="auto-stage-link" hidden>단계 상세 ↗</a>
+          </div>
+          <div class="auto-model-heading">
+            <strong>모델 호출 현황</strong><span id="auto-model-count"></span>
+          </div>
+          <div id="auto-models" class="auto-models"></div>
+          <div id="auto-changes" class="auto-changes" aria-label="이 화면에서 확인된 변화"></div>
+        </section>
         <div class="control-layout">
           <section class="control-visual" aria-labelledby="control-title">
             <div class="control-heading">
@@ -66,6 +93,11 @@
               </svg>
               <div id="control-graph-empty">실제 작업 기록을 불러오고 있습니다.</div>
             </div>
+            <div
+              id="control-progress"
+              class="control-progress"
+              aria-label="선택 작업의 실제 진행"
+            ></div>
             <div id="control-lanes" class="control-lanes" aria-label="기록된 작업 단계"></div>
             <div id="control-signals" class="control-signals" aria-label="Jev 판단 선택"></div>
             <div class="control-legend">
