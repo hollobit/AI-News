@@ -104,6 +104,7 @@
           ? '접속 정보 확인이 지연되고 있습니다. 다시 확인해 주세요.'
           : error.message;
       $('#remote-address').textContent = '';
+      $('.remote-connection').open = true;
       return false;
     } finally {
       $('#remote-refresh').disabled = false;
