@@ -98,7 +98,7 @@ class CompletionTests(unittest.TestCase):
         self.assertTrue(runner.stop.is_set())
 
     def test_failed_document_does_not_stop_other_documents(self):
-        runner=CompletionRunner(self.path,'cycle',workers=2,batch_size=1,max_rounds=20)
+        runner=CompletionRunner(self.path,'cycle',workers=2,batch_size=1,max_rounds=20,window_seconds=.5)
         original=runner.work
         def work(service,planned):
             if planned['number']==1:

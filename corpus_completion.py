@@ -445,6 +445,19 @@ class CompletionRunner:
             counts = dict(db.execute('SELECT status,COUNT(*) FROM corpus_completion_documents WHERE cycle_id=? GROUP BY status', (self.cycle_id,)))
             return {'counts': counts, 'total': sum(counts.values()), 'updated_at': now()}
 
+    def next_retry_at(self):
+        """A live owner can wait for its checkpoint instead of the next scheduler tick."""
+        with connect(self.path) as db:
+            rows=db.execute('''SELECT r.id,r.snapshot_json,w.next_attempt_at FROM rsi_rounds r
+                JOIN completion_engine_waits w ON w.round_id=r.id
+                WHERE r.cycle_id=? AND r.status IN ('planned','running') ORDER BY w.next_attempt_at''',
+                (self.cycle_id,)).fetchall()
+        for row in rows:
+            snapshot=json.loads(row['snapshot_json'])
+            if row['id'] not in self.claimed_rounds and snapshot.get('items') and snapshot.get('identities'):
+                return row['next_attempt_at']
+        return None
+
     def run(self):
         with open(self.path + '.completion.lock', 'a+') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -495,7 +508,20 @@ class CompletionRunner:
                         dispatched+=1
                         service = available.pop()
                         futures[pool.submit(self.work, service, planned)] = service
-                    if not futures: break
+                    if not futures:
+                        if (not self.stop.is_set() and not self.window_expired
+                                and not (self.max_rounds and dispatched>=self.max_rounds)):
+                            retry_at=self.next_retry_at()
+                            if retry_at is not None:
+                                # Retain the worker lease and the existing persisted
+                                # backoff. Recheck pause, input changes and run limits
+                                # every second; no probe or model call while waiting.
+                                delay=min(1,max(.01,retry_at-time.time()))
+                                if self.window_seconds:
+                                    delay=min(delay,max(.01,self.window_seconds-(time.monotonic()-started)))
+                                self.stop.wait(delay)
+                                continue
+                        break
                     finished, _ = wait(futures, timeout=5, return_when=FIRST_COMPLETED)
                     for future in finished:
                         service = futures.pop(future)
