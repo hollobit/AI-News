@@ -70,3 +70,31 @@ def test_consistent_workspace_requires_recent_current_policy_and_refreshes_recor
     finally:
         if snapshots:snapshots.close()
         case.tearDown()
+
+
+def test_committed_corpus_cache_tracks_source_generation_and_policy(tmp_path):
+    from context_current import corpus
+    path=tmp_path/'generation.db'
+    with sqlite3.connect(path) as db:
+        db.executescript("CREATE TABLE news(id); CREATE TABLE articles(id); CREATE TABLE projection_revisions(kind,value,identity); INSERT INTO projection_revisions VALUES('source',1,'epoch');")
+    with patch('improvement_selection.all_corpus_items',side_effect=[[{'id':'original'}],[{'id':'changed'}],[{'id':'new-policy'}]]) as build:
+        def read():
+            with sqlite3.connect(path) as db:
+                db.execute('BEGIN');return corpus(db)
+        assert read()==[{'id':'original'}]
+        assert read()==[{'id':'original'}] and build.call_count==1
+        with sqlite3.connect(path) as db:db.execute("UPDATE projection_revisions SET value=2")
+        assert read()==[{'id':'changed'}] and build.call_count==2
+        with patch('verified_cache.policy',return_value='new-policy'):
+            assert read()==[{'id':'new-policy'}] and build.call_count==3
+
+
+def test_final_question_dependencies_exclude_unselected_candidates():
+    from types import SimpleNamespace
+    from graph_question_context import compose
+    graph=SimpleNamespace(workspace_dependencies={'used':'hash1','other':'hash2'},
+                          workspace_dependency_refs={'used':{'e1'},'other':{'e2'}})
+    retrieval={'nodes':[],'edges':[],'evidence':[{'id':'e1','title':'관측 기사','text':'관측 사실','source_url':'https://example.org/one'}]}
+    with patch('graph_rag.build_retrieval',return_value=retrieval):
+        result=compose(graph,'관측 기사 의미',[],{'queries':['관측 기사 의미']})
+    assert result['workspace_dependencies']=={'used':'hash1'}

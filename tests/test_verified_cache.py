@@ -40,3 +40,12 @@ def test_oversized_graph_spills_as_json_and_restores_full_retrieval(tmp_path):
         assert len(calls)==1 and again.full_nodes==first.full_nodes
         cached_read(db,'integrated_graph','v2',build,copy_result=False)
         assert len(calls)==2
+
+
+def test_draining_workers_do_not_evict_another_policy_generation(tmp_path):
+    path=tmp_path/'rolling.db';calls=[]
+    def build():calls.append(1);return {'accepted':True}
+    for policy in ('old','new','old','new'):
+        with sqlite3.connect(path) as db,patch('verified_cache.policy',return_value=policy):
+            cached_read(db,'baseline_verified_content','same-input',build)
+    assert len(calls)==2

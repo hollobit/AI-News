@@ -66,6 +66,7 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
             if key not in documents:
                 selected[item['id']] = item; documents.add(key)
     supplements = []
+    source_refs=set(selected)
     if path:
         from source_store import search
         from knowledge_wiki import retrieve
@@ -126,9 +127,13 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
     evidence = list(selected.values())
     coverage = dict(scope='question_selected_evidence', unique_documents=len({document(e) for e in evidence}),
                     passages=len(evidence), full_corpus_analysis=False)
+    dependencies=getattr(graph,'workspace_dependencies',None)
+    dependency_refs=getattr(graph,'workspace_dependency_refs',None)
+    if dependencies and dependency_refs is not None:
+        dependencies={key:value for key,value in dependencies.items() if source_refs & set(dependency_refs.get(key,()))}
     return dict(nodes=list(nodes.values()), edges=list(edges.values())[:40], evidence=evidence,
                 no_hits=not evidence, limitations=[], coverage=coverage,
-                workspace_dependencies=getattr(graph,'workspace_dependencies',None),
+                workspace_dependencies=dependencies,
                 workspace_as_of=getattr(graph,'workspace_as_of',None),
                 retrieval=dict(method='axis-balanced-documents-v1', **coverage,
                                evidence_characters=sum(len(e.get('text', '')) for e in evidence)))

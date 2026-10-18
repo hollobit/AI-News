@@ -243,7 +243,7 @@ def validated_workflow_content(payload: dict, run_id: str) -> dict:
 
 
 @verification_scope
-def _analysis_sources(db: sqlite3.Connection, selected=None) -> tuple[list[dict[str, Any]], dict[str, int]]:
+def _analysis_sources(db: sqlite3.Connection, selected=None,baseline_items=None) -> tuple[list[dict[str, Any]], dict[str, int]]:
     sources: list[dict[str, Any]] = []
     current_sources = None
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='source_excerpts'").fetchone():
@@ -310,7 +310,7 @@ def _analysis_sources(db: sqlite3.Connection, selected=None) -> tuple[list[dict[
     papers, paper_counts = paper_sources(db,paper_ids=selected.get('paper',set())) if selected is not None else paper_sources(db)
     sources.extend(papers)
     from baseline_graph import baseline_sources
-    baselines, baseline_counts = baseline_sources(db,input_hashes=selected.get('baseline',set())) if selected is not None else baseline_sources(db)
+    baselines, baseline_counts = baseline_sources(db,items=baseline_items,input_hashes=selected.get('baseline',set())) if selected is not None else baseline_sources(db)
     sources.extend(baselines)
     # Public reads are raw source observations, never pre-verified analytical claims.
     if current_sources:

@@ -270,6 +270,13 @@ def _materialize(graph, questions):
             live.row_factory=sqlite3.Row;live.execute('BEGIN')
             sources=load(live,dependencies(sources))
     current_dependencies=dependencies(sources)
+    from context_current import identity
+    from graph_rag import _result_graph,_global_evidence
+    dependency_refs={}
+    for source in sources:
+        namespace='telegram' if source['kind']=='graph' else source['kind']
+        dependency_refs[identity(source)]={_global_evidence(raw,namespace,f"{source['id']}:{i}",source['kind'])['id']
+            for i,raw in enumerate(_result_graph(source)[2])}
     # Reuse enrichment against only the immutable selected workflow artifacts.
     # Wiki entries already have their original source links in this generation.
     with sqlite3.connect(':memory:') as db:
@@ -286,5 +293,6 @@ def _materialize(graph, questions):
     result.search_key = content_digest([graph.search_key, questions, VERSION,'query-batch-v1',current_dependencies])
     result.prepared_index = RetrievalIndex(result)
     result.workspace_dependencies=current_dependencies
+    result.workspace_dependency_refs=dependency_refs
     result.workspace_as_of=getattr(graph,'workspace_as_of',None)
     return result

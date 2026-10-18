@@ -51,8 +51,10 @@ def session(db):
             try:
                 if writable:
                     connection.commit()
-                    # Old policy revisions are expendable, not review history.
-                    connection.execute('DELETE FROM validations WHERE policy<>?', (policy(),))
+                    # Draining workers may still use the previous code policy.
+                    # Versioned keys isolate them; deleting each other's entries
+                    # would repeatedly force full validation during deployment.
+                    # The shared byte budget below bounds all policy generations.
                     total = connection.execute('SELECT COALESCE(SUM(LENGTH(value)),0) FROM validations').fetchone()[0]
                     if total > MAX_BYTES:
                         for namespace,key,version,size in connection.execute('SELECT namespace,key,policy,LENGTH(value) FROM validations ORDER BY created').fetchall():

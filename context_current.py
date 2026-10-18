@@ -1,10 +1,34 @@
 """Validate a question's selected source records independently of unrelated writes."""
 import json
 import sqlite3
-from collections import defaultdict
+import threading
+from pathlib import Path
+from collections import defaultdict,OrderedDict
 from contextlib import closing
 
 from projection_cache import content_digest
+
+_CORPUS=OrderedDict()
+_LOCK=threading.RLock()
+
+
+def corpus(db):
+    """Reuse only a committed source generation inside our read transaction."""
+    from improvement_selection import all_corpus_items
+    from verified_cache import policy
+    tables={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    filename=next((r[2] for r in db.execute('PRAGMA database_list') if r[1]=='main'),'')
+    if not filename or db.total_changes or not db.in_transaction or not {'news','articles','projection_revisions'}<=tables:
+        return all_corpus_items(db)
+    row=db.execute("SELECT value,identity FROM projection_revisions WHERE kind='source'").fetchone()
+    if not row:return all_corpus_items(db)
+    path=Path(filename).resolve();stat=path.stat()
+    key=(str(path),stat.st_dev,stat.st_ino,tuple(row),db.execute('PRAGMA schema_version').fetchone()[0],policy())
+    with _LOCK:
+        if key not in _CORPUS:_CORPUS[key]=all_corpus_items(db)
+        _CORPUS.move_to_end(key)
+        while len(_CORPUS)>2:_CORPUS.popitem(last=False)
+        return _CORPUS[key]
 
 
 def identity(source):
@@ -29,7 +53,7 @@ def load(db,keys):
     selected=defaultdict(set)
     for key in keys:
         kind,record,_=json.loads(key);selected[kind].add(record)
-    sources,_=_analysis_sources(db,selected=selected)
+    sources,_=_analysis_sources(db,selected=selected,baseline_items=corpus(db) if selected.get('baseline') else [])
     if selected.get('wiki'):sources+=enrich_sources(db,[])
     current=[]
     wanted=set(keys)
