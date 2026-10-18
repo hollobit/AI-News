@@ -34,6 +34,44 @@ class Snapshots:
     def close(self):pass
 
 
+def test_workspace_preview_and_synthesis_share_full_question_graph(tmp_path,monkeypatch):
+    from context_index import write,read,materialize_many
+    from graph_question_context import compose,searches_for
+    from tests.test_context_index import source
+    sources=[source('baseline','a','반도체 평가','반도체 실험 성공률은 90%다.'),
+             source('paper','b','로봇 평가','로봇 현장 평가 성공률은 40%다.')]
+    monkeypatch.setattr('graph_rag._analysis_sources',lambda db:(sources,{}))
+    index=tmp_path/'index.db'
+    with sqlite3.connect(':memory:') as db:write(index,db,'rev')
+    graph=read(index,'rev')
+    question='반도체와 로봇 평가 비교'
+    plan={'queries':['반도체 평가','로봇 현장 평가'],'axes':['반도체','로봇']}
+    expected=compose(read(index,'rev'),question,[],plan)
+    class Workspace(Snapshots):
+        def request(self,params):return 'rev',graph,None
+    q=GraphQuestions(tmp_path/'jobs.db',snapshots=Workspace())
+    seen=[]
+    def answer(graph,question,ids,**kwargs):
+        seen.append(kwargs['retrieval'])
+        assert hasattr(graph,'prepared_index') and not hasattr(graph,'workspace_store')
+        return {'answer':'검토된 비교','claims':[{'text':'비교'}],'evidence':kwargs['retrieval']['evidence'],
+                'verification':{'method':'independent_evidence_review','quality':{'policy':'question-explanation-v1','status':'passed'}}}
+    try:
+        with patch('graph_plans.prepare',return_value=(plan,True)),patch('graph_questions.answer_question',side_effect=answer),\
+                patch('decision_tasks.retrieval'),patch('context_current.current',return_value=True),\
+                patch('context_index.materialize_many',wraps=materialize_many) as materialize:
+            first=q.ask(question,params={'workspace':['1']})
+            deadline=time.monotonic()+3
+            while q.active and time.monotonic()<deadline:time.sleep(.01)
+            done=q.get(first['job']['id'])
+            assert done['status']=='complete',done
+            assert materialize.call_count==1
+            assert materialize.call_args.args[1]==searches_for(question,plan)
+            assert len(seen)==1 and seen[0]['evidence']==expected['evidence']
+            assert seen[0]['nodes']==expected['nodes'] and seen[0]['edges']==expected['edges']
+    finally:q.close()
+
+
 def test_bounded_cache_survives_unrelated_revision_but_checks_sources(tmp_path):
     q=GraphQuestions(tmp_path/'bounded.db',snapshots=Snapshots())
     request={'question':'같은 질문 테스트','node_ids':[],'params':{}}

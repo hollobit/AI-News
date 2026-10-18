@@ -10,12 +10,21 @@ MODELS = {'luna': 'gpt-6-luna', 'sol': 'gpt-6.1-sol', 'astra': 'gpt-6-astra'}
 ALLOWED = {tier: {model} for tier, model in MODELS.items()}
 
 
-def question_draft_role(question, plan=None):
+def question_draft_role(question, plan=None, *, evidence=None):
     """Focused technical comparisons can use Luna; broad synthesis stays on Sol."""
     axes=(plan or {}).get('axes',[])
     focused=re.search(r'차이|비교|작동\s*(?:방식|원리)|벤치마크|데이터세트|데이터셋|\b(?:compare|comparison|benchmark|dataset)',question,re.I)
     broad=re.search(r'대응|전략|예측|전망|추천|정책|국제|\b(?:strategy|forecast|recommend|policy)',question,re.I)
-    return 'graph_draft' if focused and not broad and 1<=len(axes)<=3 and len(question)<=250 else 'graph_answer'
+    if not focused or broad or not 1<=len(axes)<=4 or len(question)>250:return 'graph_answer'
+    if evidence is not None and (len(evidence)>24 or sum(len(e.get('text') or '') for e in evidence)>48000):
+        return 'graph_answer'
+    if len(axes)<=3:return 'graph_draft'
+    # Four-facet overviews often include an added integration axis. Explicit
+    # interpretation/causality questions retain Sol: those drafts needed extra
+    # repair in evaluation. Never discard an axis to make a question eligible.
+    interpret=re.search(r'해석|원인|인과|왜|타당|우열|효과|\b(?:interpret|causal|causation|why|validity|trade.?offs?|justify)',question,re.I)
+    overview=re.search(r'현황|종류|목록|유형|\b(?:overview|types|list|survey)',question,re.I)
+    return 'graph_draft' if evidence and overview and not interpret else 'graph_answer'
 
 
 class StructuredResult(dict):
@@ -37,7 +46,7 @@ def policy(role, *, escalation=False, prompt=None):
     model = os.environ.get('NEWS_MODEL_' + tier.upper(), MODELS[tier])
     if model not in ALLOWED[tier]:
         raise ValueError('지원되지 않는 뉴스 분석 모델 설정: ' + tier)
-    return {'policy_version': 'news-models-question-v1' if role=='graph_draft' else 'news-models-announcement-v1' if announcement else VERSION, 'tier': tier, 'model': model,
+    return {'policy_version': 'news-models-question-v2-overview' if role=='graph_draft' else 'news-models-announcement-v1' if announcement else VERSION, 'tier': tier, 'model': model,
             'instruction_profile':'grounded-analysis-v1',
             'reasoning_effort': 'medium' if announcement or role=='graph_draft' else 'high' if tier == 'luna' else 'medium' if tier == 'sol' else 'low'}
 

@@ -24,6 +24,12 @@ def requested_facets(question):
     return [(re.compile(pattern,re.I),words) for pattern,words in FACETS if re.search(pattern,question,re.I)]
 
 
+def searches_for(question,plan):
+    queries=list(dict.fromkeys([question]+plan['queries']))
+    expansions=' '.join(words for _,words in requested_facets(question))
+    return [query+' '+expansions if expansions else query for query in queries]
+
+
 def focused_candidates(items, question, facets):
     """Prefer the requested subject/facet over an incidental topic mention.
 
@@ -49,8 +55,7 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
     from graph_rag import build_retrieval
     queries = list(dict.fromkeys([question] + plan['queries']))
     facets=requested_facets(question)
-    expansions=' '.join(words for _,words in facets)
-    searches = [query+' '+expansions if expansions else query for query in queries]
+    searches = searches_for(question,plan)
     if hasattr(graph, 'workspace_store'):
         from context_index import materialize_many
         graph = materialize_many(graph, searches)

@@ -181,6 +181,34 @@ def test_query_batch_preserves_candidates_from_every_axis_and_builds_once(tmp_pa
     assert len(built)==1
 
 
+def test_single_rank_pass_matches_per_kind_quotas_ties_aliases_and_short_words():
+    from context_index import candidate_ids,expressions,KINDS
+    with sqlite3.connect(':memory:') as db:
+        db.executescript('''CREATE TABLE sources(id INTEGER PRIMARY KEY,kind TEXT,title TEXT,text TEXT);
+            CREATE VIRTUAL TABLE search USING fts5(title,text,content='sources',content_rowid='id',tokenize='trigram');''')
+        for number,kind in enumerate(KINDS):
+            # Uneven kinds and ties must not crowd out rare paper/wiki records.
+            for i in range(80 if number%2==0 else 7):
+                title='Semiconductor' if i%3==0 else '반도체 평가'
+                body='전력 수급 '+('benchmark experiment '*(1+i%4))
+                identity=db.execute('INSERT INTO sources(kind,title,text) VALUES(?,?,?)',(kind,title,body)).lastrowid
+                db.execute('INSERT INTO search(rowid,title,text) VALUES(?,?,?)',(identity,title,body))
+        queries=['반도체 평가 benchmark','전력','무관한질의','Semiconductor']
+        expected=set()
+        for query in queries:
+            expression,short=expressions(query)
+            for kind in KINDS:
+                if expression:
+                    expected.update(r[0] for r in db.execute('''SELECT s.id FROM search JOIN sources s ON s.id=search.rowid
+                        WHERE search MATCH ? AND s.kind=? ORDER BY bm25(search,3,1),s.id LIMIT 48''',(expression,kind)))
+                if short:
+                    clauses=' OR '.join('(title LIKE ? OR text LIKE ?)' for _ in short)
+                    args=[v for word in short for v in ('%'+word+'%','%'+word+'%')]
+                    expected.update(r[0] for r in db.execute(
+                        'SELECT id FROM sources WHERE kind=? AND ('+clauses+') ORDER BY id LIMIT 16',[kind]+args))
+        assert candidate_ids(db,queries)==expected
+
+
 def test_clone_modifications_never_change_published_index(tmp_path):
     from context_index import clone_index
     old=tmp_path/'old';new=tmp_path/'new'

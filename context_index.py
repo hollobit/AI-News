@@ -205,6 +205,32 @@ def materialize(graph, question):
     return materialize_many(graph,[question])
 
 
+def candidate_ids(store, questions):
+    """Rank each query once, preserving the independent quota for every kind."""
+    identities=set()
+    for question in questions:
+        expression,short=expressions(question)
+        if expression:
+            counts={kind:0 for kind in KINDS}
+            # BM25 scores use the same full FTS corpus for all source kinds.
+            # One globally ordered cursor has the same per-kind subsequences
+            # as seven separately ranked queries, including deterministic ties.
+            for identity,kind in store.execute('''SELECT s.id,s.kind FROM search JOIN sources s ON s.id=search.rowid
+                WHERE search MATCH ? ORDER BY bm25(search,3,1),s.id''',(expression,)):
+                checkpoint()
+                if kind in counts and counts[kind]<48:
+                    identities.add(identity);counts[kind]+=1
+                if all(count>=48 for count in counts.values()):break
+        if short:
+            clauses=' OR '.join('(title LIKE ? OR text LIKE ?)' for _ in short)
+            args=[v for word in short for v in ('%'+word+'%','%'+word+'%')]
+            for kind in KINDS:
+                checkpoint()
+                identities.update(r[0] for r in store.execute(
+                    'SELECT id FROM sources WHERE kind=? AND ('+clauses+') ORDER BY id LIMIT 16',[kind]+args))
+    return identities
+
+
 def materialize_many(graph, questions):
     """Reserve candidates per query/kind, build their shared graph only once."""
     questions=tuple(dict.fromkeys(questions))
@@ -247,19 +273,7 @@ def _materialize(graph, questions):
     # One connection/SQLite page cache for the query batch; fetch large source
     # bodies only once, after selecting the union of per-axis candidate IDs.
     with closing(sqlite3.connect(Path(graph.workspace_store.path).as_uri()+'?mode=ro',uri=True,timeout=2)) as store:
-        identities=set()
-        for question in questions:
-            expression, short = expressions(question)
-            for kind in KINDS:
-                checkpoint()
-                if expression:
-                    identities.update(r[0] for r in store.execute('''SELECT s.id FROM search JOIN sources s ON s.id=search.rowid
-                        WHERE search MATCH ? AND s.kind=? ORDER BY bm25(search,3,1),s.id LIMIT 48''',(expression,kind)))
-                if short:
-                    clauses=' OR '.join('(title LIKE ? OR text LIKE ?)' for _ in short)
-                    args=[v for word in short for v in ('%'+word+'%','%'+word+'%')]
-                    identities.update(r[0] for r in store.execute(
-                        'SELECT id FROM sources WHERE kind=? AND ('+clauses+') ORDER BY id LIMIT 16',[kind]+args))
+        identities=candidate_ids(store,questions)
         ordered=sorted(identities)
         for offset in range(0,len(ordered),400):
             batch=ordered[offset:offset+400]

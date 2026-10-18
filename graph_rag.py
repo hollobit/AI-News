@@ -842,7 +842,7 @@ DATA:
     prompt=generation_prompt(wire_data) if detailed else prompt.replace(encoded_data,json.dumps(wire_data,ensure_ascii=False,separators=(',',':')),1)
     started=time.monotonic()
     stage_times=[]
-    draft_role=question_draft_role(question,analysis_plan) if detailed else 'graph_answer'
+    draft_role=question_draft_role(question,analysis_plan,evidence=original_evidence) if detailed else 'graph_answer'
     def generate():
         if progress:progress('synthesis')
         current_prompt,current_schema,current_aliases=prompt,wire_schema,aliases

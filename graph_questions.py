@@ -291,6 +291,15 @@ class GraphQuestions:
                 if time.monotonic()>deadline:raise RuntimeError('검색 근거 준비 시간이 초과되었습니다.')
                 time.sleep(.1)
             if self.closed:return
+            if planned and hasattr(graph,'workspace_store'):
+                # The HTTP response already supplied immediate source excerpts.
+                # Build the full question/axis candidate union once; preview and
+                # synthesis then share its graph, validation and lexical index.
+                from graph_question_context import searches_for
+                from context_index import materialize_many
+                plan=planned.result()
+                if self.closed:return
+                graph=materialize_many(graph,searches_for(request['question'],plan))
             result=quick_answer(graph,request['question'],request['node_ids'])
             retrieval_ms=round((time.monotonic()-begun)*1000,2)
             if tracked:self._progress(identity,'evidence',done=True,cached=retrieval_ms<1000)

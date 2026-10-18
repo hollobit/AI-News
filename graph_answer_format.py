@@ -8,7 +8,7 @@ import json
 
 DETAIL_FIELDS = ('premises', 'assumptions', 'counterevidence', 'uncertainty')
 PASSAGE_FIELDS = ('premises', 'explanation', 'assumptions', 'counterevidence', 'uncertainty')
-PIPELINE = 'grounded-answer-v23-quantity-scope'
+PIPELINE = 'grounded-answer-v24-scoped-overview'
 INSTRUCTIONS = '''
 출력의 claims.passage에 답변 본문으로 그대로 사용되는 완결된 설명을 한 번 작성한다.
 finding은 passage.explanation에 원문 사실과 필요한 범위 한계를 함께 설명한다.

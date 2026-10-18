@@ -71,6 +71,24 @@ def test_question_routing_keeps_broad_or_unplanned_synthesis_on_sol(question,axe
     assert question_draft_role(question,{'axes':['축']*axes})==expected
 
 
+def test_four_axis_overviews_are_bounded_and_interpretation_remains_sol():
+    from model_policy import question_draft_role
+    plan={'axes':['연구 현황','데이터 종류','이슈','자료 간 통합']}
+    evidence=[dict(text='x'*2000) for _ in range(24)]
+    overview='최근 Physical AI 벤치마크 연구 현황과 데이터세트 종류, 이슈는?'
+    assert question_draft_role(overview,plan,evidence=evidence)=='graph_draft'
+    for question in ('벤치마크별 평가 방식과 데이터세트 구성이 성능 수치 해석에 주는 의미는?',
+                     '벤치마크 종류별 성능 차이의 원인은?',
+                     '벤치마크 연구 현황을 바탕으로 대응 전략은?',
+                     '벤치마크 방법과 데이터 구성 비교'):
+        assert question_draft_role(question,plan,evidence=evidence)=='graph_answer'
+    assert question_draft_role(overview,plan)=='graph_answer'
+    assert question_draft_role(overview,plan,evidence=[])=='graph_answer'
+    assert question_draft_role(overview,plan,evidence=evidence+[dict(text='x')])=='graph_answer'
+    assert question_draft_role(overview,plan,evidence=[dict(text='x'*48001)])=='graph_answer'
+    assert question_draft_role(overview,{'axes':['축']*5},evidence=evidence)=='graph_answer'
+
+
 def test_access_preflight_caches_failure_and_never_downgrades(tmp_path):
     from model_access import ensure_model_access
     from engine_errors import EngineError
