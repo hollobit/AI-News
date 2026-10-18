@@ -25,8 +25,11 @@ def role_context(role, context):
 
 
 def cached_call(service, run_id, stage, prompt, schema, validate, *, escalation=False):
-    # Bounded lock stripes provide cross-process single-flight without expiring
-    # a live owner's lease. flock is released by the OS on process exit.
+    # Different inputs must reach the shared model queue independently. A stripe
+    # used as an exclusive lock serialized unrelated articles for whole calls.
+    # Keep a shared stripe lock for compatibility with older exclusive owners;
+    # new owners serialize only on the exact cache key. Never unlink lock files:
+    # another process may still hold or wait on that inode.
     import fcntl
     import time
     from pathlib import Path
@@ -35,15 +38,21 @@ def cached_call(service, run_id, stage, prompt, schema, validate, *, escalation=
     key=digest([VERSION,prompt,schema,selected])
     directory=Path(service.path).resolve().with_name(Path(service.path).name+'.stage-locks')
     directory.mkdir(exist_ok=True)
-    with (directory/(key[:2]+'.lock')).open('a') as lock:
+    keys=directory/'keys'/key[:2]
+    keys.mkdir(parents=True,exist_ok=True)
+    def acquire(lock,mode):
         while True:
             service._check()
             try:
-                fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-                break
+                fcntl.flock(lock,mode|fcntl.LOCK_NB)
+                return
             except BlockingIOError:
                 time.sleep(.1)
-        return _cached_call(service,run_id,stage,prompt,schema,validate,escalation=escalation)
+    with (directory/(key[:2]+'.lock')).open('a') as legacy_lock:
+        acquire(legacy_lock,fcntl.LOCK_SH)
+        with (keys/(key+'.lock')).open('a') as lock:
+            acquire(lock,fcntl.LOCK_EX)
+            return _cached_call(service,run_id,stage,prompt,schema,validate,escalation=escalation)
 
 
 def _cached_call(service, run_id, stage, prompt, schema, validate, *, escalation=False):
