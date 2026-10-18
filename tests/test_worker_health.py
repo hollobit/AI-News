@@ -1,9 +1,35 @@
 import sqlite3
 import time
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 from worker_health import queues,WorkerHealth
 from background_jobs import BackgroundJobs
+
+
+@pytest.mark.parametrize('table', ['wiki_topics', 'article_explanations'])
+@pytest.mark.parametrize('status', ['failed', 'needs_review', 'stale', 'interrupted'])
+def test_current_content_requiring_attention_is_not_idle(tmp_path, table, status):
+    path = tmp_path / 'db'
+    with sqlite3.connect(path) as db:
+        db.execute(f'CREATE TABLE {table}(status TEXT,requested INTEGER)')
+        db.execute(f'INSERT INTO {table} VALUES (?,0)', (status,))
+    name = 'wiki' if table == 'wiki_topics' else 'article_explanations'
+    assert queues(path)[name]['state'] == 'attention'
+    # Existing work still takes precedence; health reporting never retries it.
+    with sqlite3.connect(path) as db:
+        db.execute(f"INSERT INTO {table} VALUES ('running',0)")
+    assert queues(path)[name]['state'] == 'working'
+    with sqlite3.connect(path) as db:
+        assert db.execute(f'SELECT status,requested FROM {table}').fetchall() == [(status, 0), ('running', 0)]
+
+
+def test_wiki_requested_retry_remains_queued(tmp_path):
+    path = tmp_path / 'db'
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE wiki_topics(status TEXT,requested INTEGER)')
+        db.execute("INSERT INTO wiki_topics VALUES ('failed',1)")
+    assert queues(path)['wiki']['state'] == 'queued'
 
 
 def test_queue_progress_pause_and_provider_cooldown_are_separate(tmp_path):

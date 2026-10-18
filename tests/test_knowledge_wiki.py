@@ -28,7 +28,6 @@ class Runner:
 
     def __call__(self, prompt, schema, **kwargs):
         self.calls.append(kwargs['role'])
-        if kwargs['role'] == 'wiki_structure':return {'notes':[]}
         if kwargs['role'] == 'wiki_compile':
             bundle = json.loads(prompt.split('\nDATA:')[1].split('\nPREVIOUS:')[0])
             return report(bundle)
@@ -58,7 +57,7 @@ def test_compile_persist_navigation_and_reuse(wiki):
     assert len(service.get(source_url='https://example.org/medical')['pages']) == 2
     assert service.get(source_url='https://example.org/unknown')['pages'] == []
     service.compile('medical')
-    assert len(runner.calls) == 3
+    assert runner.calls == ['wiki_compile', 'wiki_review']
     reopened = KnowledgeWiki(service.path, runner, enabled=False, start_worker=False)
     assert reopened.get('medical')['page']
     assert len(reopened.get(query='연구 발표')['pages']) == 1
@@ -160,7 +159,7 @@ def test_rejected_review_never_published_and_no_unbounded_retry(wiki):
     assert service.compile('medical') == 'needs_review'
     assert service.get('medical')['page'] is None
     assert service.get('medical')['history'][0]['status'] == 'needs_review'
-    service.compile('medical'); assert len(runner.calls) == 5
+    service.compile('medical'); assert runner.calls == ['wiki_compile', 'wiki_review'] * 2
     runner.reject = False; service.request('medical')
     assert service.compile('medical') == 'complete'
 

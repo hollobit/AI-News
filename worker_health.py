@@ -36,6 +36,10 @@ def queues(db_path, now=None):
                 'counts':counts,'queued':queued,'last_progress_at':latest}
             if not active and counts.get('paused'):
                 output[name].update(state='paused',wait_reason='job_paused')
+            if (name in ('wiki', 'article_explanations') and not active and not queued
+                    and not counts.get('paused')
+                    and any(counts.get(status) for status in ('failed', 'needs_review', 'stale', 'interrupted'))):
+                output[name].update(state='attention',wait_reason='review_or_recovery_required')
             if name=='paper_analysis':
                 from paper_recovery import summary
                 recovery=summary(db,now)

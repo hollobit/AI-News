@@ -108,9 +108,17 @@ def test_question_archive_rechecks_raw_sources(service):
 
 
 def test_structure_cache_reused_on_manual_review_retry(service):
-    calls=service.runner.calls.count('wiki_structure')
+    from wiki_structure import key
+    with service.db() as db:
+        bundle = json.loads(db.execute('SELECT result_json FROM wiki_revisions').fetchone()[0])['bundle']
+        source = bundle['evidence'][0]
+        notes = {'notes': [dict(type='claim',label='기존 편집 단서',evidence_id=source['id'],quote=source['text'][:50])]}
+        db.execute('INSERT INTO wiki_structures VALUES (?,?)', (key(bundle),json.dumps(notes)))
     service.request('medical');service.compile('medical')
-    assert service.runner.calls.count('wiki_structure')==calls
+    assert service.runner.calls == ['wiki_compile','wiki_review'] * 2
+    with service.db() as db:
+        result = json.loads(db.execute('SELECT result_json FROM wiki_revisions ORDER BY id DESC LIMIT 1').fetchone()[0])
+        assert result['structure'] == notes
 
 
 def test_purpose_change_invalidates_only_policy_bound_editions(service):

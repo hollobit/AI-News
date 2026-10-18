@@ -88,6 +88,10 @@ def generate(bundle, previous=None, runner=None, feedback=None, repair=True, str
 주제 대표 페이지 1개와 설명 가치가 있는 대상(entity), 사건(event), 쟁점(issue) 페이지를 합쳐 보통 3~5개 작성한다.
 대표 페이지 제목은 DATA.title 그대로다. 각 페이지는 핵심 내용/작동 방식/독자 효용 중심 1~5개 짧은 주장이다.
 단순 기사 목록 대신 여러 근거의 공통 내용과 차이를 설명하되 관련 없는 자료를 억지로 합치지 않는다.
+작성 전에 전체 원자료에서 이 주제를 이해하는 데 중요한 내용 축과 조건·상충을 점검한다.
+중요한 실제 활용 사례가 있으면 작동 방식·역할 분담·업무 효용을 구체적으로 설명한다.
+활용 확대를 설명하면서 접근·통제·검증 한계 같은 중요한 반대 축을 빠뜨리지 않는다.
+모든 자료를 나열할 필요는 없지만 권장 분량 때문에 핵심 내용이 사라지거나 전체 인상이 치우치면 보완한다.
 기존 위키는 편집 참고일 뿐 인용 근거가 아니다. 현재 DATA.evidence만 인용하고 낡은 주장은 수정한다.
 보도/발표 내용은 주체에 귀속(reported), 해석은 interpretation, 실제 남은 쟁점은 uncertain으로 구분한다.
 자료가 모순되면 근거 양쪽과 시점/조건 차이를 보존한다. 최신 보도를 무조건 사실로 덮어쓰지 않는다.
@@ -111,7 +115,15 @@ REVISION이 있으면 검토 지적 전부를 반영해 수정한다. 근거 없
 위키·모델의 해석을 원출처 사실로 둔갑시키거나 보도/초록을 실제 검증으로 확대하면 거부한다.
 관계 종류·방향·설명, 주체·날짜·수치·조건, 모순 양쪽의 근거, 사실/해석 구분을 대조한다.
 자료에 없는 인과, 단순 동시등장을 의미관계로 승격한 경우, 제목만 관련된 인용도 supported=false.
-검토 통과는 현실의 사실성 보증이 아니다.\n''' + js({'statements': statements, 'evidence': bundle['evidence']}),
+개별 인용의 정확성뿐 아니라 PURPOSE와 scope 안에서 전체 페이지를 합친 설명의 충분성도 대조한다.
+주제 이름만 보고 PURPOSE 밖의 분야나 주제 전체를 망라하는 백과사전을 요구하지 않는다.
+중요한 작동 방식·실제 활용 효용·조건·상충을 빠뜨려 이미 제시한 결론이나 전체 인상을 오해하게 하면
+topic 대표 페이지의 관련 주장 index를 supported=false로 하고 reason에 왜 중대한 누락인지와 원자료 ID를 명시한다.
+하위 페이지에서 설명한 내용을 대표 요약에 다시 요구하지 않는다. 명시적으로 한정한 대표 사례의 선택 차이나
+사소한 추가 설명은 거절 사유가 아니다. 모든 자료의 나열이나 관련성 약한 사례의 포함을 요구하지 않는다.
+검토 통과는 현실의 사실성 보증이 아니다.\n''' + js({'purpose': purpose(), 'scope': bundle.get('scope',''), 'topic': bundle['title'],
+            'pages': [{k:p[k] for k in ('title','kind')} for p in report['pages']],
+            'statements': statements, 'evidence': bundle['evidence']}),
         audit_schema, role='wiki_review', timeout=150, queue_timeout=60, reasoning_effort='medium')
     checks = audit.get('checks', []) if isinstance(audit, dict) else []
     if (any(not isinstance(c, dict) or type(c.get('index')) is not int or type(c.get('supported')) is not bool
@@ -327,28 +339,29 @@ class KnowledgeWiki:
                        (os.getpid(), bundle['input_hash'], row['attempts'] + 1 if same else 1, now(), topic))
             db.execute('UPDATE wiki_topics SET policy_hash=? WHERE id=?',(policy_hash,topic))
             attempt = db.execute("INSERT INTO wiki_attempts(topic,input_hash,status,created_at,error) VALUES (?,?,'running',?,'')", (topic, bundle['input_hash'], now())).lastrowid
+        stage = 'preparation'
         try:
-            from wiki_structure import analyze, validate as validate_structure, key as structure_key
+            from wiki_structure import editing_notes
             from semantic import run_structured
-            skey = structure_key(bundle)
             with self.db() as db:
-                cached = db.execute('SELECT result_json FROM wiki_structures WHERE input_hash=?',(skey,)).fetchone()
-            structure = json.loads(cached[0]) if cached else analyze(bundle,self.runner or run_structured)
-            validate_structure(structure,bundle)
-            if not cached:
-                from decision_tasks import structure as observe_decision
-                observe_decision(self.path,bundle,structure['notes'],topic=topic)
-            if not cached:
-                with self.db() as db:db.execute('INSERT OR REPLACE INTO wiki_structures VALUES (?,?)',(skey,js(structure)))
+                structure = editing_notes(db, bundle)
             from wiki_reuse import reviewed_hints
             with self.db() as db:hints=reviewed_hints(db,bundle)
-            generated = generate(bundle, previous.get('report'), self.runner, feedback=feedback,
+
+            def run(prompt, schema, **kwargs):
+                nonlocal stage
+                stage = kwargs['role']
+                return (self.runner or run_structured)(prompt, schema, **kwargs)
+
+            generated = generate(bundle, previous.get('report'), run, feedback=feedback,
                                  structure=dict(structure,reviewed_hints=hints))
             result = dict(generated, bundle=bundle)
             result['structure'] = structure
+            result['generation_path'] = 'direct-wiki-v1'
             result['purpose_hash'] = policy_hash
             result['reused_analysis_kinds'] = sorted({h['kind'] for h in hints})
             status = 'complete' if verified(result) else 'needs_review'
+            stage = 'publication'
             with self.db() as db:
                 db.execute('BEGIN IMMEDIATE')
                 if not current(db, bundle['evidence']) or not matches_config(db, bundle) or digest(purpose())!=policy_hash:
@@ -368,9 +381,8 @@ class KnowledgeWiki:
                 db.execute('UPDATE wiki_attempts SET status=?,completed_at=? WHERE id=?', (status, now(), attempt))
             return status
         except Exception as exc:
-            from engine_errors import infrastructure_error, EngineError
-            code = infrastructure_error(str(exc))
-            error = str(EngineError(code)) if code else '위키 생성 또는 검토에 실패했습니다. 공개 기준은 유지됩니다.'
+            from wiki_errors import describe
+            error = describe(exc, stage)
             with self.db() as db:
                 db.execute("UPDATE wiki_topics SET status='failed',owner_pid=NULL,updated_at=?,error=? WHERE id=?", (now(), error, topic))
                 db.execute("UPDATE wiki_attempts SET status='failed',completed_at=?,error=? WHERE id=?", (now(), error, attempt))
