@@ -81,6 +81,17 @@
         'legend'
       )
     );
+    if (
+      Number.isInteger(info.initial_candidate_documents) &&
+      Number.isInteger(info.supplemental_candidate_documents)
+    )
+      details.append(
+        el(
+          'p',
+          `1차 검색 후보 ${info.initial_candidate_documents}개 · 원문 보강에서 추가 확인한 후보 ${info.supplemental_candidate_documents}개. 같은 문서는 중복 집계하지 않습니다.`,
+          'legend'
+        )
+      );
     if (Number.isInteger(info.searched_source_records))
       details.append(
         el(

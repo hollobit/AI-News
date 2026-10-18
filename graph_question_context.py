@@ -75,6 +75,17 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
             allowed = {e.get('source_url', '') for e in selected.values()} if ids or scoped else None
             supplements = search(db, question, limit=budget['passages'], urls=allowed) + supplements
             if not ids and not scoped: supplements += retrieve(db, question, limit=1)
+    # Source-store/wiki lookups can discover documents outside the first graph
+    # search. Count every inspected candidate once, including budget exclusions;
+    # otherwise selected documents can exceed the displayed candidate total.
+    inspected = {e['id']: e for group in groups for e in group['evidence'] if e.get('text')}
+    initial_documents = {document(e) for e in inspected.values()}
+    inspected.update((e['id'], e) for e in supplements if e.get('text'))
+    candidate_documents = {document(e) for e in inspected.values()}
+    selection.update(initial_candidate_documents=len(initial_documents),
+                     supplemental_candidate_documents=len(candidate_documents - initial_documents),
+                     candidate_documents=len(candidate_documents),
+                     candidate_passages=len(inspected))
     by_document = defaultdict(list)
     for item in selected.values(): by_document[document(item)].append(item)
     query_terms = set(terms(' '.join(queries)))
@@ -140,7 +151,7 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
     source_refs.update(selected)
     coverage = dict(scope='question_selected_evidence', unique_documents=len({document(e) for e in evidence}),
                     passages=len(evidence), full_corpus_analysis=False,
-                    axes=axis_coverage(axes,candidates,evidence,document,budget),
+                    axes=axis_coverage(axes,list(inspected.values()),evidence,document,budget),
                     coverage_basis=selection['coverage_basis'])
     dependencies=getattr(graph,'workspace_dependencies',None)
     dependency_refs=getattr(graph,'workspace_dependency_refs',None)

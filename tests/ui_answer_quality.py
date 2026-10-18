@@ -18,6 +18,7 @@ async def main():
         evidence=[dict(id='e',title='공식 평가 자료',text='벤치마크 원문',source_url='https://example.org/source'),
                   dict(id='extra',title='공식 평가 조건',text='현장 적용은 미검증이다.',source_url='https://example.org/source')],
         retrieval=dict(candidate_documents=120,unique_documents=1,cited_documents=1,passages=2,
+                       initial_candidate_documents=118,supplemental_candidate_documents=2,
                        budget=dict(documents=32,passages=44),budget_limited=True,
                        candidate_limit_per_query=60,reserved_documents=2,
                        axes=[dict(axis='데이터세트',candidate_documents=0,selected_documents=0,status='no_candidates')]),
@@ -50,6 +51,8 @@ async def main():
         await expect(page.locator('.evidence-summary')).to_contain_text('일부 후보를 제외')
         await expect(page.locator('.evidence-summary')).to_contain_text('최대 60개 후보 문서')
         await expect(page.locator('.evidence-summary')).to_contain_text('2개 문서를 우선 배정')
+        await expect(page.locator('.evidence-summary')).to_contain_text('1차 검색 후보 118개')
+        await expect(page.locator('.evidence-summary')).to_contain_text('원문 보강에서 추가 확인한 후보 2개')
         await expect(page.locator('.answer-synthesis > p')).to_have_count(2)
         await expect(page.locator('.answer-synthesis > p').first.locator('mark')).to_have_text('벤치마크')
         assert await page.locator('.answer-synthesis img').count()==0
@@ -70,8 +73,11 @@ async def main():
             await page.set_viewport_size({'width':width,'height':844})
             assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
         result['verification']['quality'].update(status='evidence_limited',revision_count=0)
+        del result['retrieval']['initial_candidate_documents']
+        del result['retrieval']['supplemental_candidate_documents']
         await page.reload()
         await expect(page.locator('.answer-quality')).to_contain_text('확보한 근거 범위의 답변')
+        await expect(page.locator('.evidence-summary')).not_to_contain_text('원문 보강에서 추가 확인한 후보')
         state.update(status='needs_review',error='설명이 부족한 쟁점을 확인해 주세요.')
         result['verification']['quality'].update(status='needs_review',revision_count=1,issues=['데이터 종류가 평가에 미치는 의미의 설명이 누락되었습니다.'])
         result['answer']='질문에 충분히 답하는 종합 설명을 완성하지 못했습니다.'

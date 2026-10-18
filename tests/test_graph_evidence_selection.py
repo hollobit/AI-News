@@ -85,6 +85,46 @@ def test_source_supplements_keep_document_scope_and_actual_counts(tmp_path):
     assert search.call_args.kwargs['urls'] == {first['source_url']}
     assert result['coverage']['unique_documents'] == 1 and result['coverage']['passages'] == 2
     assert {document(e) for e in result['evidence']} == {first['source_url']}
+    assert result['retrieval']['candidate_documents'] == 1
+    assert result['retrieval']['candidate_passages'] == 2
+    assert result['retrieval']['supplemental_candidate_documents'] == 0
+
+
+def test_supplement_candidates_include_new_documents_without_double_counting(tmp_path):
+    first=source('first', 'benchmark')
+    extra=source('extra', 'dataset', kind='paper')
+    same=source('same', 'dataset', url=extra['source_url'])
+    with patch('graph_rag.build_retrieval', return_value=group([first])), \
+            patch('source_store.search', return_value=[first,extra,same]), \
+            patch('knowledge_wiki.retrieve', return_value=[extra]), \
+            patch('semantic.run_structured') as model:
+        result=compose({}, 'Physical AI 벤치마크 데이터세트', [],
+                       dict(queries=[], axes=['벤치마크','데이터세트']), tmp_path/'db')
+    model.assert_not_called()
+    stats=result['retrieval']
+    assert stats['initial_candidate_documents'] == 1
+    assert stats['supplemental_candidate_documents'] == 1
+    assert stats['candidate_documents'] == stats['unique_documents'] == 2
+    assert stats['candidate_passages'] == 3
+    dataset=next(a for a in stats['axes'] if a['axis']=='데이터세트')
+    assert dataset['candidate_documents'] == dataset['selected_documents'] == 1
+
+
+def test_over_budget_supplement_is_a_found_but_unselected_axis(tmp_path):
+    first=source('first', 'benchmark')
+    huge=source('huge', 'dataset', text='Physical AI dataset. '+('Full conditions. '*10000))
+    with patch('graph_rag.build_retrieval', return_value=group([first])), \
+            patch('source_store.search', return_value=[huge]), \
+            patch('knowledge_wiki.retrieve', return_value=[]):
+        result=compose({}, 'Physical AI 벤치마크 데이터세트', [],
+                       dict(queries=[], axes=['벤치마크','데이터세트']), tmp_path/'db')
+    assert result['evidence'] == [first]
+    stats=result['retrieval']
+    assert stats['candidate_documents'] == 2 and stats['unique_documents'] == 1
+    assert stats['budget_limited']
+    dataset=next(a for a in stats['axes'] if a['axis']=='데이터세트')
+    assert dataset['candidate_documents'] == 1 and dataset['selected_documents'] == 0
+    assert dataset['status'] == 'not_selected'
 
 
 def test_expanded_retrieval_removes_twelve_item_bottleneck_but_keeps_default():
