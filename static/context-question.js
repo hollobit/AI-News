@@ -206,7 +206,9 @@
       .map((stage) => stage.label);
     $('#answer-status').textContent = current.length
       ? current.join(' + ') + ' 진행 중'
-      : '분석 작업 순서를 기다리고 있습니다';
+      : data.total > 0 && data.completed === data.total
+        ? '검토 완료 · 결과와 최신 근거 확인 중'
+        : '분석 작업 순서를 기다리고 있습니다';
     $('#answer-detail').textContent =
       '진행률은 실제 완료한 단계의 비율입니다. 단계마다 소요 시간은 다릅니다.';
     $('#answer-eta').textContent = data.estimate_overdue

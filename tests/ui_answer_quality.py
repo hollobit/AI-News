@@ -77,6 +77,9 @@ async def main():
         await expect(page.locator('#answer-status')).to_contain_text('부족한 설명 보완 진행 중')
         await expect(page.locator('#answer-meter')).to_have_attribute('value','60')
         await expect(page.locator('.answer-quality')).to_have_count(0)
+        state['progress'].update(completed=5,total=5,percent=100,stages=[dict(id='finalize',label='최신 근거 확인·완료',status='complete',seconds=1)])
+        await page.reload()
+        await expect(page.locator('#answer-status')).to_contain_text('검토 완료 · 결과와 최신 근거 확인 중')
         state['progress'].update(planning=dict(method='jev_template',reason='template_selected'),
             planning_note='질문 유형·계획 적합성을 확인했습니다. 답변 작성과 독립 검토는 이어서 진행합니다.',
             stages=[dict(id='plan',label='Jev 검색 계획 선택',status='complete',seconds=.2),
