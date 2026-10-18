@@ -50,14 +50,18 @@ def wait_for_sources(db, snapshots, pending, prior, extraction, now, *, progress
     urls.discard('')
     cached=source_map(db,urls)
     targets={url for url in urls if cached.get(url,{}).get('status') not in TERMINAL_SOURCE_STATES}
-    headline_urls={canonical_url(e.get('url','')) for s in fresh if headline_only(s) for e in s['evidence']}
-    headline_batch=len(targets & headline_urls)>=math.ceil(len(fresh)*.8)
+    headlines=[s for s in fresh if headline_only(s)]
+    headline_urls={canonical_url(e.get('url','')) for s in headlines for e in s['evidence']}
+    # Classify the frozen messages, not how many of their reads remain pending.
+    # A cached failure or a quick success must not turn the same headline batch
+    # into a five-second mixed batch while its other sources are still arriving.
+    headline_batch=len(headlines)>=math.ceil(len(fresh)*.8)
     # Mixed/substantive batches often receive their sources within a few seconds.
     # Join those reads once, without giving them the longer headline-only wait.
     maximum=WINDOW_SECONDS if headline_batch else SHORT_WINDOW_SECONDS
     if headline_batch:targets &= headline_urls
     if not targets or age>=maximum or not owner(db):return None
-    policy=dict(policy='source-window-v2',mode='headline' if headline_batch else 'short',maximum_seconds=maximum)
+    policy=dict(policy='source-window-v3',mode='headline' if headline_batch else 'short',maximum_seconds=maximum)
     started=clock();duration=maximum-age;remaining=set(targets)
     initial=db.execute('SELECT id,status FROM bulk_baseline_runs ORDER BY created_at DESC LIMIT 1').fetchone()
     initial=tuple(initial) if initial else None

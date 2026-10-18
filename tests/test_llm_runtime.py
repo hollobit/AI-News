@@ -145,7 +145,7 @@ def test_detail_priority_preserves_baseline_interactive_and_background_aging():
     rows=[{'id':i,'role':role,'queued_at':99} for i,role in enumerate(
         ['wiki_compile','paper_analysis','national','baseline_analysis','graph_answer'],1)]
     ordered=sorted(rows,key=lambda row:queue_key(row,100,INTERACTIVE_ROLES))
-    assert [r['role'] for r in ordered]==['graph_answer','national','baseline_analysis','wiki_compile','paper_analysis']
+    assert [r['role'] for r in ordered]==['graph_answer','baseline_analysis','national','wiki_compile','paper_analysis']
     rows[0]['queued_at']=30
     assert sorted(rows,key=lambda row:queue_key(row,100,INTERACTIVE_ROLES))[0]['role']=='wiki_compile'
 
@@ -181,3 +181,26 @@ def test_review_admitted_before_earlier_draft(tmp_path):
     with runtime.slot('verification',1,1):
         with runtime.db() as db:
             assert db.execute("SELECT status FROM llm_calls WHERE role='national'").fetchone()[0]=='queued'
+
+
+def test_baseline_batch_enters_before_earlier_deep_draft(tmp_path):
+    import os
+    runtime=LLMRuntime(tmp_path/'baseline-priority.db',limit=1,poll_seconds=.005,queue_timeout=.05)
+    with runtime.db() as db:
+        db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,input_chars,schema_chars) VALUES ('national','queued',?,?,1,1)",(os.getpid(),time.time()))
+    with runtime.slot('baseline_analysis',1,1):
+        with runtime.db() as db:
+            assert db.execute("SELECT role FROM llm_calls WHERE status='running'").fetchall()[0][0]=='baseline_analysis'
+            assert db.execute("SELECT status FROM llm_calls WHERE role='national'").fetchone()[0]=='queued'
+
+
+def test_baseline_priority_keeps_reviews_finish_fifo_and_aged_work_ahead():
+    from llm_priority import queue_key
+    from llm_runtime import INTERACTIVE_ROLES
+    roles=['wiki_compile','synthesis','baseline_analysis','risk_patch','national',
+           'baseline_verification','verification','graph_answer']
+    rows=[dict(id=i,role=role,queued_at=99) for i,role in enumerate(roles)]
+    rows[0]['queued_at']=30
+    assert [r['role'] for r in sorted(rows,key=lambda row:queue_key(row,100,INTERACTIVE_ROLES))]==[
+        'wiki_compile','graph_answer','baseline_verification','verification',
+        'synthesis','baseline_analysis','risk_patch','national']

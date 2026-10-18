@@ -133,6 +133,25 @@ def test_long_headline_window_does_not_wait_for_a_substantive_minority(db):
     assert result['elapsed_seconds']==2 and result['reason']=='sources_ready'
 
 
+@pytest.mark.parametrize('terminal',['fetched','failed','blocked','unsupported','unavailable'])
+def test_ready_headline_cannot_shorten_wait_for_other_headline_sources(db,terminal):
+    rich=item('rich','작동 조건과 측정 결과를 포함한 실제 본문. '*10)
+    names=[str(i) for i in range(4)]
+    arrival(db,'0',status=terminal)
+    clock=Clock(lambda seconds:[arrival(db,name) for name in names[1:]] if seconds>=12 else None)
+    result=wait(db,[item(name) for name in names]+[rich],clock)
+    assert result['mode']=='headline' and result['maximum_seconds']==45
+    assert result['documents']==result['ready_documents']==3
+    assert result['elapsed_seconds']==12 and result['reason']=='sources_ready'
+
+
+def test_all_headline_sources_ready_do_not_wait_for_substantive_minority(db):
+    rich=item('rich','작동 조건과 측정 결과를 포함한 실제 본문. '*10)
+    names=[str(i) for i in range(4)]
+    for name in names:arrival(db,name)
+    assert wait(db,[item(name) for name in names]+[rich]) is None
+
+
 def test_dispatch_snapshot_preparation_spends_the_same_short_window(db):
     rich=item('rich','작동 조건과 측정 결과를 포함한 실제 본문. '*10)
     clock=Clock();progress=[]
