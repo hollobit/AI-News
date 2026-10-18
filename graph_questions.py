@@ -16,6 +16,12 @@ from graph_answer_format import PIPELINE
 from projection_cache import content_digest
 from graph_quick_sources import cold_answer, setup_source_search
 
+# Independent questions should reach the shared model scheduler without waiting
+# for an unrelated answer's generation AND review. These are orchestration
+# workers, not extra model slots; LLMRuntime still enforces the global limit.
+QUESTION_WORKERS = 4
+MAX_ACTIVE_QUESTIONS = 8
+
 
 def answer_day():
     from datetime import date
@@ -141,8 +147,8 @@ class GraphQuestions:
         self.enricher=enricher
         self.lock=threading.RLock();self.active=set();self.closed=False
         self.warm_stop=threading.Event();self.warm_thread=None
-        self.executor=ThreadPoolExecutor(max_workers=2,thread_name_prefix='graph-answers')
-        self.planners=ThreadPoolExecutor(max_workers=2,thread_name_prefix='question-plans')
+        self.executor=ThreadPoolExecutor(max_workers=QUESTION_WORKERS,thread_name_prefix='graph-answers')
+        self.planners=ThreadPoolExecutor(max_workers=QUESTION_WORKERS,thread_name_prefix='question-plans')
         with self.db() as db:
             db.execute('''CREATE TABLE IF NOT EXISTS graph_question_jobs (
                 id TEXT PRIMARY KEY,key TEXT NOT NULL,revision TEXT NOT NULL,request_json TEXT NOT NULL,
@@ -243,7 +249,7 @@ class GraphQuestions:
                         if job['status']=='complete':
                             return self._cached_answer(job,started)
                     if not job:
-                        if len(self.active)>=8:
+                        if len(self.active)>=MAX_ACTIVE_QUESTIONS:
                             answer['analysis_status']='busy'
                             answer['limitations'].append('심층 분석 대기열이 가득 찼습니다. 잠시 후 다시 질문해 주세요.')
                         else:
