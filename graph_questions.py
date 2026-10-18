@@ -16,6 +16,17 @@ from graph_answer_format import PIPELINE
 from projection_cache import content_digest
 from graph_quick_sources import cold_answer, setup_source_search
 
+
+def answer_day():
+    from datetime import date
+    return date.today().isoformat()
+
+
+def answer_key(revision,request):
+    values=[PIPELINE,revision,request]
+    if request['params'].get('workspace')==['1']:values.append(answer_day())
+    return content_digest(values)
+
 def passage(evidence,question,limit=500):
     text=evidence.get('text') or evidence.get('title') or ''
     # Keep contiguous source wording, including the context surrounding the hit.
@@ -83,7 +94,7 @@ def question_evidence(path,request,expected_ids=None):
     return graph,signature
 
 
-def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,progress=None,reuse_only=None,job_id=None):
+def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,progress=None,reuse_only=None,job_id=None,reuse_lookup=None):
     """Question planning adds no facts: retrieve each requested axis separately."""
     from graph_plans import prepare
     plan = plan if plan is not None else prepare(question, path)[0]
@@ -94,7 +105,7 @@ def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,pr
     observe_decision(path,question,plan,retrieval['evidence'],job_id=job_id)
     compose_ms=round((time.monotonic()-retrieval_started)*1000,2)
     # Pass the fixed retrieved bundle directly; do not rerank away a missing side.
-    answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress,reuse_only=reuse_only)
+    answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress,reuse_only=reuse_only,reuse_lookup=reuse_lookup)
     if detailed and retrieval.get('workspace_dependencies'):
         from verified_cache import policy
         answer['workspace_dependencies']=retrieval['workspace_dependencies']
@@ -122,6 +133,7 @@ class GraphQuestions:
                 id TEXT PRIMARY KEY,key TEXT NOT NULL,revision TEXT NOT NULL,request_json TEXT NOT NULL,
                 status TEXT NOT NULL,result_json TEXT NOT NULL,error TEXT NOT NULL,created_at REAL NOT NULL,owner_pid INTEGER)''')
             db.execute('CREATE INDEX IF NOT EXISTS graph_question_key ON graph_question_jobs(key,created_at)')
+            db.execute("CREATE INDEX IF NOT EXISTS graph_question_verified_input ON graph_question_jobs(json_extract(result_json,'$.input_signature'),created_at DESC) WHERE status='complete'")
             from question_progress import setup
             setup(db)
             db.execute('CREATE TABLE IF NOT EXISTS graph_question_plans(key TEXT PRIMARY KEY,plan_json TEXT NOT NULL,created_at TEXT NOT NULL)')
@@ -133,6 +145,19 @@ class GraphQuestions:
 
     def db(self, timeout=.25):
         db=sqlite3.connect(self.path,timeout=timeout);db.row_factory=sqlite3.Row;return db
+
+    def _retained_answer(self,request,signature):
+        """A candidate only: the caller rebuilt and hashed all current inputs."""
+        with self.db() as db:
+            rows=db.execute("""SELECT result_json FROM graph_question_jobs WHERE status='complete'
+                AND json_extract(result_json,'$.input_signature')=? AND request_json=?
+                ORDER BY created_at DESC LIMIT 4""",(signature,json.dumps(request,ensure_ascii=False))).fetchall()
+        from graph_answer_quality import sufficient
+        for row in rows:
+            value=json.loads(row[0])
+            if sufficient(value) and value.get('verification',{}).get('method')=='independent_evidence_review':
+                return value
+        return None
 
     def warm(self):
         """Keep revisions prepared after ingestion, without any model calls."""
@@ -159,12 +184,13 @@ class GraphQuestions:
                 (json.dumps(request,ensure_ascii=False),time.time()-600)).fetchall()
         for candidate in candidates:
             saved=json.loads(candidate['result_json'])
-            recent_workspace=saved.get('workspace_dependencies') and 0<=time.time()-float(saved.get('workspace_as_of') or 0)<=120
+            recent_workspace=(saved.get('workspace_dependencies') and saved.get('answer_as_of')==answer_day()
+                              and 0<=time.time()-float(saved.get('workspace_as_of') or 0)<=120)
             if saved.get('bounded_signature') or recent_workspace:
                 checked=self.get(candidate['id'])
                 if checked['status']=='complete':return self._cached_answer(dict(candidate),started,checked)
         revision,graph,_=self.snapshots.request(params)
-        key=content_digest([PIPELINE,revision,request])
+        key=answer_key(revision,request)
         job=None
         with self.lock:
             with self.db() as db:
@@ -277,7 +303,7 @@ class GraphQuestions:
                     revision=current
                     with self.db(timeout=10) as db:
                         db.execute('UPDATE graph_question_jobs SET revision=?,key=? WHERE id=?',
-                            (revision,content_digest([PIPELINE,revision,request]),identity))
+                            (revision,answer_key(revision,request),identity))
                 if graph:break
                 if request['params']=={'workspace':['1']} and not request['node_ids'] and hasattr(self.snapshots,'available_workspace'):
                     graph=self.snapshots.available_workspace()
@@ -324,7 +350,7 @@ class GraphQuestions:
                         self._progress(identity,'review',done=True,**detail)
                     self._progress(identity,stage,**detail)
                 if tracked:self._progress(identity,'synthesis')
-                answer=self.analyzer(graph,request['question'],request['node_ids']) if self.analyzer else deepen(graph,request['question'],request['node_ids'],path=self.path,scoped=bool(request['params']),detailed=detailed,plan=plan,progress=progress if tracked else None,reuse_only=reviewed,job_id=identity)
+                answer=self.analyzer(graph,request['question'],request['node_ids']) if self.analyzer else deepen(graph,request['question'],request['node_ids'],path=self.path,scoped=bool(request['params']),detailed=detailed,plan=plan,progress=progress if tracked else None,reuse_only=reviewed,job_id=identity,reuse_lookup=lambda signature:self._retained_answer(request,signature))
             attempts.append(dict(evidence_retrieval_ms=retrieval_ms,answer_ms=answer.get('timing',{}).get('answer_ms'),
                                  answer_cache_hit=answer.get('timing',{}).get('answer_cache_hit',False),
                                  attempt_ms=round((time.monotonic()-begun)*1000,2)))

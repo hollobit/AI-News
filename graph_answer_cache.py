@@ -14,7 +14,7 @@ class AnswerInputsChanged(RuntimeError):
     """A reviewed answer cannot be reused with the newly retrieved context."""
 
 
-def reuse_answer(key, build):
+def reuse_answer(key, build, *, lookup=None):
     if key is None:return build(), False
     with _LOCK:
         if key in _CACHE:
@@ -27,13 +27,15 @@ def reuse_answer(key, build):
         future=_FLIGHTS.setdefault(key,Future())
     if not owner:return deepcopy(future.result()), True
     try:
-        value=build()
+        value=lookup(key) if lookup else None
+        restored=value is not None
+        if not restored:value=build()
         if value.get('verification',{}).get('quality',{}).get('status')!='needs_review':
             with _LOCK:
                 _CACHE[key]=(time.monotonic(),deepcopy(value))
                 while len(_CACHE)>32:_CACHE.popitem(last=False)
         future.set_result(deepcopy(value))
-        return value,False
+        return deepcopy(value),restored
     except BaseException as error:
         future.set_exception(error)
         raise

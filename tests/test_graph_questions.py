@@ -310,7 +310,8 @@ def test_workspace_answers_validate_selected_sources_not_unrelated_revision(tmp_
     from verified_cache import policy
     q=GraphQuestions(tmp_path/'selected.db',snapshots=Snapshots())
     request={'question':'관계 종합 분석 질문','node_ids':[],'params':{'workspace':['1']}}
-    result={'phase':'analysis','answer':'검토된 종합 설명','claims':[{'text':'근거'}],
+    from graph_questions import answer_day
+    result={'phase':'analysis','answer':'검토된 종합 설명','claims':[{'text':'근거'}],'answer_as_of':answer_day(),
             'workspace_dependencies':{'source':'hash'},'workspace_as_of':time.time(),'workspace_policy':policy(),
             'verification':{'method':'independent_evidence_review','quality':{'policy':'question-explanation-v1','status':'passed'}}}
     try:

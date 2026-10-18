@@ -746,7 +746,7 @@ _ANSWER_SCHEMA = {
 
 
 def answer_question(graph: dict[str, Any], question: str,
-                    node_ids: Iterable[str] | None = None, *, retrieval=None, analysis_plan=None, detailed=False, progress=None, reuse_only=None) -> dict[str, Any]:
+                    node_ids: Iterable[str] | None = None, *, retrieval=None, analysis_plan=None, detailed=False, progress=None, reuse_only=None, reuse_lookup=None) -> dict[str, Any]:
     question = _clean(question)
     if not question:
         raise ValueError("질문을 입력해 주세요.")
@@ -906,6 +906,22 @@ DATA:
     # Include full review context: even a changed qualification outside the
     # generation excerpt invalidates the reviewed answer.
     key=content_digest({'pipeline':PIPELINE,'data':data,'draft_role':draft_role,'review_evidence':original_evidence}) if getattr(graph,'search_key',None) is not None else None
+    persistent_hit=False
+    def retained(current_key):
+        nonlocal persistent_hit
+        saved=reuse_lookup(current_key) if detailed and reuse_lookup else None
+        if (not isinstance(saved,dict) or saved.get('input_signature')!=current_key
+                or saved.get('verification',{}).get('method')!='independent_evidence_review'
+                or not sufficient(saved)):
+            return None
+        try:
+            core={k:copy.deepcopy(saved[k]) for k in ('answer','claims','limitations')}
+            validate_answer(core,original_evidence)
+        except (KeyError,RuntimeError,TypeError,ValueError):
+            return None
+        core['verification']=copy.deepcopy(saved['verification'])
+        persistent_hit=True
+        return core
     if reuse_only is not None:
         from graph_answer_cache import AnswerInputsChanged
         if not key or key!=reuse_only.get('input_signature') or (detailed and not sufficient(reuse_only)):
@@ -913,13 +929,15 @@ DATA:
         result=copy.deepcopy({k:reuse_only[k] for k in ('answer','claims','limitations','verification')})
         reused=True
     else:
-        result,reused=reuse_answer(key,generate)
+        result,reused=reuse_answer(key,generate,lookup=retained if reuse_lookup else None)
     if progress and (not detailed or sufficient(result)):progress('finalize', cached=reused)
     result.update(input_signature=key,selected_nodes=retrieval['nodes'],selected_edges=retrieval['edges'],evidence=retrieval['evidence'],
+                  answer_as_of=data.get('as_of'),
                   retrieval=dict(retrieval.get('retrieval',{}),
                       generation_evidence_characters=sum(len(e.get('text') or '') for e in data['evidence']),
                       review_evidence_characters=sum(len(e.get('text') or '') for e in original_evidence)),
-                  timing={'answer_ms':round((time.monotonic()-started)*1000,2),'answer_cache_hit':reused,'stages':stage_times})
+                  timing={'answer_ms':round((time.monotonic()-started)*1000,2),'answer_cache_hit':reused,
+                          'answer_cache_source':'persistent' if persistent_hit else 'memory_or_revalidation' if reused else 'generation','stages':stage_times})
     from graph_evidence_selection import citation_counts
     from graph_question_context import document
     result['retrieval'].update(citation_counts(result,retrieval['evidence'],document))
