@@ -55,8 +55,22 @@ limitations에는 질문별 미확보 범위와 판단 한계만 적는다. 새�
 '''
 
 
+# A writing target for the two evaluated technical question types, never an
+# output limit. Other scopes retain the general writing instructions. Existing
+# reviewed answers remain reusable: source/claim/quality gates are unchanged.
+FOCUSED_WRITING = '''설명의 분량 배분: 질문의 판단에 필요한 설명을 먼저 완성한다. 일반적인 기술 비교·현황 질문은 본문 1,200~1,800자 정도의 한국어 문단을 목표로 하되, 필수 쟁점·명시된 비교 대상·상충 근거 설명에 더 필요하면 늘린다. 글자 수 때문에 문장이나 조건을 잘라내지 않는다.
+데이터 구성을 설명할 때 원문의 모든 주석 필드·통신 지표·도구 이름을 나열할 필요는 없다. 질문의 차이를 만드는 입력 종류, 과제와 적용 범위, 필요한 규모·분할·평가 조건을 보존하고 그것이 의미하는 바를 설명한다.
+질문이 특정 대상·수치·상세 설계를 명시하면 빠뜨리지 않는다. 질문에 필요한 세부 내용이 실제로 많은 경우 위 목표보다 충분히 길게 설명한다.
+사례의 개수보다 각 핵심 쟁점의 이해가 우선이다. 같은 판단을 뒷받침하는 주변 사례를 계속 추가하거나 질문에서 요구하지 않은 자료의 미확보 목록으로 분량을 늘리지 않는다.
+불확실성과 근거 공백은 해당 결론의 해석을 제한하는 구체적인 조건으로 설명한다. 짧게 쓰려고 사실을 뭉뚱그리거나 수량·단위를 바꾸지 않는다. 산문으로 결론과 이유·비교의 의미를 연결하며 표나 사실 목록만으로 답하지 않는다.
+'''
+
+
 def generation_prompt(data):
-    return GROUNDING+INSTRUCTIONS+'\nDATA:\n'+json.dumps(data,ensure_ascii=False,separators=(',',':'))
+    from graph_plan_router import candidate
+    proposed=candidate(data['question'])
+    focused=FOCUSED_WRITING if proposed and proposed[0] in ('research','benchmark_comparison') else ''
+    return GROUNDING+INSTRUCTIONS+focused+'\nDATA:\n'+json.dumps(data,ensure_ascii=False,separators=(',',':'))
 
 
 REVIEW_FORMAT = '''answer_format=sentence-references-v1은 최종 답변을 손실 없이 표현한다.
