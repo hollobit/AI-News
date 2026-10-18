@@ -88,6 +88,8 @@
     priority: '이슈 우선순위',
     other: '맞춤 해석 필요',
     custom: '맞춤 검색 계획 필요',
+    equivalent: '전체 질문 범위 동일',
+    different: '질문 범위 다름',
     complete: '질문 전체를 포함하는 계획',
   };
   const reasons = {
@@ -98,6 +100,7 @@
     candidate_limit: '근거 후보 수 상한',
     no_candidates: '분류할 근거 없음',
     template_selected: '질문 유형·계획 적합성 확인',
+    draft_selected: '현재 원자료·질문 범위 일치 · 새 독립 검토 필요',
     uncertain: '판단 불확실',
   };
   const kinds = { workflow: '기사 분석', question: '종합 질의', wiki: '위키 편찬' };
@@ -498,9 +501,13 @@
     }
     const settings = control.settings || {};
     $('control-mode').textContent = settings.enabled
-      ? settings.applies_question_plans
-        ? 'JEV · 질의 계획 적용 / 근거 비교'
-        : 'JEV · 비교 평가'
+      ? settings.applies_question_drafts
+        ? settings.applies_question_plans
+          ? 'JEV · 질의 계획 / 기존 설명 검토 후보 선택'
+          : 'JEV · 기존 설명 검토 후보 선택 / 근거 비교'
+        : settings.applies_question_plans
+          ? 'JEV · 질의 계획 적용 / 근거 비교'
+          : 'JEV · 비교 평가'
       : settings.configured
         ? 'JEV · 중지'
         : 'JEV · 키 설정 대기';
@@ -1034,6 +1041,26 @@
         el(
           'p',
           (application.applied ? '검색 계획에 적용' : '기존 Sol 계획으로 복귀') +
+            ' · ' +
+            (reasons[application.reason] || status(application.reason)),
+          root
+        );
+      }
+      const draft = visible
+        .filter(
+          (item) =>
+            item.finished_at &&
+            item.finished_at <= at &&
+            item.result.application?.scope === 'question_draft'
+        )
+        .at(-1);
+      if (draft) {
+        const application = draft.result.application;
+        el(
+          'p',
+          (application.applied
+            ? '기존 설명을 검토 후보로 선택 · 새 독립 검토 후 공개'
+            : '기존 설명 후보 제외 · 새로 작성') +
             ' · ' +
             (reasons[application.reason] || status(application.reason)),
           root

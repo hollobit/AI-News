@@ -38,9 +38,11 @@ def config():
     plan_mode = os.getenv('NEWS_QUESTION_PLAN_MODE', 'jev')
     plans = enabled and plan_mode=='jev' and model==DEFAULT_MODEL
     keywords = enabled and os.getenv('NEWS_BASELINE_KEYWORDS_MODE','off')=='jev' and model==DEFAULT_MODEL
+    drafts = enabled and os.getenv('NEWS_QUESTION_DRAFT_MODE','jev')=='jev' and model==DEFAULT_MODEL
     return dict(mode=mode if valid else 'invalid', model=model if valid else None,
                 configured=configured, enabled=enabled, question_plan_mode=plan_mode if plan_mode in ('jev','off') else 'invalid',
-                applies_decisions=plans or keywords, applies_question_plans=plans, applies_baseline_keywords=keywords,
+                applies_decisions=plans or keywords or drafts, applies_question_plans=plans, applies_baseline_keywords=keywords,
+                applies_question_drafts=drafts,
                 applies_evidence_selection=False, applies_workflow_decisions=False, version=VERSION)
 
 
@@ -142,7 +144,7 @@ def _evaluate(path,purpose,state,questions,baseline=None,*,caller=None):
     if len(body)>64000 or not 1<=len(questions)<=24:return {'status':'input_limit'}
     key=hashlib.sha256(VERSION.encode()+body).hexdigest()
     started=time.monotonic();stamp=time.time()
-    deadline=started+PLAN_ADMISSION_SECONDS if purpose=='question_plan' else None
+    deadline=started+PLAN_ADMISSION_SECONDS if purpose in ('question_plan','question_draft') else None
     try:
         cached=_cached(path,key,questions,settings['model'],stamp)
         if cached:return cached
@@ -189,10 +191,10 @@ def decide(path,purpose,state,questions,baseline=None,*,subject=None):
 
     Question plans can read exact cached decisions during shadow work, or wait
     at most 250ms for the same cross-process provider lock. No provider retries.
-    Other decisions keep immediate fallback; any noncomplete plan uses Sol.
+    Interactive plans and drafts share bounded admission; other decisions keep immediate fallback.
     """
     if not path or not config()['enabled']:return {'status':'disabled'}
-    if purpose=='question_plan':
+    if purpose in ('question_plan','question_draft'):
         return evaluate(path,purpose,state,questions,baseline,subject=subject)
     if not PENDING.acquire(blocking=False):
         skipped(path,purpose,'pending_limit',subject)

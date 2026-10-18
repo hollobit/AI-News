@@ -7,6 +7,7 @@ STAGES = ('evidence', 'plan', 'synthesis', 'review', 'finalize')
 LABELS = dict(evidence='검색 근거 준비', plan='질문 해석·검색 계획', synthesis='관계 분석·답변 작성',
               review='근거·설명 충실도 검토', finalize='최신 근거 확인·완료')
 REVIEW_LABELS = dict(repair='부족한 설명 보완', recheck='보완 답변 독립 재검토', incomplete='설명 검토 미완료')
+SYNTHESIS_LABELS = dict(candidate='기존 설명·현재 원자료 일치 확인', reuse='기존 설명 복원 · 새 질문의 검토 준비')
 PLAN_LABELS = dict(jev='Jev 질문 유형·계획 적합성 판단', jev_template='Jev 검색 계획 선택',
                    sol='Sol 질문 해석·검색 계획', cache='저장 검색 계획 재사용', deterministic='단일 주제 검색 계획')
 PLAN_REASONS = dict(uncertain='Jev 판단이 불확실해 Sol이 검색 계획을 작성합니다.',
@@ -57,7 +58,7 @@ def view(db, identity, status, created_at):
     active = [s for s in STAGES if s in stages and s not in complete]
     result = dict(completed=len(complete), total=len(STAGES), percent=len(complete)*100//len(STAGES),
         elapsed_seconds=round(max(0, now-created_at)), active=active,
-        stages=[dict(id=s, label=(REVIEW_LABELS if s=='review' else PLAN_LABELS if s=='plan' else {}).get(stages.get(s,{}).get('phase'),LABELS[s]), status='complete' if s in complete else 'running' if s in active else 'pending',
+        stages=[dict(id=s, label=(REVIEW_LABELS if s=='review' else PLAN_LABELS if s=='plan' else SYNTHESIS_LABELS if s=='synthesis' else {}).get(stages.get(s,{}).get('phase'),LABELS[s]), status='complete' if s in complete else 'running' if s in active else 'pending',
                      seconds=round(max(0, stages[s].get('completed_at', now)-stages[s]['started_at']),1) if s in stages else None) for s in STAGES],
         remaining_seconds=None, estimate_samples=0, estimate_overdue=False)
     route=stages.get('plan',{}).get('routing')
@@ -71,7 +72,7 @@ def view(db, identity, status, created_at):
     for record in records:
         for s, entry in json.loads(record[0])['stages'].items():
             # Do not estimate the new Jev route from old Sol planning durations.
-            same_route=s!='plan' or entry.get('phase','')==stages.get(s,{}).get('phase','')
+            same_route=s not in ('plan','synthesis') or entry.get('phase','')==stages.get(s,{}).get('phase','')
             if s in durations and same_route and entry.get('completed_at') and not entry.get('cached'):
                 durations[s].append(max(0, entry['completed_at']-entry['started_at']))
     pending = [s for s in STAGES if s not in complete]

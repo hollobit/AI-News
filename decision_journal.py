@@ -69,8 +69,8 @@ def finish(path, identity, result):
 
 
 def application(path, identity, *, applied, reason, scope='question_plan'):
-    """Record actual plan use separately from a model's suggested choice."""
-    if identity is None or scope not in ('question_plan','baseline_keywords'):return
+    """Record an applied routing choice, never final answer approval."""
+    if identity is None or scope not in ('question_plan','question_draft','baseline_keywords'):return
     with closing(sqlite3.connect(path_for(path), timeout=.2)) as db, db:
         row=db.execute('SELECT result_json FROM decision_observations WHERE id=? AND purpose=?',(identity,scope)).fetchone()
         if not row:return

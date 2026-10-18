@@ -95,7 +95,7 @@ def question_evidence(path,request,expected_ids=None):
     return graph,signature
 
 
-def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,progress=None,reuse_only=None,job_id=None,reuse_lookup=None):
+def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,progress=None,reuse_only=None,job_id=None,reuse_lookup=None,draft_lookup=None):
     """Question planning adds no facts: retrieve each requested axis separately."""
     from graph_plans import prepare
     plan = plan if plan is not None else prepare(question, path)[0]
@@ -103,10 +103,21 @@ def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,pr
     retrieval_started=time.monotonic()
     retrieval = compose(graph, question, ids, plan, path, scoped)
     from decision_tasks import retrieval as observe_decision
-    observe_decision(path,question,plan,retrieval['evidence'],job_id=job_id)
+    observed=False
+    def observe():
+        nonlocal observed
+        if not observed:
+            observed=True
+            observe_decision(path,question,plan,retrieval['evidence'],job_id=job_id)
+    def prior_draft():
+        # Interactive selection owns the provider slot before optional shadow work.
+        try:return draft_lookup(retrieval['evidence'])
+        finally:observe()
+    if not draft_lookup:observe()
     compose_ms=round((time.monotonic()-retrieval_started)*1000,2)
     # Pass the fixed retrieved bundle directly; do not rerank away a missing side.
-    answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress,reuse_only=reuse_only,reuse_lookup=reuse_lookup)
+    answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress,reuse_only=reuse_only,reuse_lookup=reuse_lookup,draft_lookup=prior_draft if draft_lookup else None)
+    observe()
     if detailed and retrieval.get('workspace_dependencies'):
         from verified_cache import policy
         answer['workspace_dependencies']=retrieval['workspace_dependencies']
@@ -134,6 +145,7 @@ class GraphQuestions:
                 id TEXT PRIMARY KEY,key TEXT NOT NULL,revision TEXT NOT NULL,request_json TEXT NOT NULL,
                 status TEXT NOT NULL,result_json TEXT NOT NULL,error TEXT NOT NULL,created_at REAL NOT NULL,owner_pid INTEGER)''')
             db.execute('CREATE INDEX IF NOT EXISTS graph_question_key ON graph_question_jobs(key,created_at)')
+            db.execute('CREATE INDEX IF NOT EXISTS graph_question_recent ON graph_question_jobs(status,created_at DESC)')
             db.execute("CREATE INDEX IF NOT EXISTS graph_question_verified_input ON graph_question_jobs(json_extract(result_json,'$.input_signature'),created_at DESC) WHERE status='complete'")
             from question_progress import setup
             setup(db)
@@ -354,7 +366,11 @@ class GraphQuestions:
                         self._progress(identity,'review',done=True,**detail)
                     self._progress(identity,stage,**detail)
                 if tracked:self._progress(identity,'synthesis')
-                answer=self.analyzer(graph,request['question'],request['node_ids']) if self.analyzer else deepen(graph,request['question'],request['node_ids'],path=self.path,scoped=bool(request['params']),detailed=detailed,plan=plan,progress=progress if tracked else None,reuse_only=reviewed,job_id=identity,reuse_lookup=lambda signature:self._retained_answer(request,signature))
+                def draft_lookup(evidence):
+                    from graph_draft_reuse import select
+                    return select(self.path,request['question'],plan,evidence,job_id=identity)
+                allow_draft=request['params']=={'workspace':['1']} and not request['node_ids']
+                answer=self.analyzer(graph,request['question'],request['node_ids']) if self.analyzer else deepen(graph,request['question'],request['node_ids'],path=self.path,scoped=bool(request['params']),detailed=detailed,plan=plan,progress=progress if tracked else None,reuse_only=reviewed,job_id=identity,reuse_lookup=lambda signature:self._retained_answer(request,signature),draft_lookup=draft_lookup if allow_draft else None)
             attempts.append(dict(evidence_retrieval_ms=retrieval_ms,answer_ms=answer.get('timing',{}).get('answer_ms'),
                                  answer_cache_hit=answer.get('timing',{}).get('answer_cache_hit',False),
                                  attempt_ms=round((time.monotonic()-begun)*1000,2)))

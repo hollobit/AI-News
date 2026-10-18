@@ -752,7 +752,7 @@ _ANSWER_SCHEMA = {
 
 
 def answer_question(graph: dict[str, Any], question: str,
-                    node_ids: Iterable[str] | None = None, *, retrieval=None, analysis_plan=None, detailed=False, progress=None, reuse_only=None, reuse_lookup=None) -> dict[str, Any]:
+                    node_ids: Iterable[str] | None = None, *, retrieval=None, analysis_plan=None, detailed=False, progress=None, reuse_only=None, reuse_lookup=None, draft_lookup=None) -> dict[str, Any]:
     question = _clean(question)
     if not question:
         raise ValueError("질문을 입력해 주세요.")
@@ -848,9 +848,17 @@ DATA:
     prompt=generation_prompt(wire_data) if detailed else prompt.replace(encoded_data,json.dumps(wire_data,ensure_ascii=False,separators=(',',':')),1)
     started=time.monotonic()
     stage_times=[]
+    draft_status={}
     draft_role=question_draft_role(question,analysis_plan,evidence=original_evidence) if detailed else 'graph_answer'
     def generate():
         if progress:progress('synthesis')
+        prior_payload=None
+        if detailed and draft_lookup:
+            if progress:progress('synthesis',phase='candidate')
+            selecting=time.monotonic()
+            prior_payload,metadata=draft_lookup()
+            draft_status.update(metadata,selection_ms=round((time.monotonic()-selecting)*1000,2))
+            if progress:progress('synthesis',phase='reuse' if prior_payload is not None else '')
         current_prompt,current_schema,current_aliases=prompt,wire_schema,aliases
         rounds=[]
         previous_review=None
@@ -858,9 +866,13 @@ DATA:
         review_data=dict(data,evidence=original_evidence)
         for attempt in range(2 if detailed else 1):
             generated_at=time.monotonic()
-            raw=run_structured(current_prompt,current_schema,role=draft_role if not attempt else 'graph_answer',timeout=150 if detailed else 75,queue_timeout=30 if detailed else 15,reasoning_effort='medium' if detailed else 'low')
-            generated=restore(raw,current_aliases)
-            stage_times.append(dict(stage=('generation_repair' if format_repair else 'repair') if attempt else 'generation',attempt=attempt+1,milliseconds=round((time.monotonic()-generated_at)*1000,2),**call_metrics(raw)))
+            if not attempt and prior_payload is not None:
+                raw=generated=copy.deepcopy(prior_payload)
+                stage_times.append(dict(stage='draft_reuse',attempt=1,milliseconds=draft_status['selection_ms']))
+            else:
+                raw=run_structured(current_prompt,current_schema,role=draft_role if not attempt else 'graph_answer',timeout=150 if detailed else 75,queue_timeout=30 if detailed else 15,reasoning_effort='medium' if detailed else 'low')
+                generated=restore(raw,current_aliases)
+                stage_times.append(dict(stage=('generation_repair' if format_repair else 'repair') if attempt else 'generation',attempt=attempt+1,milliseconds=round((time.monotonic()-generated_at)*1000,2),**call_metrics(raw)))
             patch_info=None
             try:
                 if detailed:
@@ -897,6 +909,8 @@ DATA:
             stage_times.append(dict(stage='recheck' if previous_review is not None else 'review',attempt=attempt+1,milliseconds=round((time.monotonic()-reviewed_at)*1000,2),**result['verification'].get('call',{})))
             if not detailed:return result
             quality=result['verification']['quality']
+            if prior_payload is not None:
+                result['verification']['draft_reuse']=dict(draft_status,review_status=quality['status'],revised=bool(attempt))
             rounds.append(dict(attempt=attempt+1,status=quality['status'],issues=quality['issues'],
                                checked_claims=result['verification']['checked_claims'],
                                removed_unsupported_claims=result['verification']['removed_unsupported_claims'],
@@ -945,7 +959,8 @@ DATA:
                       generation_evidence_characters=sum(len(e.get('text') or '') for e in data['evidence']),
                       review_evidence_characters=sum(len(e.get('text') or '') for e in original_evidence)),
                   timing={'answer_ms':round((time.monotonic()-started)*1000,2),'answer_cache_hit':reused,
-                          'answer_cache_source':'persistent' if persistent_hit else 'memory_or_revalidation' if reused else 'generation','stages':stage_times})
+                          'answer_cache_source':'persistent' if persistent_hit else 'memory_or_revalidation' if reused else 'reviewed_draft' if draft_status.get('selected') else 'generation','stages':stage_times})
+    if draft_status:result['timing']['draft_selection']=draft_status
     from graph_evidence_selection import citation_counts
     from graph_question_context import document
     result['retrieval'].update(citation_counts(result,retrieval['evidence'],document))

@@ -78,6 +78,7 @@ def test_workspace_plan_overlaps_index_preparation_and_preserves_review(tmp_path
     def analyze(*args,progress=None,**kw):
         assert kw['plan']['axes']==['조건']
         assert kw['detailed']
+        assert bool(kw.get('draft_lookup')) == (params=={'workspace':['1']})
         progress('synthesis');progress('review');progress('finalize',cached=False)
         return {'answer':'검토 답변','claims':[{'text':'조건'}],'verification':{'method':'independent_evidence_review','quality':{'policy':'question-explanation-v1','status':'passed'}}}
     q=GraphQuestions(tmp_path/'jobs.db',snapshots=Snapshots())
