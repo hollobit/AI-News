@@ -7,7 +7,7 @@ import hashlib
 
 from evidence_search import terms, query_anchors
 from link_groups import canonical_url
-from graph_evidence_selection import MAX_PASSAGES, axes_for, budget_for, select, coverage as axis_coverage
+from graph_evidence_selection import MAX_PASSAGES, axes_for, budget_for, candidate_limit_for, select, coverage as axis_coverage
 
 # Search vocabulary, not inferred facts. Apply only facets the user requested.
 FACETS = (
@@ -60,7 +60,8 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
         from context_index import materialize_many
         graph = materialize_many(graph, searches)
     budget = budget_for(axes_for(question, plan, facets))
-    groups = [build_retrieval(graph, query, ids, evidence_limit=budget['documents']) for query in searches]
+    candidate_limit = candidate_limit_for(budget)
+    groups = [build_retrieval(graph, query, ids, evidence_limit=candidate_limit) for query in searches]
     groups = [dict(g,evidence=focused_candidates(g['evidence'],question,facets)) for g in groups]
     selected, selection, axes, candidates = select(groups, question, plan, facets, document, normalized)
     selected_documents = {document(e) for e in selected.values()}
@@ -150,6 +151,7 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
                 workspace_dependencies=dependencies,
                 workspace_as_of=getattr(graph,'workspace_as_of',None),
                 retrieval=dict({**selection, **coverage}, method=selection['policy'],
+                               candidate_limit_per_query=candidate_limit,
                                searched_source_records=graph.get('coverage',{}).get('searched_source_records') if isinstance(graph,dict) else None,
                                evidence_characters=sum(len(e.get('text', '')) for e in evidence)))
 

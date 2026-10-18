@@ -105,6 +105,22 @@
           'legend'
         )
       );
+      if (Number.isInteger(info.candidate_limit_per_query))
+        details.append(
+          el(
+            'p',
+            `세부 검색어마다 최대 ${info.candidate_limit_per_query}개 후보 문서를 살핀 뒤 위 상한 안에서 선정합니다. 후보 전체가 답변 모델에 전달되는 것은 아닙니다.`,
+            'legend'
+          )
+        );
+      if (info.reserved_documents > 0)
+        details.append(
+          el(
+            'p',
+            `조건·반대 단서와 자료 유형을 보강하기 위해 ${info.reserved_documents}개 문서를 우선 배정했습니다. 실제 상충 여부는 독립 검토에서 확인합니다.`,
+            'legend'
+          )
+        );
       if (info.budget_limited)
         details.append(
           el(

@@ -135,8 +135,10 @@ def test_restarted_service_retrieves_again_then_reuses_only_same_inputs(tmp_path
     finally:second_service.close()
 
 
-def test_same_corpus_on_next_day_cannot_take_previous_day_fast_cache(tmp_path,monkeypatch):
+@pytest.mark.parametrize('change',['day','selection'])
+def test_same_corpus_cannot_take_obsolete_day_or_selection_fast_cache(tmp_path,monkeypatch,change):
     from graph_questions import answer_key
+    from graph_evidence_selection import VERSION
     from verified_cache import policy
     class Snapshots:
         def request(self,params):return 'same-revision',None,None
@@ -147,12 +149,14 @@ def test_same_corpus_on_next_day_cannot_take_previous_day_fast_cache(tmp_path,mo
     monkeypatch.setattr('graph_questions.answer_day',lambda:'2026-10-18')
     old_key=answer_key('same-revision',request)
     old={'answer':'어제 기준 답변','answer_as_of':'2026-10-18','workspace_dependencies':{'source':'hash'},
+         'retrieval':{'policy':VERSION},
          'workspace_as_of':time.time(),'workspace_policy':policy(),
          'verification':{'method':'independent_evidence_review','quality':{'policy':'question-explanation-v1','status':'passed'}}}
     try:
         with q.db() as db:
             db.execute('INSERT INTO graph_question_jobs VALUES (?,?,?,?,?,?,?,?,?)',('yesterday',old_key,'same-revision',json.dumps(request,ensure_ascii=False),'complete',json.dumps(old),'',time.time(),0))
-        monkeypatch.setattr('graph_questions.answer_day',lambda:'2026-10-19')
+        if change=='day':monkeypatch.setattr('graph_questions.answer_day',lambda:'2026-10-19')
+        else:monkeypatch.setattr('graph_evidence_selection.VERSION','new-selection-policy')
         monkeypatch.setattr('graph_questions.cold_answer',lambda *a:None)
         monkeypatch.setattr(q.executor,'submit',lambda *a:None)
         answer=q.ask(request['question'],params=request['params'])

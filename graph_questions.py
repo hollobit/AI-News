@@ -23,7 +23,8 @@ def answer_day():
 
 
 def answer_key(revision,request):
-    values=[PIPELINE,revision,request]
+    from graph_evidence_selection import VERSION as selection_policy
+    values=[PIPELINE,selection_policy,revision,request]
     if request['params'].get('workspace')==['1']:values.append(answer_day())
     return content_digest(values)
 
@@ -184,6 +185,8 @@ class GraphQuestions:
                 (json.dumps(request,ensure_ascii=False),time.time()-600)).fetchall()
         for candidate in candidates:
             saved=json.loads(candidate['result_json'])
+            from graph_evidence_selection import VERSION as selection_policy
+            if saved.get('retrieval',{}).get('policy') not in (None,selection_policy):continue
             recent_workspace=(saved.get('workspace_dependencies') and saved.get('answer_as_of')==answer_day()
                               and 0<=time.time()-float(saved.get('workspace_as_of') or 0)<=120)
             if saved.get('bounded_signature') or recent_workspace:

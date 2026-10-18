@@ -19,6 +19,7 @@ async def main():
                   dict(id='extra',title='공식 평가 조건',text='현장 적용은 미검증이다.',source_url='https://example.org/source')],
         retrieval=dict(candidate_documents=120,unique_documents=1,cited_documents=1,passages=2,
                        budget=dict(documents=32,passages=44),budget_limited=True,
+                       candidate_limit_per_query=60,reserved_documents=2,
                        axes=[dict(axis='데이터세트',candidate_documents=0,selected_documents=0,status='no_candidates')]),
         limitations=[],workspace_as_of=1792306489,source_scope_note='선택한 자료의 현재 입력·인용·독립 검토를 다시 확인합니다.')
     state=dict(status='complete',result=result)
@@ -47,6 +48,8 @@ async def main():
         await page.locator('.evidence-summary summary').click()
         await expect(page.locator('.evidence-summary')).to_contain_text('검색 후보 없음')
         await expect(page.locator('.evidence-summary')).to_contain_text('일부 후보를 제외')
+        await expect(page.locator('.evidence-summary')).to_contain_text('최대 60개 후보 문서')
+        await expect(page.locator('.evidence-summary')).to_contain_text('2개 문서를 우선 배정')
         await expect(page.locator('.answer-synthesis > p')).to_have_count(2)
         await expect(page.locator('.answer-synthesis > p').first.locator('mark')).to_have_text('벤치마크')
         assert await page.locator('.answer-synthesis img').count()==0

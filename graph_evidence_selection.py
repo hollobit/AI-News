@@ -10,8 +10,9 @@ from urllib.parse import urlsplit
 from evidence_search import terms, query_anchors, SUFFIX, STOP
 from task_lifecycle import checkpoint
 
-VERSION = 'adaptive-evidence-v1'
+VERSION = 'adaptive-evidence-v2-reserved-sources'
 MAX_PASSAGES = 60
+MAX_CANDIDATES_PER_QUERY = 60
 QUALIFICATION = re.compile(r'다만|그러나|미검증|한계|실패|상충|반박|제약|위험|'
                            r'\b(?:however|unless|limitation\w*|fail\w*|conflict\w*|risk\w*)\b', re.I)
 REASONING_TERMS = set('연구 공통점 상충 의존 시사점 통찰 의미 핵심 종합 분석 결과 현황 영향 '
@@ -40,6 +41,11 @@ def budget_for(axes):
                 passages=min(MAX_PASSAGES, 20 + 12 * (count - 1)),
                 characters=min(96000, 48000 + 16000 * (count - 1)),
                 documents_per_axis=4 if count == 1 else 8)
+
+
+def candidate_limit_for(budget):
+    """Search beyond the prompt budget so selection can keep minority evidence."""
+    return min(MAX_CANDIDATES_PER_QUERY, budget['documents'] * 2)
 
 
 def matches(item, axis):
@@ -115,13 +121,25 @@ def select(groups, question, plan, facets, document, normalized):
     # First reserve space for every axis before the initial broad selection.
     for items in axis_candidates:
         choose(items)
+    reasons = set()
+    before_reservations = len(documents)
+    # These sources must compete before the ordinary rank fill consumes the
+    # document/character budget. A lexical clue is not verified disagreement.
+    for i, items in enumerate(axis_candidates):
+        if not any(i in membership[e['id']] and e['id'] in qualifications for e in selected.values()):
+            if choose([e for e in items if e['id'] in qualifications]):
+                reasons.add('qualification_clues')
+        for kind in sorted({family(e) for e in items}):
+            if not any(i in membership[e['id']] and family(e) == kind for e in selected.values()):
+                if choose([e for e in items if family(e) == kind]):
+                    reasons.add('source_types')
+    reserved_documents = len(documents) - before_reservations
     initial_limit = min(16, budget['documents'])
     for item in candidates:
         if len(documents) >= initial_limit:
             break
         add(item)
     initial_documents = len(documents)
-    reasons = set()
     # Expand only axes still below their retrieval target; never fill a missing
     # axis with unrelated documents just to reach a numeric quota.
     for _ in range(budget['documents_per_axis']):
@@ -132,19 +150,10 @@ def select(groups, question, plan, facets, document, normalized):
                 reasons.add('axis_coverage'); added = True
         if not added:
             break
-    # Reserve actual qualification/risk clues and different material types.
-    # The reviewer determines whether they really contradict the other sources.
-    for i, items in enumerate(axis_candidates):
-        if not any(i in membership[e['id']] and e['id'] in qualifications for e in selected.values()):
-            if choose([e for e in items if e['id'] in qualifications]):
-                reasons.add('qualification_clues')
-        for kind in sorted({family(e) for e in items}):
-            if not any(i in membership[e['id']] and family(e) == kind for e in selected.values()):
-                if choose([e for e in items if family(e) == kind]):
-                    reasons.add('source_types')
     stats = dict(policy=VERSION, candidate_documents=candidate_documents,
                  candidate_passages=len(pool), duplicate_passages=len(duplicate_ids),
                  initial_documents=initial_documents, expansion_reasons=sorted(reasons),
+                 reserved_documents=reserved_documents,
                  budget=budget, budget_limited=bool(blocked),
                  coverage_basis='lexical_retrieval_not_semantic_verification')
     return selected, stats, axes, candidates

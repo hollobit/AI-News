@@ -141,3 +141,50 @@ def test_relational_synthesis_is_not_a_literal_keyword_coverage_quota():
     axes=axes_for(question,plan,requested_facets(question))
     assert [a['label'] for a in axes] == ['벤치마크','데이터세트','이슈']
     assert len(plan['axes']) == 4  # Independent review still receives every requested axis.
+
+
+def test_single_axis_reserves_minority_sources_before_document_budget_is_full():
+    ordinary=[source(f'news{i}', 'benchmark', kind='baseline') for i in range(30)]
+    condition=source('condition', 'benchmark', text='Physical AI benchmark: however, outdoor trials failed.', kind='baseline')
+    paper=source('paper', 'benchmark', kind='paper')
+    result=compose_groups([group(ordinary+[condition,paper])], 'Physical AI 벤치마크', ['벤치마크'])
+    assert len(result['evidence']) == 16
+    assert condition in result['evidence'] and paper in result['evidence']
+    assert result['retrieval']['reserved_documents'] == 2
+    assert result['retrieval']['budget']['passages'] == 20
+
+
+def test_character_budget_keeps_full_minority_conditions_before_rank_fill():
+    ordinary=[source(f'news{i}', 'benchmark', text=f'Physical AI benchmark {i}. '+('Measured outcome. '*220), kind='baseline') for i in range(30)]
+    condition=source('condition', 'benchmark', text='Physical AI benchmark: however, outdoor trials failed. '+('Conditions apply. '*220), kind='paper')
+    result=compose_groups([group(ordinary+[condition])], 'Physical AI 벤치마크', ['벤치마크'])
+    assert condition in result['evidence']
+    assert result['retrieval']['budget_limited']
+    assert sum(len(e['text']) for e in result['evidence']) <= 48000
+    assert result['retrieval']['reserved_documents'] == 1  # One document satisfies both needs.
+
+
+def test_wider_candidate_search_finds_minority_beyond_prompt_document_cutoff():
+    ordinary=[source(f'z-news{i:02}', 'benchmark', kind='baseline') for i in range(25)]
+    paper=source('a-paper', 'benchmark', text='Physical AI benchmark: however, outdoor trials failed.', kind='paper')
+    graph=GraphResult(nodes=[], edges=[], evidence=ordinary+[paper])
+    question='Physical AI benchmark'
+    assert paper not in build_retrieval(graph,question,evidence_limit=16)['evidence']
+    with patch('semantic.run_structured') as model:
+        result=compose(graph,question,[],dict(queries=[],axes=['benchmark']))
+    model.assert_not_called()
+    assert paper in result['evidence']
+    assert result['retrieval']['candidate_documents'] == 26
+    assert result['retrieval']['candidate_limit_per_query'] == 32
+    assert result['coverage']['unique_documents'] == 16
+
+
+def test_candidate_pool_stays_bounded_and_selected_node_scope_is_preserved():
+    from graph_evidence_selection import budget_for, candidate_limit_for
+    assert candidate_limit_for(budget_for([{}]*8)) == 60
+    selected=source('selected','benchmark')
+    excluded=source('excluded','benchmark',kind='paper',text='Physical AI benchmark: however, unverified.')
+    graph=GraphResult(nodes=[dict(id='chosen',name='Physical AI',type='Technology',evidence_ids=['selected'])],
+                      edges=[],evidence=[selected,excluded])
+    result=compose(graph,'Physical AI benchmark',['chosen'],dict(queries=[],axes=['benchmark']))
+    assert [e['id'] for e in result['evidence']] == ['selected']
