@@ -529,7 +529,7 @@ class WorkflowService:
                 self._save(run_id,'source_preflight',True)
             evidence = enrichment['evidence']
             from workflow_routing import select
-            plan=select(snapshot,request,enrichment)
+            plan=select(snapshot,request,enrichment,previous=self._artifact(run_id,'execution_plan'))
             self._save(run_id,'execution_plan',plan)
             from decision_tasks import workflow as observe_decision
             observe_decision(self.path,run_id,evidence,plan)

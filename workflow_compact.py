@@ -33,13 +33,18 @@ def content_route(evidence):
 
 
 def eligible(snapshot, request, enrichment):
+    # A failed link adds no evidence for more analyst roles to inspect. A
+    # retained Telegram excerpt can still support a bounded ordinary-news
+    # report; generation/review keep the actual failed-source coverage.
+    available_excerpt = any(e.get('origin') == 'telegram_excerpt' and str(e.get('text') or '').strip()
+                            for e in enrichment['evidence'])
     return (request.get('analysis_mode') in (VERSION,'adaptive-v2') and len(snapshot) == 1
             and request.get('completion_attempt', 1) <= 1
             and not request.get('question') and not request.get('terms')
             and not (request.get('improvement_context') or {}).get('review_issues')
             and not (request.get('improvement_context') or {}).get('followup_tasks')
             and not (request.get('active_rules') or {}).get('rules')
-            and not enrichment['coverage'].get('failed_urls')
+            and (not enrichment['coverage'].get('failed_urls') or available_excerpt)
             and all(e.get('origin') in ('telegram_excerpt', 'fetched_url_excerpt') for e in enrichment['evidence'])
             and sum(len(e.get('text', '')) for e in enrichment['evidence']) <= 8000
             and content_route(enrichment['evidence']) in ('simple_document', 'simple_publication_announcement'))
