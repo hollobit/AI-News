@@ -23,6 +23,25 @@ def corpus(db, *, input_hashes=None):
         return all_corpus_items(db)
     row=db.execute("SELECT value,identity FROM projection_revisions WHERE kind='source'").fetchone()
     if not row:return all_corpus_items(db)
+    if input_hashes is not None and 'bulk_baseline_cache' in tables:
+        # Cached analysis supplies an identity hint, never current evidence. Read
+        # only those representatives from the exact committed source projection
+        # and recompute their input hashes before the normal independent gate.
+        from source_projection import selected_documents
+        from bulk_baseline import freeze_item
+        identities=set();wanted=sorted(input_hashes)
+        for offset in range(0,len(wanted),400):
+            batch=wanted[offset:offset+400]
+            identities.update(r[0] for r in db.execute('SELECT document_id FROM bulk_baseline_cache WHERE input_hash IN ('+','.join('?' for _ in batch)+')',batch))
+        if not identities:return []
+        selected=selected_documents(db,identities)
+        if selected is not None:
+            from task_lifecycle import checkpoint
+            inputs={}
+            for item in selected:
+                checkpoint()
+                inputs[freeze_item(item)['input_hash']]=item
+            return [inputs[key] for key in wanted if key in inputs]
     path=Path(filename).resolve();stat=path.stat()
     key=(str(path),stat.st_dev,stat.st_ino,tuple(row),db.execute('PRAGMA schema_version').fetchone()[0],policy())
     with _LOCK:

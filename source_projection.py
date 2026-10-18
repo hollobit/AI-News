@@ -206,6 +206,22 @@ def corpus_identities(db):
         return {row[0] for row in store.execute('SELECT identity FROM documents')}
 
 
+def selected_documents(db, identities):
+    """Read exact current representatives, or decline if the projection is stale."""
+    with snapshot(db) as store:
+        if store is None:return None
+        wanted=sorted(set(identities))
+        items=[]
+        for offset in range(0,len(wanted),400):
+            batch=wanted[offset:offset+400]
+            for row in store.execute('SELECT payload FROM documents WHERE identity IN ('+','.join('?' for _ in batch)+')',batch):
+                checkpoint()
+                items.append(json.loads(row[0]))
+        items.sort(key=lambda item:(item['strategic_value']['score'],str(item.get('day') or ''),
+                                   str(item.get('published_at') or ''),item['corpus_identity']),reverse=True)
+        return items
+
+
 def corpus(db, source_urls=None):
     from improvement_selection import SelectionBatch
     with snapshot(db) as store:
