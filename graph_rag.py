@@ -765,7 +765,7 @@ def answer_question(graph: dict[str, Any], question: str,
     from semantic import run_structured
     from model_policy import question_draft_role
     from graph_answer_cache import reuse_answer
-    from graph_answer_quality import PROFILE, repair_prompt, sufficient
+    from graph_answer_quality import PROFILE, repair_prompt, sufficient, local_repair_targets
     import copy
     import time
     from graph_question_context import focus
@@ -866,7 +866,9 @@ DATA:
                 if detailed:
                     if previous_review is not None:
                         rejected=[c['claim_index'] for c in result['verification']['claim_checks'] if not c['supported']]
-                        payload,patch_info=apply_answer_patch(payload,generated,rejected)
+                        targets=local_repair_targets(previous_review['verification'])
+                        payload,patch_info=apply_answer_patch(payload,generated,rejected,targets=targets)
+                        if targets is not None:patch_info['scope']='rejected_claims_only'
                     else:payload=generated
                     candidate=expand(payload)
                 else:candidate=generated

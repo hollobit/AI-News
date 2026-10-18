@@ -191,20 +191,22 @@ def expand_claim(claim):
     return result
 
 
-def patch_schema(original, count):
+def patch_schema(original, count, *, targets=None):
     from strategic_jobs import obj
     claim=deepcopy(original['properties']['claims']['items'])
     return obj({
-        'changes':{'type':'array','maxItems':count,'items':obj({
-            'claim_index':{'type':'integer','enum':list(range(count))},
+        'changes':{'type':'array','maxItems':len(targets) if targets is not None else count,
+                   **({'minItems':len(targets)} if targets is not None else {}),'items':obj({
+            'claim_index':{'type':'integer','enum':targets if targets is not None else list(range(count))},
             'replacement':{'anyOf':claim.get('anyOf',[claim])+[{'type':'null'}]}})},
-        'additions':dict(deepcopy(original['properties']['claims']),minItems=0),
+        'additions':dict(deepcopy(original['properties']['claims']),minItems=0,
+                         **({'maxItems':0} if targets is not None else {})),
         'paragraphs':paragraphs_schema(count+8),
         'limitations':{'anyOf':[{'type':'array','maxItems':8,'items':{'type':'integer','enum':list(range(count+8))}},{'type':'null'}]},
     })
 
 
-def apply_patch(original, patch, rejected):
+def apply_patch(original, patch, rejected, *, targets=None):
     """Stable old IDs, then appended IDs. Omitted passages remain byte-identical."""
     if not isinstance(patch,dict) or set(patch)!={'changes','additions','paragraphs','limitations'}:
         raise RuntimeError('종합 설명 부분 보완 형식이 올바르지 않습니다.')
@@ -217,6 +219,8 @@ def apply_patch(original, patch, rejected):
     changed={c['claim_index']:c['replacement'] for c in changes}
     if len(changed)!=len(changes) or not set(rejected)<=set(changed):
         raise RuntimeError('거절된 주장의 보완이 누락되었거나 중복되었습니다.')
+    if targets is not None and (set(changed)!=set(targets) or additions):
+        raise RuntimeError('국소 오류 보완에서 검토를 통과한 주장 또는 설명 범위를 변경했습니다.')
     retained={i:deepcopy(changed.get(i,c)) for i,c in enumerate(original['claims']) if changed.get(i,c) is not None}
     retained.update({count+i:deepcopy(c) for i,c in enumerate(additions)})
     if not 1<=len(retained)<=8:raise RuntimeError('보완한 주장의 수가 허용 범위를 벗어났습니다.')
