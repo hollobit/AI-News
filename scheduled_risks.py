@@ -139,9 +139,10 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--enable',action='store_true')
     parser.add_argument('--resume',action='store_true',help='Explicit operator resume; preserves document/review attempts')
+    parser.add_argument('--wait-for-check',action='store_true',help='Wait for an existing scheduler check before coordinated baseline admission')
     args=parser.parse_args()
     with (ROOT/'.runtime/scheduled-risks.lock').open('a') as lock:
-        try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        try:fcntl.flock(lock,fcntl.LOCK_EX|(0 if args.wait_for_check else fcntl.LOCK_NB))
         except BlockingIOError:
             print('{"stage":"already_checking"}');return
         result=dispatch(ROOT/'data/news.sqlite3',enable=args.enable,resume=args.resume)
