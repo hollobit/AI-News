@@ -78,3 +78,28 @@ def test_baseline_wire_compacts_structural_ids_without_rewriting_sources():
     data[0]['evidence'][0]['text']='모델 D1은 제품명이다'
     prompt='ROLE: baseline_analysis\nDATA:\n'+json.dumps(data)
     assert prepare(prompt,schema)==(prompt,schema,{})
+
+
+def test_paper_transport_roundtrip_preserves_full_sources_and_review_references():
+    ids=['arxiv_'+kind+'_'+str(n)*24 for n,kind in enumerate(('abstract','metadata','html'),1)]
+    evidence=[dict(id=i,text='명시된 비교 수치 2.21→1.92, 적용 조건은 실험에 한정.',
+                   source_url='https://arxiv.org/html/2601.12345v2',
+                   metadata_record_url='https://example.org/oai?verb=GetRecord&identifier=2601.12345',
+                   origin='arxiv_html_excerpt',published='2026-01-02') for i in ids]
+    data=dict(evidence=evidence,scope='abstract_and_html_excerpts',
+              morphology_keywords=[{'label':'강화학습'}],
+              report=dict(claims=[{'evidence_ids':ids,'uncertainty':'실험 조건 보존'}],
+                          limitations=[ids[0]+'만으로 현장 적용 여부 미확인']))
+    schema={'properties':{'checked_evidence_ids':{'items':{'enum':ids}}}}
+    prompt='ROLE: paper_verification\nDATA:\n'+json.dumps(data,ensure_ascii=False)
+    packed,wire,aliases=prepare(prompt,schema);payload=json.loads(packed.split('DATA:\n')[1])
+    assert [e['id'] for e in payload['evidence']]==['E1','E2','E3']
+    assert restore(payload,aliases)==data
+    assert restore(wire,aliases)==schema
+    assert payload['morphology_keywords']==data['morphology_keywords']
+    assert restore({'checked_evidence_ids':['E2','E99']},aliases)=={'checked_evidence_ids':[ids[1],'E99']}
+    for original,encoded in zip(evidence,payload['evidence']):
+        assert {k:v for k,v in original.items() if k!='id'}=={k:v for k,v in encoded.items() if k!='id'}
+    evidence[0]['text']='실제 수식 E1과 관련된 조건'
+    collision='ROLE: paper_analysis\nDATA:\n'+json.dumps(data,ensure_ascii=False)
+    assert prepare(collision,schema)==(collision,schema,{})

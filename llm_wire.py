@@ -4,7 +4,7 @@ import json
 import re
 
 ALIAS = re.compile(r'(?<![A-Za-z0-9_])[EDK][1-9][0-9]*(?![A-Za-z0-9_])')
-IDENTITY = re.compile(r'(?:news|url)_[0-9a-f]{20,64}')
+IDENTITY = re.compile(r'(?:(?:news|url)|arxiv_(?:abstract|metadata|html))_[0-9a-f]{20,64}')
 
 
 def prepare(prompt, schema):
