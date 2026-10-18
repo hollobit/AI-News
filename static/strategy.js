@@ -1,5 +1,44 @@
-(() => {
+(async () => {
   'use strict';
+  const panelNames = ['evidence', 'workflow', 'improvement', 'baseline', 'topics', 'risks'];
+  const missingPanels = () =>
+    panelNames.filter((name) => typeof window.StrategyPanels?.[name] !== 'function');
+  if (missingPanels().length) {
+    const notice = document.createElement('p');
+    notice.id = 'workbench-load-state';
+    notice.setAttribute('role', 'status');
+    notice.textContent = '화면을 다시 연결하고 있습니다…';
+    (document.querySelector('#main') || document.body).prepend(notice);
+    await Promise.all(
+      missingPanels().map(async (name) => {
+        for (let attempt = 0; attempt < 2 && missingPanels().includes(name); attempt++) {
+          await new Promise((resolve) => {
+            const script = document.createElement('script');
+            const done = () => {
+              clearTimeout(timeout);
+              script.remove();
+              resolve();
+            };
+            const timeout = setTimeout(done, 8000);
+            script.src = `/strategy-${name}.js`;
+            script.onload = script.onerror = done;
+            document.head.append(script);
+          });
+        }
+      })
+    );
+    if (missingPanels().length) {
+      notice.setAttribute('role', 'alert');
+      notice.textContent = '화면 일부를 불러오지 못했습니다. 연결을 확인하고 다시 시도해 주세요. ';
+      const retry = document.createElement('button');
+      retry.className = 'button';
+      retry.textContent = '화면 다시 불러오기';
+      retry.onclick = () => location.reload();
+      notice.append(retry);
+      return;
+    }
+    notice.remove();
+  }
   const $ = (s) => document.querySelector(s);
   const node = (tag, cls = '', text = '') => {
     const n = document.createElement(tag);
