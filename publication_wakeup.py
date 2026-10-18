@@ -131,9 +131,11 @@ def state_path(output):
 
 def view(output,stamp=None):
     from operations_health import alive
-    stamp=time.time() if stamp is None else stamp
     try:
         raw=json.loads(state_path(output).read_text())
+        # A writer can refresh the heartbeat while we read the file. Observe
+        # time after the read rather than making that valid heartbeat "future".
+        stamp=time.time() if stamp is None else stamp
         state=raw['state']
         if state not in ('publishing','retry_wait','coalescing','watching'):return None
         healthy=alive(raw['pid']) and 0<=stamp-raw['checked_at']<15

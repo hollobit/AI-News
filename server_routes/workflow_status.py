@@ -155,7 +155,9 @@ def snapshot(path,index=None):
         raw=json.loads(marker.read_text());published={'commit':str(raw.get('commit',''))[:12],'recorded_at':datetime.fromtimestamp(raw.get('submitted_at') or raw.get('checked_at') or marker.stat().st_mtime,timezone.utc).isoformat()}
     except (OSError,ValueError):pass
     from publication_wakeup import view as publisher_view
-    publisher=publisher_view(output,stamp)
+    # Publisher state is read after the database snapshot and may be newer
+    # than its start time. Its liveness uses the actual sidecar read time.
+    publisher=publisher_view(output)
     note='마지막 GitHub 커밋 확인 기록입니다. 원격 배포 성공이나 현재 전체 분석 완료를 뜻하지 않습니다.'
     status='recorded' if published else 'unknown'
     if publisher:

@@ -57,6 +57,28 @@ def test_publisher_progress_never_claims_remote_deployment(tmp_path,state,health
     if state=='coalescing':assert '7초' in stage['note'] and '별도' in stage['note']
 
 
+def test_publisher_heartbeat_refreshed_during_snapshot_is_alive(tmp_path,monkeypatch):
+    import json,os,publication_wakeup
+    path=tmp_path/'news.sqlite3';sqlite3.connect(path).close()
+    clock=[100.]
+    monkeypatch.setattr(publication_wakeup.time,'time',lambda:clock[0])
+    class Heartbeat:
+        def read_text(self):
+            clock[0]=101.
+            return json.dumps(dict(state='watching',pid=os.getpid(),checked_at=101.))
+    monkeypatch.setattr(publication_wakeup,'state_path',lambda _:Heartbeat())
+    stage=next(s for s in snapshot(path)['stages'] if s['id']=='publication')
+    assert stage['publisher']['state']=='watching' and stage['owner_alive']
+
+
+@pytest.mark.parametrize('heartbeat,expected',[(99.,'watching'),(100.,'watching'),(101.,'unavailable'),(80.,'unavailable')])
+def test_publisher_future_and_expired_heartbeats_remain_invalid(tmp_path,heartbeat,expected):
+    import json,os,publication_wakeup
+    output=tmp_path/'public-site'
+    publication_wakeup.state_path(output).write_text(json.dumps(dict(state='watching',pid=os.getpid(),checked_at=heartbeat)))
+    assert publication_wakeup.view(output,stamp=100.)['state']==expected
+
+
 @pytest.mark.parametrize('health,state', [('observed','coalescing'), ('unresponsive','coalescing'), ('observed','disabled')])
 def test_wiki_input_wait_is_not_analysis_completion(tmp_path, monkeypatch, health, state):
     import background_jobs
