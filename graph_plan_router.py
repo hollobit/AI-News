@@ -5,7 +5,7 @@ from decision_tasks import choice
 from decision_journal import context, application, safely
 from system_one import config, decide
 
-VERSION = 'question-template-v2'
+VERSION = 'question-template-v3-research-limits'
 MIN_CONFIDENCE = .90
 
 # These expand search vocabulary only. The full original question remains the
@@ -19,15 +19,20 @@ VOCABULARY = (
 
 def candidate(question):
     q=question.strip()
-    # Multi-part comparisons, numerical/temporal conditions, and prescriptions
-    # require custom planning. Do not silently compress or split such questions.
-    if not 8<=len(q)<=180 or re.search(r'[\n;\d]|[?？].*\S|비교|차이|대비|각각|조건|확률|예측|전망|추천|해야|해결|전략|정책|만약|제외|말고|(?:이후|이전|동안)(?![가-힣])|\b(?:versus|vs|compare|forecast|except|before|after)\b',q,re.I):
-        return None
-    trend=bool(re.search(r'공통',q) and re.search(r'변화|동향',q) and re.search(r'쟁점|이슈',q))
-    priority=bool(re.search(r'심각|우선순위|가장\s*중요',q) and re.search(r'이슈|문제|위험',q))
     research=bool(re.search(r'벤치마크|평가\s*방법|benchmark',q,re.I)
                   and re.search(r'데이터세트|데이터셋|dataset',q,re.I)
                   and re.search(r'현황|동향|연구',q) and re.search(r'이슈|쟁점|한계',q))
+    # Comparing named alternatives still needs a custom plan. A research survey
+    # can ask about general comparison limits without naming alternatives. Only
+    # this exact qualification bypasses the lexical guard; Jev must still approve
+    # intent AND full scope, and receives the untouched original question.
+    guarded=re.sub(r'비교(?:할|하는)\s*때(?:의)?\s*(?:한계|주의점|유의점)', '한계', q) if research else q
+    # Multi-part comparisons, numerical/temporal conditions, and prescriptions
+    # require custom planning. Do not silently compress or split such questions.
+    if not 8<=len(q)<=180 or re.search(r'[\n;\d]|[?？].*\S|비교|차이|대비|각각|조건|확률|예측|전망|추천|해야|해결|전략|정책|만약|제외|말고|(?:이후|이전|동안)(?![가-힣])|\b(?:versus|vs|compare|forecast|except|before|after)\b',guarded,re.I):
+        return None
+    trend=bool(re.search(r'공통',q) and re.search(r'변화|동향',q) and re.search(r'쟁점|이슈',q))
+    priority=bool(re.search(r'심각|우선순위|가장\s*중요',q) and re.search(r'이슈|문제|위험',q))
     if sum((trend,priority,research))!=1:return None
     intent='trend' if trend else 'priority' if priority else 'research'
     # A short search stem retains all nouns, rather than inferring the subject.

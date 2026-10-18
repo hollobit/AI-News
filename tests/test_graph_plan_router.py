@@ -40,7 +40,8 @@ def runtime(monkeypatch):
 
 
 @pytest.mark.parametrize('question,intent',[(TREND,'trend'),(PRIORITY,'priority'),
-    ('최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?', 'research')])
+    ('최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?', 'research'),
+    ('최근 Physical AI 벤치마크 연구 현황에서 주요 평가 방법과 데이터세트 유형, 비교할 때의 한계를 설명해주세요.', 'research')])
 def test_accepted_template_preserves_question_skips_sol_and_reuses_exact_plan(tmp_path,monkeypatch,runtime,question,intent):
     sol=Mock(side_effect=AssertionError('No Sol planning for accepted template'))
     monkeypatch.setattr('semantic.run_structured',sol)
@@ -81,6 +82,12 @@ def test_uncertain_or_mismatched_choice_runs_existing_sol_once(tmp_path,monkeypa
     'Physical AI 공통 변화와 쟁점에서 한국을 제외해 줘',
     '의료 AI에서 가장 중요한 위험과 치료 추천은?',
     '최근 뉴스의 공통 변화와 쟁점\n조건별 분석도 해줘',
+    'AI 벤치마크 연구 현황과 데이터세트 유형 및 모델별 차이, 비교할 때의 한계는?',
+    'AI 벤치마크 연구 현황과 데이터세트 유형을 각각 비교하고 비교할 때의 한계를 설명해줘',
+    '2026년 AI 벤치마크 연구 현황과 데이터세트 유형, 비교할 때의 한계는?',
+    'AI 벤치마크 연구 현황과 데이터세트 유형, 특정 조건에서 비교할 때의 한계는?',
+    'AI 벤치마크 연구 현황과 데이터세트 유형, 한국을 제외하고 비교할 때의 한계는?',
+    'AI 뉴스의 공통 변화와 쟁점에서 비교할 때의 한계는?',
 ])
 def test_custom_questions_skip_jev_and_preserve_full_question_for_sol(tmp_path,monkeypatch,runtime,question):
     sol=Mock(return_value=copy.deepcopy(FALLBACK));monkeypatch.setattr('semantic.run_structured',sol)
@@ -88,6 +95,19 @@ def test_custom_questions_skip_jev_and_preserve_full_question_for_sol(tmp_path,m
     assert prepare(question,tmp_path/'news')[0]==FALLBACK
     assert question in sol.call_args.args[0]
     runtime.assert_not_called()
+
+
+def test_comparison_limit_template_still_requires_jev_scope_approval(tmp_path,monkeypatch,runtime):
+    question='AI 벤치마크 연구 현황과 데이터세트 유형, 비교할 때의 한계는?'
+    runtime.side_effect=lambda body:response(body,coverage='custom')
+    sol=Mock(return_value=copy.deepcopy(FALLBACK));monkeypatch.setattr('semantic.run_structured',sol)
+    updates=[]
+    assert prepare(question,tmp_path/'news',report=updates.append)[0]==FALLBACK
+    assert updates[-1]['reason']=='uncertain'
+    sent=json.loads(runtime.call_args.args[0])['state']
+    assert sent['question']==question
+    assert sent['proposed_plan']['queries'][0]==question and sent['proposed_plan']['axes'][0]==question
+    assert question in sol.call_args.args[0]
 
 
 @pytest.mark.parametrize('env,value',[('NEWS_QUESTION_PLAN_MODE','off'),('NEWS_QUESTION_PLAN_MODE','invalid'),
