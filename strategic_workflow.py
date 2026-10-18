@@ -544,6 +544,11 @@ class WorkflowService:
             # Risk generation consumes current evidence/coverage, not graph hints.
             risk_context = {'coverage': enrichment['coverage'], 'request': request}
             require_all_news=bool(request.get('full_corpus') or request.get('completion'))
+            from workflow_repair_chains import risk as repair_risk_chain, strategy as repair_strategy_chain
+            # Failed URLs may change the shared evidence during source repair.
+            # Otherwise each branch can finish its sole repair immediately;
+            # neither repair prompt consumes the other branch's report/verdict.
+            independent_repairs=not enrichment['coverage']['failed_urls']
             from concurrent.futures import Future
             risk_draft_future = Future()
             def assess_and_review_risk():
@@ -557,6 +562,10 @@ class WorkflowService:
                     self._prompt('risk_assessment',evidence,risk_context),evidence_schema(RISK_SCHEMA,evidence),lambda value:validate_risk_report(value,evidence)))
                 risk_draft_future.set_result(risk)
                 audit = self._stage(run_id,'risk_verification',lambda:self._audit(evidence,risk,risk=True,require_all_news=require_all_news))
+                audit = self._current_audit(audit,evidence,risk,
+                    required_checked=risk.get('not_assessable_evidence_ids',[]) if require_all_news else ())
+                if independent_repairs and not audit['accepted']:
+                    return repair_risk_chain(self,run_id,evidence,risk,audit,risk_context,require_all_news)
                 return risk, audit
             from workflow_synthesis import VERSION as synthesis_schedule, draft as source_draft
             parallel_synthesis=plan.get('synthesis_schedule')==synthesis_schedule
@@ -592,11 +601,25 @@ class WorkflowService:
                         self._prompt('synthesis', evidence, dict(context, analysts=reports)), evidence_schema(synthesis_schema,evidence),lambda value:self._report(value,evidence)))
                 # Strategy review also need not wait for the independent risk chain.
                 audit = self._stage(run_id, 'verification', lambda: self._audit(evidence, report, require_all_news=require_all_news, deliberation=deliberation))
+                audit = self._current_audit(audit,evidence,report,deliberation=deliberation)
+                if independent_repairs and not audit['accepted']:
+                    report,audit=repair_strategy_chain(self,run_id,evidence,report,audit,context,
+                        require_all_news,deliberation,request)
                 risk_report, risk_audit = risk_future.result()
                 context=dict(context,risk_report=risk_report,risk_review_status='pending')
             risk_audit = self._current_audit(risk_audit, evidence, risk_report, required_checked=risk_report.get('not_assessable_evidence_ids',[]) if require_all_news else ())
             audit = self._current_audit(audit, evidence, report, deliberation=deliberation)
-            if not audit['accepted'] or not risk_audit['accepted']:
+            if independent_repairs:
+                # Preserve the existing audit-reuse history for the unchanged
+                # branch without sending it through another model review.
+                revised_risk=self._artifact(run_id,'risk_revision') is not None
+                revised_strategy=self._artifact(run_id,'revision') is not None
+                if revised_risk and not revised_strategy:
+                    report,audit=repair_strategy_chain(self,run_id,evidence,report,audit,context,
+                        require_all_news,deliberation,request)
+                if revised_strategy and not revised_risk:
+                    risk_report,risk_audit=repair_risk_chain(self,run_id,evidence,risk_report,risk_audit,context,require_all_news)
+            if not independent_repairs and (not audit['accepted'] or not risk_audit['accepted']):
                 if enrichment['coverage']['failed_urls']:
                     # A real retrieval action supplies a fresh observation before the only revision.
                     # Checkpointing prevents refresh requests from repeating after a resume.
@@ -608,22 +631,10 @@ class WorkflowService:
                                    source_repair={'attempts': 1, 'scope': 'failed_snapshot_urls_only',
                                                   'graph_context_reused': '기존 검색은 해석 단서이며 새 원문은 evidence로 직접 제공'})
                 def repair_risk():
-                    revised = risk_report
-                    if not risk_audit['accepted'] or risk_audit.get('evidence_hash') != digest(evidence):
-                        revised = self._stage(run_id, 'risk_revision', lambda: self._revise('risk_revision',evidence,risk_report,risk_audit,dict(context,risk_report=risk_report,critique=risk_audit),RISK_SCHEMA,lambda value:validate_risk_report(value,evidence),risk=True))
-                    checked = self._stage(run_id, 'risk_reverification',
-                        lambda: dict(risk_audit, reused=True, reuse_reason='unchanged_evidence_report_and_verification_version')
-                        if self._reusable_risk_audit(risk_audit, evidence, revised, require_all_news)
-                        else self._audit(evidence, revised, risk=True, require_all_news=require_all_news))
-                    return revised, self._current_audit(checked, evidence, revised, required_checked=revised.get('not_assessable_evidence_ids',[]) if require_all_news else ())
+                    return repair_risk_chain(self,run_id,evidence,risk_report,risk_audit,context,require_all_news)
                 def repair_strategy():
-                    if self._reusable_strategy_audit(audit,evidence,report,require_all_news,deliberation):
-                        checked=self._stage(run_id,'strategy_audit_reuse',lambda:dict(audit,reused=True,
-                            reuse_reason='unchanged_evidence_report_and_verification_version'))
-                        return report, checked
-                    revised = self._stage(run_id, 'revision', lambda: self._revise('revision',evidence,report,audit,dict(context,report=report,critique=audit),event_report_schema(REPORT,evidence),lambda value:self._report(value,evidence),escalation=request.get('completion_attempt',1)>=2))
-                    checked = self._stage(run_id, 'reverification', lambda: self._audit(evidence, revised, require_all_news=require_all_news, deliberation=deliberation))
-                    return revised, self._current_audit(checked, evidence, revised, deliberation=deliberation)
+                    return repair_strategy_chain(self,run_id,evidence,report,audit,context,
+                        require_all_news,deliberation,request)
                 # Both chains use the same frozen evidence after any source repair;
                 # strategy revision consumes no risk report or risk verdict.
                 with ThreadPoolExecutor(max_workers=2) as pool:
@@ -640,6 +651,7 @@ class WorkflowService:
                                       'coverage': enrichment['coverage'],
                                       'graph_retrieval': retrieval,
                                       'orchestration': {'pattern': 'observation_retrieval_analysis_review_one_repair',
+                                                        **({'repair_schedule':'independent-fixed-evidence-v1'} if independent_repairs else {}),
                                                         **({'synthesis_schedule':synthesis_schedule} if parallel_synthesis else {}),
                                                         'inspired_by': 'MiroFish ReportAgent ReAct',
                                                         'mirofish_simulation_executed': False},
