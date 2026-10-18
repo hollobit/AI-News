@@ -309,7 +309,14 @@ def test_single_paper_gate_matches_existing_validated_source():
     try:
         helper.add()
         helper.db.row_factory = sqlite3.Row
+        # Production includes operational fields absent from the old fixture.
+        # They must not make collection and current-source hashes disagree.
+        helper.db.execute('ALTER TABLE arxiv_paper_analyses ADD COLUMN owner_pid INTEGER')
+        helper.db.execute('ALTER TABLE arxiv_paper_analyses ADD COLUMN updated_at TEXT')
+        helper.db.execute('ALTER TABLE arxiv_paper_analyses ADD COLUMN attempts INTEGER DEFAULT 1')
         source = paper_sources(helper.db)[0][0]
+        assert paper_token(helper.db, source['id']) == digest(source['row'])
+        helper.db.execute("UPDATE arxiv_paper_analyses SET owner_pid=123,updated_at='later',attempts=2")
         assert paper_token(helper.db, source['id']) == digest(source['row'])
         helper.db.execute("UPDATE arxiv_paper_analyses SET status='needs_review'")
         assert paper_token(helper.db, source['id']) is None

@@ -9,6 +9,10 @@ from arxiv_papers import _paper_rows, _selected_rows, parse_arxiv_id
 from paper_analysis import analysis_input_hash, digest, validate_report
 from evidence_contracts import reviewed_payload
 
+# Content and approval fields shared by collection and dependency validation.
+# Queue ownership, timestamps and retry counters do not identify the evidence.
+ANALYSIS_COLUMNS = 'paper_id,input_hash,status,error,result_json'
+
 
 def validated_paper_analysis(row, item):
     if (row.get('status') != 'complete' or row.get('error') or item.get('metadata_status') != 'fetched'
@@ -92,7 +96,7 @@ def paper_sources(db,paper_ids=None):
     if paper_ids is not None and not paper_ids:return [],coverage
     items = _paper_rows(db,paper_ids)
     rows = {row['paper_id']: row for row in _selected_rows(db, 'arxiv_paper_analyses',paper_ids,
-            'paper_id,input_hash,status,error,result_json')}
+            ANALYSIS_COLUMNS)}
     coverage['total'] = len(items)
     sources = []
     for item in items:

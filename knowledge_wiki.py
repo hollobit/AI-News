@@ -314,6 +314,10 @@ class KnowledgeWiki:
             if row['status'] == 'running' and alive(row['owner_pid']):
                 return
             same = row['input_hash'] == bundle['input_hash'] and row['policy_hash'] in ('',policy_hash)
+            if same and not row['requested'] and row['status'] == 'stale':
+                from wiki_revalidation import revalidate_latest
+                if revalidate_latest(db, topic, bundle, policy_hash):
+                    return 'complete'
             if same and not row['requested'] and (row['status'] in ('complete', 'empty', 'needs_review') or row['attempts'] >= 2):
                 return
             if not bundle['evidence']:

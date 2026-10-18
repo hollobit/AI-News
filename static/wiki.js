@@ -195,6 +195,7 @@
             esc(date(h.created_at)) +
             ' · ' +
             esc(statuses[h.status] || h.status) +
+            (h.changes.revalidated_revision ? ' · 원근거 재확인 · 기존 독립 검토 재사용' : '') +
             ' · 근거 추가 ' +
             h.changes.added.length +
             ' / 변경 ' +

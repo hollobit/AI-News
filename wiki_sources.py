@@ -38,10 +38,10 @@ def paper_token(db, paper_id):
     if not exists(db, 'arxiv_papers') or not exists(db, 'arxiv_paper_analyses'):
         return None
     metadata = db.execute('SELECT metadata_json,status FROM arxiv_papers WHERE paper_id=?', (paper_id,)).fetchone()
-    analysis = db.execute('SELECT * FROM arxiv_paper_analyses WHERE paper_id=?', (paper_id,)).fetchone()
+    from paper_graph import ANALYSIS_COLUMNS, validated_paper_analysis
+    analysis = db.execute('SELECT '+ANALYSIS_COLUMNS+' FROM arxiv_paper_analyses WHERE paper_id=?', (paper_id,)).fetchone()
     if not metadata or not analysis:
         return None
-    from paper_graph import validated_paper_analysis
     item = json.loads(metadata['metadata_json'])
     item.update(paper_id=paper_id, metadata_status=metadata['status'])
     item.setdefault('metadata_version', None)
