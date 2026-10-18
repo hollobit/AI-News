@@ -202,7 +202,7 @@ def _workflow_graph(payload: dict, run_id: str, corrections=()) -> dict:
         meaning = _clean(claim["detail"]) + " / 불확실성: " + _clean(claim["uncertainty"])
         nodes.append({"id": claim_id, "name": claim["title"], "type": "StrategicClaim",
                       "summary": meaning, "evidence_ids": refs})
-        for ref in set(refs):
+        for ref in sorted(set(refs)):
             checkpoint()
             item = evidence[ref]
             doc_id = _source_document_id(item, ref)

@@ -98,3 +98,11 @@ def test_final_question_dependencies_exclude_unselected_candidates():
     with patch('graph_rag.build_retrieval',return_value=retrieval):
         result=compose(graph,'관측 기사 의미',[],{'queries':['관측 기사 의미']})
     assert result['workspace_dependencies']=={'used':'hash1'}
+
+
+def test_same_url_multiple_observations_have_stable_dependency_order():
+    first={'kind':'workflow','id':'run','row':{},'result':{'nodes':[
+        {'id':'same-url','summary':'Telegram title','evidence_ids':['telegram']},
+        {'id':'same-url','summary':'Fetched title','evidence_ids':['url']}],'edges':[],'evidence':[]}}
+    second=json.loads(json.dumps(first));second['result']['nodes'].reverse()
+    assert dependencies([first])==dependencies([second])

@@ -39,7 +39,7 @@ def normalized(source,final=None):
     source=dict(source);result=dict(source['result'])
     for field in ('nodes','edges','evidence'):
         if field in result:result[field]=sorted(result[field],key=lambda item:
-            str(item.get('id') or json.dumps(item,ensure_ascii=False,sort_keys=True)))
+            (str(item.get('id') or ''),json.dumps(item,ensure_ascii=False,sort_keys=True)))
     source['result']=result
     if final is not None:
         source['workspace_final']={k:final[k] for k in ('risk_report','risk_verification','risk_verified','evidence') if k in final}

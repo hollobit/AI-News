@@ -99,7 +99,7 @@ def write(path, db, key, previous=None):
             # reindexing thousands of identical graphs in a fresh Python process.
             for field in ('nodes','edges','evidence'):
                 if field in result:result[field]=sorted(result[field],key=lambda item:
-                    str(item.get('id') or json.dumps(item,ensure_ascii=False,sort_keys=True)))
+                    (str(item.get('id') or ''),json.dumps(item,ensure_ascii=False,sort_keys=True)))
             source['result']=result
             title = ' '.join(n.get('name', '') for n in result.get('nodes', []))
             title += ' ' + ' '.join(e.get('title', '') for e in result.get('evidence', []))
