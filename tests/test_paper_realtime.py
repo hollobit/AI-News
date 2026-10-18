@@ -117,6 +117,18 @@ def test_open_engine_circuit_does_not_consume_paper_retries(tmp_path):
     finally:pipeline.close();analysis.close()
 
 
+def test_user_pipeline_pause_keeps_queued_checkpoints_unclaimed(tmp_path):
+    pipeline,analysis=fixture_pipeline(tmp_path)
+    try:
+        analysis.submit(['2610.10000'])
+        pipeline.configure(False)
+        assert analysis._claim() is None
+        assert analysis.status()['counts']['queued']==1
+        pipeline.configure(True)
+        assert analysis._claim()['paper_id']=='2610.10000'
+    finally:pipeline.close();analysis.close()
+
+
 def test_slow_metadata_provider_cannot_hold_ready_analysis(tmp_path):
     pipeline,analysis=fixture_pipeline(tmp_path)
     gate=threading.Event();entered=threading.Event()

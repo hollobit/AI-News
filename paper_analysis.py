@@ -182,6 +182,9 @@ class PaperAnalysisService:
     def _claim(self):
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='paper_pipeline_state'").fetchone():
+                pipeline=db.execute('SELECT enabled FROM paper_pipeline_state WHERE id=1').fetchone()
+                if pipeline and not pipeline[0]:return None
             rows=db.execute("SELECT * FROM arxiv_paper_analyses WHERE status IN ('queued','paused','running') ORDER BY draft_json IS NOT NULL DESC,created_at DESC").fetchall()
             row=next((r for r in rows if not _owner_alive(r['owner_pid'])),None)
             if row:
