@@ -285,7 +285,7 @@ class GraphQuestions:
         planned=None
         attempts=list(attempts or [])
         try:
-            begun=time.monotonic();deadline=begun+(300 if request['params'].get('workspace')==['1'] else 120);bounded_signature=None;fallback_checked=False
+            begun=time.monotonic();cpu_started=time.thread_time();deadline=begun+(300 if request['params'].get('workspace')==['1'] else 120);bounded_signature=None;fallback_checked=False
             deadline=min(deadline,begun+max(0,420-(time.time()-stored['created_at'])))
             detailed=request['params'].get('workspace')==['1']
             tracked=detailed and self.enabled and not self.analyzer
@@ -331,6 +331,7 @@ class GraphQuestions:
                 graph=materialize_many(graph,searches_for(request['question'],plan))
             result=quick_answer(graph,request['question'],request['node_ids'])
             retrieval_ms=round((time.monotonic()-begun)*1000,2)
+            retrieval_cpu_ms=round((time.thread_time()-cpu_started)*1000,2)
             if tracked:self._progress(identity,'evidence',done=True,cached=retrieval_ms<1000)
             self._save(identity,'running' if self.enabled else 'evidence_only',result)
             if not self.enabled or (not result.get('evidence') and not self.enricher):
@@ -378,6 +379,7 @@ class GraphQuestions:
                 answer['enrichment']={'status':task['status'],'task_id':task['id'],'note':'부족한 비교·반대 근거를 공개 검색하여 독립 검토합니다.'}
 
             answer.setdefault('timing',{}).update(evidence_retrieval_ms=retrieval_ms,
+                evidence_retrieval_thread_cpu_ms=retrieval_cpu_ms,
                 attempt_ms=round((time.monotonic()-begun)*1000,2),
                 completion_ms=round((time.time()-stored['created_at'])*1000,2),attempts=attempts)
             if tracked:

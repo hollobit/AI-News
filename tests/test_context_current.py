@@ -213,8 +213,9 @@ def test_admission_timings_preserve_source_gate_and_contain_only_numbers():
             with service.db() as db:expected=dependencies(load(db,[key]))
             timing={}
             assert current(case.path,expected,(),timing)
-            assert set(timing)=={'corpus_ms','analysis_sources_ms','selected_results_ms','dependencies_ms','passage_checks_ms','total_ms'}
-            assert all(type(value) in (int,float) and value>=0 for value in timing.values())
+            assert set(timing)=={'corpus_ms','analysis_sources_ms','selected_results_ms','dependencies_ms','passage_checks_ms','total_ms','thread_cpu_ms','validation_cache'}
+            assert all(type(value) in (int,float) and value>=0 for key,value in timing.items() if key!='validation_cache')
+            assert all(type(value) in (int,float) and value>=0 for value in timing['validation_cache'].values())
             case.items[0]['text']='edited original'
             timing={}
             assert not current(case.path,expected,(),timing)

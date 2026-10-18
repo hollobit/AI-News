@@ -17,6 +17,23 @@ MAX_BYTES = 256 * 1024 * 1024
 from code_policy import policy
 
 
+@contextmanager
+def measurement():
+    """Optional numeric diagnostics for one thread; never record cached content."""
+    previous=getattr(_LOCAL,'metrics',None)
+    metrics={name:0 for name in ('open_ms','read_ms','write_ms','cleanup_ms','hits','misses','writes','errors')}
+    _LOCAL.metrics=metrics
+    try:yield metrics
+    finally:
+        _LOCAL.metrics=previous
+        for key in metrics:
+            if key.endswith('_ms'):metrics[key]=round(metrics[key],2)
+
+
+def _elapsed(metrics, name, started):
+    if metrics is not None:metrics[name]+=(time.monotonic()-started)*1000
+
+
 def path_for(db):
     path = next((r[2] for r in db.execute('PRAGMA database_list') if r[1]=='main'), '')
     return Path(path + '.validated.sqlite3') if path else None
@@ -32,6 +49,8 @@ def session(db):
         return
     connection = None
     writable = not is_read_projection()
+    metrics=getattr(_LOCAL,'metrics',None)
+    opened=time.monotonic() if metrics is not None else 0
     try:
         if path and (writable or path.exists()):
             connection = sqlite3.connect(str(path) if writable else path.resolve().as_uri()+'?mode=ro', uri=not writable, timeout=2)
@@ -41,13 +60,17 @@ def session(db):
                 connection.execute('CREATE INDEX IF NOT EXISTS validation_created ON validations(created)')
             _LOCAL.store = (path, connection, writable)
     except sqlite3.Error:
+        if metrics is not None:metrics['errors']+=1
         if connection: connection.close()
         connection = None
         _LOCAL.store = None
+    finally:
+        _elapsed(metrics,'open_ms',opened)
     try:
         yield
     finally:
         if connection:
+            cleanup=time.monotonic() if metrics is not None else 0
             try:
                 if writable and connection.total_changes:
                     connection.commit()
@@ -66,9 +89,11 @@ def session(db):
                             if total <= MAX_BYTES: break
                     connection.commit()
             except sqlite3.Error:
+                if metrics is not None:metrics['errors']+=1
                 pass  # Disposable cache failure must not hide a valid result.
             finally:
                 connection.close()
+                _elapsed(metrics,'cleanup_ms',cleanup)
         _LOCAL.store = existing
 
 
@@ -88,20 +113,33 @@ def read(db, namespace, key, builder):
                 return read(db,namespace,key,builder)
             return builder(), False
     _, connection, writable = store
+    metrics=getattr(_LOCAL,'metrics',None)
+    started=time.monotonic() if metrics is not None else 0
     try:
         row = connection.execute('SELECT value FROM validations WHERE namespace=? AND key=? AND policy=?',(namespace,str(key),policy())).fetchone()
         if row:
-            return json.loads(zlib.decompress(row[0])), True
+            value=json.loads(zlib.decompress(row[0]))
+            if metrics is not None:metrics['hits']+=1
+            return value, True
     except (sqlite3.Error, ValueError, zlib.error):
+        if metrics is not None:metrics['errors']+=1
         pass
+    finally:
+        _elapsed(metrics,'read_ms',started)
+    if metrics is not None:metrics['misses']+=1
     result = builder()
     if writable:
         body = zlib.compress(json.dumps(result,ensure_ascii=False,separators=(',',':')).encode(),1)
         if len(body) <= 4 * 1024 * 1024:
+            started=time.monotonic() if metrics is not None else 0
             try:
                 connection.execute('INSERT OR REPLACE INTO validations VALUES(?,?,?,?,?)',(namespace,str(key),policy(),body,time.time()))
+                if metrics is not None:metrics['writes']+=1
                 # Bound lock tenure during full archive builds.
                 if connection.total_changes % 64 == 0: connection.commit()
             except sqlite3.Error:
+                if metrics is not None:metrics['errors']+=1
                 pass
+            finally:
+                _elapsed(metrics,'write_ms',started)
     return result, False

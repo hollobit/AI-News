@@ -113,12 +113,17 @@ def dependencies(sources):
 def current(path,expected,passages=(),timing=None):
     """No model calls. Current input, review, withdrawals and full passages count."""
     if not isinstance(expected,dict) or not expected:return False
-    begun=time.monotonic()
+    begun=time.monotonic();cpu_started=time.thread_time()
     try:
         with closing(sqlite3.connect(path,timeout=2)) as db:
             db.row_factory=sqlite3.Row
             db.execute('BEGIN')
-            sources=load(db,expected,timing) if timing is not None else load(db,expected)
+            if timing is not None:
+                from verified_cache import measurement
+                with measurement() as cache_metrics:
+                    sources=load(db,expected,timing)
+                timing['validation_cache']=cache_metrics
+            else:sources=load(db,expected)
             started=time.monotonic();actual=dependencies(sources)
             if timing is not None:timing['dependencies_ms']=round((time.monotonic()-started)*1000,2)
             if actual!=expected:return False
@@ -128,5 +133,7 @@ def current(path,expected,passages=(),timing=None):
                 if not row or row[0]!=p['hash'] or row[1]!='fetched':return False
             if timing is not None:timing['passage_checks_ms']=round((time.monotonic()-started)*1000,2)
     finally:
-        if timing is not None:timing['total_ms']=round((time.monotonic()-begun)*1000,2)
+        if timing is not None:
+            timing['total_ms']=round((time.monotonic()-begun)*1000,2)
+            timing['thread_cpu_ms']=round((time.thread_time()-cpu_started)*1000,2)
     return True

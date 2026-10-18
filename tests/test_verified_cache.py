@@ -85,3 +85,27 @@ def test_byte_budget_applies_after_batch_commit_and_across_policies(tmp_path):
     with sqlite3.connect(str(path) + '.validated.sqlite3') as cache:
         assert cache.execute('SELECT SUM(LENGTH(value)) FROM validations').fetchone()[0] <= 1024
         assert cache.execute('SELECT value FROM validations WHERE key=? AND policy=?', ('new', 'new')).fetchone()
+
+
+def test_measurement_is_numeric_optional_and_restored_after_nested_work(tmp_path):
+    with sqlite3.connect(tmp_path / 'news.db') as db:
+        with verified_cache.measurement() as outer:
+            with session(db):
+                assert verified_cache.read(db, 'baseline_verified_content', 'private-input', lambda: {'secret': 'not telemetry'})[1] is False
+                with verified_cache.measurement() as inner:
+                    assert verified_cache.read(db, 'baseline_verified_content', 'private-input', lambda: pytest.fail('cache miss'))[1] is True
+                assert verified_cache.read(db, 'baseline_verified_content', 'private-input', lambda: pytest.fail('cache miss'))[1] is True
+        assert outer['misses']==1 and outer['writes']==1 and outer['hits']==1
+        assert inner['hits']==1 and inner['writes']==0 and inner['misses']==0
+        assert all(type(value) in (int,float) and value>=0 for value in outer.values())
+        assert 'private' not in str(outer) and 'secret' not in str(outer)
+        assert getattr(verified_cache._LOCAL,'metrics',None) is None
+
+
+def test_broken_optional_cache_records_error_without_hiding_valid_result(tmp_path):
+    path=tmp_path / 'news.db'
+    (tmp_path / 'news.db.validated.sqlite3').write_bytes(b'not a database')
+    with sqlite3.connect(path) as db, verified_cache.measurement() as metrics:
+        assert verified_cache.read(db,'baseline_verified_content','input',lambda: 'validated')==('validated',False)
+    assert metrics['errors']==1
+    assert getattr(verified_cache._LOCAL,'metrics',None) is None
