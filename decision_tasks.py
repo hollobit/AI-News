@@ -25,8 +25,9 @@ def retrieval(path,question,plan,evidence,job_id=None):
     # Score the bounded selected bundle without dropping any query axis or
     # counterevidence. Candidate IDs are not instructions to create new sources.
     subject=context('question',job_id,question,evidence)
-    from graph_question_context import MAX_PASSAGES
-    if len(evidence)>MAX_PASSAGES:return skipped(path,'retrieval','candidate_limit',subject)
+    # Shadow comparison has its own provider budget. Larger adaptive bundles
+    # still reach the LLM intact; never trim them merely to run this comparison.
+    if len(evidence)>20:return skipped(path,'retrieval','candidate_limit',subject)
     if not evidence:return skipped(path,'retrieval','no_candidates',subject)
     questions={f'candidate_{i}':choice(f'Assess state.candidates[{i}] against question and axes. Title is a topic cue only. Partial support and missing comparison conditions can be relevant, not unrelated.',dict(direct='Facts addressing any part of an explicit axis',counter='Relevant counterevidence, qualification or comparison limitation',context='Useful background or relationship',unrelated='No relevance to any requested axis or its limitations',unknown='Insufficient context to classify')) for i in range(len(evidence))}
     state=dict(question=question,axes=plan.get('axes',[]),candidates=[dict(index=i,**{k:e.get(k,'') for k in ('id','text','title','source_kind','day')}) for i,e in enumerate(evidence)])

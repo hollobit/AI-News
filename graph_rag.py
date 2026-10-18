@@ -715,13 +715,13 @@ def merge_sources(db, sources, shared_coverage, params):
 
 
 def build_retrieval(graph: dict[str, Any], question: str,
-                    node_ids: Iterable[str] | None = None) -> dict[str, Any]:
+                    node_ids: Iterable[str] | None = None, *, evidence_limit=None) -> dict[str, Any]:
     """Retrieve relevant admitted source excerpts before expanding graph context."""
     if hasattr(graph, 'workspace_store'):
         from context_index import materialize
         graph = materialize(graph, question)
     from graph_retrieval import retrieve
-    return retrieve(graph, question, node_ids)
+    return retrieve(graph, question, node_ids, evidence_limit=evidence_limit)
 
 
 _ANSWER_SCHEMA = {
@@ -752,9 +752,10 @@ def answer_question(graph: dict[str, Any], question: str,
         raise ValueError("질문을 입력해 주세요.")
     retrieval = retrieval if retrieval is not None else build_retrieval(graph, question, node_ids)
     if retrieval["no_hits"]:
-        return {"answer": "저장된 분석 근거에서 이 질문에 답할 내용을 찾지 못했습니다.",
+        return {"answer": "관련 후보는 있지만 원문 분량 상한 내에서 검토할 근거를 구성하지 못했습니다." if retrieval.get('retrieval',{}).get('budget_limited') else "저장된 분석 근거에서 이 질문에 답할 내용을 찾지 못했습니다.",
                 "claims": [], "limitations": retrieval["limitations"],
-                "selected_nodes": [], "selected_edges": [], "evidence": []}
+                "selected_nodes": [], "selected_edges": [], "evidence": [],
+                "retrieval": dict(retrieval.get('retrieval',{}),cited_documents=0,cited_passages=0)}
     from semantic import run_structured
     from model_policy import question_draft_role
     from graph_answer_cache import reuse_answer
@@ -779,6 +780,14 @@ def answer_question(graph: dict[str, Any], question: str,
     if detailed:
         from datetime import date
         data['as_of']=date.today().isoformat()
+        # Candidate counts are UI diagnostics, not evidence. An unrelated new
+        # candidate must not invalidate an otherwise identical reviewed bundle.
+        if retrieval.get('coverage',{}).get('coverage_basis'):
+            coverage = retrieval['coverage']
+            data['coverage'] = {k:coverage[k] for k in
+                                ('scope','unique_documents','passages','full_corpus_analysis','coverage_basis')}
+            data['coverage']['axes'] = [{k:axis[k] for k in ('axis','selected_documents')}
+                                       for axis in coverage.get('axes',[])]
         # Relationship hints locate originals; previous generated prose is not
         # additional evidence and need not be repeated in this generation.
         data.pop('nodes');data.pop('edges')
@@ -911,6 +920,9 @@ DATA:
                       generation_evidence_characters=sum(len(e.get('text') or '') for e in data['evidence']),
                       review_evidence_characters=sum(len(e.get('text') or '') for e in original_evidence)),
                   timing={'answer_ms':round((time.monotonic()-started)*1000,2),'answer_cache_hit':reused,'stages':stage_times})
+    from graph_evidence_selection import citation_counts
+    from graph_question_context import document
+    result['retrieval'].update(citation_counts(result,retrieval['evidence'],document))
     return result
 
 

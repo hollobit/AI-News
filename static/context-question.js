@@ -51,6 +51,98 @@
     paragraph.append(document.createTextNode(text.slice(cursor)));
     return paragraph;
   }
+  function evidenceSummary(data, references, complete) {
+    const info = data.retrieval || {};
+    const box = el('section', null, 'evidence-summary');
+    box.setAttribute('aria-label', '답변의 자료 활용 범위');
+    const counts = el('dl', null, 'evidence-counts');
+    const cited = new Set(
+      (data.claims || []).flatMap((c) => c.evidence_ids || []).filter((id) => references.has(id))
+    );
+    const number = (value, unit) =>
+      Number.isInteger(value) ? `${value.toLocaleString()}${unit}` : '기록 없음';
+    for (const [label, value] of [
+      ['검색 후보', number(info.candidate_documents, '개 문서')],
+      ['선정 자료', number(info.unique_documents, '개 문서')],
+      ['근거 발췌', `${references.size.toLocaleString()}개`],
+      ['실제 인용', complete ? `${cited.size.toLocaleString()}개 발췌` : '검토 전'],
+    ]) {
+      const item = el('div');
+      item.append(el('dt', label), el('dd', value));
+      counts.append(item);
+    }
+    box.append(counts);
+    const details = el('details');
+    details.append(el('summary', '선정 범위와 쟁점별 검색 현황'));
+    details.append(
+      el(
+        'p',
+        '검색 후보는 관련도 선별 후 모은 문서입니다. 동일 자료의 여러 발췌를 문서 수에 더하지 않으며, 저장 자료 전체를 전수 독해한 결과는 아닙니다.',
+        'legend'
+      )
+    );
+    if (Number.isInteger(info.searched_source_records))
+      details.append(
+        el(
+          'p',
+          `색인에서 조회한 자료 기록 ${info.searched_source_records.toLocaleString()}건 · 동일 문서의 여러 분석 기록이 포함될 수 있습니다.`,
+          'legend'
+        )
+      );
+    if (complete && Number.isInteger(info.cited_documents))
+      details.append(
+        el(
+          'p',
+          `답변에서 실제 인용한 고유 자료 ${info.cited_documents}개 · 인용 발췌 ${cited.size}개`,
+          'legend'
+        )
+      );
+    if (info.budget) {
+      details.append(
+        el(
+          'p',
+          `질문별 상한: 고유 자료 ${info.budget.documents}개 · 발췌 ${info.budget.passages}개. 필요한 쟁점과 조건·반대 단서, 자료 유형을 보강합니다.`,
+          'legend'
+        )
+      );
+      if (info.budget_limited)
+        details.append(
+          el(
+            'p',
+            '자료 수 또는 원문 분량 상한으로 일부 후보를 제외했습니다. 선택된 근거 범위에서 답변합니다.',
+            'legend'
+          )
+        );
+    }
+    if (info.axes?.length) {
+      const list = el('ul', null, 'evidence-axes');
+      for (const axis of info.axes) {
+        const state =
+          {
+            no_candidates: '검색 후보 없음',
+            not_selected: '선정 근거 없음',
+            below_target: '보강 목표 미달',
+            target_met: '검색 배정 목표 충족',
+          }[axis.status] || '검색 현황';
+        list.append(
+          el(
+            'li',
+            `${axis.axis}: 후보 ${axis.candidate_documents}개 / 선정 ${axis.selected_documents}개 · ${state}`
+          )
+        );
+      }
+      details.append(
+        list,
+        el(
+          'p',
+          '위 수치는 표현 일치에 따른 검색 배정 현황입니다. 근거의 충분성과 주장 지지 여부는 독립 검토에서 별도로 판단합니다.',
+          'legend'
+        )
+      );
+    }
+    box.append(details);
+    return box;
+  }
   function render(data, complete = false) {
     const root = $('#context-answer');
     root.replaceChildren();
@@ -68,6 +160,8 @@
     const references = new Map(
       (data.evidence || []).map((e, i) => [e.id, { ...e, number: i + 1 }])
     );
+    if (references.size || data.retrieval?.policy)
+      root.append(evidenceSummary(data, references, complete));
     const quality = data.verification?.quality;
     const incomplete = quality?.status === 'needs_review';
     if (reviewed) {
@@ -142,9 +236,7 @@
       if (!(data.answer || '').includes(text)) root.append(el('p', text, 'legend'));
     const sources = el('details');
     sources.open = !complete;
-    sources.append(
-      el('summary', `인용 원자료 ${references.size}개 · 뉴스/논문과 기존 해석의 구분`)
-    );
+    sources.append(el('summary', `검토 대상 근거 발췌 ${references.size}개 · 출처와 원문 확인`));
     for (const e of references.values()) {
       const item = el('article', null, 'source');
       item.id = 'answer-source-' + e.number;

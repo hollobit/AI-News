@@ -288,7 +288,8 @@ def _materialize(graph, questions):
                            (source['id'], 'final', encode(source.pop('workspace_final'))))
         sources = enrich_sources(db, sources)
         result = merge_sources(db, sources, graph['coverage'], {})
-    result['coverage'].update(scope='질문별 관련 자료의 연결 분석', selected_source_records=len(sources))
+    result['coverage'].update(scope='질문별 관련 자료의 연결 분석', selected_source_records=len(sources),
+                              searched_source_records=len(identities))
     result['limitations'][0] = '분야별 검색 상위 후보의 인용·관계를 종합합니다. 자료 전체를 전수 독해하거나 모든 관계를 열거한 결과가 아닙니다.'
     result.search_key = content_digest([graph.search_key, questions, VERSION,'query-batch-v1',current_dependencies])
     result.prepared_index = RetrievalIndex(result)

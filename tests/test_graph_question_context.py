@@ -82,7 +82,10 @@ def test_layout_duplicates_are_removed_but_distinct_qualifications_survive(tmp_p
 def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeypatch):
     original = evidence('support', '배경입니다. '*300+'벤치마크 실험 성공률은 90%다. 현장 일반화는 미검증이다. '+'기타 배경입니다. '*300)
     conflict = evidence('conflict', '다른 환경에서 벤치마크 성공률은 40%였다.')
-    bundle = group([original,conflict]); bundle.update(no_hits=False, limitations=[], coverage={'scope':'selected'})
+    bundle = group([original,conflict]); bundle.update(no_hits=False, limitations=[], coverage={
+        'scope':'selected','coverage_basis':'lexical_retrieval_not_semantic_verification',
+        'unique_documents':2,'passages':2,'full_corpus_analysis':False,
+        'axes':[dict(axis='성공률',selected_documents=2,candidate_documents=20)]})
     graph = GraphResult(coverage={'all_corpus_documents':10}); graph.search_key='context-test'
     calls=[]
     def runner(prompt, schema, **kw):
@@ -109,6 +112,7 @@ def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeyp
     assert first['claims'][0]['evidence_ids']==['support']
     assert first['retrieval']['generation_evidence_characters'] < first['retrieval']['review_evidence_characters']
     graph['coverage']['all_corpus_documents']=11
+    bundle['coverage']['axes'][0]['candidate_documents']=30
     assert run()['timing']['answer_cache_hit'] and len(calls)==2
     bundle['evidence'].reverse()
     reused=answer_question(graph,'벤치마크 성공률',retrieval=bundle,analysis_plan=dict(axes=['성공률'],queries=['성공률']),detailed=True,reuse_only=first)

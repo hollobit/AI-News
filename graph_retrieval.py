@@ -56,8 +56,9 @@ def get_index(graph):
         return value, False
 
 
-def retrieve(graph, question, node_ids=None):
+def retrieve(graph, question, node_ids=None, *, evidence_limit=None):
     from graph_rag import RETRIEVAL_NODE_LIMIT, RETRIEVAL_EDGE_LIMIT, RETRIEVAL_EVIDENCE_LIMIT
+    limit = RETRIEVAL_EVIDENCE_LIMIT if evidence_limit is None else max(1, min(60, int(evidence_limit)))
     started = time.monotonic()
     index,hit = get_index(graph)
     scores = index.lexical.search(question)
@@ -116,8 +117,9 @@ def retrieve(graph, question, node_ids=None):
         floor = max(es[i] for i in candidates)*.18
         candidates = [i for i in candidates if es[i]>=floor]
     def doc_id(i):
+        from link_groups import canonical_url
         e=index.evidence[i]
-        return e.get('document_id') or e.get('source_url') or e.get('url') or i
+        return canonical_url(e.get('source_url') or e.get('url') or '') or e.get('document_id') or i
     def publisher(i):
         e=index.evidence[i]
         return urlsplit(e.get('source_url') or e.get('url') or '').netloc
@@ -126,7 +128,7 @@ def retrieve(graph, question, node_ids=None):
         relevance=es[i]*(1+.25*len((token_sets[i]&query_terms)-covered))/(1+.2*publishers[publisher(i)])
         # Date breaks equal relevance only; a newer irrelevant article never wins.
         return relevance,e.get('day',''),i
-    while candidates and len(chosen)<RETRIEVAL_EVIDENCE_LIMIT:
+    while candidates and len(chosen)<limit:
         checkpoint()
         identity=max(candidates,key=rank)
         candidates.remove(identity)

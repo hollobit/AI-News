@@ -407,6 +407,43 @@ mark.search-highlight {
   font: inherit;
   resize: vertical;
 }
+.evidence-summary {
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f5f9ff;
+}
+.evidence-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 12px;
+}
+.evidence-counts dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.evidence-counts dd {
+  margin: 4px 0 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.evidence-summary summary {
+  cursor: pointer;
+  font-size: 13px;
+}
+.evidence-axes {
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .evidence-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .answer-synthesis {
   white-space: pre-line;
   font-size: 16px;

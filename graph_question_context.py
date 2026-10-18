@@ -7,8 +7,7 @@ import hashlib
 
 from evidence_search import terms, query_anchors
 from link_groups import canonical_url
-
-MAX_PASSAGES = 20
+from graph_evidence_selection import MAX_PASSAGES, axes_for, budget_for, select, coverage as axis_coverage
 
 # Search vocabulary, not inferred facts. Apply only facets the user requested.
 FACETS = (
@@ -17,6 +16,7 @@ FACETS = (
     (r'표준(?:화)?|\bstandard(?:s|ization|isation)?\b', 'standard standards standardization 표준 표준화'),
     (r'안전|\bsafety\b', 'safety 안전'),
     (r'비용|\bcosts?\b', 'cost costs 비용'),
+    (r'이슈|쟁점|위험|문제|\b(?:issues?|risks?|challenges?|limitations?)\b', 'issues risks challenges limitations 이슈'),
 )
 
 
@@ -54,18 +54,12 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
     if hasattr(graph, 'workspace_store'):
         from context_index import materialize_many
         graph = materialize_many(graph, searches)
-    groups = [build_retrieval(graph, query, ids) for query in searches]
+    budget = budget_for(axes_for(question, plan, facets))
+    groups = [build_retrieval(graph, query, ids, evidence_limit=budget['documents']) for query in searches]
     groups = [dict(g,evidence=focused_candidates(g['evidence'],question,facets)) for g in groups]
-    selected = {}; documents = set()
-    # Reserve space for each search axis BEFORE adding longer source passages.
-    for position in range(max((len(g['evidence']) for g in groups), default=0)):
-        for group in groups:
-            if position >= len(group['evidence']) or len(selected) >= 16: continue
-            item = group['evidence'][position]
-            key = document(item)
-            if key not in documents:
-                selected[item['id']] = item; documents.add(key)
-    supplements = []
+    selected, selection, axes, candidates = select(groups, question, plan, facets, document, normalized)
+    selected_documents = {document(e) for e in selected.values()}
+    supplements = [e for e in candidates if document(e) in selected_documents and e['id'] not in selected]
     source_refs=set(selected)
     if path:
         from source_store import search
@@ -73,7 +67,7 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
         with sqlite3.connect(path, timeout=.5) as db:
             db.row_factory = sqlite3.Row
             allowed = {e.get('source_url', '') for e in selected.values()} if ids or scoped else None
-            supplements = search(db, question, limit=24, urls=allowed)
+            supplements = search(db, question, limit=budget['passages'], urls=allowed) + supplements
             if not ids and not scoped: supplements += retrieve(db, question, limit=1)
     by_document = defaultdict(list)
     for item in selected.values(): by_document[document(item)].append(item)
@@ -85,20 +79,32 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
                 sum(bool(pattern.search(text)) for pattern,_ in facets),
                 len(set(terms(text)) & query_terms), min(len(text), 1600))
     replacements = {}
+    selected_characters = sum(len(e.get('text', '')) for e in selected.values())
     # An identical/contained passage is one source, not corroboration. A longer
     # passage can replace an exact contained excerpt without losing its context.
     for item in sorted(supplements, key=relevance, reverse=True):
         key = document(item); text = normalized(item.get('text', ''))
         siblings = by_document[key]
         if not text or any(text in normalized(e.get('text', '')) for e in siblings): continue
+        if len(text) >= 120 and any(text == normalized(e.get('text','')) and key != document(e) for e in selected.values()): continue
         contained = [e for e in siblings if normalized(e.get('text', '')) and normalized(e['text']) in text]
+        extra_characters = len(item['text']) - sum(len(e['text']) for e in contained)
+        if selected_characters + extra_characters > budget['characters']:
+            selection['budget_limited'] = True
+            continue
+        # A source-store supplement must obey the same document/passage scope.
+        if not siblings and len({document(e) for e in selected.values()}) >= budget['documents']:
+            selection['budget_limited'] = True
+            continue
         if contained:
             for previous in contained:
                 selected.pop(previous['id'], None); siblings.remove(previous)
                 replacements[previous['id']] = item['id']
-        elif len(selected) >= MAX_PASSAGES or len(siblings) >= 2:
+        elif len(selected) >= budget['passages'] or len(siblings) >= 2:
+            if len(selected) >= budget['passages']: selection['budget_limited'] = True
             continue
         selected[item['id']] = item; siblings.append(item)
+        selected_characters += extra_characters
     refs = set(selected)
     def attached(item):
         value = deepcopy(item)
@@ -125,8 +131,11 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
                     edge['evidence_ids'] = sorted(set(edge['evidence_ids']) | set(edges[edge['id']]['evidence_ids']))
                 edges[edge['id']] = edge
     evidence = list(selected.values())
+    source_refs.update(selected)
     coverage = dict(scope='question_selected_evidence', unique_documents=len({document(e) for e in evidence}),
-                    passages=len(evidence), full_corpus_analysis=False)
+                    passages=len(evidence), full_corpus_analysis=False,
+                    axes=axis_coverage(axes,candidates,evidence,document,budget),
+                    coverage_basis=selection['coverage_basis'])
     dependencies=getattr(graph,'workspace_dependencies',None)
     dependency_refs=getattr(graph,'workspace_dependency_refs',None)
     if dependencies and dependency_refs is not None:
@@ -135,7 +144,8 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
                 no_hits=not evidence, limitations=[], coverage=coverage,
                 workspace_dependencies=dependencies,
                 workspace_as_of=getattr(graph,'workspace_as_of',None),
-                retrieval=dict(method='axis-balanced-documents-v1', **coverage,
+                retrieval=dict({**selection, **coverage}, method=selection['policy'],
+                               searched_source_records=graph.get('coverage',{}).get('searched_source_records') if isinstance(graph,dict) else None,
                                evidence_characters=sum(len(e.get('text', '')) for e in evidence)))
 
 
