@@ -56,3 +56,25 @@ def test_bounded_prose_keeps_real_citation_lengths():
     schema={'type':'object','properties':{'value':{'type':'string','maxLength':120}}}
     packed,wire,aliases=prepare(prompt,schema)
     assert packed==prompt and wire==schema and aliases=={}
+
+
+def test_baseline_wire_compacts_structural_ids_without_rewriting_sources():
+    from bulk_baseline import ANALYSIS_SCHEMA
+    from baseline_citations import bind_documents,generation_schema
+    url='https://example.com/article?full=123&query=456'
+    evidence='baseline_ev_'+'a'*24;keyword='kw_'+'b'*16
+    data=[dict(document_id=url,evidence=[dict(id=evidence,text='원문 그대로',url=url)],
+               keyword_citations={keyword:dict(label='완전한 구절',source_quote='완전한 구절')})]
+    schema=bind_documents(generation_schema(ANALYSIS_SCHEMA,[keyword]),{url:data[0]})
+    prompt='ROLE: baseline_analysis\nDATA:\n'+json.dumps(data,ensure_ascii=False)
+    packed,wire,aliases=prepare(prompt,schema);payload=json.loads(packed.split('DATA:\n')[1])
+    assert payload[0]['document_id']=='D1' and payload[0]['evidence'][0]['id']=='E1'
+    assert payload[0]['evidence'][0]['url']==url and payload[0]['evidence'][0]['text']=='원문 그대로'
+    assert list(payload[0]['keyword_citations'])==['K1']
+    assert wire['properties']['documents']['items']['properties']['document_id']['enum']==['D1']
+    result=restore(dict(document_id='D1',evidence_ids=['E1'],keywords=[{'citation_id':'K1'}]),aliases)
+    assert result==dict(document_id=url,evidence_ids=[evidence],keywords=[{'citation_id':keyword}])
+    assert data[0]['document_id']==url
+    data[0]['evidence'][0]['text']='모델 D1은 제품명이다'
+    prompt='ROLE: baseline_analysis\nDATA:\n'+json.dumps(data)
+    assert prepare(prompt,schema)==(prompt,schema,{})

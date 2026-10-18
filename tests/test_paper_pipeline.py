@@ -82,3 +82,14 @@ def test_scheduler_survives_locked_error_recording(tmp_path):
         pipeline._loop()
     assert len(calls)==2
     pipeline.close()
+
+
+def test_paused_papers_do_not_occupy_capacity_for_new_papers(tmp_path):
+    pipeline,m,a=services(tmp_path,time.time()+3600)
+    with pipeline.db() as db:
+        db.execute("UPDATE arxiv_papers SET status='fetched'")
+        db.executemany("INSERT INTO arxiv_paper_analyses VALUES(?,'unchanged','paused')",[(str(i),) for i in range(4)])
+    pipeline.tick()
+    assert a.calls==[['2609.12345']]
+    with pipeline.db() as db:assert db.execute("SELECT count(*) FROM arxiv_paper_analyses WHERE status='paused'").fetchone()[0]==4
+    pipeline.close()

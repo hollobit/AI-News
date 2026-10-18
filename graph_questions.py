@@ -95,6 +95,13 @@ def deepen(graph,question,ids,path=None,scoped=False,detailed=False,plan=None,pr
     compose_ms=round((time.monotonic()-retrieval_started)*1000,2)
     # Pass the fixed retrieved bundle directly; do not rerank away a missing side.
     answer=answer_question(graph,question,ids,retrieval=retrieval,analysis_plan=plan,detailed=detailed,progress=progress,reuse_only=reuse_only)
+    if detailed and retrieval.get('workspace_dependencies'):
+        from verified_cache import policy
+        answer['workspace_dependencies']=retrieval['workspace_dependencies']
+        answer['workspace_policy']=policy()
+        answer['workspace_as_of']=retrieval.get('workspace_as_of')
+        answer['workspace_passages']=[{'url':e['source_url'],'hash':e['content_hash']} for e in retrieval['evidence'] if e.get('content_hash')]
+        answer['source_scope_note']='관계 검색은 자료 준비 시점을 기준으로 합니다. 선택한 자료의 현재 입력·인용·독립 검토는 생성 및 조회 시 다시 확인합니다.'
     answer.setdefault('timing',{})['compose_ms']=compose_ms
     answer.update(phase='analysis',analysis_plan=plan)
     return answer
@@ -135,7 +142,7 @@ class GraphQuestions:
         with self.lock:
             if self.warm_thread is None and not self.closed:
                 def refresh():
-                    while not self.warm_stop.wait(30):
+                    while not self.warm_stop.wait(2):
                         try:self.snapshots.request({'workspace':['1']})
                         except (RuntimeError,sqlite3.OperationalError):pass
                 self.warm_thread=threading.Thread(target=refresh,name='question-index-warmup',daemon=True)
@@ -152,7 +159,8 @@ class GraphQuestions:
                 (json.dumps(request,ensure_ascii=False),time.time()-600)).fetchall()
         for candidate in candidates:
             saved=json.loads(candidate['result_json'])
-            if saved.get('bounded_signature'):
+            recent_workspace=saved.get('workspace_dependencies') and 0<=time.time()-float(saved.get('workspace_as_of') or 0)<=120
+            if saved.get('bounded_signature') or recent_workspace:
                 checked=self.get(candidate['id'])
                 if checked['status']=='complete':return self._cached_answer(dict(candidate),started,checked)
         revision,graph,_=self.snapshots.request(params)
@@ -165,6 +173,8 @@ class GraphQuestions:
         if job:
             return self._cached_answer(job,started)
         answer=quick_answer(graph,question,ids) if graph else cold_answer(self.path,question,ids,params)
+        if answer is None and params=={'workspace':['1']}:
+            answer=cold_answer(self.path,question,ids,{})
         if answer is None:answer={
             'phase':'preparing','answer':'검색 근거를 준비하고 있습니다. 준비가 끝나면 이 화면에 표시됩니다.',
             'claims':[],'evidence':[],'limitations':[]}
@@ -266,6 +276,9 @@ class GraphQuestions:
                         db.execute('UPDATE graph_question_jobs SET revision=?,key=? WHERE id=?',
                             (revision,content_digest([PIPELINE,revision,request]),identity))
                 if graph:break
+                if request['params']=={'workspace':['1']} and not request['node_ids'] and hasattr(self.snapshots,'available_workspace'):
+                    graph=self.snapshots.available_workspace()
+                    if graph:break
                 if not fallback_checked and time.monotonic()-begun>=5:
                     fallback_checked=True
                     bounded=question_evidence(self.path,request)
@@ -304,7 +317,10 @@ class GraphQuestions:
                                  answer_cache_hit=answer.get('timing',{}).get('answer_cache_hit',False),
                                  attempt_ms=round((time.monotonic()-begun)*1000,2)))
             latest=question_evidence(self.path,request,[e['id'] for e in graph['evidence']]) if bounded_signature else None
-            changed=(not latest or latest[1]!=bounded_signature) if bounded_signature else self.snapshots.key(request['params'])!=revision
+            if answer.get('workspace_dependencies'):
+                from context_current import current as current_workspace
+                changed=not current_workspace(self.path,answer['workspace_dependencies'],answer.get('workspace_passages',[]))
+            else:changed=(not latest or latest[1]!=bounded_signature) if bounded_signature else self.snapshots.key(request['params'])!=revision
             if changed:
                 if retries:
                     self._save(identity,'preparing',{},'근거 갱신으로 한 번 자동 재검토합니다.')
@@ -384,11 +400,19 @@ class GraphQuestions:
             if not latest or latest[1]!=result['result']['bounded_signature']:
                 return {'id':identity,'status':'stale','result':{},'error':'질문에 사용한 근거가 변경되어 재검토가 필요합니다.'}
             return result
+        if result['result'].get('workspace_dependencies'):
+            from context_current import current as current_workspace
+            from verified_cache import policy
+            if result['result'].get('workspace_policy')!=policy() or not current_workspace(self.path,result['result']['workspace_dependencies'],result['result'].get('workspace_passages',[])):
+                return {'id':identity,'status':'stale','result':{},'error':'질문에 사용한 자료가 변경되어 재검토가 필요합니다.'}
+            return result
         if self.snapshots.key(request['params'])!=row['revision']:
             if row['status'] in ('preparing','queued','running'):
                 # Prepare the new index while generation/review is still in
                 # flight, rather than add its cost after the model finishes.
                 self.snapshots.request(request['params'])
+                if request['params']=={'workspace':['1']}:
+                    return {'id':identity,'status':row['status'],'result':{},'error':''}
                 return {'id':identity,'status':'preparing','result':{},'error':'최신 근거를 준비하고 있습니다.'}
             return {'id':identity,'status':'stale','result':{},'error':'근거가 갱신되었습니다. 다시 질문해 주세요.'}
         return result

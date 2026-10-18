@@ -111,10 +111,14 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
         return dict(summary, stage='waiting_for_extraction')
     if active:
         return dict(summary, stage='baseline_running')
-    # Never bypass an unfinished run with fresh attempts.
+    # A new input generation can carry unchanged rejections without resetting
+    # attempts. Explicit pauses and engine failures still stop admission.
+    from baseline_handoff import can_carry
+    carry=latest and can_carry(db,latest)
     if latest and latest['status'] != 'complete':
-        return dict(summary, baseline_status=latest['status'],
-                    **recover_baseline(db, latest, request, now, check_engine, recovery_path))
+        if not carry:
+            return dict(summary, baseline_status=latest['status'],
+                        **recover_baseline(db, latest, request, now, check_engine, recovery_path))
     snapshots = {s['document_id']: s for s in map(freeze_item, all_corpus_items(db))}
     pending = 0
     for snapshot in snapshots.values():
@@ -123,6 +127,11 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
         if not cached or not BulkBaselineService._valid_cached(json.loads(cached[0]), snapshot):
             pending += 1
     summary.update(total_unique=len(snapshots), pending_current_inputs=pending)
+    if carry:
+        old={r[0]:r[1] for r in db.execute('SELECT document_id,input_hash FROM bulk_baseline_documents WHERE run_id=?',(latest['id'],))}
+        new=sum(old.get(identity)!=snapshot['input_hash'] for identity,snapshot in snapshots.items())
+        summary['new_or_changed_inputs']=new
+        if not new:return dict(summary,stage='baseline_attention_required',baseline_status=latest['status'])
     if not pending:
         return dict(summary, stage='up_to_date')
     from model_access import ensure_model_access
@@ -130,7 +139,10 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
     if not access['ready']:
         return dict(summary,stage='model_access_required',model_access=access)
     # After a timed-out POST, recheck the DB on the next tick rather than retrying.
-    result = request('/api/baseline', {'workers': 2, 'batch_size': 1})['run']
+    from baseline_execution import scheduled_settings
+    settings=scheduled_settings()
+    if carry:settings['carry_forward_run']=latest['id']
+    result = request('/api/baseline', settings)['run']
     return dict(summary, stage='baseline_started', baseline_run=result['id'],
                 baseline_status=result['status'], metrics=result['metrics'])
 

@@ -203,7 +203,7 @@ def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_t
             call_id=ticket.id, input_hash=input_digest(prompt),usage=ticket.usage,
             phase_ms=getattr(ticket,'phase_ms',{}),
             instruction_profile=selected['instruction_profile'],
-            wire_format='short-evidence-ids-v1' if aliases else 'original',wire_input_hash=input_digest(wire_prompt)))
+            wire_format=('short-baseline-ids-v1' if any(k.startswith('D') for k in aliases) else 'short-evidence-ids-v1') if aliases else 'original',wire_input_hash=input_digest(wire_prompt)))
 
 
 QUESTION_INSTRUCTIONS = '''You are a source-grounded analysis engine. Complete the requested analysis or independent review and return only the final JSON matching the supplied schema.

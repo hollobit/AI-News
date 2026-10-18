@@ -115,6 +115,8 @@ class BulkBaselineService:
             db.execute('''CREATE TABLE IF NOT EXISTS bulk_baseline_runs(id TEXT PRIMARY KEY,status TEXT NOT NULL,settings_json TEXT NOT NULL,
                 created_at TEXT NOT NULL,updated_at TEXT NOT NULL,owner_pid INTEGER,error TEXT NOT NULL DEFAULT '')''')
             init_blobs(db)
+            from baseline_execution import initialize
+            initialize(db)
             db.execute('''CREATE TABLE IF NOT EXISTS bulk_baseline_documents(run_id TEXT NOT NULL,document_id TEXT NOT NULL,position INTEGER NOT NULL,
                 input_hash TEXT NOT NULL,snapshot_json TEXT NOT NULL,prepared_json TEXT,status TEXT NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,
                 result_json TEXT,error TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL,reused INTEGER NOT NULL DEFAULT 0,
@@ -149,6 +151,10 @@ class BulkBaselineService:
             self._available()
             settings=dict(settings or {})
             settings.update(batch_size=max(1,min(int(settings.get('batch_size',12)),32)),workers=max(1,min(int(settings.get('workers',6)),6)),max_retries=1)
+            from baseline_handoff import extraction_token,prior_rows
+            with self.db() as db:
+                settings['extraction_token']=extraction_token(db)
+                prior=prior_rows(db,settings['carry_forward_run']) if settings.get('carry_forward_run') else {}
             snapshots={}
             selection=self.selector()
             coverage=dict(getattr(selection,'coverage',{}));selected_count=0
@@ -157,6 +163,11 @@ class BulkBaselineService:
                 snapshot=freeze_item(item)
                 snapshots.setdefault(snapshot['document_id'],snapshot)
             if not snapshots:raise ValueError('분석할 수집 뉴스가 없습니다.')
+            if prior:
+                if not any(identity not in prior or prior[identity]['input_hash']!=snapshot['input_hash'] for identity,snapshot in snapshots.items()):
+                    raise ValueError('새로 분석할 입력이 없습니다. 기존 검토 이력을 확인해 주세요.')
+                snapshots=dict(sorted(snapshots.items(),key=lambda item:
+                    item[0] in prior and prior[item[0]]['input_hash']==item[1]['input_hash']))
             settings['snapshot_coverage']={'selector_total_unique':coverage.get('total_unique',len(snapshots)),
                                            'snapshot_documents':len(snapshots),'empty_evidence':sum(not s['evidence'] for s in snapshots.values()),
                                            'selector_duplicates_excluded':coverage.get('duplicates_excluded',0),
@@ -168,6 +179,17 @@ class BulkBaselineService:
                     cached=db.execute('SELECT * FROM bulk_baseline_cache WHERE input_hash=?',(snapshot['input_hash'],)).fetchone()
                     reusable=bool(cached and self._valid_cached(json.loads(cached['result_json']),snapshot))
                     empty=not snapshot['evidence']
+                    old=prior.get(snapshot['document_id'])
+                    if old and old['input_hash']==snapshot['input_hash'] and not reusable:
+                        # Identical rejections keep their attempts, feedback and
+                        # preprocessing. New snapshots never replenish attempts.
+                        state=old['status'] if old['status']!='verified' else 'needs_review'
+                        db.execute('INSERT INTO bulk_baseline_documents VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                                   (run_id,snapshot['document_id'],position,snapshot['input_hash'],old['snapshot_json'],old['prepared_json'],
+                                    state,old['attempts'],old['result_json'],old['error'],old['updated_at'],0))
+                        if old['attempt_limit']>2:
+                            db.execute('INSERT INTO baseline_retry_budgets VALUES(?,?,?)',(run_id,snapshot['document_id'],old['attempt_limit']))
+                        continue
                     db.execute('INSERT INTO bulk_baseline_documents VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
                                (run_id,snapshot['document_id'],position,snapshot['input_hash'],pack_json(db,snapshot),pack_json(db,json.loads(cached['prepared_json'])) if reusable else None,
                                 'verified' if reusable else 'failed' if empty else 'pending',2 if empty else 0,pack_json(db,json.loads(cached['result_json'])) if reusable else None,
@@ -199,19 +221,29 @@ class BulkBaselineService:
         self._status(run_id,'finishing' if run['metrics']['active_workers'] else 'paused')
         return self.get(run_id)
 
-    def resume(self,run_id):
+    def resume(self,run_id,settings=None):
         with self.lock:
             self._available();run=self.get(run_id)
             if not run:raise ValueError('기본 분석 실행을 찾을 수 없습니다.')
             if run['status']=='complete':return run
+            from baseline_execution import update_profile
+            revised=update_profile(run['settings'],settings or {})
             with self.db() as db:
+                db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES (?,?,?,?)',
+                           (run_id,'execution_resumed','{}',now()))
+                if revised!=run['settings']:
+                    db.execute('UPDATE bulk_baseline_runs SET settings_json=? WHERE id=?',(js(revised),run_id))
+                    db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES (?,?,?,?)',
+                               (run_id,'execution_profile_changed',js({'before':run['settings'],'after':revised}),now()))
                 db.execute("UPDATE bulk_baseline_documents SET status='pending' WHERE run_id=? AND status='running'",(run_id,))
                 if run['status'] in ('requires_review','failed'):
-                    retryable=db.execute("SELECT document_id,snapshot_json FROM bulk_baseline_documents WHERE run_id=? AND status IN ('failed','needs_review')",(run_id,)).fetchall()
+                    retryable=db.execute("SELECT document_id,snapshot_json,attempts FROM bulk_baseline_documents WHERE run_id=? AND status IN ('failed','needs_review') AND attempts<5",(run_id,)).fetchall()
                     ids=[r['document_id'] for r in retryable if unpack_json(db,r['snapshot_json'])['evidence']]
-                    db.executemany("UPDATE bulk_baseline_documents SET status='pending',attempts=0 WHERE run_id=? AND document_id=?",[(run_id,identity) for identity in ids])
+                    db.executemany("UPDATE bulk_baseline_documents SET status='pending' WHERE run_id=? AND document_id=?",[(run_id,identity) for identity in ids])
+                    db.executemany('INSERT OR REPLACE INTO baseline_retry_budgets VALUES(?,?,?)',
+                                   [(run_id,r['document_id'],r['attempts']+1) for r in retryable if r['document_id'] in ids])
                     db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES (?,?,?,?)',
-                               (run_id,'manual_retry',js({'documents':len(ids),'max_retries':1,'reason':'사용자가 명시적으로 재개한 미검증 문서'}),now()))
+                               (run_id,'manual_retry',js({'documents':len(ids),'additional_attempts':1,'total_attempt_cap':5,'prior_attempts':{r['document_id']:r['attempts'] for r in retryable},'reason':'사용자가 명시적으로 재개한 미검증 문서'}),now()))
                 db.execute("UPDATE bulk_baseline_runs SET status='running',owner_pid=?,error='',updated_at=? WHERE id=?",(os.getpid(),now(),run_id))
             self._launch(run_id)
         return self.get(run_id)
@@ -256,17 +288,25 @@ class BulkBaselineService:
             preparation=threading.Thread(target=self._preprocess,args=(run_id,),daemon=True,name='news-baseline-morphology');preparation.start()
             self._status(run_id,'running')
             futures=set()
+            next_check=0;changed_token=None
             with ThreadPoolExecutor(max_workers=settings['workers'],thread_name_prefix='news-baseline-agent') as pool:
                 while True:
+                    if settings.get('realtime_inputs') and time.monotonic()>=next_check and not self.stop.is_set():
+                        from baseline_handoff import extraction_token
+                        with self.db() as db:token=extraction_token(db)
+                        next_check=time.monotonic()+2
+                        if token and token!=settings.get('extraction_token'):
+                            changed_token=token;self.stop.set()
                     if not self.stop.is_set() and not self.closed:
                         while len(futures)<settings['workers'] and not self.stop.is_set():
                             with self.db() as db:
                                 db.execute('BEGIN IMMEDIATE')
-                                rows=db.execute("SELECT * FROM bulk_baseline_documents WHERE run_id=? AND prepared_json IS NOT NULL AND status IN ('pending','retry') AND attempts<2 ORDER BY attempts,position LIMIT ?",(run_id,16 if settings.get('adaptive_batches') else settings['batch_size'])).fetchall()
+                                rows=db.execute("SELECT d.*,COALESCE(b.attempt_limit,2) AS attempt_limit FROM bulk_baseline_documents d LEFT JOIN baseline_retry_budgets b ON b.run_id=d.run_id AND b.document_id=d.document_id WHERE d.run_id=? AND prepared_json IS NOT NULL AND status IN ('pending','retry') AND attempts<COALESCE(b.attempt_limit,2) ORDER BY attempts,position LIMIT ?",(run_id,16 if settings.get('adaptive_batches') else settings['batch_size'])).fetchall()
                                 rows=hydrate_rows(db,rows)
+                                from baseline_execution import select_rows
                                 target=choose_batch_size(rows,settings)
-                                rows=rows[:target]
-                                if len(rows)<target and preparation.is_alive():rows=[]
+                                rows=select_rows(rows,settings)
+                                if not settings.get('micro_batches') and len(rows)<target and preparation.is_alive():rows=[]
                                 if rows:
                                     db.executemany("UPDATE bulk_baseline_documents SET status='running',attempts=attempts+1 WHERE run_id=? AND document_id=?",[(run_id,r['document_id']) for r in rows])
                             if not rows:break
@@ -279,10 +319,13 @@ class BulkBaselineService:
                         self.stop.wait(.1)
                     else:
                         with self.db() as db:
-                            pending=db.execute("SELECT COUNT(*) FROM bulk_baseline_documents WHERE run_id=? AND status IN ('pending','retry') AND prepared_json IS NOT NULL AND attempts<2",(run_id,)).fetchone()[0]
+                            pending=db.execute("SELECT COUNT(*) FROM bulk_baseline_documents d LEFT JOIN baseline_retry_budgets b ON b.run_id=d.run_id AND b.document_id=d.document_id WHERE d.run_id=? AND status IN ('pending','retry') AND prepared_json IS NOT NULL AND attempts<COALESCE(b.attempt_limit,2)",(run_id,)).fetchone()[0]
                         if not pending:break
                 preparation.join()
-            if self.stop.is_set() or self.closed:self._status(run_id,'paused')
+            if self.stop.is_set() or self.closed:
+                from baseline_handoff import request_handoff
+                handoff=changed_token and not self.closed and request_handoff(self,run_id,changed_token)
+                self._status(run_id,'paused','new_input_handoff' if handoff else '')
             else:
                 metrics=self.get(run_id)['metrics'];self._status(run_id,'complete' if metrics['verified']==metrics['total'] else 'requires_review')
         except Exception as exc:self._status(run_id,'failed',str(exc))
@@ -308,99 +351,17 @@ class BulkBaselineService:
                 + '반복 설명을 줄이고 요청된 JSON만 반환한다.\nDATA:\n'+json.dumps(documents,ensure_ascii=False))
 
     def _batch(self,run_id,rows):
-        started=time.monotonic();analysis_ms=review_ms=0;output_chars=0
-        with self.db() as db:
-            batch_settings=json.loads(db.execute('SELECT settings_json FROM bulk_baseline_runs WHERE id=?',(run_id,)).fetchone()[0])
-        snapshots={r['document_id']:json.loads(r['snapshot_json']) for r in rows}
-        preparations={r['document_id']:json.loads(r['prepared_json']) for r in rows}
-        from baseline_citations import candidates, generation_schema, materialize, bind_documents
-        citation_options={key:candidates(snapshots[key],preparations[key]) for key in snapshots}
-        inputs=[]
-        for row in rows:
-            prior=json.loads(row['result_json']) if row.get('result_json') else {}
-            feedback=list((prior.get('verification') or {}).get('issues') or [])
-            if row.get('error') and row['error'] not in feedback:feedback.append(row['error'])
-            inputs.append(dict(snapshots[row['document_id']],keyword_citations=citation_options[row['document_id']],
-                               previous_review={'issues':feedback[:8],'previous_analysis':{k:prior[k] for k in RECORD['required'] if k in prior}} if feedback else None))
-        outcomes={};valid={};engine_failure=None
-        try:
-            phase=time.monotonic()
-            raw=self.analyzer(self._prompt('analysis',inputs),bind_documents(generation_schema(ANALYSIS_SCHEMA,[key for choices in citation_options.values() for key in choices]),snapshots))
-            analysis_ms=round((time.monotonic()-phase)*1000);output_chars+=len(js(raw))
-            entries=raw.get('documents',[]) if isinstance(raw,dict) else []
-            for row in rows:
-                identity=row['document_id'];matches=[r for r in entries if isinstance(r,dict) and r.get('document_id')==identity]
-                try:
-                    if len(matches)!=1:raise ValueError('입력 문서가 누락되거나 중복되었습니다.')
-                    valid[identity]=validate_record(materialize(matches[0],citation_options[identity]),snapshots[identity],preparations[identity])
-                except (ValueError,TypeError) as exc:outcomes[identity]=('failed',None,str(exc))
-            if valid:
-                review_inputs=[dict(snapshots[key],keyword_citations=citation_options[key],analysis=value) for key,value in valid.items()]
-                phase=time.monotonic()
-                response=self.analyzer(self._prompt('verification',review_inputs),bind_documents(REVIEW_SCHEMA,{key:snapshots[key] for key in valid},'reviews'))
-                review_ms=round((time.monotonic()-phase)*1000);output_chars+=len(js(response))
-                reviews=response.get('reviews',[]) if isinstance(response,dict) else []
-                for identity,record in valid.items():
-                    matches=[r for r in reviews if isinstance(r,dict) and r.get('document_id')==identity]
-                    ids={e['id'] for e in snapshots[identity]['evidence']}
-                    if len(matches)!=1:
-                        outcomes[identity]=('failed',None,'독립 검토에서 문서가 누락되거나 중복되었습니다.');continue
-                    audit=matches[0]
-                    checked=audit.get('checked_evidence_ids');issues=audit.get('issues')
-                    if (not isinstance(audit.get('accepted'),bool) or not isinstance(checked,list) or any(not isinstance(r,str) or r not in ids for r in checked)
-                            or not isinstance(issues,list) or any(not isinstance(i,str) for i in issues)):
-                        outcomes[identity]=('failed',None,'독립 검토 응답·인용 형식 오류');continue
-                    if not set(record['evidence_ids'])<=set(checked):issues.append('모든 분석 인용을 대조하지 않았습니다.')
-                    accepted=audit['accepted'] and not issues
-                    audit=dict(audit,accepted=accepted,report_hash=digest(record),evidence_hash=digest(snapshots[identity]['evidence']))
-                    result=dict(record,verification=audit,verified=accepted,run_id=run_id,source_scope=snapshots[identity]['source_scope'],
-                                evidence=snapshots[identity]['evidence'],input_hash=snapshots[identity]['input_hash'],sectors=preparations[identity]['sectors'],
-                                strategic_value=preparations[identity]['strategic_value'],
-                                model_provenance=[p for p in (getattr(raw,'provenance',None),getattr(response,'provenance',None)) if p])
-                    outcomes[identity]=('verified' if accepted else 'needs_review',result,'; '.join(issues)[:500])
-        except Exception as exc:
-            from engine_errors import infrastructure_error
-            engine_failure = infrastructure_error(str(exc))
-            if engine_failure:
-                self.stop.set()
-            for row in rows:outcomes.setdefault(row['document_id'],('failed',None,str(exc)[:500]))
-        for identity,record in valid.items():
-            status,result,error=outcomes.get(identity,('failed',None,'독립 검토 미완료'))
-            if result is None:
-                draft=dict(record,verified=False,run_id=run_id,source_scope=snapshots[identity]['source_scope'],
-                           evidence=snapshots[identity]['evidence'],input_hash=snapshots[identity]['input_hash'],
-                           verification={'accepted':False,'status':'not_completed','issues':[error],'checked_evidence_ids':[]})
-                outcomes[identity]=(status,draft,error)
-        with self.db() as db:
-            for row in rows:
-                identity=row['document_id'];status,result,error=outcomes.get(identity,('failed',None,'분석 결과 없음'))
-                if engine_failure and status != 'verified':
-                    # An unavailable engine is not a content rejection. Preserve
-                    # the checkpoint and record the interrupted call separately.
-                    db.execute("UPDATE bulk_baseline_documents SET status='pending',attempts=?,error=?,updated_at=? WHERE run_id=? AND document_id=?",
-                               (row['attempts'], error, now(), run_id, identity))
-                    continue
-                if status!='verified' and row['attempts']+1<2:status='retry'
-                db.execute('UPDATE bulk_baseline_documents SET status=?,result_json=?,error=?,updated_at=? WHERE run_id=? AND document_id=?',
-                           (status,pack_json(db,result) if result else None,error,now(),run_id,identity))
-                if status=='verified':
-                    db.execute('INSERT OR REPLACE INTO bulk_baseline_cache VALUES (?,?,?,?,?,?)',
-                               (row['input_hash'],identity,js(result),js(snapshots[identity]['evidence']),row['prepared_json'],now()))
-            if engine_failure:
-                db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES (?,?,?,?)',
-                           (run_id,'engine_paused',js({'code':engine_failure,'documents':[r['document_id'] for r in rows]}),now()))
-            db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES (?,?,?,?)',
-                       (run_id,'analysis_and_verification',js({'documents':len(rows),'verified':sum(v[0]=='verified' for v in outcomes.values()),
-                        'input_chars':len(js(inputs)),'output_chars':output_chars,'analysis_ms':analysis_ms,'review_ms':review_ms,
-                        'elapsed_ms':round((time.monotonic()-started)*1000),'retry_documents':sum(r['attempts']>0 for r in rows),
-                        'measurement_version':1,'workers':batch_settings['workers'],
-                        'batch_mode':'adaptive' if batch_settings.get('adaptive_batches') else 'fixed',
-                        'configured_batch_size':batch_settings['batch_size']}),now()))
+        from baseline_processing import execute
+        return execute(self,run_id,rows)
 
     def _batch_worker(self,run_id,rows):
+        batch_id=uuid.uuid4().hex
+        with self.db() as db:
+            db.execute('INSERT INTO baseline_active_batches VALUES (?,?,?,?,?)',(batch_id,run_id,os.getpid(),len(rows),now()))
         with self.lock:self.active_batches+=1
         try:return self._batch(run_id,rows)
         finally:
+            with self.db() as db:db.execute('DELETE FROM baseline_active_batches WHERE id=?',(batch_id,))
             with self.lock:self.active_batches-=1
 
     def get(self,run_id):

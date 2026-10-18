@@ -36,7 +36,7 @@ def test_empty_store_has_unknown_not_fake_complete(tmp_path):
     path=tmp_path/'news.sqlite3'
     sqlite3.connect(path).close()
     result=snapshot(path)
-    assert len(result['stages'])==8
+    assert len(result['stages'])==10
     assert all(s['percent'] is None for s in result['stages'])
     assert result['stages'][0]['status']=='delayed'
 

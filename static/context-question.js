@@ -60,6 +60,10 @@
         el('p', '관련 원문을 먼저 제공합니다. 아래 발췌는 최종 종합 답변이 아닙니다.', 'legend')
       );
     }
+    if (data.workspace_as_of && data.source_scope_note) {
+      const asOf = new Date(data.workspace_as_of * 1000).toLocaleString('ko-KR');
+      root.append(el('p', `자료 준비 ${asOf} · ${data.source_scope_note}`, 'legend'));
+    }
     const reviewed = complete && data.verification?.method === 'independent_evidence_review';
     const references = new Map(
       (data.evidence || []).map((e, i) => [e.id, { ...e, number: i + 1 }])

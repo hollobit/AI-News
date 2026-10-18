@@ -8,9 +8,10 @@ from bulk_baseline import BulkBaselineService, freeze_item, validate_record, REC
 
 
 @verification_scope
-def baseline_sources(db, items=None):
+def baseline_sources(db, items=None, input_hashes=None):
     coverage = {'baseline_cached_analyses': 0, 'completed_verified_baselines': 0,
                 'baseline_stale_or_invalid': 0}
+    if input_hashes is not None and not input_hashes:return [],coverage
     if not db.execute("SELECT 1 FROM sqlite_master WHERE name='bulk_baseline_cache'").fetchone():
         return [], coverage
     def snapshots():
@@ -23,7 +24,13 @@ def baseline_sources(db, items=None):
     current = cached_read(db, 'baseline_current_snapshots', revision_token(db, ('source',)), snapshots,
                           copy_result=False) if items is None else snapshots()
     sources = []
-    for row in db.execute('SELECT input_hash,result_json,prepared_json FROM bulk_baseline_cache'):
+    query='SELECT input_hash,result_json,prepared_json FROM bulk_baseline_cache'
+    args=[]
+    if input_hashes is not None:
+        if not input_hashes:return [],coverage
+        args=sorted(input_hashes)
+        query+=' WHERE input_hash IN ('+','.join('?' for _ in args)+')'
+    for row in db.execute(query,args):
         checkpoint()
         coverage['baseline_cached_analyses'] += 1
         snapshot = current.get(row[0])

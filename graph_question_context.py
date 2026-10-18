@@ -128,6 +128,8 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
                     passages=len(evidence), full_corpus_analysis=False)
     return dict(nodes=list(nodes.values()), edges=list(edges.values())[:40], evidence=evidence,
                 no_hits=not evidence, limitations=[], coverage=coverage,
+                workspace_dependencies=getattr(graph,'workspace_dependencies',None),
+                workspace_as_of=getattr(graph,'workspace_as_of',None),
                 retrieval=dict(method='axis-balanced-documents-v1', **coverage,
                                evidence_characters=sum(len(e.get('text', '')) for e in evidence)))
 

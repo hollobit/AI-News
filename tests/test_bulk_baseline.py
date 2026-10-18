@@ -159,6 +159,8 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(selected,['https://example.com/1'])
         retried=[d for p in self.calls[before:] if p.startswith('ROLE: baseline_analysis') for d in json.loads(p.split('DATA:\n')[1])]
         self.assertTrue(retried[0]['previous_review']['issues'])
+        with s.db() as db:
+            self.assertEqual(db.execute("SELECT attempts FROM bulk_baseline_documents WHERE run_id=? AND document_id='https://example.com/1'",(r['id'],)).fetchone()[0],3)
 
     def test_review_feedback_reaches_the_automatic_retry(self):
         self.reject_ids={'https://example.com/1'}

@@ -18,7 +18,7 @@ def db():
         CREATE TABLE state(key TEXT PRIMARY KEY,value TEXT);
         CREATE TABLE bulk_baseline_runs(id TEXT,status TEXT,owner_pid INTEGER,created_at TEXT,updated_at TEXT);
         CREATE TABLE bulk_baseline_cache(input_hash TEXT,result_json TEXT);
-        CREATE TABLE bulk_baseline_documents(run_id TEXT,status TEXT);
+        CREATE TABLE bulk_baseline_documents(run_id TEXT,status TEXT,document_id TEXT,input_hash TEXT);
         CREATE TABLE bulk_baseline_events(seq INTEGER PRIMARY KEY,run_id TEXT,stage TEXT,detail TEXT,created_at TEXT);
     ''')
     connection.executemany('INSERT INTO state VALUES (?,?)', [
@@ -34,7 +34,7 @@ def run(db, **kwargs):
     return dispatch(db, now=datetime(2026, 9, 28, 12, 0, 1, tzinfo=timezone.utc), **kwargs)
 
 
-@pytest.mark.parametrize('status', ['paused', 'failed', 'requires_review', 'running', 'finishing'])
+@pytest.mark.parametrize('status', ['paused', 'failed', 'running', 'finishing'])
 def test_unfinished_runs_are_not_bypassed(db, status):
     db.execute('INSERT INTO bulk_baseline_runs VALUES (?,?,?,?,?)', ('old', status, None, '2026-09-28', '2026-09-28T12:00:00+00:00'))
     assert run(db, request=lambda *_: pytest.fail('Must not dispatch'))['stage'] == 'baseline_attention_required'
@@ -71,6 +71,22 @@ def test_new_input_dispatches_but_current_verified_input_does_not(db):
         with patch.object(BulkBaselineService, '_valid_cached', return_value=True):
             assert run(db, request=request)['stage'] == 'up_to_date'
         assert len(calls) == 2
+
+
+def test_rejected_history_carries_only_when_new_inputs_exist(db):
+    item={'title':'old','text':'source','source_url':'https://example.org/old'}
+    snapshot=freeze_item(item)
+    db.execute('INSERT INTO bulk_baseline_runs VALUES (?,?,?,?,?)',('old','requires_review',None,'2026-09-28','2026-09-28T12:00:00+00:00'))
+    db.execute('INSERT INTO bulk_baseline_documents VALUES (?,?,?,?)',('old','needs_review',snapshot['document_id'],snapshot['input_hash']))
+    calls=[]
+    def request(path,payload):
+        calls.append(payload);return {'run':{'id':'next','status':'running','metrics':{}}}
+    with patch('scheduled_collection.all_corpus_items',return_value=[item]):
+        assert run(db,request=request)['stage']=='baseline_attention_required'
+        assert not calls
+    with patch('scheduled_collection.all_corpus_items',return_value=[item,dict(item,source_url='https://example.org/new')]):
+        assert run(db,request=request)['stage']=='baseline_started'
+        assert calls[0]['carry_forward_run']=='old' and calls[0]['realtime_inputs']
 
 
 def engine_pause(db, code='timeout'):

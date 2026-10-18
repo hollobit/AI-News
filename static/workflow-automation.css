@@ -33,7 +33,7 @@
 }
 .auto-pipeline {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
 }
 .auto-stage {
@@ -143,6 +143,16 @@
 }
 .auto-support {
   margin-top: 10px;
+}
+.auto-lane-label {
+  margin: 8px 0 6px;
+  color: var(--lab-muted);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.auto-stage-queue {
+  line-height: 1.6;
+  white-space: normal;
 }
 .auto-support .auto-stage {
   background: var(--lab-surface) !important;

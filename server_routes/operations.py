@@ -18,7 +18,9 @@ def get(self, route, params):
         return True
     if route.path == '/api/operations/flow':
         from .workflow_status import snapshot
-        self.send_json(snapshot(self.services.path))
+        questions=getattr(self.services,'question_service',None)
+        index=questions.snapshots.status() if questions and hasattr(questions.snapshots,'status') else None
+        self.send_json(snapshot(self.services.path,index=index))
         return True
     if route.path == '/api/operations/health':
         from pipeline_health import view
@@ -110,7 +112,7 @@ def post(self, route, payload):
         try:
             if baseline_action:
                 run_id, action = baseline_action.groups()
-                result = getattr(self.services.baseline_service, action)(run_id)
+                result = self.services.baseline_service.resume(run_id, settings=payload) if action=='resume' and payload else getattr(self.services.baseline_service, action)(run_id)
             else:
                 result = self.services.baseline_service.start(payload)
             self.send_json({'run': result}, 202)

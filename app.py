@@ -55,7 +55,8 @@ def load_local_env(path=ROOT / ".env"):
         key, separator, value = line.partition("=")
         key = key.strip()
         if separator and key in {"TELEGRAM_BOT_TOKEN", "TELEGRAM_CHANNEL_IDS", "SSL_CERT_FILE", "NEWS_EXTERNAL_ANALYSIS_ENABLED",
-                                 "TYPESAFE_API_KEY", "NEWS_SYSTEM_ONE_MODE", "NEWS_SYSTEM_ONE_MODEL", "NEWS_QUESTION_PLAN_MODE"}:
+                                 "TYPESAFE_API_KEY", "NEWS_SYSTEM_ONE_MODE", "NEWS_SYSTEM_ONE_MODEL", "NEWS_QUESTION_PLAN_MODE",
+                                 "NEWS_BASELINE_KEYWORDS_MODE", "NEWS_BASELINE_PROFILE"}:
             os.environ.setdefault(key, value.strip())
 
 
@@ -445,6 +446,8 @@ def _collect(path):
                     db.execute("INSERT OR REPLACE INTO state VALUES ('collector_corpus_snapshot',?)",
                                (json.dumps(dict(previous,status='extracting',checked_at=checked)),))
                 finish_extraction(db,channels,checked)
+                from pipeline_wakeup import notify
+                notify(path)
         except HTTPError as error:
             if error.code in (401, 403, 404, 409):
                 raise SystemExit(f"Telegram HTTP {error.code}: 토큰, 권한, 기존 webhook 또는 중복 수집 프로세스를 확인해 주세요.") from None

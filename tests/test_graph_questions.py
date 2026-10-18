@@ -266,3 +266,53 @@ def test_background_warmup_is_idempotent_and_stops_without_analysis(tmp_path):
     assert not worker.is_alive() and snapshots.closed
     service.warm()
     assert snapshots.calls==2
+
+
+def test_workspace_answers_validate_selected_sources_not_unrelated_revision(tmp_path):
+    from verified_cache import policy
+    q=GraphQuestions(tmp_path/'selected.db',snapshots=Snapshots())
+    request={'question':'관계 종합 분석 질문','node_ids':[],'params':{'workspace':['1']}}
+    result={'phase':'analysis','answer':'검토된 종합 설명','claims':[{'text':'근거'}],
+            'workspace_dependencies':{'source':'hash'},'workspace_as_of':time.time(),'workspace_policy':policy(),
+            'verification':{'method':'independent_evidence_review','quality':{'policy':'question-explanation-v1','status':'passed'}}}
+    try:
+        with q.db() as db:
+            db.execute('INSERT INTO graph_question_jobs VALUES (?,?,?,?,?,?,?,?,?)',('selected','old-key','old',json.dumps(request,ensure_ascii=False),'complete',json.dumps(result),'',time.time(),0))
+        with patch('context_current.current',return_value=True) as validate:
+            answer=q.ask(request['question'],params=request['params'])
+            assert answer['timing']['answer_cache_hit'] and answer['answer']==result['answer']
+            validate.assert_called()
+        with patch('context_current.current',return_value=False):
+            assert q.get('selected')['status']=='stale'
+        with patch('context_current.current',return_value=True),patch('verified_cache.policy',return_value='new-review-policy'):
+            assert q.get('selected')['status']=='stale'
+    finally:q.close()
+
+
+def test_workspace_progress_does_not_go_back_to_preparation_on_unrelated_writes(tmp_path):
+    q=GraphQuestions(tmp_path/'progress.db',snapshots=Snapshots())
+    try:
+        with q.db() as db:
+            db.execute('INSERT INTO graph_question_jobs VALUES (?,?,?,?,?,?,?,?,?)',('id','key','old',json.dumps({'params':{'workspace':['1']}}),'running','{}','',time.time(),0))
+        assert q.get('id')['status']=='running'
+    finally:q.close()
+
+
+def test_consistent_workspace_fallback_preserves_selected_nodes_and_filters(tmp_path):
+    for index,(params,ids,expected) in enumerate([
+            ({'workspace':['1']},[],True),
+            ({'workspace':['1'],'topic':['robotics']},[],False),
+            ({'workspace':['1']},['node:1'],False)]):
+        class Preparing(Snapshots):
+            def request(self,params):return 'rev',None,None
+            def available_workspace(self):return object()
+        snapshots=Preparing()
+        q=GraphQuestions(tmp_path/(str(index)+'.db'),enabled=False,snapshots=snapshots)
+        request={'question':'범위 지정 질문','node_ids':ids,'params':params}
+        try:
+            with q.db() as db:
+                db.execute('INSERT INTO graph_question_jobs VALUES (?,?,?,?,?,?,?,?,?)',('id','key','rev',json.dumps(request),'preparing','{}','',time.time(),0))
+            with patch.object(snapshots,'available_workspace',wraps=snapshots.available_workspace) as available,patch('graph_questions.quick_answer',return_value={'evidence':[{'id':'e'}]}),patch('graph_questions.time.sleep',side_effect=lambda _:setattr(q,'closed',True)):
+                q._run('id','rev',request)
+                assert bool(available.call_count)==expected
+        finally:q.close()

@@ -39,7 +39,8 @@ def runtime(monkeypatch):
     return caller
 
 
-@pytest.mark.parametrize('question,intent',[(TREND,'trend'),(PRIORITY,'priority')])
+@pytest.mark.parametrize('question,intent',[(TREND,'trend'),(PRIORITY,'priority'),
+    ('최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?', 'research')])
 def test_accepted_template_preserves_question_skips_sol_and_reuses_exact_plan(tmp_path,monkeypatch,runtime,question,intent):
     sol=Mock(side_effect=AssertionError('No Sol planning for accepted template'))
     monkeypatch.setattr('semantic.run_structured',sol)

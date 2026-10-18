@@ -75,7 +75,7 @@ class GraphSnapshots:
         self.directory.mkdir(parents=True,exist_ok=True)
         self.builder=builder or load_integrated_graph
         self.isolated=builder is None
-        self.lock=threading.RLock();self.ready=OrderedDict();self.pending={};self.errors={};self.latest={}
+        self.lock=threading.RLock();self.ready=OrderedDict();self.pending={};self.errors={};self.latest={};self.builds={}
         self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='graph-snapshots')
         self.workspace_executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='workspace-snapshots')
 
@@ -98,6 +98,7 @@ class GraphSnapshots:
             if key not in self.pending:
                 if len(self.pending)>=4:return key,None,None
                 executor=self.workspace_executor if params=={'workspace':['1']} else self.executor
+                self.builds[key]={'started_at':time.time()}
                 future=executor.submit(self._prepare,key,params)
                 self.pending[key]=future
                 future.add_done_callback(lambda f:self._finished(key,f))
@@ -143,6 +144,45 @@ class GraphSnapshots:
             while len(self.ready)>3:self.ready.popitem(last=False)
         return graph
 
+    def status(self,params=None):
+        """In-memory observation only; polling never triggers an index build."""
+        params=filters(params or {'workspace':['1']})
+        with self.lock:
+            key=self.latest.get(content_digest(params))
+            graph=self.ready.get(key)
+            info=dict(self.builds.get(key,{}))
+            pending=key in self.pending
+            status='complete' if graph is not None else 'preparing' if pending else 'failed' if key in self.errors else 'unknown'
+        info.update(status=status,owner_alive=pending,active_count=int(pending))
+        if graph is None:
+            graph=self.available_workspace()
+            if graph is not None:
+                info.update(status='refreshing' if pending else 'available',selection_as_of=graph.workspace_as_of)
+        if graph is not None and hasattr(graph,'workspace_store'):
+            try:
+                metadata=dict(graph.workspace_store.rows("SELECT key,body FROM meta WHERE key='build'"))
+                info.update(json.loads(metadata.get('build','{}')))
+                info['prepared_at']=Path(graph.workspace_store.path).stat().st_mtime
+            except (OSError,sqlite3.Error,ValueError):pass
+        return info
+
+    def available_workspace(self):
+        """A recent consistent selection; callers must refresh/validate its sources."""
+        from context_index import previous_index,read
+        from verified_cache import policy
+        file=previous_index(self.directory)
+        if not file:return None
+        try:
+            with sqlite3.connect(file.resolve().as_uri()+'?mode=ro',uri=True,timeout=.25) as db:
+                metadata=dict(db.execute("SELECT key,body FROM meta WHERE key IN ('key','baseline_delta','admitted_at')"))
+            position=json.loads(metadata.get('baseline_delta','null'))
+            stamp=float(metadata.get('admitted_at','0'))
+            if not position or position.get('policy')!=policy() or not 0<=time.time()-stamp<=120:return None
+            graph=read(file,metadata['key'],consistent=True)
+            graph.workspace_source_path=self.path;graph.workspace_as_of=stamp
+            return graph
+        except (OSError,ValueError,sqlite3.Error,KeyError):return None
+
     def _check_current(self,key,params):
         from concurrent.futures import CancelledError
         checkpoint()
@@ -164,7 +204,7 @@ class GraphSnapshots:
             from context_index import previous_index
             # Keep one cold workspace build as an incremental base even if the
             # corpus moves during it. It is never served as a current snapshot.
-            cold_workspace=params=={'workspace':['1']} and previous_index(self.directory) is None
+            workspace=params=={'workspace':['1']}
             process=subprocess.Popen([sys.executable,__file__,'--build',self.path,str(file),key,json.dumps(params)],
                                      stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             try:
@@ -172,7 +212,7 @@ class GraphSnapshots:
                 while process.poll() is None:
                     checkpoint()
                     if time.monotonic()-checked>=2:
-                        if not cold_workspace:self._check_current(key,params)
+                        if not workspace:self._check_current(key,params)
                         checked=time.monotonic()
                     time.sleep(.1)
                 if process.returncode:raise RuntimeError('Graph index preparation failed')
@@ -186,9 +226,15 @@ class GraphSnapshots:
                 file.with_suffix('.'+str(process.pid)+'.tmp').unlink(missing_ok=True)
         if self.key(params)!=key:raise RuntimeError('저장 근거가 갱신되었습니다.')
         graph=read(file,key)
+        if params=={'workspace':['1']}:
+            graph.workspace_source_path=self.path
+            metadata=dict(graph.workspace_store.rows("SELECT key,body FROM meta WHERE key='admitted_at'"))
+            graph.workspace_as_of=float(metadata.get('admitted_at',time.time()))
         with self.lock:
             self.ready[key]=graph
             while len(self.ready)>3:self.ready.popitem(last=False)
+            for old in list(self.builds):
+                if old not in self.ready and old not in self.pending:self.builds.pop(old,None)
         from graph_disk_index import prune
         prune(self.directory)
         return graph

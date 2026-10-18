@@ -18,7 +18,7 @@ import time
 import urllib.error
 import urllib.request
 
-VERSION = 'system-one-scoped-plan-v2'
+VERSION = 'system-one-scoped-plan-v3'
 ENDPOINT = 'https://api.typesafe.ai/v1/systemone'
 DEFAULT_MODEL = 'jev-1.14.0'
 TIMEOUT = 2.0
@@ -30,15 +30,16 @@ def config():
     mode = os.getenv('NEWS_SYSTEM_ONE_MODE', 'shadow')
     model = os.getenv('NEWS_SYSTEM_ONE_MODEL', DEFAULT_MODEL)
     configured = bool(os.getenv('TYPESAFE_API_KEY'))
-    # Pin calibration. Only the separately bounded search-plan selector may
-    # apply decisions; evidence selection and article analysis remain shadow.
+    # Pin calibration. Search plans apply by default; optional keyword cleanup
+    # requires an explicit opt-in. Neither approves evidence or analysis.
     valid = mode in ('off', 'shadow') and bool(re.fullmatch(r'jev-\d+\.\d+\.\d+', model))
     enabled = valid and mode=='shadow' and configured
     plan_mode = os.getenv('NEWS_QUESTION_PLAN_MODE', 'jev')
     plans = enabled and plan_mode=='jev' and model==DEFAULT_MODEL
+    keywords = enabled and os.getenv('NEWS_BASELINE_KEYWORDS_MODE','off')=='jev' and model==DEFAULT_MODEL
     return dict(mode=mode if valid else 'invalid', model=model if valid else None,
                 configured=configured, enabled=enabled, question_plan_mode=plan_mode if plan_mode in ('jev','off') else 'invalid',
-                applies_decisions=plans, applies_question_plans=plans,
+                applies_decisions=plans or keywords, applies_question_plans=plans, applies_baseline_keywords=keywords,
                 applies_evidence_selection=False, applies_workflow_decisions=False, version=VERSION)
 
 

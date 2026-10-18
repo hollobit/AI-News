@@ -3,7 +3,7 @@ import copy
 import json
 import re
 
-ALIAS = re.compile(r'(?<![A-Za-z0-9_])E[1-9][0-9]*(?![A-Za-z0-9_])')
+ALIAS = re.compile(r'(?<![A-Za-z0-9_])[EDK][1-9][0-9]*(?![A-Za-z0-9_])')
 IDENTITY = re.compile(r'(?:news|url)_[0-9a-f]{20,64}')
 
 
@@ -19,6 +19,8 @@ def prepare(prompt, schema):
     if not separator:return prompt,schema,{}
     try:data=json.loads(body)
     except (ValueError,TypeError):return prompt,schema,{}
+    if isinstance(data,list) and head.startswith(('ROLE: baseline_analysis','ROLE: baseline_verification')):
+        return prepare_documents(head,separator,data,schema,prompt)
     if not isinstance(data,dict):return prompt,schema,{}
     entries=data.get('evidence')
     if not isinstance(entries,list):return prompt,schema,{}
@@ -40,6 +42,31 @@ def prepare(prompt, schema):
     # Text/date/source fields are not truncated or rewritten. Only reference
     # values and enum alternatives change; JSON whitespace is insignificant.
     packed=head+separator+json.dumps(encode(data),ensure_ascii=False,separators=(',',':'))
+    return packed,encode(copy.deepcopy(schema)),{alias:identity for identity,alias in forward.items()}
+
+
+def prepare_documents(head, separator, documents, schema, original):
+    """Compress only structural document/evidence/keyword references, not sources."""
+    if (not documents or any(not isinstance(d,dict) or not isinstance(d.get('document_id'),str)
+                             or not isinstance(d.get('evidence'),list) for d in documents)
+            or ALIAS.search(original) or ALIAS.search(json.dumps(schema))):
+        return original,schema,{}
+    document_ids=[d['document_id'] for d in documents]
+    if len(set(document_ids))!=len(document_ids):return original,schema,{}
+    evidence_ids=list(dict.fromkeys(e.get('id') for d in documents for e in d['evidence']))
+    keywords=list(dict.fromkeys(k for d in documents for k in d.get('keyword_citations',{})))
+    ids=document_ids+evidence_ids+keywords
+    if any(not isinstance(i,str) or not i for i in ids) or len(ids)!=len(set(ids)):
+        return original,schema,{}
+    forward={identity:prefix+str(n+1) for prefix,entries in [('D',document_ids),('E',evidence_ids),('K',keywords)]
+             for n,identity in enumerate(entries)}
+    def encode(value,key=''):
+        if isinstance(value,dict):return {forward.get(k,k) if key=='keyword_citations' else k:encode(v,k) for k,v in value.items()}
+        if isinstance(value,list):return [encode(v,key) for v in value]
+        if isinstance(value,str) and key in ('id','document_id','evidence_ids','checked_evidence_ids','citation_id','enum'):
+            return forward.get(value,value)
+        return value
+    packed=head+separator+json.dumps(encode(documents),ensure_ascii=False,separators=(',',':'))
     return packed,encode(copy.deepcopy(schema)),{alias:identity for identity,alias in forward.items()}
 
 

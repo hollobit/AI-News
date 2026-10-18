@@ -53,7 +53,7 @@ class PaperPipeline:
         # Only fetch-backed papers enter analysis. Never use discovery titles as abstracts.
         if self.analysis.enabled:
             with self.db() as db:
-                pending=db.execute("SELECT count(*) FROM arxiv_paper_analyses WHERE status IN ('queued','running','paused')").fetchone()[0]
+                pending=db.execute("SELECT count(*) FROM arxiv_paper_analyses WHERE status IN ('queued','running')").fetchone()[0]
                 from arxiv_papers import _paper_rows
                 from paper_analysis import analysis_input_hash
                 analyses={r['paper_id']:dict(r) for r in db.execute('SELECT * FROM arxiv_paper_analyses')}
@@ -69,7 +69,7 @@ class PaperPipeline:
                     candidates.append(item['paper_id'])
                     if len(candidates)>=2:break
             if pending<4 and candidates:
-                result=self.analysis.submit(candidates,limit=2);self._record(result['queued'],'analysis')
+                result=self.analysis.submit(candidates[:4-pending],limit=min(2,4-pending));self._record(result['queued'],'analysis')
         if state['failures']>=3:return
         if self.metadata.active:return
         with self.db() as db:

@@ -31,7 +31,9 @@ class BaselineJobs:
     def worker_counts(self):
         with self.reader.db() as db:
             rows=db.execute("SELECT r.id,r.owner_pid,r.settings_json,COUNT(d.document_id) AS count FROM bulk_baseline_runs r LEFT JOIN bulk_baseline_documents d ON d.run_id=r.id AND d.status='running' WHERE r.status IN ('preparing','running','finishing') GROUP BY r.id").fetchall()
-        return {r['id']:math.ceil(r['count']/max(1,json.loads(r['settings_json']).get('batch_size',1))) for r in rows if owner_alive(r['owner_pid'])}
+            batches={(r[0],r[1]):r[2] for r in db.execute('SELECT run_id,owner_pid,count(*) FROM baseline_active_batches GROUP BY run_id,owner_pid')}
+        return {r['id']:batches.get((r['id'],r['owner_pid']),0 if json.loads(r['settings_json']).get('micro_batches') else
+                    math.ceil(r['count']/max(1,json.loads(r['settings_json']).get('batch_size',1)))) for r in rows if owner_alive(r['owner_pid'])}
 
     def _launch(self,action,run_id='',settings=None):
         self.reader._available()
@@ -61,10 +63,12 @@ class BaselineJobs:
     def start(self,settings=None):
         with self.lock:return self._launch('start',settings=settings)
 
-    def resume(self,run_id):
+    def resume(self,run_id,settings=None):
         if not self.get(run_id):raise ValueError('기본 분석 실행을 찾을 수 없습니다.')
         if self.get(run_id)['status']=='complete':return self.get(run_id)
-        with self.lock:return self._launch('resume',run_id)
+        from baseline_execution import update_profile
+        update_profile(self.get(run_id)['settings'],settings or {})
+        with self.lock:return self._launch('resume',run_id,settings=settings)
 
     def pause(self,run_id):
         with self.reader.db() as db:

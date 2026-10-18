@@ -474,6 +474,9 @@ class CompletionRunner:
                             print(json.dumps({'status':'admission_sample','workers_target':self.admission.target,'prior_target':before,'sample':sample,'reason':getattr(self.admission,'last_reason','warming_up')}),flush=True)
                         last_pressure = stamp
                     if self.cycle_control(): self.stop.set()
+                    if not self.stop.is_set() and self.recent_first:
+                        from completion_inputs import refresh
+                        refresh(self,stamp)
                     self.window_expired = bool(self.window_seconds and time.monotonic() - started >= self.window_seconds)
                     while available and not self.stop.is_set() and not self.window_expired and len(futures) < self.admission.target:
                         if self.max_rounds and dispatched>=self.max_rounds:break

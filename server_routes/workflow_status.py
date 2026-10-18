@@ -10,7 +10,7 @@ from operations_health import alive, age
 from engine_errors import infrastructure_error, MESSAGES
 
 
-def snapshot(path):
+def snapshot(path,index=None):
     stamp=time.time()
     stages=[];events=[];tasks=[]
     def stage(identity,title,counts=None,done=(),**extra):
@@ -45,6 +45,17 @@ def snapshot(path):
             if row:
                 code=infrastructure_error(row['error'])
                 item['error_message']=MESSAGES.get(code,'')
+            if row and identity=='baseline':
+                if 'baseline_active_batches' in tables:
+                    item['active_count']=db.execute('SELECT count(*) FROM baseline_active_batches WHERE run_id=? AND owner_pid=?',(row['id'],row['owner_pid'])).fetchone()[0] if item['owner_alive'] else 0
+                if 'bulk_baseline_events' in tables:
+                    latest=db.execute("SELECT stage,detail,created_at FROM bulk_baseline_events WHERE run_id=? AND stage IN ('analysis_and_verification','input_handoff','engine_paused') ORDER BY seq DESC LIMIT 1",(row['id'],)).fetchone()
+                    if latest:
+                        detail=json.loads(latest['detail']);item['last_event']=dict(stage=latest['stage'],at=latest['created_at'],
+                            documents=detail.get('documents') if type(detail.get('documents')) is int else None,
+                            verified=detail.get('verified'),reused_drafts=detail.get('reused_drafts',0))
+                        if latest['stage']=='input_handoff':item['note']='새 입력을 우선 처리하기 위해 현재 배치 종료 후 인계합니다. 이전 대상·시도·검토 이력은 보존합니다.'
+                        if latest['stage']=='engine_paused':item['error_message']=MESSAGES.get(detail.get('code'),'분석 엔진 확인 후 재개가 필요합니다.')
             if row and identity=='deep':
                 if 'completion_engine_waits' in tables:
                     item['retries']=[dict(r) for r in db.execute('''SELECT r.number,w.failures,w.next_attempt_at FROM completion_engine_waits w
@@ -78,6 +89,29 @@ def snapshot(path):
         if 'risk_schedule' in tables:
             schedule=dict(db.execute('SELECT enabled,recoveries,stagnant,next_attempt_at FROM risk_schedule WHERE id=1').fetchone() or {})
         else:schedule={}
+        if 'completion_input_events' in tables:
+            inputs=[dict(r) for r in db.execute('SELECT added,changed,deferred,created_at FROM completion_input_events ORDER BY seq DESC LIMIT 5')]
+        else:inputs=[]
+        question_counts=counts('graph_question_jobs')
+        active_questions=0
+        if 'graph_question_jobs' in tables:
+            active_questions=sum(alive(r[0]) for r in db.execute("SELECT owner_pid FROM graph_question_jobs WHERE status IN ('running','queued','preparing')"))
+        stage('questions','종합 질의·독립 검토',question_counts,('complete',),status='running' if active_questions else 'recorded' if question_counts else 'unknown',
+              active_count=active_questions,owner_alive=bool(active_questions),href='/context',unit='질의 기록',
+              note='질의별 근거 검색 → 작성 → 독립 검토입니다. 과거 완료 기록의 최신 입력 유효성은 답변을 열 때 확인합니다.')
+        if 'paper_pipeline_state' in tables:
+            paper_state=db.execute('SELECT enabled,failures,next_at FROM paper_pipeline_state WHERE id=1').fetchone()
+            if paper_state:
+                paper_stage=next(s for s in stages if s['id']=='papers')
+                paper_stage['provider_wait']=dict(official_api_paused=paper_state['failures']>=3,retry_at=paper_state['next_at'],enabled=bool(paper_state['enabled']))
+                if paper_state['failures']>=3:paper_stage['note']+=' 공식 API는 실패 후 대기 중이며 대체 공급자·확보 자료 분석은 별도로 진행합니다.'
+    index=index or {}
+    stage('index','검토 자료 검색 반영',status=index.get('status','unknown'),owner_alive=index.get('owner_alive',False),
+          active_count=index.get('active_count',0),observed=index.get('sources'),href='/context',unit='검색 자료',
+          updated_at=datetime.fromtimestamp(index['prepared_at'],timezone.utc).isoformat() if index.get('prepared_at') else None,
+          mode=index.get('mode'),changed=index.get('changed'),removed=index.get('removed'),
+          selection_as_of=index.get('selection_as_of'),
+          note='기본 분석만 바뀌면 해당 자료만 갱신합니다. 갱신 중에는 2분 이내 준비된 자료에서 후보를 찾고, 선택한 자료의 현재 입력·인용·검토를 다시 확인합니다. 답변에는 자료 준비 시점을 표시합니다.')
     runtime_dir=Path(path).resolve().parent.parent/'.runtime'
     try:
         dispatch=json.loads((runtime_dir/'scheduled-risks.json').read_text())
@@ -115,5 +149,5 @@ def snapshot(path):
     for task in tasks: task.pop('call_ids', None)
     from .decision_control import overview
     return dict(observed_at=datetime.fromtimestamp(stamp,timezone.utc).isoformat(),stages=stages,events=events,tasks=tasks,control=overview(path),
-                calls=calls,call_counts=call_counts,call_limit=limit,runtime_error=runtime_error,schedule=schedule,
+                calls=calls,call_counts=call_counts,call_limit=limit,runtime_error=runtime_error,schedule=schedule,input_events=inputs,
                 scope='각 단계의 원장·확보 기록입니다. 서로 다른 대상을 합산한 전체 완료율은 제공하지 않습니다.')

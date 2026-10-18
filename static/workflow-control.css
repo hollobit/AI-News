@@ -97,7 +97,15 @@ body[data-lab-view='control'] [data-offline='true'] #connection {
   gap: 10px;
 }
 #control-room
-  > :is(.lab-toolbar, .control-metrics, .control-layout, .control-replay, #control-message) {
+  > :is(
+    .lab-toolbar,
+    .auto-panel,
+    .control-metrics,
+    .control-layout,
+    .control-detail-layout,
+    .control-replay,
+    #control-message
+  ) {
   grid-column: 1 / -1;
 }
 .lab-toolbar {

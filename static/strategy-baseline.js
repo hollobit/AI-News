@@ -216,7 +216,12 @@
 
     $('#baseline-start').addEventListener('click', () =>
       action($('#baseline-start'), async () => {
-        const data = await api('/api/baseline', { batch_size: 12, workers: 6 });
+        const data = await api('/api/baseline', {
+          batch_size: 4,
+          workers: 4,
+          micro_batches: true,
+          realtime_inputs: true,
+        });
         renderBaseline(data.run || data);
         loadBaseline((data.run || data).id);
       })

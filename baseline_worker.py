@@ -22,7 +22,7 @@ def run(path, action, run_id, settings, ready):
             initial_seq=db.execute('SELECT COALESCE(MAX(seq),0) FROM bulk_baseline_events').fetchone()[0]
         for sig in (signal.SIGINT,signal.SIGTERM):
             signal.signal(sig,lambda *_:service.stop.set())
-        result=service.start(settings) if action=='start' else service.resume(run_id)
+        result=service.start(settings) if action=='start' else service.resume(run_id,settings=settings)
         ready.write_text(json.dumps({'run':result}))
         done=threading.Event()
         def watch_pause():
@@ -37,6 +37,12 @@ def run(path, action, run_id, settings, ready):
             if service.thread:service.thread.join()
         finally:
             done.set();watcher.join(1);service.close()
+        with service.db() as db:
+            final=db.execute("SELECT status,error FROM bulk_baseline_runs WHERE id=?",(result['id'],)).fetchone()
+            handoff=final['error']=='new_input_handoff' or final['status'] in ('complete','requires_review')
+    if handoff:
+        from pipeline_wakeup import notify
+        notify(path,risks=False)
 
 
 if __name__=='__main__':

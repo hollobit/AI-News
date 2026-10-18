@@ -15,7 +15,7 @@ async def main():
     result=dict(answer='벤치마크는 평가 조건에 따라 비교 범위가 달라집니다. [e]\n\n제공 자료의 차이가 해석에 미치는 의미를 설명합니다. [unknown:source] <img src=x onerror=alert(1)>',
         verification=dict(method='independent_evidence_review',quality=dict(status='passed',revision_count=1,issues=[])),
         claims=[dict(text='평가 조건은 비교 범위를 제한합니다.',kind='connection',axis='비교 조건',evidence_ids=['e'])],
-        evidence=[dict(id='e',title='공식 평가 자료',text='벤치마크 원문',source_url='https://example.org/source')],limitations=[])
+        evidence=[dict(id='e',title='공식 평가 자료',text='벤치마크 원문',source_url='https://example.org/source')],limitations=[],workspace_as_of=1792306489,source_scope_note='선택한 자료의 현재 입력·인용·독립 검토를 다시 확인합니다.')
     state=dict(status='complete',result=result)
     errors=[];posts=[];polls=[]
     async with async_playwright() as p:
@@ -35,6 +35,8 @@ async def main():
         await page.route('http://test.local/**',route)
         await page.goto('http://test.local/context?'+urlencode(dict(q=question,answer='b'*32)))
         await expect(page.locator('.answer-quality')).to_have_text('보완 후 재검토 완료')
+        await expect(page.locator('#context-answer')).to_contain_text('자료 준비')
+        await expect(page.locator('#context-answer')).to_contain_text('현재 입력·인용·독립 검토')
         await expect(page.locator('.answer-synthesis > p')).to_have_count(2)
         await expect(page.locator('.answer-synthesis > p').first.locator('mark')).to_have_text('벤치마크')
         assert await page.locator('.answer-synthesis img').count()==0

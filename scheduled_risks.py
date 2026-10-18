@@ -119,7 +119,9 @@ def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=
         # A pause or new owner arriving during the probe always wins.
         current=db.execute('SELECT pause_requested,owner_pid FROM rsi_cycles WHERE id=?',(identity,)).fetchone()
         if current['pause_requested'] or is_alive(current['owner_pid']):return {'stage':'admission_changed'}
-        if cycle['status']=='needs_review' and not resume:return {'stage':'review_required','cycle':identity}
+        if cycle['status']=='needs_review' and not resume:
+            from completion_inputs import has_new_inputs
+            if not has_new_inputs(db,identity):return {'stage':'review_required','cycle':identity}
         db.execute('UPDATE risk_schedule SET cycle_id=?,stagnant=?,verified=? WHERE id=1',(identity,schedule['stagnant'],verified))
         db.commit()
         pid=launcher(path,identity)

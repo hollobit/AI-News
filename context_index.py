@@ -11,6 +11,7 @@ import re
 import sqlite3
 import threading
 import hashlib
+import time
 from pathlib import Path
 import shutil
 from contextlib import closing
@@ -18,6 +19,8 @@ from contextlib import closing
 from graph_disk_index import Store, encode
 from task_lifecycle import checkpoint
 
+# The physical schema is unchanged. Old indexes have no delta watermark and
+# must pass full current admission once before the new fast path is eligible.
 VERSION = 'workspace-sources-v2-incremental'
 KINDS = ('graph', 'research', 'workflow', 'paper', 'baseline', 'external', 'wiki')
 
@@ -46,14 +49,30 @@ def previous_index(directory):
     return None
 
 
-def write(path, db, key, previous=None):
+def admitted_snapshot(db,previous):
+    """Bind the disposable base to one SQLite read snapshot, even during writes."""
     from graph_rag import _analysis_sources
     from integrated_context import enrich_sources
-    sources, coverage = _analysis_sources(db)
-    # Risk/scenario materialization uses this immutable payload, never a newer
-    # final artifact mixed with an older source index.
-    finals = {r[0]: r[1] for r in db.execute("SELECT run_id,payload_json FROM strategic_workflow_artifacts WHERE stage='final'")} if db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_artifacts'").fetchone() else {}
-    sources = sources + enrich_sources(db, [])
+    from context_delta import position,inputs
+    position(db)  # Install change tracking before opening the read transaction.
+    owned=not db.in_transaction
+    if owned:db.execute('BEGIN')
+    try:
+        initial=position(db)
+        admitted_at=time.time()
+        delta=inputs(db,previous,initial)
+        if delta:sources,coverage,changed_keys=delta
+        else:sources,coverage=_analysis_sources(db);changed_keys=None
+        finals = {r[0]: r[1] for r in db.execute("SELECT run_id,payload_json FROM strategic_workflow_artifacts WHERE stage='final'")} if not delta and db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_artifacts'").fetchone() else {}
+        if not delta:sources=sources+enrich_sources(db,[])
+        return sources,coverage,finals,initial,changed_keys,admitted_at
+    finally:
+        if owned:db.rollback()
+
+
+def write(path, db, key, previous=None):
+    sources,coverage,finals,initial,changed_keys,admitted_at=admitted_snapshot(db,previous)
+    delta=changed_keys is not None
     if previous:
         clone_index(previous, path)
     with sqlite3.connect(path) as store:
@@ -65,6 +84,7 @@ def write(path, db, key, previous=None):
             CREATE INDEX source_kind ON sources(kind);
             CREATE VIRTUAL TABLE search USING fts5(title,text,content='sources',content_rowid='id',tokenize='trigram');''')
         existing={r[0]:(r[1],r[2]) for r in store.execute('SELECT source_key,id,digest FROM sources')}
+        if delta:existing={k:v for k,v in existing.items() if k in changed_keys}
         store.executemany('INSERT OR REPLACE INTO meta VALUES(?,?)',
                           [('key',key),('coverage',encode(coverage)),('workspace_format',VERSION),('servable','1')])
         changed=0
@@ -113,8 +133,11 @@ def write(path, db, key, previous=None):
             unindex(identity)
             store.execute('DELETE FROM sources WHERE id=?',(identity,))
         if not previous:store.execute("INSERT INTO search(search) VALUES('rebuild')")
-        stats=dict(mode='incremental' if previous else 'full',sources=len(sources),changed=changed,removed=len(existing))
+        stats=dict(mode='baseline_delta' if delta else 'incremental' if previous else 'full',
+                   sources=store.execute('SELECT count(*) FROM sources').fetchone()[0],changed=changed,removed=len(existing))
         store.execute('INSERT OR REPLACE INTO meta VALUES(?,?)',('build',encode(stats)))
+        store.execute('INSERT OR REPLACE INTO meta VALUES(?,?)',('baseline_delta',encode(initial)))
+        store.execute('INSERT OR REPLACE INTO meta VALUES(?,?)',('admitted_at',str(admitted_at)))
     return stats
 
 
@@ -145,11 +168,11 @@ def clone_index(previous, path):
     shutil.copyfile(previous,path)
 
 
-def read(path, key):
+def read(path, key, *, consistent=False):
     from graph_rag import GraphResult
     store = Store(path)
     metadata=dict(store.rows("SELECT key,body FROM meta WHERE key IN ('key','servable')"))
-    if metadata.get('key') != key or metadata.get('servable')=='0':
+    if metadata.get('key') != key or (metadata.get('servable')=='0' and not consistent):
         raise ValueError('Obsolete workspace index')
     coverage = json.loads(store.rows("SELECT body FROM meta WHERE key='coverage'")[0][0])
     graph = GraphResult(nodes=[], edges=[], evidence=[], coverage=coverage)
@@ -182,6 +205,12 @@ def materialize_many(graph, questions):
     """Reserve candidates per query/kind, build their shared graph only once."""
     questions=tuple(dict.fromkeys(questions))
     question=questions
+    with graph.workspace_lock:
+        cached=graph.workspace_cache.get(question)
+    if cached is not None and getattr(graph,'workspace_source_path',None):
+        from context_current import current
+        if not current(graph.workspace_source_path,cached.workspace_dependencies):
+            with graph.workspace_lock:graph.workspace_cache.pop(question,None)
     with graph.workspace_lock:
         if question in graph.workspace_cache:
             graph.workspace_cache.move_to_end(question)
@@ -232,6 +261,15 @@ def _materialize(graph, questions):
             batch=ordered[offset:offset+400]
             selected.update(store.execute('SELECT id,body FROM sources WHERE id IN ('+','.join('?' for _ in batch)+')',batch))
     sources = [json.loads(body) for _, body in sorted(selected.items())]
+    from context_current import dependencies,load
+    source_path=getattr(graph,'workspace_source_path',None)
+    if source_path:
+        # A prepared selection may be slightly behind continuous ingestion.
+        # Refresh its actual source records before generating any interpretation.
+        with closing(sqlite3.connect(source_path,timeout=2)) as live:
+            live.row_factory=sqlite3.Row;live.execute('BEGIN')
+            sources=load(live,dependencies(sources))
+    current_dependencies=dependencies(sources)
     # Reuse enrichment against only the immutable selected workflow artifacts.
     # Wiki entries already have their original source links in this generation.
     with sqlite3.connect(':memory:') as db:
@@ -245,6 +283,8 @@ def _materialize(graph, questions):
         result = merge_sources(db, sources, graph['coverage'], {})
     result['coverage'].update(scope='질문별 관련 자료의 연결 분석', selected_source_records=len(sources))
     result['limitations'][0] = '분야별 검색 상위 후보의 인용·관계를 종합합니다. 자료 전체를 전수 독해하거나 모든 관계를 열거한 결과가 아닙니다.'
-    result.search_key = content_digest([graph.search_key, questions, VERSION,'query-batch-v1'])
+    result.search_key = content_digest([graph.search_key, questions, VERSION,'query-batch-v1',current_dependencies])
     result.prepared_index = RetrievalIndex(result)
+    result.workspace_dependencies=current_dependencies
+    result.workspace_as_of=getattr(graph,'workspace_as_of',None)
     return result

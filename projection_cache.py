@@ -123,6 +123,8 @@ def _setup(db, identity):
                 BEGIN UPDATE projection_revisions SET value=value+1 WHERE kind='{kind}'; END''')
     from source_changes import install
     install(db)
+    from context_delta import install as install_baseline_changes
+    install_baseline_changes(db)
     db.commit()
     schema = db.execute('PRAGMA schema_version').fetchone()[0]
     with _LOCK:

@@ -21,6 +21,8 @@ def job(identity,status='running'):
 async def main():
     a=job('a','complete');b=job('b');c=job('c')
     stages=[dict(id=k,title=k,counts={'complete':2,'pending':1},total=3,complete=2,percent=66.6,status='running' if k=='deep' else 'recorded',owner_alive=k=='deep',href='/operations',unit='기사',note='선택 기간의 원장 기준',run_id='run',updated_at='2026-10-15T07:00:00Z') for k in ['collector','extract','baseline','deep','sources','papers','wiki','publication']]
+    stages.extend([dict(id='index',title='검색 반영',counts={},total=0,complete=0,percent=None,status='preparing',owner_alive=True,active_count=1,href='/context',unit='검색 자료',note='현재 검토 자료를 준비합니다.'),
+                   dict(id='questions',title='종합 질의',counts={'running':1},total=1,complete=0,percent=0,status='running',owner_alive=True,active_count=1,href='/context',unit='질의',note='작성과 독립 검토')])
     flow=dict(observed_at='2026-10-15T07:01:00Z',stages=stages,tasks=[],events=[],calls=[],call_counts={'running':0,'queued':0},call_limit=20,runtime_error=False,schedule={'enabled':1},scope='원장 기준',control=dict(jobs=[a],metrics={},settings={},unavailable=False))
     jobs={'a':a,'b':b,'c':c};fail_detail=False;fail_flow=False;posts=[];errors=[];hits=0
     async with async_playwright() as p:
@@ -43,6 +45,14 @@ async def main():
         await page.route('http://test.local/**',handle)
         await page.goto('http://test.local/workflow')
         await expect(page.locator('#control-title')).to_have_text(a['title'])
+        await expect(page.locator('.auto-stage')).to_have_count(10)
+        assert await page.locator('.auto-panel').evaluate('(e)=>e.getBoundingClientRect().top') < await page.locator('.control-layout').evaluate('(e)=>e.getBoundingClientRect().top')
+        assert await page.locator('.auto-panel').evaluate('(e)=>e.getBoundingClientRect().width') > 1200
+        await expect(page.locator('[data-auto-stage="index"]')).to_have_attribute('data-activity','running')
+        stages[-2].update(status='complete',owner_alive=False,active_count=0,mode='baseline_delta',changed=4,removed=1,observed=120)
+        await page.locator('#refresh').click()
+        await page.locator('[data-auto-stage="index"]').click()
+        await expect(page.locator('#auto-stage-note')).to_contain_text('변경 4개 · 철회 1개')
         await expect(page.locator('#control-follow')).to_have_attribute('aria-pressed','true')
         flow['control']['jobs']=[b,a]
         flow['calls']=[dict(id=i,model='gpt-6.1-sol',role='risk_assessment',status='running' if i==0 else 'queued',owner_alive=True,elapsed_seconds=5,started_at=10,queued_at=9) for i in range(20)]

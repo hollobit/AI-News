@@ -243,13 +243,14 @@ def validated_workflow_content(payload: dict, run_id: str) -> dict:
 
 
 @verification_scope
-def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dict[str, int]]:
+def _analysis_sources(db: sqlite3.Connection, selected=None) -> tuple[list[dict[str, Any]], dict[str, int]]:
     sources: list[dict[str, Any]] = []
     current_sources = None
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='source_excerpts'").fetchone():
         current_sources = {canonical_url(row[0]):(_json(row[1]) or {}) for row in
                            db.execute('SELECT canonical_url,result_json FROM source_excerpts')}
-    graph_rows = _table_rows(db, "graph_analysis")
+    graph_rows = _table_rows(db, "graph_analysis") if selected is None or selected.get('graph') else []
+    if selected is not None:graph_rows=[r for r in graph_rows if str(r.get('group_id')) in selected.get('graph',set())]
     completed_graphs = 0
     for row in graph_rows:
         checkpoint()
@@ -260,7 +261,7 @@ def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dic
         sources.append({"kind": "graph", "id": _clean(row.get("group_id")), "result": result,
                         "row": row})
 
-    research_rows = _table_rows(db, "research_documents")
+    research_rows = _table_rows(db, "research_documents") if selected is None or selected.get('research') else []
     completed_documents = 0
     for index, row in enumerate(research_rows):
         checkpoint()
@@ -273,17 +274,21 @@ def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dic
         completed_documents += 1
         identity = _clean(row.get("id") or row.get("document_id") or row.get("doc_id")
                           or row.get("canonical_url") or index)
+        if selected is not None and identity not in selected.get('research',set()):continue
         sources.append({"kind": "research", "id": identity, "result": result, "row": row})
     workflow_rows, finals = [], ()
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_runs'").fetchone():
         workflow_rows = [dict(zip(('id','status','error'),row)) for row in
                          db.execute('SELECT id,status,error FROM strategic_workflow_runs')]
-    if db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_artifacts'").fetchone():
+    if (selected is None or selected.get('workflow')) and db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_artifacts'").fetchone():
         # Intermediate role reports and failed attempts never enter this graph.
         # Filtering in SQL avoids decoding gigabytes of unrelated execution history.
-        finals = db.execute('''SELECT a.run_id,a.payload_json
+        query='''SELECT a.run_id,a.payload_json
             FROM strategic_workflow_artifacts a JOIN strategic_workflow_runs r ON r.id=a.run_id
-            WHERE a.stage='final' AND r.status='complete' AND COALESCE(r.error,'')='' ''')
+            WHERE a.stage='final' AND r.status='complete' AND COALESCE(r.error,'')='' '''
+        args=[] if selected is None else sorted(selected['workflow'])
+        if selected is not None:query+=' AND a.run_id IN ('+','.join('?' for _ in args)+')'
+        finals=db.execute(query,args)
     completed_workflows = 0
     stale_workflow_claims = 0
     corrections = correction_token(db)
@@ -302,10 +307,10 @@ def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dic
             completed_workflows += 1
             sources.append({"kind": "workflow", "id": row["id"], "result": result, "row": row})
     from paper_graph import paper_sources
-    papers, paper_counts = paper_sources(db)
+    papers, paper_counts = paper_sources(db,paper_ids=selected.get('paper',set())) if selected is not None else paper_sources(db)
     sources.extend(papers)
     from baseline_graph import baseline_sources
-    baselines, baseline_counts = baseline_sources(db)
+    baselines, baseline_counts = baseline_sources(db,input_hashes=selected.get('baseline',set())) if selected is not None else baseline_sources(db)
     sources.extend(baselines)
     # Public reads are raw source observations, never pre-verified analytical claims.
     if current_sources:
@@ -313,6 +318,7 @@ def _analysis_sources(db: sqlite3.Connection) -> tuple[list[dict[str, Any]], dic
             checkpoint()
             if excerpt.get('status')!='fetched' or not excerpt.get('reader') or not excerpt.get('text'):continue
             identity='reach:'+hashlib.sha256(url.encode()).hexdigest()[:24]
+            if selected is not None and identity not in selected.get('external',set()):continue
             evidence=dict(id=identity,title=excerpt.get('title') or url,text=excerpt['text'],
                 source_url=url,day='',origin='public_source_excerpt',reader=excerpt['reader'],
                 evidence_scope=excerpt.get('evidence_scope',''),fetched_at=excerpt.get('fetched_at',''))
