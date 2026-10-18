@@ -172,7 +172,10 @@ class GraphQuestions:
                 if row:job=dict(row)
         if job:
             return self._cached_answer(job,started)
-        answer=quick_answer(graph,question,ids) if graph else cold_answer(self.path,question,ids,params)
+        workspace=self.enabled and params=={'workspace':['1']} and not ids
+        # Connected graph construction belongs to the background job. Even a
+        # prepared index must not delay the first HTTP evidence response.
+        answer=cold_answer(self.path,question,ids,{}) if workspace else quick_answer(graph,question,ids) if graph else cold_answer(self.path,question,ids,params)
         if answer is None and params=={'workspace':['1']}:
             answer=cold_answer(self.path,question,ids,{})
         if answer is None:answer={
@@ -187,7 +190,7 @@ class GraphQuestions:
                     claims=[{'text':passage(e,question),'evidence_ids':[e['id']],'kind':'source_excerpt'} for e in evidence[:4]],
                     verification={'method':'source_passage_selection','question_answer_reviewed':False})
         if not self.enabled and graph:answer['analysis_status']='disabled'
-        if not graph or (self.enabled and (answer.get('evidence') or self.enricher)):
+        if not graph or (self.enabled and (answer.get('evidence') or self.enricher or workspace)):
             with self.lock:
                 with self.db() as db:
                     existing=db.execute("SELECT * FROM graph_question_jobs WHERE (key=? AND status='complete') OR (request_json=? AND owner_pid=? AND status IN ('preparing','queued','running')) ORDER BY created_at DESC LIMIT 1",(key,json.dumps(request,ensure_ascii=False),os.getpid())).fetchone()
