@@ -14,6 +14,7 @@ from graph_plans import prepare, valid
 
 TREND='최근 Physical AI 관련 뉴스와 논문에서 공통으로 나타나는 변화와 쟁점은 무엇인가요?'
 PRIORITY='에이전트 환경에서의 개인정보 보호, 보안 이슈 중 가장 심각하게 다루어지고 있는 이슈는 ?'
+COMPARISON='최근 Physical AI 벤치마크의 평가 방법과 데이터세트 구성 차이를 설명하고, 보고된 성능 수치를 해석할 때 주의할 점을 정리해주세요.'
 FALLBACK={'queries':['맞춤 검색'], 'axes':['요청별 검토']}
 
 
@@ -41,7 +42,9 @@ def runtime(monkeypatch):
 
 @pytest.mark.parametrize('question,intent',[(TREND,'trend'),(PRIORITY,'priority'),
     ('최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?', 'research'),
-    ('최근 Physical AI 벤치마크 연구 현황에서 주요 평가 방법과 데이터세트 유형, 비교할 때의 한계를 설명해주세요.', 'research')])
+    ('최근 Physical AI 벤치마크 연구 현황에서 주요 평가 방법과 데이터세트 유형, 비교할 때의 한계를 설명해주세요.', 'research'),
+    (COMPARISON,'benchmark_comparison'),
+    ('Physical AI 벤치마크별 평가 방식과 데이터세트 구성은 어떻게 다르며 성능 수치를 어떻게 해석해야 하나요?', 'benchmark_comparison')])
 def test_accepted_template_preserves_question_skips_sol_and_reuses_exact_plan(tmp_path,monkeypatch,runtime,question,intent):
     sol=Mock(side_effect=AssertionError('No Sol planning for accepted template'))
     monkeypatch.setattr('semantic.run_structured',sol)
@@ -108,6 +111,37 @@ def test_comparison_limit_template_still_requires_jev_scope_approval(tmp_path,mo
     assert sent['question']==question
     assert sent['proposed_plan']['queries'][0]==question and sent['proposed_plan']['axes'][0]==question
     assert question in sol.call_args.args[0]
+
+
+def test_benchmark_comparison_preserves_all_axes_and_sol_draft(tmp_path,monkeypatch):
+    from model_policy import question_draft_role
+    monkeypatch.setattr('semantic.run_structured',Mock(side_effect=AssertionError('No planning call')))
+    plan,_=prepare(COMPARISON,tmp_path/'news')
+    assert len(plan['axes'])==4 and plan['axes'][0]==COMPARISON
+    assert all(COMPARISON.rstrip('.?') in q for q in plan['queries'])
+    assert question_draft_role(COMPARISON,plan,evidence=[{'text':'원자료'}])=='graph_answer'
+
+
+@pytest.mark.parametrize('question',[
+    'PhysAI-Bench와 Smart Spaces 벤치마크의 평가 방법과 데이터세트 구성 차이, 성능 수치 해석은?',
+    'Physical AI 벤치마크 평가 방법과 데이터세트 구성 차이, 성능 해석과 치료 결정은?',
+])
+def test_specific_alternatives_or_added_requirements_need_independent_scope_approval(tmp_path,monkeypatch,runtime,question):
+    runtime.side_effect=lambda body:response(body,coverage='custom')
+    sol=Mock(return_value=copy.deepcopy(FALLBACK));monkeypatch.setattr('semantic.run_structured',sol)
+    assert candidate(question)[0]=='benchmark_comparison'
+    assert prepare(question,tmp_path/'news')[0]==FALLBACK
+    assert question in sol.call_args.args[0] and sol.call_count==1
+
+
+@pytest.mark.parametrize('extra',['2026년 이후 ', '한국을 제외하고 ', '각각 ', '특정 조건에서 ', '성과를 예측하고 ', '모델별로 '])
+def test_benchmark_template_does_not_drop_filters_or_extra_scope(tmp_path,monkeypatch,runtime,extra):
+    question=extra+COMPARISON
+    sol=Mock(return_value=copy.deepcopy(FALLBACK));monkeypatch.setattr('semantic.run_structured',sol)
+    assert candidate(question) is None
+    assert prepare(question,tmp_path/'news')[0]==FALLBACK
+    assert question in sol.call_args.args[0]
+    runtime.assert_not_called()
 
 
 @pytest.mark.parametrize('env,value',[('NEWS_QUESTION_PLAN_MODE','off'),('NEWS_QUESTION_PLAN_MODE','invalid'),
