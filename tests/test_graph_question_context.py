@@ -90,16 +90,17 @@ def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeyp
     calls=[]
     def runner(prompt, schema, **kw):
         calls.append(prompt)
-        if 'checks' in schema['properties']:
+        if {'checks','support'} & schema['properties'].keys():
             data=json.loads(prompt[prompt.index('\n')+1:])
             assert {e['source_url']:e['text'] for e in data['evidence']} == {original['source_url']:original['text'],conflict['source_url']:conflict['text']}
             support_id=next(e['id'] for e in data['evidence'] if e['source_url']==original['source_url'])
             assert data['claims'][0]['evidence_ids']==[support_id]
             assert data['axes'] == ['성공률'] and data['as_of']
             value=dict(checks=[dict(claim_index=0,supported=True,reason='조건부 해석')],answer_supported=True,missing_information=[],citation_corrections=[])
-            if 'quality' in schema['properties']:
+            if {'quality','criteria_pass'} & schema['properties'].keys():
                 from test_answer_quality import audit
-                count=schema['properties']['quality']['properties']['axes']['minItems']
+                count=(schema['properties']['addressed']['maxItems'] if 'addressed' in schema['properties']
+                       else schema['properties']['quality']['properties']['axes']['minItems'])
                 value['quality']=audit(axes=('addressed',)*count)['quality']
             return value
         data=json.JSONDecoder().raw_decode(prompt.split('\nDATA:\n')[1])[0]

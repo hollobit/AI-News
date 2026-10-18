@@ -9,11 +9,12 @@ def test_detailed_relational_answer_preserves_review_and_separate_cache(monkeypa
     calls=[]
     def runner(prompt,schema,**kwargs):
         calls.append((prompt,schema,kwargs))
-        if 'checks' in schema['properties']:
+        if {'checks','support'} & schema['properties'].keys():
             value=dict(checks=[dict(claim_index=0,supported=True,reason='원문 대조')],answer_supported=True,missing_information=[],citation_corrections=[])
-            if 'quality' in schema['properties']:
+            if {'quality','criteria_pass'} & schema['properties'].keys():
                 from test_answer_quality import audit
-                count=schema['properties']['quality']['properties']['axes']['minItems']
+                count=(schema['properties']['addressed']['maxItems'] if 'addressed' in schema['properties']
+                       else schema['properties']['quality']['properties']['axes']['minItems'])
                 value['quality']=audit(axes=('addressed',)*count)['quality']
             return value
         item=schema['properties']['claims']['items']

@@ -18,7 +18,7 @@ def context(monkeypatch):
     calls=[]
     def model(prompt,schema,**kwargs):
         calls.append(kwargs['role'])
-        if 'checks' in schema['properties']:
+        if {'checks','support'} & schema['properties'].keys():
             return audit(axes=('addressed',))
         data=json.loads(prompt.split('\nDATA:\n')[1])
         return dict(claims=[dict(kind='finding',axis='측정 범위',

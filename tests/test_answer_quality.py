@@ -51,7 +51,7 @@ def execute(monkeypatch, responses, *, graph=None, events=None):
     calls=[]
     def runner(prompt, schema, **kwargs):
         initial='paragraphs' in schema['properties'] and 'changes' not in schema['properties'] and '\nFORMAT_REPAIR:\n' not in prompt
-        assert kwargs['role']==('strategic_question_verification' if 'checks' in schema['properties'] else 'graph_draft' if initial else 'graph_answer')
+        assert kwargs['role']==('strategic_question_verification' if {'checks','support'} & schema['properties'].keys() else 'graph_draft' if initial else 'graph_answer')
         calls.append((prompt, schema))
         value=responses.pop(0)
         if isinstance(value, Exception): raise value
@@ -98,7 +98,7 @@ def test_list_only_answer_is_repaired_and_independently_rechecked(monkeypatch):
     assert quality['revision_count']==1
     assert [r['status'] for r in quality['review_rounds']]==['needs_review','passed']
     assert '차이가 평가에 미치는 의미' in calls[2][0]
-    assert 'checks' in calls[3][1]['properties'] and result['answer']==review_explanation(calls[3][0])['answer']
+    assert 'support' in calls[3][1]['properties'] and result['answer']==review_explanation(calls[3][0])['answer']
     assert ('review', {'phase':'repair'}) in events and ('review', {'phase':'recheck'}) in events
     assert events[-1][0]=='finalize'
 
@@ -284,7 +284,7 @@ def test_citation_fix_survives_prose_repair_and_is_reused_only_after_independent
 def test_missing_citation_audit_cannot_publish_a_compact_answer(monkeypatch):
     value=audit();value.pop('citation_corrections')
     run,_=execute(monkeypatch,[draft(),value])
-    with pytest.raises(RuntimeError,match='교정 검토'):run()
+    with pytest.raises(RuntimeError,match='검토'):run()
 
 
 @pytest.mark.parametrize('quality_passes',[True,False])
