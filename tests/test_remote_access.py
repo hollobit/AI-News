@@ -1,9 +1,11 @@
 import json
+from concurrent.futures import ThreadPoolExecutor
 from http.client import HTTPConnection
-from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler
 import threading
 import pytest
-from ops.remote_access import Access,handler,COOKIE,TTL,public_origin
+from ops.remote_access import Access,handler,COOKIE,TTL,public_origin,RemoteHTTPServer
+from server_bootstrap import NewsHTTPServer
 
 @pytest.fixture
 def gateway(tmp_path):
@@ -15,13 +17,13 @@ def gateway(tmp_path):
             body=self.rfile.read(int(self.headers.get('Content-Length','0')))
             seen.append((self.path,dict(self.headers),body))
             self.send_response(200);self.send_header('Content-Type','application/json');self.end_headers();self.wfile.write(b'{"ok":true}')
-    upstream=ThreadingHTTPServer(('127.0.0.1',0),Upstream)
+    upstream=NewsHTTPServer(('127.0.0.1',0),Upstream)
     config=tmp_path/'public.json';config.write_text(json.dumps({'origin':'https://news.example.org'}))
     access=Access(config,'a'*32,upstream.server_port)
-    server=ThreadingHTTPServer(('127.0.0.1',0),handler(access))
+    server=RemoteHTTPServer(('127.0.0.1',0),handler(access))
     for s in [upstream,server]:threading.Thread(target=s.serve_forever,daemon=True).start()
     def request(path='/api/context',method='GET',payload=None,cookie='',origin='https://news.example.org',host='news.example.org'):
-        c=HTTPConnection('127.0.0.1',server.server_port)
+        c=HTTPConnection('127.0.0.1',server.server_port,timeout=10)
         headers={'Host':host,'Origin':origin,'Content-Type':'application/json','Cookie':cookie}
         c.request(method,path,None if payload is None else json.dumps(payload),headers)
         r=c.getresponse(); result=(r.status,dict(r.getheaders()),r.read());c.close();return result
@@ -64,6 +66,24 @@ def test_expired_session_and_login_throttle(gateway):
     for _ in range(10):assert r('/_remote/login','POST',{'password':'wrong'})[0]==401
     assert r('/_remote/login','POST',{'password':'a'*32})[0]==429
     assert not seen
+
+
+def test_authenticated_page_asset_burst(gateway):
+    _, seen, request = gateway
+    cookie = login(request)
+    barrier = threading.Barrier(32, timeout=10)
+
+    def fetch(index):
+        barrier.wait()
+        return request(f'/asset-{index}.js', cookie=cookie)
+
+    with ThreadPoolExecutor(max_workers=32) as pool:
+        results = list(pool.map(fetch, range(32)))
+    assert all(status == 200 and body == b'{"ok":true}' for status, _, body in results)
+    assert {path for path, _, _ in seen} == {f'/asset-{index}.js' for index in range(32)}
+    assert all('Cookie' not in headers and not body for _, headers, body in seen)
+    assert request()[0] == 401
+
 
 @pytest.mark.parametrize('value',['http://example.org','https://user:pass@example.org','https://example.org/path','https://example.org?token=x','https://example.org#x'])
 def test_public_origin_rejects_unsafe_addresses(value):

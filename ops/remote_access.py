@@ -19,6 +19,14 @@ from urllib.parse import urlsplit
 
 COOKIE = '__Host-news-session'
 TTL = 8 * 3600
+
+
+class RemoteHTTPServer(ThreadingHTTPServer):
+    # The tunnel forwards parallel browser asset requests over separate sockets.
+    # Match the local server's backlog so a page load survives a brief accept lag.
+    request_queue_size = 64
+
+
 LOGIN = '''<!doctype html><html lang="ko"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>원격 분석실 로그인</title>
 <style>body{font:16px system-ui;background:#edf2f8;color:#17334a;margin:0}main{max-width:420px;margin:12vh auto;padding:28px;background:white;border-radius:18px}input,button{box-sizing:border-box;width:100%;padding:14px;margin:12px 0;border:1px solid #bbcadb;border-radius:8px;font:inherit}button{background:#204c70;color:white}p{line-height:1.7}#status{color:#a13030}</style>
@@ -205,7 +213,7 @@ def main():
     password = Path(args.password_file).read_text().strip()
     if len(password)<24:
         raise SystemExit('Use a generated access password of at least 24 characters')
-    server = ThreadingHTTPServer(('127.0.0.1',args.port), handler(Access(args.config,password,args.upstream_port)))
+    server = RemoteHTTPServer(('127.0.0.1',args.port), handler(Access(args.config,password,args.upstream_port)))
     server.daemon_threads = True
     server.serve_forever()
 
