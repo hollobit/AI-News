@@ -105,6 +105,9 @@ def _setup(db, identity):
         columns = {row[1] for row in db.execute(f'PRAGMA table_info("{table}")')}
         for event in ('INSERT','UPDATE','DELETE'):
             condition = ''
+            if table=='arxiv_paper_analyses' and event=='UPDATE':
+                from context_paper_delta import publication_condition
+                condition=publication_condition(table,columns)
             if table == 'strategic_workflow_artifacts' and 'stage' in columns:
                 condition = " WHEN (" + ("OLD.stage='final' OR NEW.stage='final'" if event=='UPDATE' else
                                          ("OLD.stage='final'" if event=='DELETE' else "NEW.stage='final'"))
@@ -116,11 +119,15 @@ def _setup(db, identity):
                 condition = ' WHEN ' + ("(OLD.status='complete' OR NEW.status='complete') AND (OLD.status IS NOT NEW.status OR OLD.error IS NOT NEW.error)" if event=='UPDATE'
                     else "NEW.status='complete'" if event=='INSERT' else "OLD.status='complete'")
             trigger = f'projection_v1_{table}_{event.lower()}'
+            marker=' /* paper-public-v2 */ ' if table=='arxiv_paper_analyses' and event=='UPDATE' and condition else ''
+            if marker:
+                existing=db.execute("SELECT sql FROM sqlite_master WHERE type='trigger' AND name=?",(trigger,)).fetchone()
+                if existing and 'paper-public-v2' not in existing[0]:db.execute(f'DROP TRIGGER "{trigger}"')
             if table in {'strategic_workflow_runs','strategic_workflow_artifacts'}:
                 db.execute(f'DROP TRIGGER IF EXISTS "{trigger}"')
                 trigger = f'projection_v2_{table}_{event.lower()}'
             db.execute(f'''CREATE TRIGGER IF NOT EXISTS "{trigger}" AFTER {event} ON "{table}"{condition}
-                BEGIN UPDATE projection_revisions SET value=value+1 WHERE kind='{kind}'; END''')
+                BEGIN {marker} UPDATE projection_revisions SET value=value+1 WHERE kind='{kind}'; END''')
     from source_changes import install
     install(db)
     from context_delta import install as install_baseline_changes

@@ -142,3 +142,52 @@ def test_workflow_delta_preserves_risk_payload_and_removes_revoked_verdicts(tmp_
                     actual.execute("INSERT INTO search(search,rank) VALUES('integrity-check',1)")
                 previous=delta
     finally:case.db.close()
+
+
+def test_paper_checkpoint_writes_do_not_rebuild_search_but_public_changes_do(tmp_path):
+    from context_delta import publication_changes
+    path=tmp_path/'db'
+    with sqlite3.connect(path) as db:
+        db.executescript('''CREATE TABLE bulk_baseline_cache(input_hash TEXT PRIMARY KEY);
+            CREATE TABLE arxiv_paper_analyses(paper_id TEXT PRIMARY KEY,input_hash TEXT,status TEXT,error TEXT,result_json TEXT,
+                owner_pid INTEGER,updated_at TEXT,draft_json TEXT,evidence_json TEXT);
+            INSERT INTO arxiv_paper_analyses VALUES('paper','hash','running','',NULL,123,'old',NULL,NULL);''')
+        before=position(db)
+        db.execute("UPDATE arxiv_paper_analyses SET draft_json='draft',evidence_json='evidence',owner_pid=234,updated_at='new'");db.commit()
+        assert position(db)==before
+        db.execute("UPDATE arxiv_paper_analyses SET result_json='verified result',status='complete'");db.commit()
+        after=position(db)
+        assert publication_changes(db,before,after)==dict(baseline=set(),paper={'paper'},workflow=set())
+        assert after['analysis'][0]-before['analysis'][0]==1
+        db.execute("UPDATE arxiv_paper_analyses SET error='withdrawn'");db.commit()
+        assert publication_changes(db,after,position(db))['paper']=={'paper'}
+
+
+def test_paper_checkpoint_trigger_upgrade_rotates_epoch_and_keeps_revision_journal_in_sync(tmp_path):
+    from context_delta import publication_changes
+    path=tmp_path/'db'
+    with sqlite3.connect(path) as db:
+        db.executescript('''CREATE TABLE bulk_baseline_cache(input_hash TEXT PRIMARY KEY);
+            CREATE TABLE arxiv_paper_analyses(paper_id TEXT PRIMARY KEY,updated_at TEXT);
+            INSERT INTO arxiv_paper_analyses VALUES('paper','old');''')
+        original=position(db)
+        db.execute("UPDATE arxiv_paper_analyses SET updated_at='checkpoint'");db.commit()
+        legacy=position(db)
+        assert publication_changes(db,original,legacy)['paper']=={'paper'}
+        for column in ('input_hash','status','error','result_json'):
+            db.execute(f'ALTER TABLE arxiv_paper_analyses ADD COLUMN {column} TEXT')
+        db.commit()
+        upgraded=position(db)
+        assert publication_changes(db,legacy,upgraded) is None
+        # A draining older process uses the same CREATE IF NOT EXISTS names;
+        # it must not reinstall an additional unfiltered trigger.
+        for name in ('paper_search_v1_arxiv_paper_analyses_update','projection_v1_arxiv_paper_analyses_update'):
+            db.execute(f'''CREATE TRIGGER IF NOT EXISTS {name} AFTER UPDATE ON arxiv_paper_analyses
+                BEGIN SELECT RAISE(ABORT,'old trigger should not be recreated'); END''')
+        db.commit()
+        db.execute("UPDATE arxiv_paper_analyses SET updated_at='next checkpoint'");db.commit()
+        assert position(db)==upgraded
+        db.execute("UPDATE arxiv_paper_analyses SET input_hash='changed'");db.commit()
+        changed=position(db)
+        assert changed['analysis'][0]-upgraded['analysis'][0]==1
+        assert publication_changes(db,upgraded,changed)['paper']=={'paper'}

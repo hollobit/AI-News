@@ -39,6 +39,40 @@ def claim(db, table, id_column, owner_column, statuses):
             return dict(row)
 
 
+def initialize_services(db):
+    """Finish schema/recovery setup before any queue starts writing results."""
+    from paper_analysis import PaperAnalysisService
+    from arxiv_papers import PaperService
+    from paper_pipeline import PaperPipeline
+    from knowledge_wiki import KnowledgeWiki
+    from article_explanations import ArticleExplanations
+    services=[]
+    stage='paper_analysis'
+    try:
+        analysis=PaperAnalysisService(db,start_worker=False);services.append(analysis)
+        stage='paper_metadata'
+        metadata=PaperService(db,start_worker=False);services.append(metadata)
+        stage='paper_pipeline'
+        pipeline=PaperPipeline(db,metadata,analysis,autostart=False);services.append(pipeline)
+        stage='wiki'
+        wiki=KnowledgeWiki(db,start_worker=False);services.append(wiki)
+        stage='article_explanations'
+        articles=ArticleExplanations(db,SavedObservatory(db),start_worker=False);services.append(articles)
+        return analysis,metadata,pipeline,wiki,articles
+    except Exception as error:
+        error.worker_stage=stage
+        for service in reversed(services):service.close()
+        raise
+
+
+def failure_details(error):
+    # Exception messages can contain provider input. These fields are controlled
+    # component names and SQLite's own error identifiers, never request data.
+    result=dict(status='failed',error_type=type(error).__name__,stage=getattr(error,'worker_stage','run'))
+    if isinstance(error,sqlite3.Error):result['sqlite_error']=getattr(error,'sqlite_errorname','UNKNOWN')
+    return result
+
+
 def run(db):
     lock, state = paths(db)
     with lock.open('a+') as handle:
@@ -49,22 +83,19 @@ def run(db):
         stop = threading.Event()
         for sig in (signal.SIGTERM, signal.SIGINT):
             signal.signal(sig, lambda *_: stop.set())
-        from paper_analysis import PaperAnalysisService
-        from arxiv_papers import PaperService
-        from paper_pipeline import PaperPipeline
-        from knowledge_wiki import KnowledgeWiki
-        from article_explanations import ArticleExplanations
-        analysis = PaperAnalysisService(db)
-        metadata = PaperService(db, start_worker=False)
-        pipeline = PaperPipeline(db, metadata, analysis)
-        wiki = KnowledgeWiki(db)
-        articles = ArticleExplanations(db, SavedObservatory(db), start_worker=False)
+        analysis,metadata,pipeline,wiki,articles=initialize_services(db)
         pool = __import__('concurrent.futures', fromlist=['ThreadPoolExecutor']).ThreadPoolExecutor(2, thread_name_prefix='durable-background')
         from worker_health import WorkerHealth
         health = WorkerHealth(db, state, ['paper_metadata','paper_analysis','paper_pipeline','wiki','article_explanations'])
         pending = {}
         wiki_request = None
         try:
+            if stop.is_set():return
+            analysis.thread.start()
+            pipeline.autostart=True
+            pipeline.thread.start();pipeline.provider_thread.start()
+            wiki.thread=threading.Thread(target=wiki._loop,daemon=True,name='knowledge-wiki')
+            wiki.thread.start()
             while not stop.wait(2):
                 health.tick("claiming")
                 for kind, future in list(pending.items()):
@@ -109,5 +140,10 @@ if __name__ == '__main__':
     try:
         run(str(Path(args.db).resolve()))
     except Exception as error:
-        print(json.dumps({'status':'failed','error_type':type(error).__name__}), flush=True)
+        details=failure_details(error)
+        from worker_health import write_state
+        import time
+        try:write_state(Path(str(paths(args.db)[1])+'.failure.json'),dict(details,at=time.time(),pid=os.getpid()))
+        except OSError:pass
+        print(json.dumps(details), flush=True)
         raise SystemExit(1)

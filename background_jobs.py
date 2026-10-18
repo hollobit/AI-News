@@ -40,6 +40,8 @@ def _worker_status(db):
 
 def worker_status(db):
     value = _worker_status(db)
+    try:value['last_failure']=json.loads(Path(str(paths(db)[1])+'.failure.json').read_text())
+    except (OSError,ValueError):pass
     monitor_file = Path(str(paths(db)[1]) + '.monitor.json')
     try:
         monitor = json.loads(monitor_file.read_text())

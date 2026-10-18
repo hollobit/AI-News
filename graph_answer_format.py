@@ -8,7 +8,7 @@ import json
 
 DETAIL_FIELDS = ('premises', 'assumptions', 'counterevidence', 'uncertainty')
 PASSAGE_FIELDS = ('premises', 'explanation', 'assumptions', 'counterevidence', 'uncertainty')
-PIPELINE = 'grounded-answer-v22-adaptive-evidence'
+PIPELINE = 'grounded-answer-v23-quantity-scope'
 INSTRUCTIONS = '''
 출력의 claims.passage에 답변 본문으로 그대로 사용되는 완결된 설명을 한 번 작성한다.
 finding은 passage.explanation에 원문 사실과 필요한 범위 한계를 함께 설명한다.
@@ -41,6 +41,10 @@ GROUNDING = '''
 키워드 일치·공동 인용·전재는 인과나 독립 확인이 아니다. wiki_context는 검색 방향을 돕는 기존 해석이며 새 사실 근거가 아니다.
 독립적으로 병행하는 활동의 공통점과 실제 의존·진행 관계를 구분한다. 원문에서 연결하지 않은 활동을 연속 단계로 단정하지 않는다.
 원문에 없는 용어 정의·괄호 풀이·예시·수치·국가 입장을 추가하지 않는다. few-shot 등 이름만 나온 설정의 정의도 만들지 않는다.
+수량의 크기 관계(미만·이하·초과·이상), 근삿값과 단위를 원문 그대로 보존한다. 예컨대 less than은 미만이며 약/여로 바꾸지 않는다.
+수량이 핵심이 아니면 불완전한 근삿값으로 요약하지 말고 그 수량을 생략한다.
+자료에 대표성·외부 일반화·독립 검증 결과가 없다는 것은 이 발췌로 판단할 수 없다는 뜻이다.
+이를 실제로 검증되지 않았다거나 대표성이 부족하다는 사실로 바꾸지 않는다. 적용 범위의 한계는 입력 자료 범위와 실제 연구의 검증 상태를 구분해 적는다.
 최근은 기본90일이나 실제 확인된 발행/사건 날짜만 사용한다. URL 경로·수집 시각·Telegram 게시일은 확인된 사건 발생일이 아니다.
 시점이 확인되지 않은 사례는 최근 발생으로 단정하지 않으며 과거 사례·시험·실제 운영 사고를 구분한다.
 출처가 '최근 수개월' 같은 상대 시점을 명시하면 그 출처의 설명으로 전달하고, 정확한 발생일 미확인과 구분한다.
