@@ -201,3 +201,22 @@ def test_cached_input_lookup_does_not_cache_review_acceptance_or_withdrawal():
             with service.db() as db:db.execute('DELETE FROM bulk_baseline_cache WHERE input_hash=?',(wanted,))
             assert not current(case.path,expected)
     finally:case.tearDown()
+
+
+def test_admission_timings_preserve_source_gate_and_contain_only_numbers():
+    case=fixture.BaselineTests();case.setUp();case.items=case.items[:1]
+    try:
+        service=case.service();case.done(service,service.start()['id'])
+        with service.db() as db:wanted=db.execute('SELECT input_hash FROM bulk_baseline_cache').fetchone()[0]
+        key=json.dumps(['baseline',wanted,None],separators=(',',':'))
+        with patch('improvement_selection.all_corpus_items',return_value=case.items):
+            with service.db() as db:expected=dependencies(load(db,[key]))
+            timing={}
+            assert current(case.path,expected,(),timing)
+            assert set(timing)=={'corpus_ms','analysis_sources_ms','selected_results_ms','dependencies_ms','passage_checks_ms','total_ms'}
+            assert all(type(value) in (int,float) and value>=0 for value in timing.values())
+            case.items[0]['text']='edited original'
+            timing={}
+            assert not current(case.path,expected,(),timing)
+            assert 'total_ms' in timing and 'passage_checks_ms' not in timing
+    finally:case.tearDown()

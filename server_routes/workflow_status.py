@@ -143,7 +143,9 @@ def snapshot(path,index=None):
                     task['metrics']['usage']=totals(db,ids)
                 for r in db.execute("SELECT owner_pid,status,COUNT(*) AS n FROM llm_calls WHERE status IN ('queued','running') GROUP BY owner_pid,status"):
                     if alive(r['owner_pid']):call_counts[r['status']]+=r['n']
-                calls=[dict(r) for r in db.execute('''SELECT id,role,model,status,owner_pid,started_at,queued_at,finished_at,error_code
+                fields={r[1] for r in db.execute('PRAGMA table_info(llm_calls)')}
+                speed='service_tier_requested' if 'service_tier_requested' in fields else "'' AS service_tier_requested"
+                calls=[dict(r) for r in db.execute('SELECT id,role,model,status,owner_pid,started_at,queued_at,finished_at,error_code,'+speed+'''
                     FROM llm_calls WHERE status IN ('queued','running') ORDER BY CASE status WHEN 'running' THEN 0 ELSE 1 END,id DESC LIMIT 20''')]
                 for call in calls:
                     call['owner_alive']=alive(call.pop('owner_pid'));call['elapsed_seconds']=max(0,round(stamp-(call['started_at'] or call['queued_at'])))

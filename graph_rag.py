@@ -1013,7 +1013,7 @@ def review_answer(result, data, previous=None, authored=None):
         (RUBRIC.strip().replace('\n',' ') if explanation_review else '')+
         (REVIEW_FORMAT.strip().replace('\n',' ') if authored is not None else '')+'\n'+
         json.dumps(wire_data,ensure_ascii=False,separators=(',',':')),
-        wire_schema,role='graph_answer',timeout=120 if detailed else 60,queue_timeout=30,reasoning_effort='medium' if detailed else 'low')
+        wire_schema,role='strategic_question_verification',timeout=120 if detailed else 60,queue_timeout=30,reasoning_effort='medium' if detailed else 'low')
     from graph_answer_format import call_metrics
     metrics=call_metrics(audit)
     audit=restore(audit,aliases)

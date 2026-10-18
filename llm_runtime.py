@@ -76,7 +76,7 @@ class LLMRuntime:
                 output_chars INTEGER NOT NULL DEFAULT 0,wait_ms INTEGER,run_ms INTEGER,error_code TEXT NOT NULL DEFAULT '')''')
             db.execute('CREATE INDEX IF NOT EXISTS llm_calls_active ON llm_calls(status,id)')
             columns = {r[1] for r in db.execute('PRAGMA table_info(llm_calls)')}
-            for column in ('model', 'reasoning_effort'):
+            for column in ('model', 'reasoning_effort', 'service_tier_requested'):
                 if column not in columns:
                     db.execute(f"ALTER TABLE llm_calls ADD COLUMN {column} TEXT NOT NULL DEFAULT ''")
 
@@ -118,13 +118,13 @@ class LLMRuntime:
         return len(rows)==3 and all(row['status']=='failed' and row['error_code'] in INFRASTRUCTURE_CODES for row in rows)
 
     @contextmanager
-    def slot(self, role, input_chars, schema_chars, max_run_seconds=240, model='', reasoning_effort=''):
+    def slot(self, role, input_chars, schema_chars, max_run_seconds=240, model='', reasoning_effort='', service_tier_requested=''):
         if not re.fullmatch(r'[a-z_]{1,48}', role):
             role = 'structured_analysis'
         queued = time.time()
         with self.db() as db:
-            identity = db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,input_chars,schema_chars,model,reasoning_effort) VALUES (?,'queued',?,?,?,?,?,?)",
-                                  (role, os.getpid(), queued, int(input_chars), int(schema_chars), model, reasoning_effort)).lastrowid
+            identity = db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,input_chars,schema_chars,model,reasoning_effort,service_tier_requested) VALUES (?,'queued',?,?,?,?,?,?,?)",
+                                  (role, os.getpid(), queued, int(input_chars), int(schema_chars), model, reasoning_effort,service_tier_requested)).lastrowid
         ticket = _Ticket(identity)
         started = None
         try:
@@ -205,7 +205,7 @@ def runtime_status(path=None):
             count(input_tokens) measured_calls,sum(input_tokens) input_tokens,sum(output_tokens) output_tokens
             FROM llm_calls GROUP BY role ORDER BY calls DESC''')]
         recent = [dict(row) for row in db.execute('''SELECT id,role,status,queued_at,started_at,finished_at,input_chars,schema_chars,
-            output_chars,wait_ms,run_ms,error_code,model,reasoning_effort,input_tokens,cached_input_tokens,output_tokens,reasoning_output_tokens FROM llm_calls ORDER BY id DESC LIMIT 40''')]
+            output_chars,wait_ms,run_ms,error_code,model,reasoning_effort,service_tier_requested,input_tokens,cached_input_tokens,output_tokens,reasoning_output_tokens FROM llm_calls ORDER BY id DESC LIMIT 40''')]
         if db.execute("SELECT 1 FROM sqlite_master WHERE name='llm_call_phases'").fetchone():
             phases={row[0]:json.loads(row[1]) for row in db.execute('SELECT call_id,phase_json FROM llm_call_phases WHERE call_id IN (SELECT id FROM llm_calls ORDER BY id DESC LIMIT 40)')}
             for call in recent:call['phase_ms']=phases.get(call['id'],{})

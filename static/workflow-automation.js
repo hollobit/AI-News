@@ -42,7 +42,7 @@
     baseline_analysis: '기사 기본 분석',
     baseline_verification: '기사 독립 검토',
     graph_draft: '종합 답변 작성',
-    graph_answer: '질의 계획 · 보완',
+    graph_answer: '종합 답변 · 계획 · 보완',
     strategic_question_verification: '종합 답변 독립 검토',
     national: '국가 관점',
     technology: '기술 관점',
@@ -224,12 +224,24 @@
         box.dataset.call = String(c.id);
       }
       box.dataset.status = c.status;
-      const signature = JSON.stringify([c.model, c.role, c.status, c.started_at, c.queued_at]);
+      const signature = JSON.stringify([
+        c.model,
+        c.role,
+        c.status,
+        c.started_at,
+        c.queued_at,
+        c.service_tier_requested,
+      ]);
       if (box.dataset.signature !== signature) {
         box.dataset.signature = signature;
         box.replaceChildren();
         el('strong', (c.model || '모델').replace(/^gpt-/, ''), box);
-        el('span', roleNames[c.role] || c.role || '분석', box);
+        el(
+          'span',
+          (roleNames[c.role] || c.role || '분석') +
+            (c.service_tier_requested === 'fast' ? ' · Fast 요청' : ''),
+          box
+        );
         const age = el('small', null, box);
         age.dataset.elapsed = String(c.id);
       }

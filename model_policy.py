@@ -8,6 +8,16 @@ VERSION = 'news-models-v1'
 # stop admission; never silently downgrade or route around an account limit.
 MODELS = {'luna': 'gpt-6-luna', 'sol': 'gpt-6.1-sol', 'astra': 'gpt-6-astra'}
 ALLOWED = {tier: {model} for tier, model in MODELS.items()}
+QUESTION_ROLES = {'graph_answer','graph_draft','strategic_question','strategic_question_verification'}
+
+
+def execution_tier(role):
+    """Opt-in faster question review; generation and bulk work stay standard."""
+    if role not in QUESTION_ROLES:return 'standard'
+    value=os.environ.get('NEWS_QUESTION_SERVICE_TIER','standard').strip().lower()
+    if value not in {'standard','fast'}:
+        raise ValueError('NEWS_QUESTION_SERVICE_TIER는 standard 또는 fast여야 합니다.')
+    return value if role=='strategic_question_verification' else 'standard'
 
 
 def question_draft_role(question, plan=None, *, evidence=None):

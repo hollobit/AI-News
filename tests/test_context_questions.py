@@ -33,7 +33,7 @@ def test_detailed_relational_answer_preserves_review_and_separate_cache(monkeypa
     assert result['claims'][0]['kind']=='connection'
     assert calls[0][1]['properties']['claims']['maxItems']==8
     assert calls[0][2]['role']=='graph_draft' and calls[0][2]['reasoning_effort']=='medium'
-    assert calls[1][2]['role']=='graph_answer' and calls[1][2]['reasoning_effort']=='medium'
+    assert calls[1][2]['role']=='strategic_question_verification' and calls[1][2]['reasoning_effort']=='medium'
     assert '자료 사이' in calls[0][0] and '원문' in calls[1][0]
     answer_question(graph,'Physical AI 연구',retrieval=retrieval,analysis_plan={'axes':['방법','데이터']})
     assert len(calls)==4

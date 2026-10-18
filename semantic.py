@@ -176,9 +176,10 @@ def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_t
     if not executable:
         raise RuntimeError("의미 분석에는 Codex CLI 설치와 로그인이 필요합니다.")
     from llm_runtime import LLMRuntime, infer_role
-    from model_policy import policy, StructuredResult, input_digest
+    from model_policy import policy, execution_tier, StructuredResult, input_digest
     role = role or infer_role(prompt, schema_definition)
     selected = policy(role, escalation=escalation, prompt=prompt)
+    service_tier = execution_tier(role)
     reasoning_effort = reasoning_effort or selected['reasoning_effort']
     if reasoning_effort not in {'low','medium','high'}:
         raise ValueError('지원되지 않는 분석 추론 설정입니다.')
@@ -195,12 +196,14 @@ def run_structured(prompt, schema_definition, *, role=None, timeout=240, queue_t
     wire_prompt,wire_schema,aliases=prepare(prompt,schema_definition)
     with runtime.slot(role, len(wire_prompt),
                            len(json.dumps(wire_schema, ensure_ascii=False)), max_run_seconds=timeout,
-                           model=selected['model'], reasoning_effort=reasoning_effort) as ticket:
+                           model=selected['model'], reasoning_effort=reasoning_effort,
+                           service_tier_requested=service_tier) as ticket:
         result = _run_structured_cli(wire_prompt, wire_schema, executable, ticket, timeout=timeout,
                                      reasoning_effort=reasoning_effort, model=selected['model'],
-                                     analysis_instructions=True)
+                                     analysis_instructions=True, service_tier=service_tier)
         return StructuredResult(restore(result,aliases), dict(selected, role=role, reasoning_effort=reasoning_effort,
             call_id=ticket.id, input_hash=input_digest(prompt),usage=ticket.usage,
+            service_tier_requested=service_tier,
             phase_ms=getattr(ticket,'phase_ms',{}),
             instruction_profile=selected['instruction_profile'],
             wire_format=('short-baseline-ids-v1' if any(k.startswith('D') for k in aliases) else 'short-evidence-ids-v1') if aliases else 'original',wire_input_hash=input_digest(wire_prompt)))
@@ -213,7 +216,8 @@ Write explanations in Korean, retaining proper names and technical terms. Explai
 '''
 
 
-def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=240, reasoning_effort='medium', model=None, analysis_instructions=False):
+def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=240, reasoning_effort='medium', model=None, analysis_instructions=False, service_tier='standard'):
+    if service_tier not in {'standard','fast'}:raise ValueError('지원되지 않는 처리 속도 설정입니다.')
     started=time.monotonic()
     ticket.phase_ms={}
     # Child only needs authentication, TLS and executable paths, not Telegram secrets.
@@ -229,6 +233,8 @@ def _run_structured_cli(prompt, schema_definition, executable, ticket, timeout=2
                    '-c', f'model_reasoning_effort="{reasoning_effort}"']
         if model:
             command.extend(['--model', model])
+        if service_tier=='fast':
+            command.extend(['--strict-config','--enable','fast_mode','-c','service_tier="fast"'])
         if analysis_instructions:
             # This request is analysis, not a coding session. Replace the
             # built-in coding instructions for every excerpt-only analysis role.

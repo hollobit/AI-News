@@ -192,7 +192,7 @@ def detail(path,kind,identity):
         try:
             with closing(connect(runtime)) as db:
                 fields={r[1] for r in db.execute('PRAGMA table_info(llm_calls)')}
-                wanted=[k for k in ('id','role','model','status','owner_pid','queued_at','started_at','finished_at','wait_ms','run_ms','input_tokens','output_tokens') if k in fields]
+                wanted=[k for k in ('id','role','model','service_tier_requested','status','owner_pid','queued_at','started_at','finished_at','wait_ms','run_ms','input_tokens','output_tokens') if k in fields]
                 calls=[dict(r) for r in db.execute('SELECT '+','.join(wanted)+' FROM llm_calls WHERE id IN ('+','.join('?' for _ in call_ids)+') ORDER BY id',call_ids)]
                 for call in calls:
                     call['owner_alive']=alive(call.pop('owner_pid',None))

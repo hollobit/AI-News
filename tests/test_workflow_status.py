@@ -1,4 +1,5 @@
 import sqlite3
+import pytest
 from datetime import datetime, timezone
 from server_routes.workflow_status import snapshot
 
@@ -39,6 +40,22 @@ def test_empty_store_has_unknown_not_fake_complete(tmp_path):
     assert len(result['stages'])==10
     assert all(s['percent'] is None for s in result['stages'])
     assert result['stages'][0]['status']=='delayed'
+
+
+@pytest.mark.parametrize('legacy',[False,True])
+def test_flow_reports_requested_speed_without_assuming_provider_delivery(tmp_path,legacy):
+    import os,time
+    from llm_runtime import LLMRuntime
+    path=tmp_path/'news.sqlite3';sqlite3.connect(path).close()
+    runtime=LLMRuntime(tmp_path/'llm_runtime.sqlite3')
+    with runtime.db() as db:
+        if legacy:db.execute('ALTER TABLE llm_calls DROP COLUMN service_tier_requested')
+        db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,input_chars,schema_chars,model) VALUES('strategic_question_verification','queued',?,?,0,0,'gpt-6.1-sol')",(os.getpid(),time.time()))
+        if not legacy:db.execute("UPDATE llm_calls SET service_tier_requested='fast'")
+    result=snapshot(path)
+    assert not result['runtime_error'] and len(result['calls'])==1
+    assert result['calls'][0]['service_tier_requested']==('' if legacy else 'fast')
+    assert 'service_tier_actual' not in result['calls'][0]
 
 
 def test_task_timeline_parallel_retry_and_restarted_stage(tmp_path):

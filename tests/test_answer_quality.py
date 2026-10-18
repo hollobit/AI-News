@@ -51,7 +51,7 @@ def execute(monkeypatch, responses, *, graph=None, events=None):
     calls=[]
     def runner(prompt, schema, **kwargs):
         initial='paragraphs' in schema['properties'] and 'changes' not in schema['properties'] and '\nFORMAT_REPAIR:\n' not in prompt
-        assert kwargs['role']==('graph_draft' if initial else 'graph_answer')
+        assert kwargs['role']==('strategic_question_verification' if 'checks' in schema['properties'] else 'graph_draft' if initial else 'graph_answer')
         calls.append((prompt, schema))
         value=responses.pop(0)
         if isinstance(value, Exception): raise value

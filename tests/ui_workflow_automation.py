@@ -58,10 +58,18 @@ async def main():
         await expect(page.locator('#control-follow')).to_have_attribute('aria-pressed','true')
         flow['control']['jobs']=[b,a]
         flow['calls']=[dict(id=i,model='gpt-6.1-sol',role='risk_assessment',status='running' if i==0 else 'queued',owner_alive=True,elapsed_seconds=5,started_at=10,queued_at=9) for i in range(20)]
+        flow['calls'][0].update(role='strategic_question_verification',service_tier_requested='fast')
         flow['call_counts']={'running':1,'queued':19}
         await page.locator('#refresh').click();await expect(page.locator('#control-title')).to_have_text(b['title'])
         await expect(page.locator('#control-graph')).to_contain_text('2개 단계 병행')
         await expect(page.locator('.auto-call')).to_have_count(20)
+        await expect(page.locator('.auto-call[data-call="0"]')).to_contain_text('종합 답변 독립 검토 · Fast 요청')
+        flow['calls'][0]['service_tier_requested']='standard'
+        await page.locator('#refresh').click()
+        await expect(page.locator('.auto-call[data-call="0"]')).not_to_contain_text('Fast 요청')
+        flow['calls'][0]['service_tier_requested']='fast'
+        await page.locator('#refresh').click()
+        await expect(page.locator('.auto-call[data-call="0"]')).to_contain_text('Fast 요청')
         await expect(page.locator('#control-progress')).to_contain_text('1 / 7')
         await expect(page.locator('#auto-summary')).to_contain_text('진행 작업 1개')
         assert await page.locator('.control-stream').count()==1

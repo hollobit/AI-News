@@ -104,7 +104,7 @@ def call_metrics(result):
     """Only numeric usage and call identity; never persist prompts/auth details."""
     provenance=getattr(result,'provenance',{})
     usage=provenance.get('usage') or {}
-    return {**{k:provenance[k] for k in ('call_id','model','instruction_profile') if k in provenance},
+    return {**{k:provenance[k] for k in ('call_id','model','instruction_profile','service_tier_requested') if k in provenance},
             'usage':{k:usage[k] for k in ('input_tokens','cached_input_tokens','output_tokens','reasoning_output_tokens')
                      if isinstance(usage.get(k),(int,float))}}
 

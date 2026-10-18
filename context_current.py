@@ -2,6 +2,7 @@
 import json
 import sqlite3
 import threading
+import time
 from pathlib import Path
 from collections import defaultdict,OrderedDict
 from contextlib import closing
@@ -58,15 +59,20 @@ def normalized(source,final=None):
     return source
 
 
-def load(db,keys):
+def load(db,keys,timing=None):
     """Same publication gates as the index, applied only to selected records."""
     from graph_rag import _analysis_sources
     from integrated_context import enrich_sources
     selected=defaultdict(set)
     for key in keys:
         kind,record,_=json.loads(key);selected[kind].add(record)
-    sources,_=_analysis_sources(db,selected=selected,
-        baseline_items=corpus(db,input_hashes=selected['baseline']) if selected.get('baseline') else [])
+    started=time.monotonic()
+    baseline_items=corpus(db,input_hashes=selected['baseline']) if selected.get('baseline') else []
+    if timing is not None:timing['corpus_ms']=round((time.monotonic()-started)*1000,2)
+    started=time.monotonic()
+    sources,_=_analysis_sources(db,selected=selected,baseline_items=baseline_items)
+    if timing is not None:timing['analysis_sources_ms']=round((time.monotonic()-started)*1000,2)
+    started=time.monotonic()
     if selected.get('wiki'):sources+=enrich_sources(db,[])
     current=[]
     wanted=set(keys)
@@ -77,6 +83,7 @@ def load(db,keys):
             row=db.execute("SELECT payload_json FROM strategic_workflow_artifacts WHERE run_id=? AND stage='final'",(source['id'],)).fetchone()
             if row:final=json.loads(row[0])
         current.append(normalized(source,final))
+    if timing is not None:timing['selected_results_ms']=round((time.monotonic()-started)*1000,2)
     return current
 
 
@@ -84,15 +91,23 @@ def dependencies(sources):
     return {identity(s):content_digest(normalized(s)) for s in sources}
 
 
-def current(path,expected,passages=()):
+def current(path,expected,passages=(),timing=None):
     """No model calls. Current input, review, withdrawals and full passages count."""
     if not isinstance(expected,dict) or not expected:return False
-    with closing(sqlite3.connect(path,timeout=2)) as db:
-        db.row_factory=sqlite3.Row
-        db.execute('BEGIN')
-        actual=dependencies(load(db,expected))
-        if actual!=expected:return False
-        for p in passages:
-            row=db.execute("SELECT hash,last_status FROM source_health WHERE url=?",(p['url'],)).fetchone()
-            if not row or row[0]!=p['hash'] or row[1]!='fetched':return False
+    begun=time.monotonic()
+    try:
+        with closing(sqlite3.connect(path,timeout=2)) as db:
+            db.row_factory=sqlite3.Row
+            db.execute('BEGIN')
+            sources=load(db,expected,timing) if timing is not None else load(db,expected)
+            started=time.monotonic();actual=dependencies(sources)
+            if timing is not None:timing['dependencies_ms']=round((time.monotonic()-started)*1000,2)
+            if actual!=expected:return False
+            started=time.monotonic()
+            for p in passages:
+                row=db.execute("SELECT hash,last_status FROM source_health WHERE url=?",(p['url'],)).fetchone()
+                if not row or row[0]!=p['hash'] or row[1]!='fetched':return False
+            if timing is not None:timing['passage_checks_ms']=round((time.monotonic()-started)*1000,2)
+    finally:
+        if timing is not None:timing['total_ms']=round((time.monotonic()-begun)*1000,2)
     return True

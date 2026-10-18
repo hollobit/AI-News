@@ -174,3 +174,80 @@ def test_analysis_instructions_keep_model_review_and_isolation(monkeypatch,tmp_p
     assert question.provenance['instruction_profile']=='grounded-analysis-v1'
     assert other.provenance['instruction_profile']=='grounded-analysis-v1'
     assert instruction_files and all(not p.exists() for p in instruction_files)
+
+
+def test_question_speed_is_opt_in_and_never_changes_background_or_probe(monkeypatch):
+    from model_policy import execution_tier
+    monkeypatch.delenv('NEWS_QUESTION_SERVICE_TIER',raising=False)
+    original=policy('graph_answer')
+    assert execution_tier('graph_answer')=='standard'
+    monkeypatch.setenv('NEWS_QUESTION_SERVICE_TIER','fast')
+    assert execution_tier('strategic_question_verification')=='fast'
+    assert execution_tier('graph_answer')=='standard'
+    assert execution_tier('graph_draft')=='standard'
+    assert policy('graph_answer')==original
+    for role in ('engine_probe','baseline_analysis','baseline_verification','paper_analysis','risk_verification','wiki_compile','strategic_forecast'):
+        assert execution_tier(role)=='standard'
+    monkeypatch.setenv('NEWS_QUESTION_SERVICE_TIER','ultrafast')
+    with pytest.raises(ValueError,match='NEWS_QUESTION_SERVICE_TIER'):execution_tier('graph_answer')
+    assert execution_tier('baseline_analysis')=='standard'
+
+
+def test_question_speed_local_setting_preserves_explicit_process_override(monkeypatch,tmp_path):
+    from app import load_local_env
+    from model_policy import execution_tier
+    env=tmp_path/'settings';env.write_text('NEWS_QUESTION_SERVICE_TIER=fast\n')
+    monkeypatch.delenv('NEWS_QUESTION_SERVICE_TIER',raising=False)
+    load_local_env(env)
+    assert execution_tier('strategic_question_verification')=='fast'
+    monkeypatch.setenv('NEWS_QUESTION_SERVICE_TIER','standard')
+    load_local_env(env)
+    assert execution_tier('strategic_question_verification')=='standard'
+
+
+@pytest.mark.parametrize('role,fast,model',[
+    ('graph_draft',False,'gpt-6-luna'),('graph_answer',False,'gpt-6.1-sol'),
+    ('strategic_question_verification',True,'gpt-6.1-sol'),
+    ('baseline_verification',False,'gpt-6.1-sol')])
+def test_question_speed_reaches_cli_and_content_free_provenance(monkeypatch,tmp_path,role,fast,model):
+    monkeypatch.setenv('NEWS_EXTERNAL_ANALYSIS_ENABLED','1')
+    monkeypatch.setenv('NEWS_QUESTION_SERVICE_TIER','fast')
+    monkeypatch.setenv('NEWS_LLM_RUNTIME_DB',str(tmp_path/'runtime.db'))
+    monkeypatch.setattr('semantic.codex_executable',lambda:'codex')
+    def execute(command,**kwargs):
+        assert ('service_tier="fast"' in command)==fast
+        assert ('--strict-config' in command)==fast
+        assert ('fast_mode' in command)==fast
+        assert command[command.index('--model')+1]==model
+        assert 'model_reasoning_effort="medium"' in command
+        assert '--ignore-user-config' in command and '--ephemeral' in command
+        assert 'NEWS_QUESTION_SERVICE_TIER' not in kwargs['env']
+        Path(command[command.index('--output-last-message')+1]).write_text('{"ok":true}')
+        return SimpleNamespace(returncode=0,stderr='')
+    monkeypatch.setattr('semantic.subprocess.run',execute)
+    result=run_structured('private original excerpt',{},role=role)
+    requested='fast' if fast else 'standard'
+    assert result.provenance['service_tier_requested']==requested
+    row=runtime_status()['recent'][0]
+    assert row['service_tier_requested']==requested
+    assert row['model']==model and row['reasoning_effort']=='medium'
+    assert 'private original excerpt' not in json.dumps(row)
+    assert 'service_tier_actual' not in row
+
+
+def test_fast_mode_failure_never_retries_on_different_tier_or_model(monkeypatch,tmp_path):
+    from engine_errors import EngineError
+    monkeypatch.setenv('NEWS_EXTERNAL_ANALYSIS_ENABLED','1')
+    monkeypatch.setenv('NEWS_QUESTION_SERVICE_TIER','fast')
+    monkeypatch.setenv('NEWS_LLM_RUNTIME_DB',str(tmp_path/'runtime.db'))
+    monkeypatch.setattr('semantic.codex_executable',lambda:'codex')
+    calls=[]
+    def execute(command,**kwargs):
+        calls.append(command)
+        return SimpleNamespace(returncode=1,stderr='ERROR: rate limit')
+    monkeypatch.setattr('semantic.subprocess.run',execute)
+    with pytest.raises(EngineError,match='rate_limit'):run_structured('question',{},role='strategic_question_verification')
+    assert len(calls)==1 and 'service_tier="fast"' in calls[0]
+    row=runtime_status()['recent'][0]
+    assert row['status']=='failed' and row['error_code']=='rate_limit'
+    assert row['service_tier_requested']=='fast'

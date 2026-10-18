@@ -357,7 +357,9 @@ class GraphQuestions:
             latest=question_evidence(self.path,request,[e['id'] for e in graph['evidence']]) if bounded_signature else None
             if answer.get('workspace_dependencies'):
                 from context_current import current as current_workspace
-                changed=not current_workspace(self.path,answer['workspace_dependencies'],answer.get('workspace_passages',[]))
+                admission_timing={}
+                changed=not current_workspace(self.path,answer['workspace_dependencies'],answer.get('workspace_passages',[]),admission_timing)
+                answer.setdefault('timing',{})['current_admission_ms']=admission_timing
             else:changed=(not latest or latest[1]!=bounded_signature) if bounded_signature else self.snapshots.key(request['params'])!=revision
             if changed:
                 if retries:
