@@ -9,7 +9,7 @@ from playwright.async_api import async_playwright,expect
 async def main():
  async with async_playwright() as p:
   browser=await p.chromium.launch();page=await browser.new_page(viewport={'width':1440,'height':1100},reduced_motion='reduce');errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  hits=0;fail=False
+  hits=0;fail=False;parallel_synthesis=False
   def data():
    stages=[]
    for i,key in enumerate(['collector','extract','baseline','deep','sources','papers','wiki','publication']):
@@ -21,7 +21,12 @@ async def main():
    path=__import__('urllib.parse',fromlist=['urlparse']).urlparse(r.request.url).path
    if path=='/api/operations/flow':
     if fail:await r.fulfill(status=503,json={'error':'잠시 대기'});return
-    hits+=1;await r.fulfill(json=data());return
+    hits+=1;payload=data()
+    if parallel_synthesis:
+     task=payload['tasks'][0];task.update(route='multi-role',step_complete=5,step_total=13,step_percent=38,
+      steps=[dict(stage=stage,status='pending' if stage=='verification' else 'running',elapsed_seconds=2)
+       for stage in ('national','technology','risk_assessment','synthesis','verification')])
+    await r.fulfill(json=payload);return
    f=ROOT/'static'/('workflow-live.html' if path=='/workflow' else path.lstrip('/'))
    if f.is_file():await r.fulfill(path=str(f))
    else:await r.fulfill(status=404,body='not found')
@@ -54,6 +59,13 @@ async def main():
   await page.locator('#task-status').select_option('active');await expect(page.locator('#tasks details')).to_have_count(1)
   await page.locator('#task-search').fill('');await page.locator('#task-status').select_option('all')
   await page.locator('#tasks summary').click()
+
+  parallel_synthesis=True;await page.locator('#refresh').click()
+  await expect(page.locator('#tasks .task-progress-label')).to_contain_text('5/13')
+  if await page.locator('#tasks details').get_attribute('open') is None:await page.locator('#tasks summary').click()
+  await expect(page.locator('.task-steps li').filter(has_text='진행 중')).to_have_count(4)
+  await expect(page.locator('.task-steps li').filter(has_text='대기')).to_have_count(1)
+  await expect(page.locator('#tasks summary')).to_contain_text('분석 종합')
 
   out=ROOT/'.runtime/verification';out.mkdir(parents=True,exist_ok=True)
   await page.screenshot(path=str(out/'workflow-live-desktop.png'),full_page=True)

@@ -339,6 +339,10 @@ class CompletionRunner:
         request = {'full_corpus': True, 'completion': True, 'recursive_cycle_id': self.cycle_id,
                    'recursive_round_id': planned['id'], 'improvement_context': snapshot['improvement_context'],
                    'completion_attempt': snapshot.get('completion_attempt',1), 'analysis_mode': 'adaptive-v2'}
+        from workflow_synthesis import VERSION as synthesis_schedule
+        # Only newly created workflows opt in. Existing saved requests and stage
+        # checkpoints resume their original dependency graph unchanged.
+        request['synthesis_schedule']=synthesis_schedule
         with connect(self.path) as db:
             prior=db.execute("SELECT id FROM strategic_workflow_runs WHERE json_extract(request_json,'$.recursive_round_id')=? ORDER BY created_at DESC LIMIT 1",(planned['id'],)).fetchone()
         prior_id=planned.get('workflow_run_id') or (prior[0] if prior else None)

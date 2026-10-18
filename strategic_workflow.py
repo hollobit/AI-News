@@ -558,8 +558,12 @@ class WorkflowService:
                 risk_draft_future.set_result(risk)
                 audit = self._stage(run_id,'risk_verification',lambda:self._audit(evidence,risk,risk=True,require_all_news=require_all_news))
                 return risk, audit
-            with ThreadPoolExecutor(max_workers=3) as pool:
+            from workflow_synthesis import VERSION as synthesis_schedule, draft as source_draft
+            parallel_synthesis=plan.get('synthesis_schedule')==synthesis_schedule
+            with ThreadPoolExecutor(max_workers=4 if parallel_synthesis else 3) as pool:
                 risk_future=pool.submit(assess_and_review_risk)
+                synthesis_future=(pool.submit(source_draft,self,run_id,evidence,request,enrichment)
+                                  if parallel_synthesis else None)
                 keywords = self._stage(run_id, 'morphology', lambda: [
                     {'evidence_id': e['id'], 'keywords': self.extractor(e['text'])[:40]} for e in evidence])
                 retrieval_dependencies = None
@@ -573,20 +577,23 @@ class WorkflowService:
                     return self._stage(run_id, role, lambda: self._validated_call(role, self._prompt(role, evidence, context), evidence_schema(schema(),evidence), lambda value:self._report(normalize(value),evidence)))
                 futures = {role: pool.submit(analyze, role) for role in ('national', 'technology')}
                 reports = {role: future.result() for role, future in futures.items()}
-                # The saved risk draft is needed for synthesis, its audit is not.
-                # Keep a separate draft future/event rather than waiting for review.
-                risk_report=risk_draft_future.result()
                 from deliberation import build_deliberation
                 deliberation=self._stage(run_id,'deliberation',lambda:build_deliberation(reports,evidence))
                 context=dict(context,deliberation=deliberation)
                 from event_observations import report_schema as event_report_schema
-                synthesis_schema=event_report_schema(REPORT,evidence)
-                context = dict(context, risk_report=risk_report, risk_review_status='pending')
-                report = self._stage(run_id, 'synthesis', lambda: self._validated_call('synthesis',
-                    self._prompt('synthesis', evidence, dict(context, analysts=reports)), evidence_schema(synthesis_schema,evidence),lambda value:self._report(value,evidence)))
+                if synthesis_future is not None:
+                    report=synthesis_future.result()
+                else:
+                    # Legacy synthesis consumes the risk draft, but not its audit.
+                    risk_report=risk_draft_future.result()
+                    context=dict(context,risk_report=risk_report,risk_review_status='pending')
+                    synthesis_schema=event_report_schema(REPORT,evidence)
+                    report=self._stage(run_id, 'synthesis', lambda: self._validated_call('synthesis',
+                        self._prompt('synthesis', evidence, dict(context, analysts=reports)), evidence_schema(synthesis_schema,evidence),lambda value:self._report(value,evidence)))
                 # Strategy review also need not wait for the independent risk chain.
                 audit = self._stage(run_id, 'verification', lambda: self._audit(evidence, report, require_all_news=require_all_news, deliberation=deliberation))
-                _, risk_audit = risk_future.result()
+                risk_report, risk_audit = risk_future.result()
+                context=dict(context,risk_report=risk_report,risk_review_status='pending')
             risk_audit = self._current_audit(risk_audit, evidence, risk_report, required_checked=risk_report.get('not_assessable_evidence_ids',[]) if require_all_news else ())
             audit = self._current_audit(audit, evidence, report, deliberation=deliberation)
             if not audit['accepted'] or not risk_audit['accepted']:
@@ -633,6 +640,7 @@ class WorkflowService:
                                       'coverage': enrichment['coverage'],
                                       'graph_retrieval': retrieval,
                                       'orchestration': {'pattern': 'observation_retrieval_analysis_review_one_repair',
+                                                        **({'synthesis_schedule':synthesis_schedule} if parallel_synthesis else {}),
                                                         'inspired_by': 'MiroFish ReportAgent ReAct',
                                                         'mirofish_simulation_executed': False},
                                       'model_provenance': self._model_provenance(run_id),

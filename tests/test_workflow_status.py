@@ -99,3 +99,25 @@ def test_task_timeline_parallel_retry_and_restarted_stage(tmp_path):
     result=task_detail(db,task,set(),stamp,True)
     assert result['step_percent'] is None
     db.close()
+
+
+def test_source_synthesis_timeline_shows_four_active_stages_and_pending_review():
+    import json
+    from server_routes.workflow_tasks import task_detail
+    from workflow_synthesis import VERSION
+    db=sqlite3.connect(':memory:');db.row_factory=sqlite3.Row
+    db.executescript('''CREATE TABLE strategic_workflow_events(seq INTEGER PRIMARY KEY,run_id,stage,status,created_at);
+    CREATE TABLE strategic_workflow_artifacts(run_id,stage,payload_json);''')
+    db.execute('INSERT INTO strategic_workflow_artifacts VALUES(?,?,?)',
+               ('w','execution_plan',json.dumps(dict(path='multi-role',synthesis_schedule=VERSION))))
+    when=datetime.now(timezone.utc)
+    active={'national','technology','risk_assessment','synthesis'}
+    for stage in ('collection','enrichment','execution_plan','morphology','graph_retrieval',*active):
+        db.execute('INSERT INTO strategic_workflow_events(run_id,stage,status,created_at) VALUES(?,?,?,?)',
+                   ('w',stage,'running' if stage in active else 'complete',when.isoformat()))
+    task=dict(id='r',workflow_run_id='w',status='running',created_at=when.isoformat(),completed_at=None)
+    result=task_detail(db,task,{'strategic_workflow_artifacts'},when.timestamp(),True)
+    assert {s['stage'] for s in result['steps'] if s['status']=='running'}==active
+    assert result['step_complete']==5 and result['step_total']==13
+    assert all(s['status']=='pending' for s in result['steps'] if s['stage'] in ('verification','risk_verification','final'))
+    db.close()
