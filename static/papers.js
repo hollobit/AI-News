@@ -99,13 +99,21 @@
   function render(data, append = false) {
     current = data;
     const pipeline = data.pipeline || {};
+    const analysis = data.analysis_service || {},
+      recovery = analysis.recovery || {};
     $('#paper-pipeline-state').textContent =
       (pipeline.enabled ? '자동 수집·분석 진행' : '자동 수집·분석 일시중지') +
       (pipeline.next_retry_at
         ? ' · 다음 수집 시각 ' + new Date(pipeline.next_retry_at).toLocaleString()
         : '') +
       (pipeline.error ? ' · ' + pipeline.error : '') +
-      (pipeline.official_api_paused ? ' · arXiv 검색 API 중지, 대체 출처는 계속 처리' : '');
+      (pipeline.official_api_paused ? ' · arXiv 검색 API 중지, 대체 출처는 계속 처리' : '') +
+      (analysis.workers
+        ? ` · 분석 동시 한도 ${analysis.workers} · 실행 ${num(analysis.counts?.running)} · 대기 ${num(analysis.counts?.queued)}`
+        : '') +
+      (recovery.retry_ready || recovery.retry_waiting
+        ? ` · 장애 복구 대상 ${num((recovery.retry_ready || 0) + (recovery.retry_waiting || 0))}`
+        : '');
     const providers = $('#paper-providers');
     providers.replaceChildren(
       ...(pipeline.providers || []).map((p) =>

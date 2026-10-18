@@ -86,6 +86,9 @@ def snapshot(path,index=None):
             fields={r[1] for r in db.execute('PRAGMA table_info('+table+')')} if table in tables else set()
             if {'status','owner_pid'} <= fields:
                 item['active_count']=sum(r['n'] for r in db.execute("SELECT owner_pid,count(*) AS n FROM "+table+" WHERE status='running' GROUP BY owner_pid") if alive(r['owner_pid']))
+            if identity=='papers' and table in tables:
+                from paper_recovery import summary
+                item['recovery']=summary(db,stamp)
         if 'risk_schedule' in tables:
             schedule=dict(db.execute('SELECT enabled,recoveries,stagnant,next_attempt_at FROM risk_schedule WHERE id=1').fetchone() or {})
         else:schedule={}
@@ -111,7 +114,7 @@ def snapshot(path,index=None):
           updated_at=datetime.fromtimestamp(index['prepared_at'],timezone.utc).isoformat() if index.get('prepared_at') else None,
           mode=index.get('mode'),changed=index.get('changed'),removed=index.get('removed'),
           selection_as_of=index.get('selection_as_of'),
-          note='기본 분석만 바뀌면 해당 자료만 갱신합니다. 갱신 중에는 2분 이내 준비된 자료에서 후보를 찾고, 선택한 자료의 현재 입력·인용·검토를 다시 확인합니다. 답변에는 자료 준비 시점을 표시합니다.')
+          note='기본·상세·위험·논문 분석 변경은 해당 자료를 다시 검증해 반영합니다. 원문·검토 정책 변경은 전체 입장을 확인합니다. 갱신 중에는 2분 이내 준비된 자료에서 후보를 찾고, 선택 자료의 현재 입력·인용·검토를 다시 확인합니다.')
     runtime_dir=Path(path).resolve().parent.parent/'.runtime'
     try:
         dispatch=json.loads((runtime_dir/'scheduled-risks.json').read_text())

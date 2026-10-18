@@ -87,6 +87,9 @@ def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=
         extraction=json.loads(states.get('collector_corpus_snapshot','{}'))
         if extraction.get('status')!='complete':return {'stage':'waiting_for_extraction'}
         db.commit()
+        if cycle['status']=='complete' and not resume:
+            from completion_idle import unchanged
+            if unchanged(db,identity):return {'stage':'complete_waiting_for_input','cycle':identity}
         # Explicit recovery must precede normal model calls, which obey the breaker.
         if resume and not check_engine():
             return {'stage':'engine_unavailable','cycle':identity}

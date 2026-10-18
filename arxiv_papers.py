@@ -297,12 +297,24 @@ class PaperService:
             self.pool.shutdown(wait=False, cancel_futures=True)
 
 
-def _paper_rows(db):
-    records = _rows(db, 'arxiv_papers')
+def _selected_rows(db, table, paper_ids=None, columns='*'):
+    """Hydrate only requested papers; analysis bodies are not list metadata."""
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(table,)).fetchone():return []
+    clause='';args=[]
+    if paper_ids is not None:
+        if not paper_ids:return []
+        clause=' WHERE paper_id IN ('+','.join('?' for _ in paper_ids)+')';args=list(paper_ids)
+    rows=db.execute('SELECT '+columns+' FROM '+table+clause,args)
+    names=[c[0] for c in rows.description]
+    return [dict(zip(names,row)) for row in rows]
+
+
+def _paper_rows(db, paper_ids=None):
+    records = _selected_rows(db, 'arxiv_papers', paper_ids)
     mentions = defaultdict(list)
-    for row in _rows(db, 'arxiv_paper_mentions'):
+    for row in _selected_rows(db, 'arxiv_paper_mentions', paper_ids):
         mentions[row['paper_id']].append(row)
-    analyses = {row['paper_id']: row for row in _rows(db, 'arxiv_paper_analyses')}
+    analyses = {row['paper_id']: row for row in _selected_rows(db, 'arxiv_paper_analyses', paper_ids, 'paper_id,input_hash,status')}
     items = []
     for row in records:
         saved = json.loads(row['metadata_json'])
@@ -336,8 +348,7 @@ def paper(db, identity):
     parsed = parse_arxiv_id(identity)
     if not parsed:
         return None
-    init_papers(db)
-    return next((item for item in _paper_rows(db) if item['paper_id'] == parsed['paper_id']), None)
+    return next(iter(_paper_rows(db, [parsed['paper_id']])), None)
 
 
 def _trends(db, items, window):

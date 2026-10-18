@@ -37,3 +37,19 @@ def test_monitor_failure_is_reported_without_requeueing(tmp_path):
     assert manager.monitor_state['state']=='failed' and manager.monitor_state['failures']==3
     assert manager.monitor_state['error_type']=='RuntimeError'
     assert 'private provider text' not in manager.monitor_file.read_text()
+
+
+def test_paper_failed_queue_does_not_look_idle(tmp_path):
+    from paper_recovery import setup
+    path=tmp_path/'db'
+    with sqlite3.connect(path) as db:
+        setup(db)
+        db.execute('CREATE TABLE arxiv_paper_analyses(paper_id TEXT,input_hash TEXT,status TEXT,error TEXT,updated_at TEXT)')
+        db.execute("INSERT INTO arxiv_paper_analyses VALUES('one','hash','failed','[engine:circuit_open]','2026-01-01')")
+    result=queues(path)['paper_analysis']
+    assert result['state']=='waiting'
+    assert result['recovery']['retry_ready']==1
+    with sqlite3.connect(path) as db:
+        db.execute("INSERT INTO paper_analysis_recovery VALUES('one','hash',3,0,'network')")
+    result=queues(path)['paper_analysis']
+    assert result['state']=='attention' and result['recovery']['retry_exhausted']==1

@@ -5,7 +5,7 @@ import hashlib
 import json
 from projection_cache import cached_read, content_digest
 
-from arxiv_papers import _paper_rows, _rows, parse_arxiv_id
+from arxiv_papers import _paper_rows, _selected_rows, parse_arxiv_id
 from paper_analysis import analysis_input_hash, digest, validate_report
 from evidence_contracts import reviewed_payload
 
@@ -90,9 +90,9 @@ def _graph(result, item):
 def paper_sources(db,paper_ids=None):
     coverage = dict.fromkeys(['total', 'metadata_fetched', 'verified', 'needs_review', 'stale', 'pending', 'failed', 'unassessed'], 0)
     if paper_ids is not None and not paper_ids:return [],coverage
-    items = _paper_rows(db)
-    if paper_ids is not None:items=[i for i in items if i['paper_id'] in paper_ids]
-    rows = {row['paper_id']: row for row in _rows(db, 'arxiv_paper_analyses')}
+    items = _paper_rows(db,paper_ids)
+    rows = {row['paper_id']: row for row in _selected_rows(db, 'arxiv_paper_analyses',paper_ids,
+            'paper_id,input_hash,status,error,result_json')}
     coverage['total'] = len(items)
     sources = []
     for item in items:

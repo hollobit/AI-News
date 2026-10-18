@@ -60,3 +60,85 @@ def test_delta_watermark_is_bound_to_consistent_read_snapshot(tmp_path):
         assert position(db)==before
         db.rollback()
         assert changed_keys(db,before,position(db))=={'new'}
+
+
+def test_paper_delta_matches_full_admission_after_publication_revocation_and_metadata_edit(tmp_path):
+    from tests.test_paper_graph import PaperGraphTests
+    case=PaperGraphTests();case.setUp()
+    path=tmp_path/'news.db'
+    case.db.close();case.db=sqlite3.connect(path)
+    from arxiv_papers import init_papers
+    init_papers(case.db)
+    case.db.executescript('''CREATE TABLE arxiv_paper_analyses(paper_id TEXT PRIMARY KEY,input_hash TEXT,status TEXT,result_json TEXT,error TEXT);
+        CREATE TABLE bulk_baseline_cache(input_hash TEXT PRIMARY KEY,result_json TEXT,prepared_json TEXT);''')
+    corpus=patch('improvement_selection.all_corpus_items',return_value=[]);corpus.start()
+    def contents(path):
+        with sqlite3.connect(path) as store:
+            rows=store.execute('SELECT source_key,body FROM sources ORDER BY source_key').fetchall()
+            coverage=store.execute("SELECT body FROM meta WHERE key='coverage'").fetchone()[0]
+            store.execute("INSERT INTO search(search,rank) VALUES('integrity-check',1)")
+        return rows,json.loads(coverage)
+    try:
+        case.add('2609.10001');case.db.commit()
+        previous=tmp_path/'first.sqlite3';write(previous,case.db,'first')
+        actions=[lambda:case.add('2609.10002'),
+                 lambda:case.db.execute("UPDATE arxiv_paper_analyses SET status='needs_review' WHERE paper_id='2609.10001'"),
+                 lambda:case.db.execute("UPDATE arxiv_papers SET metadata_json=json_set(metadata_json,'$.abstract','Changed source') WHERE paper_id='2609.10002'"),
+                 lambda:case.db.execute("DELETE FROM arxiv_paper_analyses WHERE paper_id='2609.10001'")]
+        for i,action in enumerate(actions):
+            action();case.db.commit()
+            delta=tmp_path/f'delta{i}.sqlite3';full=tmp_path/f'full{i}.sqlite3'
+            with patch('graph_rag._analysis_sources',side_effect=AssertionError('full archive scan')):
+                result=write(delta,case.db,str(i),previous)
+            assert result['mode']=='publication_delta'
+            write(full,case.db,str(i))
+            assert contents(delta)==contents(full)
+            previous=delta
+    finally:corpus.stop();case.tearDown()
+
+
+def test_paper_delta_requires_complete_journal_and_unknown_changes_fall_back(tmp_path):
+    from context_delta import publication_changes
+    path=tmp_path/'db'
+    with sqlite3.connect(path) as db:
+        db.executescript('''CREATE TABLE bulk_baseline_cache(input_hash TEXT PRIMARY KEY);
+            CREATE TABLE arxiv_papers(paper_id TEXT PRIMARY KEY);
+            CREATE TABLE research_documents(id TEXT);''')
+        first=position(db)
+        db.execute("INSERT INTO arxiv_papers VALUES('one')")
+        db.execute("INSERT INTO bulk_baseline_cache VALUES('base')");db.commit()
+        assert publication_changes(db,first,position(db))==dict(baseline={'base'},paper={'one'},workflow=set())
+        db.execute('DELETE FROM paper_search_changes');db.commit()
+        assert publication_changes(db,first,position(db)) is None
+        first=position(db)
+        db.execute("INSERT INTO research_documents VALUES('unknown')");db.commit()
+        assert publication_changes(db,first,position(db)) is None
+
+
+def test_workflow_delta_preserves_risk_payload_and_removes_revoked_verdicts(tmp_path):
+    from tests.test_graph_rag import IntegratedGraphTests
+    from graph_rag import _analysis_sources
+    case=IntegratedGraphTests();case.db=sqlite3.connect(tmp_path/'news.db')
+    case.db.execute('CREATE TABLE bulk_baseline_cache(input_hash TEXT PRIMARY KEY,result_json TEXT,prepared_json TEXT)')
+    try:
+        with patch('improvement_selection.all_corpus_items',return_value=[]):
+            case.add_workflow('first');case.db.commit()
+            previous=tmp_path/'first.sqlite3';write(previous,case.db,'first')
+            actions=[lambda:case.add_workflow('second'),
+                     lambda:case.db.execute("UPDATE strategic_workflow_runs SET error='revoked' WHERE id='first'"),
+                     lambda:case.db.execute("UPDATE strategic_workflow_artifacts SET payload_json='{}' WHERE run_id='second'")]
+            for i,action in enumerate(actions):
+                action();case.db.commit()
+                delta=tmp_path/f'wdelta{i}.sqlite3';full=tmp_path/f'wfull{i}.sqlite3'
+                def selected(db,selected=None):
+                    assert selected and selected.get('workflow')
+                    return _analysis_sources(db,selected=selected)
+                with patch('graph_rag._analysis_sources',side_effect=selected):
+                    assert write(delta,case.db,str(i),previous)['mode']=='publication_delta'
+                write(full,case.db,str(i))
+                with sqlite3.connect(delta) as actual,sqlite3.connect(full) as expected:
+                    for query in ('SELECT source_key,body,text FROM sources ORDER BY source_key',"SELECT body FROM meta WHERE key='coverage'"):
+                        assert actual.execute(query).fetchall()==expected.execute(query).fetchall()
+                    actual.execute("INSERT INTO search(search,rank) VALUES('integrity-check',1)")
+                previous=delta
+    finally:case.db.close()

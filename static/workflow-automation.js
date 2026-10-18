@@ -53,6 +53,8 @@
     strategy_draft: '전략 작성',
     synthesis: '종합 작성',
     question_answer: '답변 작성',
+    paper_analysis: '논문 분석',
+    paper_verification: '논문 독립 검토',
   };
   const state = (v) => labels[v] || v || '기록 없음';
   const num = (v) => Number(v || 0).toLocaleString('ko-KR');
@@ -95,10 +97,9 @@
     const update = s?.updated_at
       ? ` 최근 반영 ${new Date(s.updated_at).toLocaleString('ko-KR')}.`
       : '';
-    const delta =
-      s?.mode === 'baseline_delta'
-        ? ` 변경 ${num(s.changed)}개 · 철회 ${num(s.removed)}개만 검색에 반영했습니다.`
-        : '';
+    const delta = ['baseline_delta', 'publication_delta'].includes(s?.mode)
+      ? ` 변경 ${num(s.changed)}개 · 철회 ${num(s.removed)}개만 검색에 반영했습니다.`
+      : '';
     $('auto-stage-note').textContent = s
       ? `${s.title} · ${s.note}${s.error_message ? ' ' + s.error_message : ''}${update}${delta}`
       : '새 입력은 기존 작업의 체크포인트에서 우선 인계됩니다. 위험·논문은 병행 처리하며, 검토된 자료부터 검색과 질의에 반영합니다.';
@@ -180,6 +181,16 @@
       failed = (counts.failed || 0) + (counts.blocked || 0);
     if (review || failed)
       el('small', `검토 ${num(review)} · 실패/차단 ${num(failed)}`, b, 'auto-attention');
+    if (s.recovery) {
+      const r = s.recovery;
+      if (r.retry_ready || r.retry_waiting || r.retry_exhausted)
+        el(
+          'small',
+          `복구 대상 ${num(r.retry_ready)} · 재시도 대기 ${num(r.retry_waiting)} · 한도 도달 ${num(r.retry_exhausted)}`,
+          b,
+          'auto-stage-queue'
+        );
+    }
   }
   function models(data) {
     const root = $('auto-models'),

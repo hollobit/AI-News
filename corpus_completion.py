@@ -140,6 +140,10 @@ class CompletionRunner:
         from improvement_selection import all_corpus_items
         with connect(self.path) as db:
             init(db)
+            from completion_idle import install as install_idle, token as idle_token, remember as remember_idle
+            install_idle(db)
+            db.commit()
+            validated_inputs=idle_token(db)
             cycle = db.execute('SELECT * FROM rsi_cycles WHERE id=?', (self.cycle_id,)).fetchone()
             recoverable=bool(cycle and cycle['status'] in ('running','finishing','waiting') and not owner_alive(cycle['owner_pid']))
             if not cycle or (cycle['status'] not in ('paused', 'error', 'complete', 'needs_review') and not recoverable):
@@ -270,6 +274,8 @@ class CompletionRunner:
                        (os.getpid(), now(), self.cycle_id))
             if not updated.rowcount:
                 raise RuntimeError('입력 갱신 중 요청된 일시중지를 보존합니다.')
+            db.commit()
+            remember_idle(db,self.cycle_id,validated_inputs)
 
 
     def cycle_control(self):

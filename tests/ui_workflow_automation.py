@@ -23,6 +23,7 @@ async def main():
     stages=[dict(id=k,title=k,counts={'complete':2,'pending':1},total=3,complete=2,percent=66.6,status='running' if k=='deep' else 'recorded',owner_alive=k=='deep',href='/operations',unit='기사',note='선택 기간의 원장 기준',run_id='run',updated_at='2026-10-15T07:00:00Z') for k in ['collector','extract','baseline','deep','sources','papers','wiki','publication']]
     stages.extend([dict(id='index',title='검색 반영',counts={},total=0,complete=0,percent=None,status='preparing',owner_alive=True,active_count=1,href='/context',unit='검색 자료',note='현재 검토 자료를 준비합니다.'),
                    dict(id='questions',title='종합 질의',counts={'running':1},total=1,complete=0,percent=0,status='running',owner_alive=True,active_count=1,href='/context',unit='질의',note='작성과 독립 검토')])
+    next(s for s in stages if s['id']=='papers')['recovery']=dict(retry_ready=12,retry_waiting=2,retry_exhausted=1)
     flow=dict(observed_at='2026-10-15T07:01:00Z',stages=stages,tasks=[],events=[],calls=[],call_counts={'running':0,'queued':0},call_limit=20,runtime_error=False,schedule={'enabled':1},scope='원장 기준',control=dict(jobs=[a],metrics={},settings={},unavailable=False))
     jobs={'a':a,'b':b,'c':c};fail_detail=False;fail_flow=False;posts=[];errors=[];hits=0
     async with async_playwright() as p:
@@ -46,10 +47,11 @@ async def main():
         await page.goto('http://test.local/workflow')
         await expect(page.locator('#control-title')).to_have_text(a['title'])
         await expect(page.locator('.auto-stage')).to_have_count(10)
+        await expect(page.locator('[data-auto-stage="papers"]')).to_contain_text('복구 대상 12 · 재시도 대기 2 · 한도 도달 1')
         assert await page.locator('.auto-panel').evaluate('(e)=>e.getBoundingClientRect().top') < await page.locator('.control-layout').evaluate('(e)=>e.getBoundingClientRect().top')
         assert await page.locator('.auto-panel').evaluate('(e)=>e.getBoundingClientRect().width') > 1200
         await expect(page.locator('[data-auto-stage="index"]')).to_have_attribute('data-activity','running')
-        stages[-2].update(status='complete',owner_alive=False,active_count=0,mode='baseline_delta',changed=4,removed=1,observed=120)
+        stages[-2].update(status='complete',owner_alive=False,active_count=0,mode='publication_delta',changed=4,removed=1,observed=120)
         await page.locator('#refresh').click()
         await page.locator('[data-auto-stage="index"]').click()
         await expect(page.locator('#auto-stage-note')).to_contain_text('변경 4개 · 철회 1개')

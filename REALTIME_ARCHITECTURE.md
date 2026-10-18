@@ -86,3 +86,11 @@ JEV 키워드 후보 정리는 `NEWS_BASELINE_KEYWORDS_MODE=jev`로 별도 시�
 구현은 SQLite 기반의 단일 호스트 운영을 유지한다. 메시지 브로커/벡터 DB를 추가하면 자동으로 빨라진다고 가정하지 않는다. 이후 확대 시에는 검토 결과의 변경 원장을 상세·논문에도 확장하고, 동일 기사에서 이미 검토한 사실을 중복 생성하는 부분을 근거/정책별로 재사용하는 순서가 적절하다.
 
 참고: [OpenAI 지연 최적화](https://developers.openai.com/api/docs/guides/latency-optimization), [TypeSafe JEV 인터페이스](https://docs.typesafe.ai/introduction). 외부 자료의 일반 원칙과 이 저장소의 실제 측정값을 구분한다.
+
+## 후속: 병렬 논문 분석과 게시 증분 갱신 (2026-10-18)
+
+`paper_pipeline`은 수집 요청과 준비된 논문 분석 예약을 분리한다. `PaperAnalysisService`의 기본4개 작업자가 초안→독립 검토를 수행하며 현재 입력 해시·인용·검토 기준을 유지한다. `NEWS_PAPER_WORKERS`로1~8을 설정할 수 있고 총 모델 동시 한도는 여전히20이다. `paper_analysis_recovery/events`는 인프라 복구를 기존 의미 검토 시도와 구분해 기록한다. 공급자 중지·공유 엔진 중지·사용자 전체 중지는 각각 보존한다.
+
+`context_paper_delta`와 `context_workflow_delta`는 projection revision과 일치하는 변경 경계에서 키를 기록한다. `context_delta`가 기본 분석 변경과 합쳐 같은 read snapshot에서 재입장시키며, 누락·철회·정책 변경에는 보수적으로 전체 검증을 적용한다. 논문 coverage는 동일한 검토 게이트를 전수 확인하며 본문 재색인만 변경 자료에 한정한다. 검토 전 초안이나 중간 역할 산출물은 공개하지 않는다.
+
+`completion_idle`은 완료된 cycle의 검증 토큰이 현재와 같을 때 불필요한 driver 재시작을 생략한다. 신규 원문·최종 결과·정정·검토 코드·스키마 변경이면 원래 재검증으로 돌아간다. 종합 질의는 최신 선택 근거를 다시 확인하며 첫 발췌와 최종 독립 검토 답변의 시간은 별도로 보고한다. 최종 LLM 응답의 수십 초 지연은 아직 남은 개선 대상이다.

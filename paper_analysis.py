@@ -1,10 +1,11 @@
-"""Single-worker, source-bounded paper analyses with independent evidence review."""
+"""Bounded parallel paper analyses with independent evidence review."""
 import hashlib
 import json
 import os
 import re
 import sqlite3
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -70,7 +71,7 @@ def validate_report(report, evidence, keywords):
 
 
 class PaperAnalysisService:
-    def __init__(self, path, analyzer=None, enabled=None, fetcher=None, extractor=None, start_worker=True):
+    def __init__(self, path, analyzer=None, enabled=None, fetcher=None, extractor=None, start_worker=True, workers=None):
         self.path = str(path)
         if analyzer is None:
             from semantic import run_structured
@@ -84,6 +85,7 @@ class PaperAnalysisService:
         self.analyzer, self.fetcher, self.extractor = analyzer, fetcher, extractor
         self.enabled = os.environ.get('NEWS_EXTERNAL_ANALYSIS_ENABLED') == '1' if enabled is None else enabled
         self.closed = False
+        self.workers=max(1,min(8,int(workers if workers is not None else os.environ.get('NEWS_PAPER_WORKERS','4'))))
         self.active = None
         self.lock = threading.RLock()
         self.wake = threading.Event()
@@ -99,6 +101,8 @@ class PaperAnalysisService:
             for row in db.execute("SELECT paper_id,owner_pid FROM arxiv_paper_analyses WHERE status='running'").fetchall():
                 if not _owner_alive(row['owner_pid']):
                     db.execute("UPDATE arxiv_paper_analyses SET status='paused',owner_pid=NULL WHERE paper_id=?",(row['paper_id'],))
+            from paper_recovery import setup
+            setup(db)
         self.thread = threading.Thread(target=self._worker, daemon=True, name='news-paper-analysis')
         if start_worker:
             self.thread.start()
@@ -178,7 +182,7 @@ class PaperAnalysisService:
     def _claim(self):
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
-            rows=db.execute("SELECT * FROM arxiv_paper_analyses WHERE status IN ('queued','paused','running') ORDER BY created_at").fetchall()
+            rows=db.execute("SELECT * FROM arxiv_paper_analyses WHERE status IN ('queued','paused','running') ORDER BY draft_json IS NOT NULL DESC,created_at DESC").fetchall()
             row=next((r for r in rows if not _owner_alive(r['owner_pid'])),None)
             if row:
                 db.execute("UPDATE arxiv_paper_analyses SET status='running',owner_pid=?,updated_at=? WHERE paper_id=?",(os.getpid(),now(),row['paper_id']))
@@ -186,29 +190,42 @@ class PaperAnalysisService:
         return None
 
     def _worker(self):
-        while not self.closed:
-            try:row=self._claim() if self.enabled else None
-            except sqlite3.OperationalError:
-                self.wake.wait(2);self.wake.clear();continue
-            if row is None:
-                self.wake.wait(2)
-                self.wake.clear()
-                continue
-            self.active=row['paper_id']
+        pending={}
+        with ThreadPoolExecutor(self.workers,thread_name_prefix='paper-analysis') as pool:
+            while not self.closed:
+                for future in list(pending):
+                    if future.done():
+                        future.result();pending.pop(future)
+                try:
+                    while self.enabled and not self.closed and len(pending)<self.workers:
+                        row=self._claim()
+                        if row is None:break
+                        pending[pool.submit(self._execute,row)]=row['paper_id']
+                except sqlite3.OperationalError:pass
+                self.active=next(iter(pending.values()),None)
+                self.wake.wait(.25 if pending else 2);self.wake.clear()
+        self.active=None
+
+    def _execute(self,row):
+        try:
+            self._analyze(row)
+        except Exception as exc:
+            self._save_failure(row,exc)
+
+    def _save_failure(self,row,exc):
+        # Checkpoint/error persistence may briefly wait for another writer, but
+        # never take down the other paper workers or reset previous attempts.
+        while True:
             try:
-                self._analyze(row)
-            except Exception as exc:
-                while True:
-                    try:
-                        with self.db() as db:
-                            db.execute("UPDATE arxiv_paper_analyses SET status=?,error=?,owner_pid=NULL,updated_at=? WHERE paper_id=? AND input_hash=?",
-                                       ('paused' if self.closed else 'failed',str(exc)[:500],now(),row['paper_id'],row['input_hash']))
-                        break
-                    except sqlite3.OperationalError:
-                        if self.closed:break
-                        self.wake.wait(2);self.wake.clear()
-            finally:
-                self.active=None
+                with self.db() as db:
+                    db.execute("UPDATE arxiv_paper_analyses SET status=?,error=?,owner_pid=NULL,updated_at=? WHERE paper_id=? AND input_hash=?",
+                               ('paused' if self.closed else 'failed',str(exc)[:500],now(),row['paper_id'],row['input_hash']))
+                    from paper_recovery import failed
+                    failed(db,row,exc)
+                return
+            except sqlite3.OperationalError:
+                if self.closed:return
+                self.wake.wait(2);self.wake.clear()
 
     def _evidence(self,item):
         identity=item['paper_id']
@@ -330,9 +347,11 @@ class PaperAnalysisService:
     def status(self):
         with self.db() as db:
             counts={r[0]:r[1] for r in db.execute('SELECT status,COUNT(*) FROM arxiv_paper_analyses GROUP BY status')}
-            active = db.execute("SELECT paper_id FROM arxiv_paper_analyses WHERE status='running' LIMIT 1").fetchone()
+            active = [r[0] for r in db.execute("SELECT paper_id FROM arxiv_paper_analyses WHERE status='running' ORDER BY updated_at")]
+            from paper_recovery import summary
+            recovery=summary(db)
         return {'enabled':self.enabled,'pending':sum(counts.get(s,0) for s in ('queued','paused')),'running': active[0] if active else None,
-                'counts':counts,'workers':1,'max_per_action':10}
+                'running_ids':active,'counts':counts,'workers':self.workers,'recovery':recovery,'max_per_action':10}
 
     def close(self):
         self.closed=True

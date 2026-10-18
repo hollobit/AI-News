@@ -36,6 +36,15 @@ def queues(db_path, now=None):
                 'counts':counts,'queued':queued,'last_progress_at':latest}
             if not active and counts.get('paused'):
                 output[name].update(state='paused',wait_reason='job_paused')
+            if name=='paper_analysis':
+                from paper_recovery import summary
+                recovery=summary(db,now)
+                output[name]['recovery']=recovery
+                if not active and not queued and not counts.get('paused'):
+                    if recovery['retry_ready'] or recovery['retry_waiting']:
+                        output[name].update(state='waiting',wait_reason='infrastructure_recovery')
+                    elif counts.get('failed') or counts.get('needs_review'):
+                        output[name].update(state='attention',wait_reason='review_or_recovery_required')
         if 'arxiv_api_cooldown' in tables:
             retry=db.execute('SELECT MAX(retry_at) FROM arxiv_api_cooldown').fetchone()[0]
             if retry and retry>now:
@@ -46,6 +55,9 @@ def queues(db_path, now=None):
                 enabled,next_at,failures=row
                 output['paper_pipeline']={'state':'waiting' if enabled else 'paused',
                     'wait_reason':'scheduled' if enabled else 'pipeline_disabled','next_at':next_at,'failures':failures}
+                output['paper_pipeline']['official_api_paused']=failures>=3
+                if enabled and failures>=3:
+                    output['paper_pipeline']['wait_reason']='official_api_paused_alternates_continue'
     return output
 
 

@@ -94,6 +94,7 @@ def run(db):
             if wiki.thread: wiki.thread.join()
             if analysis.thread.is_alive(): analysis.thread.join()
             if pipeline.thread.is_alive(): pipeline.thread.join()
+            if pipeline.provider_thread.is_alive(): pipeline.provider_thread.join()
             metadata.close(); articles.close()
             health.close()
             state.unlink(missing_ok=True)

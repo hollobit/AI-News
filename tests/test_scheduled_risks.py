@@ -104,3 +104,11 @@ def test_failed_operator_probe_does_not_check_models_or_launch(path, monkeypatch
                     check_models=lambda:pytest.fail('breaker still blocked'),
                     launcher=lambda *_:pytest.fail('must not launch'))
     assert result['stage']=='engine_unavailable'
+
+
+def test_unchanged_completed_cycle_does_not_probe_or_launch(path,monkeypatch):
+    with connect(path) as db:db.execute("UPDATE rsi_cycles SET status='complete',pause_requested=0")
+    monkeypatch.setattr('completion_idle.unchanged',lambda *_:True)
+    result=run(path,enable=True,check_models=lambda:pytest.fail('no work means no model access probe'))
+    assert result['stage']=='complete_waiting_for_input'
+    assert run(path,resume=True)['stage']=='started'

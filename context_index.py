@@ -64,6 +64,9 @@ def admitted_snapshot(db,previous):
         if delta:sources,coverage,changed_keys=delta
         else:sources,coverage=_analysis_sources(db);changed_keys=None
         finals = {r[0]: r[1] for r in db.execute("SELECT run_id,payload_json FROM strategic_workflow_artifacts WHERE stage='final'")} if not delta and db.execute("SELECT 1 FROM sqlite_master WHERE name='strategic_workflow_artifacts'").fetchone() else {}
+        workflow_ids=[s['id'] for s in sources if s['kind']=='workflow'] if delta else []
+        if workflow_ids:
+            finals={r[0]:r[1] for r in db.execute("SELECT run_id,payload_json FROM strategic_workflow_artifacts WHERE stage='final' AND run_id IN ("+','.join('?' for _ in workflow_ids)+')',workflow_ids)}
         if not delta:sources=sources+enrich_sources(db,[])
         return sources,coverage,finals,initial,changed_keys,admitted_at
     finally:
@@ -133,7 +136,8 @@ def write(path, db, key, previous=None):
             unindex(identity)
             store.execute('DELETE FROM sources WHERE id=?',(identity,))
         if not previous:store.execute("INSERT INTO search(search) VALUES('rebuild')")
-        stats=dict(mode='baseline_delta' if delta else 'incremental' if previous else 'full',
+        mode='publication_delta' if delta and any(json.loads(k)[0]!='baseline' for k in changed_keys) else 'baseline_delta' if delta else 'incremental' if previous else 'full'
+        stats=dict(mode=mode,
                    sources=store.execute('SELECT count(*) FROM sources').fetchone()[0],changed=changed,removed=len(existing))
         store.execute('INSERT OR REPLACE INTO meta VALUES(?,?)',('build',encode(stats)))
         store.execute('INSERT OR REPLACE INTO meta VALUES(?,?)',('baseline_delta',encode(initial)))
