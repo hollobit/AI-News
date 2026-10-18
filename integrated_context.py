@@ -8,6 +8,8 @@ def enrich_sources(db, sources):
     from risk_analysis import validated_risk_content
     from knowledge_wiki import read_wiki
     from strategy_trends import LENSES, matched_terms
+    from evidence_corrections import risk_projection_token,active_risks
+    corrections=risk_projection_token(db) if any(s['kind']=='workflow' and 'workspace_risk_corrections' not in s for s in sources) else ()
     additions=[]
     for source in sources:
         if source['kind'] != 'workflow': continue
@@ -17,7 +19,9 @@ def enrich_sources(db, sources):
         if not content: continue
         admitted={e['id']:e for e in source['result']['evidence']}
         nodes=[];edges=[]
+        active=active_risks(content['risks'],source['id'],source.get('workspace_risk_corrections',corrections))
         for i,risk in enumerate(content['risks']):
+            if risk not in active:continue
             refs=risk['evidence_ids']
             if not refs or not set(refs)<=set(admitted): continue
             rid='risk:'+str(i); sid='scenario:'+str(i)

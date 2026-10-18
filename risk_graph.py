@@ -42,7 +42,7 @@ def _risk_matches(risk: dict[str, Any], params: dict[str, Any]) -> bool:
     if status == "all": status = ""
     if status in {"withdrawn", "history", "resolved", "superseded"}:
         lifecycle = risk.get("lifecycle")
-        if status == "withdrawn" and lifecycle != "withdrawn_source_mismatch": return False
+        if status == "withdrawn" and lifecycle not in {"withdrawn_source_mismatch","withdrawn_analysis_error"}: return False
         if status == "superseded" and lifecycle != "superseded": return False
         if status == "history" and not risk.get("resolution"): return False
         if status == "resolved" and risk.get("resolution", {}).get("verification_status") != "resolved": return False
@@ -63,14 +63,17 @@ def _node_id(prefix: str, value: str) -> str:
 def load_risk_graph(db, params: dict[str, Any] | None = None) -> dict[str, Any]:
     params = params or {}
     # The map is a read-only projection of independently admitted risk reports.
-    # Avoid the heavier archive/source-state audit used by the paginated review
-    # page so opening this secondary visualization does not block the list.
-    risks = read_risks(db, unlimited=True, include_source_evidence=True)["risks"]
+    # Recheck explicit replacements without the full archive/source-state audit
+    # used by the paginated review page.
+    data = read_risks(db, unlimited=True, include_source_evidence=True,include_history=True)
+    risks=data['risks']
     for risk in risks:
         risk["lifecycle"] = "active"
         risk["source_status"] = "reviewed_at_analysis"
         risk["priority"] = priority_score(risk)
         risk["status"] = risk["priority"]["status"]
+    from risk_views import _apply_resolutions
+    risks=_apply_resolutions(db,data)['risks']
     risks = [risk for risk in risks if _risk_matches(risk, params)]
     risks.sort(key=lambda item: (item.get("priority", {}).get("range", [0, 0])[0], item.get("id", "")), reverse=True)
     requested = max(1, min(2000, int(_one(params, "risk_limit", "48"))))

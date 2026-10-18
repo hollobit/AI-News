@@ -51,7 +51,7 @@ def _all_risks(db,current_time=None):
     today=(current_time or datetime.now(timezone.utc)).date().isoformat()
     token=revision_token(db)
     def build():
-        base=read_risks(db,current_time=current_time,unlimited=True,include_source_evidence=True)
+        base=read_risks(db,current_time=current_time,unlimited=True,include_source_evidence=True,include_history=True)
         flat=[e for risk in base['risks'] for e in risk.get('raw_evidence',[])]
         from risk_source_state import evidence_source_states,evidence_index_key
         states=evidence_source_states(db,flat)
@@ -157,12 +157,12 @@ def _apply_resolutions(db,data):
         if not record:continue
         record=dict(record);history_total+=1
         # Only an explicit, reasoned withdrawal leaves the active ranking.
-        if record['status'] not in ('withdrawn_source_mismatch','source_correction','context_reassessment') or not str(record['reason'] or '').strip():
+        if record['status'] not in ('withdrawn_source_mismatch','withdrawn_analysis_error','source_correction','context_reassessment') or not str(record['reason'] or '').strip():
             record['verification_status']='pending_resolution'
             risk['resolution']=record;pending+=1
             continue
-        if record['status']=='withdrawn_source_mismatch':
-            risk['lifecycle']='withdrawn_source_mismatch';withdrawn+=1
+        if record['status'] in ('withdrawn_source_mismatch','withdrawn_analysis_error'):
+            risk['lifecycle']=record['status'];withdrawn+=1
         accepted=_replacement_verified(db,record)
         if accepted and record['status'] in ('source_correction','context_reassessment'):
             risk['lifecycle']='superseded';superseded+=1
@@ -198,7 +198,7 @@ def read_risk_page(db,params=None,*,current_time=None):
     if likelihood and likelihood not in {*LIKELIHOOD,'unknown'}:raise ValueError('알 수 없는 미래 가능성입니다.')
     if status and status not in {'scored','partial','unknown','needs_review','withdrawn','history','resolved','superseded'}:raise ValueError('알 수 없는 검토 상태입니다.')
     if status in ('withdrawn','history','resolved','superseded'):
-        items=[risk for risk in items if (status=='withdrawn' and risk.get('lifecycle')=='withdrawn_source_mismatch') or (status=='superseded' and risk.get('lifecycle')=='superseded') or (status=='history' and risk.get('resolution')) or (status=='resolved' and risk.get('resolution',{}).get('verification_status')=='resolved')]
+        items=[risk for risk in items if (status=='withdrawn' and risk.get('lifecycle') in ('withdrawn_source_mismatch','withdrawn_analysis_error')) or (status=='superseded' and risk.get('lifecycle')=='superseded') or (status=='history' and risk.get('resolution')) or (status=='resolved' and risk.get('resolution',{}).get('verification_status')=='resolved')]
         status=''
     else:
         items=[risk for risk in items if risk.get('lifecycle')=='active']

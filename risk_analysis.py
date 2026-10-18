@@ -115,9 +115,11 @@ def validated_risk_content(payload, run_id=''):
     return {'report': report, 'risks': report['risks'], 'evidence': evidence, 'workflow_run_id': run_id}
 
 
-def read_risks(db, params=None, *, current_time=None, unlimited=False, include_source_evidence=False):
+def read_risks(db, params=None, *, current_time=None, unlimited=False, include_source_evidence=False, include_history=False):
     """Summarize saved source assessments; never calculate a world threat score."""
     from graph_rag import _table_rows, _json, _global_evidence, validated_workflow_content
+    from evidence_corrections import risk_projection_token,active_risks
+    corrections=() if include_history else risk_projection_token(db)
     params = params or {}
     def one(key):
         value = params.get(key, '')
@@ -152,12 +154,15 @@ def read_risks(db, params=None, *, current_time=None, unlimited=False, include_s
                 if '근거 ID만 기록됨' in str(exc):issues=list(issues)+[str(exc)]
             pending.append({'workflow_run_id': row['id'], 'status': 'needs_review', 'issues': issues})
             continue
-        selected = [risk for risk in content['risks'] if not domain or domain in risk['impact_domains']]
+        current=active_risks(content['risks'],row['id'],corrections)
+        if content['risks'] and not current:continue
+        selected = [risk for risk in current if not domain or domain in risk['impact_domains']]
         assessments.append({'workflow_run_id': row['id'], 'analysis_at': analyzed_at,
-                            'risk_count': len(selected), 'summary': content['report']['summary'],
+                            'risk_count': len(selected), 'summary': content['report']['summary'] if len(current)==len(content['risks']) else '',
                             'assessed_evidence_ids': content['report']['assessed_evidence_ids'],
                             'not_assessable_evidence_ids': content['report']['not_assessable_evidence_ids'],
-                            'limitations': content['report']['limitations']})
+                            'limitations': content['report']['limitations'] if len(current)==len(content['risks']) else [],
+                            'summary_withheld_after_correction':len(current)!=len(content['risks'])})
         raw = _sources(content['evidence'])
         for risk in selected:
             evidence = [_global_evidence(dict(raw[ref], source_url=raw[ref].get('url', ''), workflow_run_ids=[row['id']]),

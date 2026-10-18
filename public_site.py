@@ -20,6 +20,31 @@ def published_files(root):
 def pick(data,keys):return {k:data[k] for k in keys.split() if k in data}
 def identity(value):return hashlib.sha256(value.encode()).hexdigest()[:24]
 
+
+def _current_risk_reports(db,run_id,report,corrections):
+    """Follow verified correction pointers without changing completion history."""
+    from evidence_corrections import risk_corrections
+    from risk_views import _replacement_verified
+    fields=('risk_id','status','reason','corrected_source_url','replacement_workflow_run_id','created_at')
+    pending=[(run_id,report)];seen=set()
+    while pending:
+        run,payload=pending.pop()
+        if run in seen:continue
+        seen.add(run)
+        yield run,payload
+        for row in risk_corrections(payload,run,corrections):
+            replacement=row[4]
+            if not replacement or replacement in seen or not _replacement_verified(db,dict(zip(fields,row))):continue
+            saved=db.execute("SELECT payload_json FROM strategic_workflow_artifacts WHERE run_id=? AND stage='final'",(replacement,)).fetchone()
+            if saved:pending.append((replacement,json.loads(saved[0])))
+
+
+def _owned_evidence(report,item):
+    from completion_quality import message_text
+    return {e['id'] for e in report['evidence'] if e.get('url')==item.get('source_url') and
+            ((e.get('origin')=='telegram_excerpt' and e['text']==message_text(item)) or
+             (e.get('origin')=='fetched_url_excerpt' and e['text']==str((item.get('source_context') or {}).get('text') or '')[:3500]))}
+
 def observation(raw):
     from export_wiki_site import public_url
     d=raw.get('data',{})
@@ -41,7 +66,8 @@ def content(db, *, news_only=False, selected_items=None, include_excerpts=False)
     from baseline_graph import baseline_sources
     from arxiv_papers import _paper_rows
     from paper_graph import validated_paper_analysis
-    from completion_quality import document_admission, message_text
+    from completion_quality import document_admission
+    from evidence_corrections import risk_projection_token,active_risks
     from graph_rag import validated_workflow_content
     tables={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     items=selected_items if selected_items is not None else (all_corpus_items(db) if {'news','articles','archived_urls'}<=tables else [])
@@ -61,7 +87,8 @@ def content(db, *, news_only=False, selected_items=None, include_excerpts=False)
         for n in source['result']['nodes']:
             if n['type']=='NewsSummary':article['analyses'].append(dict(kind='기본 분석',text=n['summary']))
     if {'corpus_completion_documents','strategic_workflow_runs','strategic_workflow_artifacts'}<=tables:
-        current={content_identity(i):i for i in items};runs={};seen=set()
+        current={content_identity(i):i for i in items};runs={};seen=set();risk_reports={}
+        corrections=risk_projection_token(db)
         rows=db.execute('''SELECT d.document_id,r.id,r.status,r.error,a.payload_json FROM corpus_completion_documents d
             JOIN strategic_workflow_runs r ON r.id=d.workflow_run_id
             JOIN strategic_workflow_artifacts a ON a.run_id=r.id AND a.stage='final'
@@ -76,20 +103,22 @@ def content(db, *, news_only=False, selected_items=None, include_excerpts=False)
             admission=document_admission(dict(row,results=report),item)
             if not admission['verified']:continue
             seen.add(key)
-            own={e['id'] for e in report['evidence'] if e.get('url')==item.get('source_url') and
-                 ((e.get('origin')=='telegram_excerpt' and e['text']==message_text(item)) or
-                  (e.get('origin')=='fetched_url_excerpt' and e['text']==str((item.get('source_context') or {}).get('text') or '')[:3500]))}
+            own=_owned_evidence(report,item)
             for claim in review.get('claims',[]):
                 if claim['evidence_ids'] and set(claim['evidence_ids'])<=own:
                     bykey[key]['analyses'].append(dict(kind='심층 분석',title=claim['title'],text=claim['detail'],uncertainty=claim['uncertainty']))
             if admission['risk_reviewed']:
                 from risk_analysis import validated_risk_content
-                checked=validated_risk_content(report,row['id'])
-                for risk in checked.get('risks',[]):
-                    if risk.get('evidence_ids') and set(risk['evidence_ids'])<=own:
-                        risks.append(dict(pick(risk,'title current_severity current_basis scenario assumptions uncertainty future_likelihood horizon mitigations'),
-                            article_id=bykey[key]['id'],url=bykey[key]['url'],day=bykey[key]['day'],
-                            analysis_at=report.get('completed_at','')))
+                if row['id'] not in risk_reports:
+                    risk_reports[row['id']]=list(_current_risk_reports(db,row['id'],report,corrections))
+                for risk_run,risk_report in risk_reports[row['id']]:
+                    checked=validated_risk_content(risk_report,risk_run)
+                    risk_own=_owned_evidence(risk_report,item)
+                    for risk in active_risks(checked.get('risks',[]),risk_run,corrections):
+                        if risk.get('evidence_ids') and set(risk['evidence_ids'])<=risk_own:
+                            risks.append(dict(pick(risk,'title current_severity current_basis scenario assumptions uncertainty future_likelihood horizon mitigations'),
+                                article_id=bykey[key]['id'],url=bykey[key]['url'],day=bykey[key]['day'],
+                                analysis_at=risk_report.get('completed_at','')))
     if news_only:
         return dict(news=articles, risks=risks)
     if include_excerpts:

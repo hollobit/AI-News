@@ -67,6 +67,11 @@ def admitted_snapshot(db,previous):
         workflow_ids=[s['id'] for s in sources if s['kind']=='workflow'] if delta else []
         if workflow_ids:
             finals={r[0]:r[1] for r in db.execute("SELECT run_id,payload_json FROM strategic_workflow_artifacts WHERE stage='final' AND run_id IN ("+','.join('?' for _ in workflow_ids)+')',workflow_ids)}
+        from evidence_corrections import risk_projection_token,risk_corrections
+        corrections=risk_projection_token(db)
+        for source in sources:
+            if source['kind']=='workflow' and source['id'] in finals:
+                source['workspace_risk_corrections']=risk_corrections(json.loads(finals[source['id']]),source['id'],corrections)
         if not delta:sources=sources+enrich_sources(db,[])
         return sources,coverage,finals,initial,changed_keys,admitted_at
     finally:
@@ -113,7 +118,13 @@ def write(path, db, key, previous=None):
                 source['workspace_final'] = {k: payload[k] for k in ('risk_report', 'risk_verification', 'risk_verified', 'evidence') if k in payload}
                 # Candidate matching only; the original risk gate still runs
                 # before a risk or scenario can enter the materialized graph.
-                text += ' ' + encode(payload.get('risk_report', {}))
+                from evidence_corrections import active_risks
+                report=payload.get('risk_report')
+                if not isinstance(report,dict):report={}
+                risks=report.get('risks')
+                if not isinstance(risks,list):risks=[]
+                active=active_risks(risks,source['id'],source.get('workspace_risk_corrections',[]))
+                text += ' ' + encode(report if len(active)==len(risks) else {'risks':active})
             body=encode(source)
             source_key=encode([source['kind'],source['id'],source.get('row',{}).get('run_id')])
             digest=hashlib.sha256(body.encode()).hexdigest()

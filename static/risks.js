@@ -80,7 +80,7 @@
       node(
         'span',
         '',
-        r.lifecycle === 'withdrawn_source_mismatch'
+        ['withdrawn_source_mismatch', 'withdrawn_analysis_error'].includes(r.lifecycle)
           ? '철회 기록의 검토 지수'
           : r.lifecycle === 'superseded'
             ? '대체된 기록의 검토 지수'
@@ -141,6 +141,8 @@
     const card = node('article', 'risk-row');
     if (r.lifecycle === 'withdrawn_source_mismatch')
       card.append(node('p', 'pill amber', '원문 연결 오류로 철회 · 활성 순위에서 제외'));
+    if (r.lifecycle === 'withdrawn_analysis_error')
+      card.append(node('p', 'pill amber', '해석 오류로 철회 · 활성 순위에서 제외'));
     if (r.lifecycle === 'superseded')
       card.append(node('p', 'pill', '후속 검증 평가로 대체 · 과거 기록'));
     if (r.resolution)
@@ -203,7 +205,7 @@
         ['검토 필요 분석', c.needs_review_workflows ?? c.needs_review],
         ['위험 미평가 분석', c.unassessed],
         ['현재 원문 재검토 항목', c.source_review_required],
-        ['원문 오류 철회', c.withdrawn],
+        ['원문·해석 오류 철회', c.withdrawn],
         ['후속 평가로 대체', c.superseded],
         ['이력에 보존된 원문 변경', c.historical_source_review_required],
         ['후속 검토 대기', c.resolution_pending],
@@ -427,15 +429,23 @@
         section(area, '철회·정정 이력', [
           r.lifecycle === 'withdrawn_source_mismatch'
             ? '원문 연결 오류로 철회'
-            : r.lifecycle === 'superseded'
-              ? '후속 검증 평가로 대체된 과거 기록'
-              : '문맥·출처 정정 검토',
+            : r.lifecycle === 'withdrawn_analysis_error'
+              ? '해석 오류로 철회'
+              : r.lifecycle === 'superseded'
+                ? '후속 검증 평가로 대체된 과거 기록'
+                : '문맥·출처 정정 검토',
           v.reason,
           v.verification_status === 'resolved'
             ? '후속 독립 검토와 현재 원문 일치 확인'
             : '후속 독립 검토 미완료',
         ]);
-        if (v.corrected_source_url) area.append(link('교정된 원문', v.corrected_source_url));
+        if (v.corrected_source_url)
+          area.append(
+            link(
+              v.status === 'withdrawn_analysis_error' ? '검토 원문' : '교정된 원문',
+              v.corrected_source_url
+            )
+          );
         if (v.replacement_workflow_run_id)
           section(area, '후속 재평가 ID', v.replacement_workflow_run_id);
       }

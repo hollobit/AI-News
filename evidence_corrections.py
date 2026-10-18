@@ -1,4 +1,4 @@
-"""Read-only projection of explicit source withdrawals; archived audits stay intact."""
+"""Project explicit source/interpretation corrections without rewriting audits."""
 import hashlib
 import json
 from copy import deepcopy
@@ -10,6 +10,36 @@ def correction_token(db):
     return tuple(tuple(row) for row in db.execute(
         'SELECT risk_id,status,reason,corrected_source_url,replacement_workflow_run_id,created_at '
         'FROM risk_review_resolutions ORDER BY risk_id,created_at'))
+
+
+def risk_projection_token(db,*,records=None):
+    """Explicit withdrawals or independently current replacements leave live risks."""
+    token=correction_token(db) if records is None else tuple(tuple(row) for row in records)
+    if not token:return ()
+    from projection_cache import cached_read,revision_token
+    def build():
+        from risk_views import _replacement_verified
+        fields=('risk_id','status','reason','corrected_source_url','replacement_workflow_run_id','created_at')
+        latest={row[0]:row for row in token}
+        return tuple(row for row in latest.values() if str(row[2] or '').strip() and (
+            row[1] in ('withdrawn_source_mismatch','withdrawn_analysis_error') or
+            row[1] in ('source_correction','context_reassessment') and _replacement_verified(db,dict(zip(fields,row)))))
+    revision=revision_token(db)
+    return cached_read(db,'risk-projection-corrections-v1',(revision,token) if revision is not None else None,build)
+
+
+def risk_corrections(payload,run_id,token):
+    report=payload.get('risk_report')
+    risks=report.get('risks') if isinstance(report,dict) else None
+    ids={'risk:'+hashlib.sha256(json.dumps([run_id,risk],ensure_ascii=False,sort_keys=True).encode()).hexdigest()[:24]
+         for risk in (risks if isinstance(risks,list) else [])}
+    return [list(row) for row in token if row[0] in ids]
+
+
+def active_risks(risks,run_id,corrections):
+    excluded={row[0] for row in corrections}
+    return [risk for risk in risks if 'risk:'+hashlib.sha256(
+        json.dumps([run_id,risk],ensure_ascii=False,sort_keys=True).encode()).hexdigest()[:24] not in excluded]
 
 
 def withdrawn_refs(payload, run_id, token):

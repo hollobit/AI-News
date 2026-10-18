@@ -95,12 +95,17 @@ def load(db,keys,timing=None):
     if selected.get('wiki'):sources+=enrich_sources(db,[])
     current=[]
     wanted=set(keys)
+    from evidence_corrections import correction_token,risk_projection_token,risk_corrections
+    corrections=correction_token(db) if selected.get('workflow') else ()
     for source in sources:
         if identity(source) not in wanted:continue
         final=None
         if source['kind']=='workflow':
             row=db.execute("SELECT payload_json FROM strategic_workflow_artifacts WHERE run_id=? AND stage='final'",(source['id'],)).fetchone()
             if row:final=json.loads(row[0])
+            relevant=risk_corrections(final or {},source['id'],corrections)
+            # Only this question's selected workflows need replacement checks.
+            source['workspace_risk_corrections']=[list(row) for row in risk_projection_token(db,records=relevant)]
         current.append(normalized(source,final))
     if timing is not None:timing['selected_results_ms']=round((time.monotonic()-started)*1000,2)
     return current
