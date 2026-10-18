@@ -7,7 +7,8 @@ from code_policy import policy
 
 
 INTERNAL = {'evidence_blob_migrations','completion_report_digests','completion_admission_checks',
-            'projection_revisions','projection_source_meanings','source_changes','source_change_state','morphology_cache'}
+            'projection_revisions','projection_source_meanings','source_changes','source_change_state','morphology_cache',
+            'wiki_input_revision'}
 
 
 def signature(db_path, root):

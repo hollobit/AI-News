@@ -89,8 +89,14 @@ def run(db):
         health = WorkerHealth(db, state, ['paper_metadata','paper_analysis','paper_pipeline','wiki','article_explanations'])
         pending = {}
         wiki_request = None
+        from wiki_wakeup import InputWatch, notify
+        wiki_inputs = InputWatch()
         try:
             if stop.is_set():return
+            # Establish the input counter before the initial wiki sweep so an
+            # update during that sweep remains observable by the same worker.
+            with sqlite3.connect(db, timeout=15) as connection:
+                wiki_inputs.poll(connection, enabled=wiki.enabled)
             analysis.thread.start()
             pipeline.autostart=True
             pipeline.thread.start();pipeline.provider_thread.start()
@@ -113,10 +119,12 @@ def run(db):
                         pending['article'] = pool.submit(articles._run, row['url'])
                 with sqlite3.connect(db, timeout=15) as connection:
                     requested = tuple(connection.execute('SELECT id,requested FROM wiki_topics WHERE requested=1 ORDER BY id'))
+                    notify(connection, wiki_inputs, wiki)
                 if requested != wiki_request:
                     wiki_request = requested
-                    wiki.wake.set()
-                health.tick("working" if pending else "idle")
+                    if requested:
+                        wiki.wake.set()
+                health.tick("working" if pending else "idle", wiki_source_updates=wiki_inputs.status())
         finally:
             health.tick('draining')
             wiki.close(); analysis.close(); pipeline.close()

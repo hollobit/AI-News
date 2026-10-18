@@ -47,6 +47,24 @@ async def main():
         await page.goto('http://test.local/workflow')
         await expect(page.locator('#control-title')).to_have_text(a['title'])
         await expect(page.locator('.auto-stage')).to_have_count(10)
+        wiki=next(s for s in stages if s['id']=='wiki')
+        wiki['source_updates']=dict(state='coalescing',remaining_seconds=7)
+        wiki['note']='약 7초 후 갱신을 확인합니다. 생성·검토 완료 예상 시간은 아닙니다.'
+        await page.locator('#refresh').click()
+        await expect(page.locator('[data-auto-stage="wiki"]')).to_contain_text('약 7초 후 확인')
+        await expect(page.locator('[data-auto-stage="wiki"]')).to_have_attribute('data-activity','idle')
+        await page.locator('[data-auto-stage="wiki"]').click()
+        await expect(page.locator('#auto-stage-note')).to_contain_text('완료 예상 시간은 아닙니다')
+        wiki['source_updates']['state']='unavailable'
+        await page.locator('#refresh').click()
+        await expect(page.locator('[data-auto-stage="wiki"]')).to_contain_text('변경 감지 확인 필요')
+        await expect(page.locator('[data-auto-stage="wiki"]')).to_have_attribute('data-activity','attention')
+        wiki['source_updates']['state']='coalescing';wiki['active_count']=1
+        await page.locator('#refresh').click()
+        await expect(page.locator('[data-auto-stage="wiki"]')).to_contain_text('실행 확인')
+        wiki['active_count']=0;wiki['source_updates']['state']='watching'
+        await page.locator('#refresh').click()
+        await expect(page.locator('[data-auto-stage="wiki"]')).to_contain_text('원근거 변경 감지 중')
         await expect(page.locator('[data-auto-stage="papers"]')).to_contain_text('복구 대상 12 · 재시도 대기 2 · 한도 도달 1')
         assert await page.locator('.auto-panel').evaluate('(e)=>e.getBoundingClientRect().top') < await page.locator('.control-layout').evaluate('(e)=>e.getBoundingClientRect().top')
         assert await page.locator('.auto-panel').evaluate('(e)=>e.getBoundingClientRect().width') > 1200

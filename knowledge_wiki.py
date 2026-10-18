@@ -270,6 +270,9 @@ class KnowledgeWiki:
 
     def _loop(self):
         while not self.stop.is_set():
+            # Clear before reading inputs, never after waiting: a notification
+            # arriving during work must schedule a further sweep.
+            self.wake.clear()
             if self.enabled:
                 from wiki_registry import topics
                 try:
@@ -295,7 +298,6 @@ class KnowledgeWiki:
                         # A storage outage must not kill the scheduler or leak provider text.
                         self.abandoned.add(topic)
             self.wake.wait(600)
-            self.wake.clear()
 
     def compile(self, topic):
         from wiki_structure import purpose

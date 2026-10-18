@@ -42,6 +42,25 @@ def test_empty_store_has_unknown_not_fake_complete(tmp_path):
     assert result['stages'][0]['status']=='delayed'
 
 
+@pytest.mark.parametrize('health,state', [('observed','coalescing'), ('unresponsive','coalescing'), ('observed','disabled')])
+def test_wiki_input_wait_is_not_analysis_completion(tmp_path, monkeypatch, health, state):
+    import background_jobs
+    path=tmp_path/'news.sqlite3'
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE wiki_topics(status)')
+        db.execute("INSERT INTO wiki_topics VALUES('complete')")
+    monkeypatch.setattr(background_jobs,'worker_status',lambda _:dict(status='running',health=health,
+        wiki_source_updates=dict(state=state,remaining_seconds=7,checked_at=123,notifications=2)))
+    stage=next(s for s in snapshot(path)['stages'] if s['id']=='wiki')
+    assert stage['complete']==1 and stage['status']=='recorded'
+    assert 'checked_at' not in stage['source_updates']
+    if health=='unresponsive':
+        assert stage['source_updates']['state']=='unavailable' and '확인할 수 없습니다' in stage['note']
+    elif state=='coalescing':
+        assert '7초 후 갱신을 확인' in stage['note'] and '완료 예상 시간은 아닙니다' in stage['note']
+    else:assert '중지' in stage['note']
+
+
 @pytest.mark.parametrize('state',['live','stale','orphan'])
 def test_source_coalescing_is_visible_without_faking_a_running_analysis(tmp_path,state):
     import json,os

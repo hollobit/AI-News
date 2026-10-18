@@ -75,8 +75,8 @@ class WorkerHealth:
         self.thread=threading.Thread(target=self._loop,daemon=True,name='worker-heartbeat')
         self.thread.start()
 
-    def tick(self, phase='idle'):
-        with self.lock:self.value.update(loop_at=time.time(),phase=phase)
+    def tick(self, phase='idle', **details):
+        with self.lock:self.value.update(loop_at=time.time(),phase=phase,**details)
 
     def _write(self):
         with self.lock:value=dict(self.value)

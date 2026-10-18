@@ -69,6 +69,7 @@
     Number(s.active_count) > 0 ||
     (['running', 'preparing'].includes(s.status) && s.owner_alive === true);
   const problems = (s) =>
+    s.source_updates?.state === 'unavailable' ||
     [
       'failed',
       'owner_missing',
@@ -90,6 +91,11 @@
     if (s.id === 'collector')
       return s.status === 'live' ? '정기 확인 정상 · 새 메시지 대기' : state(s.status);
     if (running(s)) return '실행 확인 · ' + state(s.status === 'recorded' ? 'running' : s.status);
+    if (s.source_updates?.state === 'coalescing')
+      return `원근거 변경 모으는 중 · 약 ${num(s.source_updates.remaining_seconds)}초 후 확인`;
+    if (s.source_updates?.state === 'unavailable') return '변경 감지 확인 필요';
+    if (s.source_updates?.state === 'disabled') return '자동 갱신 중지';
+    if (s.source_updates?.state === 'watching') return '원근거 변경 감지 중';
     return state(s.status);
   }
   function stageInfo() {

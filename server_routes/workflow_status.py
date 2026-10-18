@@ -109,6 +109,23 @@ def snapshot(path,index=None):
                 paper_stage['provider_wait']=dict(official_api_paused=paper_state['failures']>=3,retry_at=paper_state['next_at'],enabled=bool(paper_state['enabled']))
                 if paper_state['failures']>=3:paper_stage['note']+=' 공식 API는 실패 후 대기 중이며 대체 공급자·확보 자료 분석은 별도로 진행합니다.'
     index=index or {}
+    from background_jobs import worker_status
+    from wiki_wakeup import status_for_view
+    try:
+        wiki_updates=status_for_view(worker_status(path))
+    except (OSError, ValueError, KeyError, TypeError):
+        wiki_updates=dict(state='unavailable',error_type='WorkerUnavailable')
+    if wiki_updates:
+        wiki_stage=next(s for s in stages if s['id']=='wiki')
+        wiki_stage['source_updates']=wiki_updates
+        if wiki_updates['state']=='coalescing':
+            wiki_stage['note']+=f" 원근거 변경을 모으는 중입니다. 약 {wiki_updates['remaining_seconds']}초 후 갱신을 확인합니다. 생성·검토 완료 예상 시간은 아닙니다."
+        elif wiki_updates['state']=='unavailable':
+            wiki_stage['note']+=' 원근거 변경 감지를 확인할 수 없습니다. 작업자가 동작 중이면 10분 주기 확인은 유지됩니다.'
+        elif wiki_updates['state']=='disabled':
+            wiki_stage['note']+=' 외부 분석 설정에 따라 자동 갱신 알림이 중지되어 있습니다.'
+        else:
+            wiki_stage['note']+=' 원근거 변경을 감지하면 연속 변경을 모아 갱신을 요청합니다. 갱신 요청 수는 분석 완료 수가 아닙니다.'
     stage('index','검토 자료 검색 반영',status=index.get('status','unknown'),owner_alive=index.get('owner_alive',False),
           active_count=index.get('active_count',0),observed=index.get('sources'),href='/context',unit='검색 자료',
           updated_at=datetime.fromtimestamp(index['prepared_at'],timezone.utc).isoformat() if index.get('prepared_at') else None,
