@@ -24,6 +24,19 @@ def _keyword_membership(db, items):
 
 
 def read_news(db, params, *, include_discovery=True):
+    from keyword_index import ensure_keyword_index, _source_revision, _is_current
+    import sqlite3
+    ensure_keyword_index(db,lambda:joined_articles(db))
+    revision=_source_revision(db)
+    if not _is_current(db,revision):
+        raise sqlite3.OperationalError('keyword index preparation pending')
+    result=_read_news(db,params,include_discovery=include_discovery)
+    if revision!=_source_revision(db):
+        raise sqlite3.OperationalError('news changed during keyword selection')
+    return result
+
+
+def _read_news(db, params, *, include_discovery=True):
     from source_projection import news_dates, joined
     dates = news_dates(db)
     rows = None

@@ -35,7 +35,9 @@ def channel_status(db,channels,config_path):
             'status':'received' if observed.get('last_received_at') else 'historical' if stored.get('messages') else 'waiting'})
     heartbeat=db.execute("SELECT value FROM state WHERE key='collector_last_success'").fetchone()
     snapshot=db.execute("SELECT value FROM state WHERE key='collector_corpus_snapshot'").fetchone()
+    metrics=db.execute("SELECT value FROM state WHERE key='collector_last_batch_metrics'").fetchone()
     return {'pipeline':json.loads(snapshot[0]) if snapshot else None,'channels':result,'last_success':heartbeat[0] if heartbeat else None,
+            'last_batch_metrics':json.loads(metrics[0]) if metrics else None,
             'scope':'봇 업데이트 확인 시각과 실제 메시지 수신 시각입니다. 채널의 과거 전체 이력 확인을 의미하지 않습니다.'}
 
 
@@ -43,14 +45,16 @@ def finish_extraction(db, channels, checked_at):
     """Persist coverage only after messages and article indexing have committed."""
     from datetime import datetime, timezone
     from improvement_selection import all_corpus_items
+    from source_projection import corpus_identities
     previous=db.execute("SELECT value FROM state WHERE key='collector_corpus_snapshot'").fetchone()
     previous=json.loads(previous[0]) if previous else None
-    items=all_corpus_items(db)
+    identities=corpus_identities(db)
+    if identities is None:
+        identities={item['corpus_identity'] for item in all_corpus_items(db)}
     stamp=datetime.now(timezone.utc).isoformat()
-    identities={item['corpus_identity'] for item in items}
     prior_ids=db.execute("SELECT value FROM state WHERE key='collector_corpus_identities'").fetchone()
     old_ids=set(json.loads(prior_ids[0])) if prior_ids else None
-    total=len(items)
+    total=len(identities)
     value={'status':'complete','checked_at':checked_at,'extracted_at':stamp,
            'total_unique':total,'previous_total':previous.get('total_unique') if previous else None,
            'new_unique':len(identities-old_ids) if old_ids is not None else None,

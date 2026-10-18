@@ -149,7 +149,7 @@ def save_message(db, message):
     return bool(cursor.rowcount)
 
 
-def process_updates(db, updates, allowed_channels):
+def process_updates(db, updates, allowed_channels, *, prepare_keywords=True):
     changed = False
     with db:
         for update in updates:
@@ -168,8 +168,61 @@ def process_updates(db, updates, allowed_channels):
             pending['status']='extracting'
             db.execute("INSERT OR REPLACE INTO state VALUES ('collector_corpus_snapshot',?)",(json.dumps(pending),))
             mark_keyword_source_changed(db)
-            ensure_keyword_index(db, lambda: joined_articles(db))
+            if prepare_keywords:ensure_keyword_index(db, lambda: joined_articles(db))
     return changed
+
+
+def process_collection_batch(db, updates, channels, checked, path):
+    """Publish committed articles before preparing the derived keyword index."""
+    from collector_status import mark_checked, finish_extraction
+    started=time.monotonic()
+    changed=process_updates(db,updates,channels,prepare_keywords=False)
+    saved=time.monotonic()
+    with db:
+        db.execute("INSERT OR REPLACE INTO state VALUES ('collector_last_success',?)",(checked,))
+        mark_checked(db,channels,checked)
+    extraction=db.execute("SELECT value FROM state WHERE key='collector_corpus_snapshot'").fetchone()
+    pending=changed or not extraction or json.loads(extraction[0]).get('status')!='complete'
+    metrics=None
+    if pending:
+        previous=json.loads(extraction[0]) if extraction else {}
+        with db:
+            db.execute("INSERT OR REPLACE INTO state VALUES ('collector_corpus_snapshot',?)",
+                       (json.dumps(dict(previous,status='extracting',checked_at=checked)),))
+        finish_extraction(db,channels,checked)
+        extracted=time.monotonic()
+        from pipeline_wakeup import notify
+        notify(path)
+        metrics={'checked_at':checked,'save_seconds':round(saved-started,4),
+                 'extraction_seconds':round(extracted-saved,4),
+                 'analysis_wakeup_seconds':round(time.monotonic()-started,4),
+                 'keywords_status':'preparing'}
+        with db:
+            db.execute("INSERT OR REPLACE INTO state VALUES ('collector_last_batch_metrics',?)",(json.dumps(metrics),))
+    else:
+        prior=db.execute("SELECT value FROM state WHERE key='collector_last_batch_metrics'").fetchone()
+        if prior and json.loads(prior[0]).get('keywords_status') in ('preparing','failed'):
+            metrics=json.loads(prior[0])
+    # The source revision was invalidated atomically with the cursor/articles.
+    # Preparation runs without their write lock; readers reject stale keywords.
+    # Retry even after an empty poll, including a previous preparation failure.
+    keyword_started=time.monotonic()
+    try:
+        ensure_keyword_index(db,lambda:joined_articles(db))
+    except Exception as error:
+        if metrics:
+            metrics.update(keywords_status='failed',keyword_error=type(error).__name__)
+            with db:
+                db.execute("INSERT OR REPLACE INTO state VALUES ('collector_last_batch_metrics',?)",(json.dumps(metrics),))
+        raise
+    if metrics:
+        metrics.pop('keyword_error',None)
+        metrics.update(keywords_status='complete',keyword_seconds=round(time.monotonic()-keyword_started,4),
+                       keywords_ready_at=datetime.now(KST).isoformat())
+        if pending:metrics['total_seconds']=round(time.monotonic()-started,4)
+        else:metrics['keywords_recovered']=True
+        with db:
+            db.execute("INSERT OR REPLACE INTO state VALUES ('collector_last_batch_metrics',?)",(json.dumps(metrics),))
 
 
 
@@ -433,21 +486,7 @@ def _collect(path):
             if not result.get("ok"):
                 raise SystemExit("Telegram API 요청이 거절되었습니다. 봇 설정을 확인해 주세요.")
             checked=datetime.now(KST).isoformat()
-            changed=process_updates(db, result["result"], channels)
-            with db:
-                db.execute("INSERT OR REPLACE INTO state VALUES ('collector_last_success',?)", (checked,))
-                from collector_status import mark_checked
-                mark_checked(db,channels,checked)
-            extraction=db.execute("SELECT value FROM state WHERE key='collector_corpus_snapshot'").fetchone()
-            if changed or not extraction or json.loads(extraction[0]).get('status')!='complete':
-                from collector_status import finish_extraction
-                previous=json.loads(extraction[0]) if extraction else {}
-                with db:
-                    db.execute("INSERT OR REPLACE INTO state VALUES ('collector_corpus_snapshot',?)",
-                               (json.dumps(dict(previous,status='extracting',checked_at=checked)),))
-                finish_extraction(db,channels,checked)
-                from pipeline_wakeup import notify
-                notify(path)
+            process_collection_batch(db,result['result'],channels,checked,path)
         except HTTPError as error:
             if error.code in (401, 403, 404, 409):
                 raise SystemExit(f"Telegram HTTP {error.code}: 토큰, 권한, 기존 webhook 또는 중복 수집 프로세스를 확인해 주세요.") from None

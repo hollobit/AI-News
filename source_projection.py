@@ -199,6 +199,13 @@ def joined(db, day=None):
     return result+attach_sources(db,[r for r in external_rows(db) if not day or r.get('day')==day])
 
 
+def corpus_identities(db):
+    """Read the same current unique document set without decoding article bodies."""
+    with snapshot(db) as store:
+        if store is None:return None
+        return {row[0] for row in store.execute('SELECT identity FROM documents')}
+
+
 def corpus(db, source_urls=None):
     from improvement_selection import SelectionBatch
     with snapshot(db) as store:

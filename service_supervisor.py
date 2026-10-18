@@ -65,7 +65,8 @@ def run(service):
                 # An operator's graceful restart exits successfully; it must not
                 # consume the crash-loop budget or eventually disable service.
                 failures=failures+1 if child.returncode != 0 and time.monotonic()-started<300 else 0
-                next_start=time.monotonic()+min(900,30*2**min(failures,5))
+                delay=0 if child.returncode==0 else min(900,30*2**min(failures,5))
+                next_start=time.monotonic()+delay
                 print(json.dumps(dict(service=service,event='exited',code=child.returncode,failures=failures)),flush=True)
                 child=None
             output=subprocess.run(['ps','-axo','pid=,command='],capture_output=True,text=True,check=True).stdout
@@ -81,6 +82,9 @@ def run(service):
             for _ in range(30):
                 if stopping:break
                 time.sleep(1)
+                # Notice a managed child's exit promptly. The restart above
+                # still enforces crash backoff; adopted processes stay passive.
+                if child is not None and child.poll() is not None:break
         # Adopted processes are never signalled. Managed children checkpoint normally.
         if child is not None and child.poll() is None:
             child.send_signal(signal.SIGINT)

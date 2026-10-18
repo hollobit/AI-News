@@ -39,7 +39,7 @@ def test_graceful_restarts_do_not_exhaust_crash_budget(tmp_path,monkeypatch,exit
         elapsed[0]+=seconds
         if elapsed[0]>700:raise Finished()
     def launch(*a,**kw):
-        starts.append(1)
+        starts.append(elapsed[0])
         if len(starts)==4:raise Finished()
         return SimpleNamespace(pid=len(starts),returncode=exit_code,poll=lambda:exit_code)
     monkeypatch.setattr(supervisor,'ROOT',tmp_path)
@@ -50,3 +50,39 @@ def test_graceful_restarts_do_not_exhaust_crash_budget(tmp_path,monkeypatch,exit
     monkeypatch.setattr(supervisor.subprocess,'Popen',launch)
     with pytest.raises(Finished):supervisor.run('server')
     assert len(starts)==expected_starts
+    if exit_code==0:
+        assert starts==[0,1,2,3]
+    else:
+        assert starts[1]-starts[0]>=60
+        assert starts[2]-starts[1]>=120
+
+
+def test_stop_checkpoints_owned_child_and_does_not_restart(tmp_path,monkeypatch):
+    import service_supervisor as supervisor
+    from types import SimpleNamespace
+    (tmp_path/'.runtime').mkdir()
+    handlers={};events=[]
+    child=SimpleNamespace(pid=123,poll=lambda:None,
+        send_signal=lambda value:events.append(('signal',value)),wait=lambda:events.append(('wait',)))
+    monkeypatch.setattr(supervisor,'ROOT',tmp_path)
+    monkeypatch.setattr(supervisor.signal,'signal',lambda sig,fn:handlers.setdefault(sig,fn))
+    monkeypatch.setattr(supervisor.time,'sleep',lambda _:handlers[supervisor.signal.SIGINT]())
+    monkeypatch.setattr(supervisor.subprocess,'run',lambda *a,**kw:SimpleNamespace(stdout=''))
+    def launch(*a,**kw):events.append(('start',));return child
+    monkeypatch.setattr(supervisor.subprocess,'Popen',launch)
+    supervisor.run('server')
+    assert events==[('start',),('signal',supervisor.signal.SIGINT),('wait',)]
+
+
+def test_adopted_process_is_neither_restarted_nor_signalled(tmp_path,monkeypatch):
+    import service_supervisor as supervisor
+    from types import SimpleNamespace
+    (tmp_path/'.runtime').mkdir()
+    handlers={}
+    monkeypatch.setattr(supervisor,'ROOT',tmp_path)
+    monkeypatch.setattr(supervisor.signal,'signal',lambda sig,fn:handlers.setdefault(sig,fn))
+    monkeypatch.setattr(supervisor.time,'sleep',lambda _:handlers[supervisor.signal.SIGINT]())
+    monkeypatch.setattr(supervisor.subprocess,'run',lambda *a,**kw:SimpleNamespace(stdout='456 python app.py serve --port 8001'))
+    def unexpected(*a,**kw):raise AssertionError('adopted process must be left alone')
+    monkeypatch.setattr(supervisor.subprocess,'Popen',unexpected)
+    supervisor.run('server')
