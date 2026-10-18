@@ -14,6 +14,10 @@ class PaperPipeline:
             CREATE TABLE IF NOT EXISTS paper_pipeline_attempts(paper_id TEXT,kind TEXT,attempts INTEGER,at REAL,PRIMARY KEY(paper_id,kind));''')
             from paper_recovery import setup
             setup(db)
+            from context_paper_delta import install
+            install(db)
+        from paper_pipeline_inputs import PaperInputIndex
+        self.input_index=PaperInputIndex()
         from paper_metadata_sources import AlternateMetadata
         self.alternates=AlternateMetadata(path)
         self.thread=threading.Thread(target=self._loop,daemon=True,name='paper-pipeline')
@@ -71,19 +75,17 @@ class PaperPipeline:
         if self.analysis.enabled and self.engine_ready():
             with self.db() as db:
                 pending=db.execute("SELECT count(*) FROM arxiv_paper_analyses WHERE status IN ('queued','running')").fetchone()[0]
-                from arxiv_papers import _paper_rows
-                from paper_analysis import analysis_input_hash
                 columns={r[1] for r in db.execute('PRAGMA table_info(arxiv_paper_analyses)')}
                 fields=','.join(k for k in ('paper_id','input_hash','status','error','updated_at') if k in columns)
                 analyses={r['paper_id']:dict(r) for r in db.execute('SELECT '+fields+' FROM arxiv_paper_analyses')}
                 attempts={r['paper_id']:dict(r) for r in db.execute("SELECT * FROM paper_pipeline_attempts WHERE kind='analysis'")}
                 capacity=min(16,max(4,getattr(self.analysis,'workers',1)*2))
                 slots=min(10,capacity-pending);candidates=[]
-                for item in sorted(_paper_rows(db),key=lambda p:p['paper_id'],reverse=True) if slots>0 else []:
-                    if item['metadata_status']!='fetched':continue
-                    existing=analyses.get(item['paper_id']);attempt=attempts.get(item['paper_id'],{})
+                for item in self.input_index.current(db) if slots>0 else []:
+                    if item.metadata_status!='fetched':continue
+                    existing=analyses.get(item.paper_id);attempt=attempts.get(item.paper_id,{})
                     if existing and existing['status'] in ('queued','running','paused'):continue
-                    changed=existing and existing['input_hash']!=analysis_input_hash(item)
+                    changed=existing and existing['input_hash']!=item.input_hash
                     if existing and existing['status']!='failed' and not changed:continue
                     from paper_recovery import eligible, reserve
                     from engine_errors import infrastructure_error
@@ -92,7 +94,7 @@ class PaperPipeline:
                         if not eligible(db,existing,stamp):continue
                         if not reserve(db,existing,stamp):continue
                     elif not changed and (attempt.get('attempts',0)>=2 or attempt.get('at',0)>stamp-3600):continue
-                    candidates.append(item['paper_id'])
+                    candidates.append(item.paper_id)
                     if len(candidates)>=slots:break
             if candidates:
                 result=self.analysis.submit(candidates,limit=slots);self._record(result['queued'],'analysis')
