@@ -5,6 +5,7 @@ import fcntl
 import json
 from pathlib import Path
 import sqlite3
+from time import monotonic
 from urllib.request import Request, urlopen
 
 from bulk_baseline import BulkBaselineService, freeze_item
@@ -100,6 +101,7 @@ def inspect(db):
 
 def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVERY, check_models=None,
              coalesce=True, progress=None):
+    started=monotonic()
     now = now or datetime.now(timezone.utc)
     states, latest, active = inspect(db)
     extraction = json.loads(states.get('collector_corpus_snapshot', '{}'))
@@ -140,7 +142,10 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
         def waiting(detail):
             if progress:progress(dict(summary,stage='waiting_for_sources',source_coalescing=detail,
                                       checked_at=datetime.now(timezone.utc).isoformat()))
-        waited=wait_for_sources(db,snapshots,pending,old,extraction,now,progress=waiting)
+        # Corpus inspection also spends the extraction event's bounded window.
+        # Do not restart that window after a slow source/snapshot scan.
+        window_now=now+timedelta(seconds=monotonic()-started)
+        waited=wait_for_sources(db,snapshots,pending,old,extraction,window_now,progress=waiting)
         if waited:
             # Re-read current snapshots and every pause/owner/model gate. The
             # eventual run freezes the fetched input once, never patches a run.
@@ -148,7 +153,7 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
             def record_window(path,payload):
                 if path=='/api/baseline':payload=dict(payload,source_coalescing=waited)
                 return request(path,payload)
-            result=dispatch(db,record_window,now+timedelta(seconds=waited['elapsed_seconds']),check_engine,
+            result=dispatch(db,record_window,window_now+timedelta(seconds=waited['elapsed_seconds']),check_engine,
                             recovery_path,check_models,coalesce=False,progress=progress)
             return dict(result,source_coalescing=waited)
     from model_access import ensure_model_access

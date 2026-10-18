@@ -1,4 +1,4 @@
-"""Coalesce a fresh headline batch with source reads already owned by deep work.
+"""Coalesce fresh inputs with source reads already owned by deep work.
 
 No fetching, model calls, snapshot mutation or retry-budget changes happen here.
 The deadline belongs to the extraction event, so restarts cannot extend it.
@@ -10,6 +10,7 @@ import re
 import time
 
 WINDOW_SECONDS = 45
+SHORT_WINDOW_SECONDS = 5
 MAX_NEW_DOCUMENTS = 64
 TERMINAL_SOURCE_STATES = {'fetched','failed','blocked','unsupported','unavailable'}
 
@@ -45,13 +46,19 @@ def wait_for_sources(db, snapshots, pending, prior, extraction, now, *, progress
     if not 1 <= len(fresh) <= MAX_NEW_DOCUMENTS:return None
     from source_enrichment import source_map
     from link_groups import canonical_url
-    urls={canonical_url(e.get('url','')) for s in fresh if headline_only(s) for e in s['evidence']}
+    urls={canonical_url(e.get('url','')) for s in fresh for e in s['evidence']}
     urls.discard('')
     cached=source_map(db,urls)
     targets={url for url in urls if cached.get(url,{}).get('status') not in TERMINAL_SOURCE_STATES}
-    # Do not hold a predominantly substantive batch behind a few missing URLs.
-    if len(targets) < math.ceil(len(fresh)*.8) or not owner(db):return None
-    started=clock();duration=WINDOW_SECONDS-age;remaining=set(targets)
+    headline_urls={canonical_url(e.get('url','')) for s in fresh if headline_only(s) for e in s['evidence']}
+    headline_batch=len(targets & headline_urls)>=math.ceil(len(fresh)*.8)
+    # Mixed/substantive batches often receive their sources within a few seconds.
+    # Join those reads once, without giving them the longer headline-only wait.
+    maximum=WINDOW_SECONDS if headline_batch else SHORT_WINDOW_SECONDS
+    if headline_batch:targets &= headline_urls
+    if not targets or age>=maximum or not owner(db):return None
+    policy=dict(policy='source-window-v2',mode='headline' if headline_batch else 'short',maximum_seconds=maximum)
+    started=clock();duration=maximum-age;remaining=set(targets)
     initial=db.execute('SELECT id,status FROM bulk_baseline_runs ORDER BY created_at DESC LIMIT 1').fetchone()
     initial=tuple(initial) if initial else None
     reason='deadline'
@@ -74,11 +81,15 @@ def wait_for_sources(db, snapshots, pending, prior, extraction, now, *, progress
         if not remaining:reason='sources_ready';break
         elapsed=clock()-started
         if progress:
-            progress(dict(policy='headline-source-window-v1',documents=len(targets),
+            progress(dict(policy,documents=len(targets),
                           ready_documents=len(targets)-len(remaining),pending_documents=len(remaining),
                           remaining_seconds=max(0,math.ceil(duration-elapsed)),owner_pid=live,
                           deadline=datetime.fromtimestamp(now.timestamp()+duration,timezone.utc).isoformat()))
         sleep(max(0,min(1,duration-elapsed)))
-    return dict(policy='headline-source-window-v1',documents=len(targets),
+    if reason=='deadline':
+        cached=source_map(db,remaining)
+        remaining={url for url in remaining if cached.get(url,{}).get('status') not in TERMINAL_SOURCE_STATES}
+        if not remaining:reason='sources_ready'
+    return dict(policy,documents=len(targets),
                 ready_documents=len(targets)-len(remaining),pending_documents=len(remaining),
-                elapsed_seconds=round(clock()-started,3),reason=reason,maximum_seconds=WINDOW_SECONDS)
+                elapsed_seconds=round(clock()-started,3),reason=reason)

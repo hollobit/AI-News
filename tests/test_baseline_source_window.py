@@ -85,12 +85,68 @@ def test_outside_fresh_window_does_not_delay(db,age):
     assert wait(db,now=STAMP+timedelta(seconds=age)) is None
 
 
-def test_meaningful_messages_and_mixed_batches_are_not_held(db):
+def test_meaningful_messages_and_mixed_batches_only_join_fast_sources(db):
     rich=item('rich','현장 조건과 측정 결과를 확인하기 위한 새로운 실험 및 평가 방법을 발표했습니다. '*5)
     assert not headline_only(freeze_item(rich))
-    assert wait(db,[rich]) is None
-    assert wait(db,[item(),rich]) is None
+    result=wait(db,[rich])
+    assert result['mode']=='short' and result['elapsed_seconds']==result['maximum_seconds']==5
+    clock=Clock(lambda seconds: [arrival(db,name) for name in ('a','rich')] if seconds>=3 else None)
+    result=wait(db,[item(),rich],clock)
+    assert result['mode']=='short' and result['reason']=='sources_ready'
+    assert result['elapsed_seconds']==3 and result['ready_documents']==2
     assert wait(db,[item(str(i)) for i in range(65)]) is None
+
+
+@pytest.mark.parametrize('age,expected',[(0,5),(3,2),(5,None),(6,None)])
+def test_short_window_deadline_is_bound_to_original_extraction(db,age,expected):
+    rich=item('rich','작동 조건과 측정 결과를 포함한 실제 본문. '*10)
+    result=wait(db,[rich],now=STAMP+timedelta(seconds=age))
+    if expected is None:assert result is None
+    else:assert result['elapsed_seconds']==expected and result['reason']=='deadline'
+
+
+def test_short_window_keeps_terminal_sources_and_reports_arrival_at_deadline(db):
+    rich=item('rich','작동 조건과 측정 결과를 포함한 실제 본문. '*10)
+    arrival(db,'a',status='blocked')
+    progress=[]
+    result=wait(db,[item(),rich],Clock(lambda seconds:arrival(db,'rich') if seconds>=5 else None),progress=progress.append)
+    assert result['reason']=='sources_ready' and result['elapsed_seconds']==5
+    assert result['documents']==result['ready_documents']==1
+    assert progress[0]['remaining_seconds']==5 and progress[0]['mode']=='short'
+    assert wait(db,[item(),rich]) is None
+
+
+def test_short_window_requires_a_live_owner_and_never_fetches_sources(db):
+    rich=item('rich','작동 조건과 측정 결과를 포함한 실제 본문. '*10)
+    with patch('source_enrichment.SourceService.fetch') as fetch,patch('semantic.run_structured') as model:
+        assert wait(db,[rich],owner=lambda _:None) is None
+    fetch.assert_not_called();model.assert_not_called()
+
+
+def test_long_headline_window_does_not_wait_for_a_substantive_minority(db):
+    rich=item('rich','작동 조건과 측정 결과를 포함한 실제 본문. '*10)
+    names=[str(i) for i in range(4)]
+    clock=Clock(lambda seconds:[arrival(db,name) for name in names] if seconds>=2 else None)
+    result=wait(db,[item(name) for name in names]+[rich],clock)
+    assert result['mode']=='headline' and result['maximum_seconds']==45
+    assert result['documents']==result['ready_documents']==4
+    assert result['elapsed_seconds']==2 and result['reason']=='sources_ready'
+
+
+def test_dispatch_snapshot_preparation_spends_the_same_short_window(db):
+    rich=item('rich','작동 조건과 측정 결과를 포함한 실제 본문. '*10)
+    clock=Clock();progress=[]
+    def bounded(*args,**kwargs):
+        return wait_for_sources(*args,**kwargs,clock=clock,sleep=clock.sleep,owner=lambda _:os.getpid())
+    request=lambda *_:{'run':{'id':'next','status':'running','metrics':{}}}
+    with patch('scheduled_collection.all_corpus_items',return_value=[rich]), \
+            patch('scheduled_collection.monotonic',side_effect=[0,4,5]), \
+            patch('baseline_source_window.wait_for_sources',side_effect=bounded):
+        result=dispatch(db,request,STAMP,check_models=lambda:{'ready':True},progress=progress.append)
+    assert result['source_coalescing']['elapsed_seconds']==1
+    assert progress[0]['source_coalescing']['remaining_seconds']==1
+    assert progress[0]['source_coalescing']['deadline']==(STAMP+timedelta(seconds=5)).isoformat()
+    assert result['checked_at']==(STAMP+timedelta(seconds=5)).isoformat()
 
 
 @pytest.mark.parametrize('status',['fetched','failed','blocked','unsupported','unavailable'])
