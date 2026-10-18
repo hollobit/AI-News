@@ -12,7 +12,7 @@ from typing import Any
 from link_groups import canonical_url
 from risk_analysis import read_risks
 from risk_views import priority_score
-from graph_rag import _json, _table_rows, _workflow_graph
+from graph_rag import _json, _workflow_graph
 
 
 def _clean(value: Any) -> str:
@@ -60,6 +60,18 @@ def _node_id(prefix: str, value: str) -> str:
     return f"{prefix}:{hashlib.sha256(value.encode()).hexdigest()[:20]}"
 
 
+def _selected_workflows(db,run_ids):
+    wanted=sorted(run for run in run_ids if run)
+    for offset in range(0,len(wanted),400):
+        batch=wanted[offset:offset+400]
+        rows=db.execute("""SELECT r.id,a.payload_json FROM strategic_workflow_runs r
+            JOIN strategic_workflow_artifacts a ON a.run_id=r.id AND a.stage='final'
+            WHERE r.status='complete' AND COALESCE(r.error,'')='' AND r.id IN ("""+','.join('?' for _ in batch)+')',batch)
+        for run_id,body in rows:
+            payload=_json(body)
+            if isinstance(payload,dict):yield _workflow_graph(payload,run_id)
+
+
 def load_risk_graph(db, params: dict[str, Any] | None = None) -> dict[str, Any]:
     params = params or {}
     # The map is a read-only projection of independently admitted risk reports.
@@ -73,6 +85,9 @@ def load_risk_graph(db, params: dict[str, Any] | None = None) -> dict[str, Any]:
         risk["priority"] = priority_score(risk)
         risk["status"] = risk["priority"]["status"]
     from risk_views import _apply_resolutions
+    # Apply ordinary filters before replacement checks. Lifecycle is decided
+    # afterwards, so history queries still include withdrawn/superseded rows.
+    data=dict(data,risks=[risk for risk in risks if _risk_matches(risk,dict(params,status=''))])
     risks=_apply_resolutions(db,data)['risks']
     risks = [risk for risk in risks if _risk_matches(risk, params)]
     risks.sort(key=lambda item: (item.get("priority", {}).get("range", [0, 0])[0], item.get("id", "")), reverse=True)
@@ -82,15 +97,8 @@ def load_risk_graph(db, params: dict[str, Any] | None = None) -> dict[str, Any]:
     # Build the GraphRAG slice from only the workflow runs represented by the
     # selected risks. Calling the global graph builder here would repeatedly
     # scan the whole corpus while the collector is updating its revision token.
-    workflow_rows = {row["id"]: row for row in _table_rows(db, "strategic_workflow_runs")}
-    final_rows = {row["run_id"]: _json(row.get("payload_json")) for row in _table_rows(db, "strategic_workflow_artifacts")
-                  if row.get("stage") == "final" and isinstance(_json(row.get("payload_json")), dict)}
     graph_nodes, graph_edges, graph_evidence = [], [], []
-    for run_id in {risk.get("workflow_run_id") for risk in risks}:
-        payload = final_rows.get(run_id)
-        row = workflow_rows.get(run_id)
-        if not payload or not row or row.get("status") != "complete" or row.get("error"): continue
-        source = _workflow_graph(payload, run_id)
+    for source in _selected_workflows(db,{risk.get("workflow_run_id") for risk in risks}):
         graph_nodes.extend(source.get("nodes", [])); graph_edges.extend(source.get("edges", [])); graph_evidence.extend(source.get("evidence", []))
     graph_evidence = {item["id"]: item for item in graph_evidence if isinstance(item, dict) and item.get("id")}
     by_url = defaultdict(set)

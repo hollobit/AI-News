@@ -115,9 +115,22 @@ def validated_risk_content(payload, run_id=''):
     return {'report': report, 'risks': report['risks'], 'evidence': evidence, 'workflow_run_id': run_id}
 
 
+def _workflow_reports(db):
+    """Stream final reports; intermediate role/model history never enters a view."""
+    from graph_rag import _json
+    tables={row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if 'strategic_workflow_runs' not in tables:return
+    columns={row[1] for row in db.execute('PRAGMA table_info(strategic_workflow_runs)')}
+    updated='r.updated_at' if 'updated_at' in columns else "''"
+    final='a.payload_json' if 'strategic_workflow_artifacts' in tables else 'NULL'
+    join=" LEFT JOIN strategic_workflow_artifacts a ON a.run_id=r.id AND a.stage='final'" if final!='NULL' else ''
+    for identity,status,error,stamp,body in db.execute('SELECT r.id,r.status,r.error,'+updated+','+final+' FROM strategic_workflow_runs r'+join):
+        yield dict(id=identity,status=status,error=error,updated_at=stamp),_json(body)
+
+
 def read_risks(db, params=None, *, current_time=None, unlimited=False, include_source_evidence=False, include_history=False):
     """Summarize saved source assessments; never calculate a world threat score."""
-    from graph_rag import _table_rows, _json, _global_evidence, validated_workflow_content
+    from graph_rag import _global_evidence, validated_workflow_content
     from evidence_corrections import risk_projection_token,active_risks
     corrections=() if include_history else risk_projection_token(db)
     params = params or {}
@@ -130,13 +143,12 @@ def read_risks(db, params=None, *, current_time=None, unlimited=False, include_s
     if since:
         date.fromisoformat(since)
     today = (current_time or datetime.now(timezone.utc)).date()
-    rows = _table_rows(db, 'strategic_workflow_runs')
-    finals = {row['run_id']: _json(row.get('payload_json')) for row in _table_rows(db, 'strategic_workflow_artifacts') if row.get('stage') == 'final'}
     risks, assessments, pending = [], [], []
     unassessed = 0
     scoped_workflows = 0
-    for row in rows:
-        payload = finals.get(row['id'])
+    archive_workflows = 0
+    for row,payload in _workflow_reports(db):
+        archive_workflows += 1
         payload = payload if isinstance(payload, dict) else {}
         analyzed_at = payload.get('completed_at') or row.get('updated_at') or ''
         if since and str(analyzed_at)[:10] < since:
@@ -188,7 +200,7 @@ def read_risks(db, params=None, *, current_time=None, unlimited=False, include_s
                 current_basis_scope='분석 시점의 원문 기반 평가; 현재 세계 상황에 대한 확정이 아님'))
     risks.sort(key=lambda item: (str(item['analysis_at']), item['id']), reverse=True)
     return {'risks': risks if unlimited else risks[:200], 'assessments': assessments, 'needs_review': pending,
-            'coverage': {'total_workflows': scoped_workflows, 'archive_workflows': len(rows), 'assessed': len(assessments), 'needs_review': len(pending),
+            'coverage': {'total_workflows': scoped_workflows, 'archive_workflows': archive_workflows, 'assessed': len(assessments), 'needs_review': len(pending),
                          'unassessed': unassessed, 'accepted_risks': len(risks)},
             'distributions': {'current_severity': dict(Counter(r['current_severity'] for r in risks)),
                               'future_likelihood': dict(Counter(r['future_likelihood'] for r in risks))},

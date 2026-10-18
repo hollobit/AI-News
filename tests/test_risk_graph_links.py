@@ -1,5 +1,4 @@
 import copy
-import json
 
 import risk_graph as graph
 
@@ -16,8 +15,7 @@ def fixture(monkeypatch,node_count=3):
     monkeypatch.setattr(graph,'read_risks',lambda *a,**kw:dict(risks=copy.deepcopy(risks)))
     monkeypatch.setattr('risk_views._apply_resolutions',lambda db,data:data)
     monkeypatch.setattr(graph,'priority_score',lambda r:dict(status='watch',range=[50,60]))
-    monkeypatch.setattr(graph,'_table_rows',lambda db,table:[dict(id='w',status='complete',error='')] if table=='strategic_workflow_runs' else [dict(run_id='w',stage='final',payload_json=json.dumps(payload))])
-    monkeypatch.setattr(graph,'_workflow_graph',lambda data,run_id:copy.deepcopy(data))
+    monkeypatch.setattr(graph,'_selected_workflows',lambda db,run_ids:[copy.deepcopy(payload)])
     return risks
 
 
