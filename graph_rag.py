@@ -768,8 +768,7 @@ def answer_question(graph: dict[str, Any], question: str,
     from graph_answer_quality import PROFILE, repair_prompt, sufficient, local_repair_targets
     import copy
     import time
-    from graph_question_context import focus
-    from graph_answer_format import PIPELINE, generation_schema, expand, apply_patch as apply_answer_patch, call_metrics, generation_prompt, citation_corrections
+    from graph_answer_format import PIPELINE, generation_schema, expand, apply_patch as apply_answer_patch, call_metrics, generation_prompt, citation_corrections, generation_evidence
     fields = ('id','title','text','day','date_basis','source_url','source_kind','evidence_origin')
     original_evidence = [{k:e.get(k) for k in fields} for e in retrieval['evidence']]
     if detailed:original_evidence.sort(key=lambda e:e['id'])
@@ -778,7 +777,7 @@ def answer_question(graph: dict[str, Any], question: str,
         'question':question,
         'nodes':[{k:n.get(k) for k in ('id','name','type','summary','evidence_ids')} for n in retrieval['nodes'][:8]],
         'edges':[{k:e.get(k) for k in ('source','target','relation','meaning','confidence','evidence_ids')} for e in retrieval['edges'][:12]],
-        'evidence':[focus(e,question+' '+' '.join((analysis_plan or {}).get('queries',[]))) for e in original_evidence] if detailed else original_evidence,
+        'evidence':generation_evidence(original_evidence,question+' '+' '.join((analysis_plan or {}).get('queries',[]))) if detailed else original_evidence,
         'coverage':retrieval.get('coverage',graph.get('coverage',{})),
         'analysis_plan':analysis_plan,
         'answer_profile':PROFILE if detailed else 'concise',

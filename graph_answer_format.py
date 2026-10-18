@@ -66,6 +66,19 @@ FOCUSED_WRITING = '''설명의 분량 배분: 질문의 판단에 필요한 설�
 '''
 
 
+def generation_evidence(evidence, question):
+    """Keep small admitted bundles intact; window only larger writer inputs.
+
+    A per-passage cut can hide the very quantities/conditions the question asks
+    about even when the complete bundle is inexpensive to read. The reviewer
+    always receives the full originals, independently of this writer budget.
+    """
+    from graph_question_context import focus
+    if sum(len(item.get('text') or '') for item in evidence) <= 12000:
+        return [dict(item) for item in evidence]
+    return [focus(item, question) for item in evidence]
+
+
 def generation_prompt(data):
     from graph_plan_router import candidate
     proposed=candidate(data['question'])

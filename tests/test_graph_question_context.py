@@ -79,8 +79,9 @@ def test_layout_duplicates_are_removed_but_distinct_qualifications_survive(tmp_p
     assert {e['id'] for e in result['evidence']}=={'short','other'}
 
 
-def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeypatch):
-    original = evidence('support', '배경입니다. '*300+'벤치마크 실험 성공률은 90%다. 현장 일반화는 미검증이다. '+'기타 배경입니다. '*300)
+@pytest.mark.parametrize('background',[300,1000])
+def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeypatch,background):
+    original = evidence('support', '배경입니다. '*background+'벤치마크 실험 성공률은 90%다. 현장 일반화는 미검증이다. '+'기타 배경입니다. '*background)
     conflict = evidence('conflict', '다른 환경에서 벤치마크 성공률은 40%였다.')
     bundle = group([original,conflict]); bundle.update(no_hits=False, limitations=[], coverage={
         'scope':'selected','coverage_basis':'lexical_retrieval_not_semantic_verification',
@@ -104,6 +105,8 @@ def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeyp
                 value['quality']=audit(axes=('addressed',)*count)['quality']
             return value
         data=json.JSONDecoder().raw_decode(prompt.split('\nDATA:\n')[1])[0]
+        if background==300:
+            assert {e['source_url']:e['text'] for e in data['evidence']} == {original['source_url']:original['text'],conflict['source_url']:conflict['text']}
         support_id=next(e['id'] for e in data['evidence'] if e['source_url']==original['source_url'])
         return dict(paragraphs=[[0]], claims=[dict(sentences=['실험 성공률90%, 현장은 미검증'], evidence_ids=[support_id],
                     kind='finding',axis='성공률',premises=None,assumptions=None,counterevidence=None,uncertainty=[0])],limitations=[])
@@ -111,7 +114,10 @@ def test_full_review_sees_uncited_conflict_and_cache_tracks_full_context(monkeyp
     def run():return answer_question(graph,'벤치마크 성공률',retrieval=bundle,analysis_plan=dict(axes=['성공률'],queries=['성공률']),detailed=True)
     first=run()
     assert first['claims'][0]['evidence_ids']==['support']
-    assert first['retrieval']['generation_evidence_characters'] < first['retrieval']['review_evidence_characters']
+    if background==300:
+        assert first['retrieval']['generation_evidence_characters'] == first['retrieval']['review_evidence_characters']
+    else:
+        assert first['retrieval']['generation_evidence_characters'] < first['retrieval']['review_evidence_characters']
     graph['coverage']['all_corpus_documents']=11
     bundle['coverage']['axes'][0]['candidate_documents']=30
     assert run()['timing']['answer_cache_hit'] and len(calls)==2
