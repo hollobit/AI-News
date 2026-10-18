@@ -15,7 +15,8 @@ def finish(service,run_id,evidence,request,enrichment,report,risk_report,*,patte
     validate_strategy=lambda value:service._report(value,evidence)
     validate_risk=lambda value:validate_risk_report(value,evidence)
     def review(report,risk_report,stage):
-        generated={'report':report,'risk_report':risk_report,'prior_feedback':request.get('improvement_context') or {},
+        generated={'report':report,'risk_report':risk_report,'coverage':enrichment['coverage'],
+            'prior_feedback':request.get('improvement_context') or {},
             'strategy_target_map':{key:index for key,(index,_) in targets(report).items()},
             'risk_target_map':{key:index for key,(index,_) in targets(risk_report,True).items()}}
         prompt=compact_prompt(service,'integrated_verification',evidence,generated,extra_instructions=

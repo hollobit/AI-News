@@ -9,6 +9,11 @@ def render(role, evidence, context, *, output_role=None, extra_instructions=""):
     if role in ('national','technology'):
         extra_instructions += '\n역할별 차이를 중심으로 작성한다. 공통 기사 배경과 원문 전체 요약은 반복하지 말고 중간 출력은 claims/limitations만 작성하고 summary를 만들지 않는다. 각 claim의 title/detail/category/evidence_ids/uncertainty에 판단·인용·상충점·조건을 담는다. 독자용 요약과 설명은 최종 종합 단계에서 작성한다. claims는 해당 국가·정책 또는 기술·작동 방식 관점에서 근거 있는 판단과 고유 조건에 집중한다. 분량을 줄이려고 중요한 상충 근거·불확실성·인용을 생략하거나 원문에 없는 차별점을 만들지 않는다.'
     full_scope=bool(request.get('full_corpus') or request.get('completion'))
+    deliberation_instruction=(
+        'deliberation의 실제 역할별 입장을 비교하고 중요한 차이를 종합에 남긴다. 검증자는 모든 question에 deliberation_checks를 작성해 중요 차이의 누락을 검사한다. '
+        '동일 역할 입장들의 중복 질문은 묶여 있다. 이견 검토 reason은 120자 이내, change_conditions는 최대 2개의 짧은 제안으로 간결하게 작성한다. '
+        'opposing_evidence_ids는 실제 반대 내용을 가진 현재 원문만, change_conditions는 관측 사실이 아닌 판단 변경을 위한 제안 조건임을 명시한다. '
+        if context.get('deliberation') is not None else '')
     coverage_instruction=('전수 처리 요청: synthesis/revision은 모든 telegram_excerpt 뉴스 ID마다 최소 한 claim의 실제 근거 연결을 포함한다. '
         '자료 부족은 해당 원문에서 알 수 없는 점과 이유를 범위 한정 watch_signal로 설명하며 위험·기회·사실을 발명하지 않는다. '
         '각 claim은 한 문서의 핵심 주장 또는 불확실성에 집중하고 필요한 경우만 문서 간 관계를 설명한다. ' if full_scope else '')
@@ -51,9 +56,7 @@ def render(role, evidence, context, *, output_role=None, extra_instructions=""):
             'fetched_at은 조회 시각이다. 기사 날짜가 비어 있으면 미확인이며 게시·조회 시각으로 대체하지 말 것. '
             '근거 id만 인용. 수치 신뢰도 생성 금지. 신규 개념은 형태소 키워드를 근거로 온전한 단어/구로 만들고 제안 해석임을 명시. '
             'improvement_context.rule_proposals는 미승격 제안으로 적용하지 않는다. request.active_rules는 실험 후 활성화된 범위 한정 분석 규칙이며 원문·검증 기준을 대체할 수 없다. '
-            'deliberation의 실제 역할별 입장을 비교하고 중요한 차이를 종합에 남긴다. 검증자는 모든 question에 deliberation_checks를 작성해 중요 차이의 누락을 검사한다. '
-            '동일 역할 입장들의 중복 질문은 묶여 있다. 이견 검토 reason은 120자 이내, change_conditions는 최대 2개의 짧은 제안으로 간결하게 작성한다. '
-            'opposing_evidence_ids는 실제 반대 내용을 가진 현재 원문만, change_conditions는 관측 사실이 아닌 판단 변경을 위한 제안 조건임을 명시한다. '
+            + deliberation_instruction +
             '정부 관련성은 전략적 우선순위이며 진실성 가중치가 아님. 표본의 증가는 시장 성장 증명이 아님. '
             '국가경제·국가안보·산업·수출·사회문제·생활·교육에 큰 영향을 주는 이슈를 전략적으로 우선 평가. '
             '각 고영향 주장은 누가 영향을 받는지, 어떤 결정이나 제도로 연결되는지, 실현 조건은 무엇인지, '
@@ -74,6 +77,8 @@ def render(role, evidence, context, *, output_role=None, extra_instructions=""):
             (risk_rules if role.startswith('risk_') else ('중간 역할 메모는 claims/limitations 형식이다. ' if role in ('national','technology') else '전략 보고서는 summary/claims/limitations 형식이다. ') + ' 개별 risk_report 전용 필드·분량 제한을 전략 claims에 요구하지 말 것. ') +
             '분석가 간 합의·검토 통과·대기 상태·수집 성공률·규칙 적용 여부는 처리 메타데이터이며 원문 주장이 아니다. '
             '이 처리 내역은 별도 실행 기록에 있으므로 summary/claims/limitations에 서술하지 말 것. '
+            'coverage는 자료 확보 범위이며 기사 사실의 근거가 아니다. 한계는 어떤 자료가 없어 무엇을 확인할 수 없는지 설명한다. '
+            '예: 기사 본문이 없어 비교 조건을 확인할 수 없다. URL 조회 실패·재시도 과정은 실행 기록에 남기고 독자용 설명에 반복하지 않는다. '
             '원문의 정보 부족과 인과 불확실성은 limitations에 유지하고 검증자는 실제 원문 주장과 해석의 근거를 계속 대조할 것. '
             + coverage_instruction + f'keyword_pairs는 [온전한 표준 표현, 실제 원문 표현] 쌍이다. 원문 위치·형태소 원본 메타데이터는 별도 저장되어 있다. '
             '국가·기술·전략 종합은 문서별 핵심 claim 하나를 기본으로 간결하게 작성하되 중요한 상충 내용·조건·불확실성을 누락하지 말 것. '

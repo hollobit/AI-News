@@ -221,7 +221,8 @@ def test_complex_path_excludes_observed_contamination_regression():
     assert not eligible([e],{'analysis_mode':'adaptive-v2'},{'evidence':[dict(e,text='에이전트가 통제를 우회한 사건')],'coverage':{}})
 
 
-def test_complex_high_risk_review_keeps_astra_escalation(tmp_path):
+@pytest.mark.parametrize('partial',[False,True])
+def test_complex_high_risk_review_keeps_astra_escalation(tmp_path,partial):
     from test_risk_analysis import fixture
     class HighRisk(ComplexModel):
         def __call__(self,prompt,schema):
@@ -231,7 +232,10 @@ def test_complex_high_risk_review_keeps_astra_escalation(tmp_path):
                 result=fixture()['risk_report'];result['risks'][0]['evidence_ids']=ids
                 result['assessed_evidence_ids']=ids
             return result
-    s=WorkflowService(tmp_path/'db',sources=Sources(),analyzer=HighRisk(),enabled=True)
+    class FailedSource:
+        def fetch(self,url,refresh=False):
+            return dict(status='failed',url=url,text='')
+    s=WorkflowService(tmp_path/'db',sources=FailedSource() if partial else Sources(),analyzer=HighRisk(),enabled=True)
     selected=[];original=s._validated_call
     def traced(stage,*args,**kwargs):
         selected.append((stage,kwargs.get('escalation',False)))
@@ -283,6 +287,24 @@ def test_scheduling_ids_do_not_change_prompt_but_review_feedback_does():
     other['request']['improvement_context']['followup_tasks'][0]['text']='상충 근거 추가 확인'
     assert render('national',evidence,context)!=render('national',evidence,other)
     assert context['request']['owner_pid']==1
+
+
+def test_deliberation_checks_are_requested_only_with_actual_role_positions():
+    from workflow_prompts import render
+    from workflow_compact import prompt
+    evidence=[dict(id='e',text='AI 개발 도구 공개',origin='telegram_excerpt')]
+    for role in ('national','technology','synthesis','risk_assessment','risk_verification','verification'):
+        instructions=render(role,evidence,{}).split('DATA:\n')[0]
+        assert 'deliberation_checks' not in instructions
+    class Service:
+        _prompt=staticmethod(render)
+    for role in ('integrated_analysis','integrated_verification'):
+        assert 'deliberation_checks' not in prompt(Service(),role,evidence,{}).split('DATA:\n')[0]
+    actual=dict(positions=[dict(role='national',claims=[])],questions=[])
+    for role in ('synthesis','verification','revision'):
+        text=render(role,evidence,dict(deliberation=actual))
+        assert 'deliberation_checks' in text.split('DATA:\n')[0]
+        assert json.loads(text.split('DATA:\n')[1])['context']['deliberation']==actual
 
 
 def test_patch_citations_bound_before_wrapping_values():

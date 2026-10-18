@@ -1,30 +1,30 @@
 """Three-call route: strategy and risk drafts in parallel, one independent joint review."""
-import re
 from concurrent.futures import ThreadPoolExecutor
-from workflow_compact import SENSITIVE
+from workflow_compact import SENSITIVE, RESEARCH_CONFLICT, AGENT_CONTROL, partial_excerpt_eligible
 
 VERSION = 'parallel-drafts-v1'
-# Paired evaluation found loss of a distinct contamination scenario; keep this class on the original path.
-RESEARCH_CONFLICT = re.compile(r'contamin|오염|상충|contradict|conflicting|mixed findings',re.I)
-AGENT_CONTROL = re.compile(r'우회|bypass|기만|decept|unauthoriz|무단|정보 유출',re.I)
 
 
 def eligible(snapshot, request, enrichment):
     evidence=enrichment['evidence']
+    text=' '.join(e.get('text','') for e in evidence)
     from workflow_recovery_route import operational_feedback_only
     recovered=operational_feedback_only(request)
+    partial=bool(enrichment['coverage'].get('failed_urls'))
+    # Failure coverage stays in both drafts and the final result. Semantic
+    # review failures still fail the same feedback checks below.
     return (request.get('analysis_mode')=='adaptive-v2' and len(snapshot)==1
             and (request.get('completion_attempt',1)==1 or recovered)
             and not request.get('question') and not request.get('terms')
             and not (request.get('active_rules') or {}).get('rules')
             and (recovered or not (request.get('improvement_context') or {}).get('review_issues'))
             and (recovered or not (request.get('improvement_context') or {}).get('followup_tasks'))
-            and not enrichment['coverage'].get('failed_urls')
+            and (not partial or partial_excerpt_eligible(enrichment))
             and all(e.get('origin') in ('telegram_excerpt','fetched_url_excerpt') for e in evidence)
             and sum(len(e.get('text','')) for e in evidence)<=14000
-            and not SENSITIVE.search(' '.join(e.get('text','') for e in evidence))
-            and not RESEARCH_CONFLICT.search(' '.join(e.get('text','') for e in evidence))
-            and not AGENT_CONTROL.search(' '.join(e.get('text','') for e in evidence)))
+            and not SENSITIVE.search(text)
+            and not RESEARCH_CONFLICT.search(text)
+            and not AGENT_CONTROL.search(text))
 
 
 def execute(service,run_id,evidence,request,enrichment):

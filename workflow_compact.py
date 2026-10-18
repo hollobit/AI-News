@@ -8,6 +8,23 @@ VERSION = 'compact-v1'
 # Conservative routing; absence of these terms is not a declaration of safety.
 COMPLEX = re.compile(r'벤치마크|benchmark|contaminat|오염|상충|논문|초록|연구 결과|실험 결과|정확도|비교 연구|독파모|소송|특허|논란|취약|침해|security|clinical|arxiv', re.I)
 SENSITIVE = re.compile(r'의료|임상|환자|전쟁|군사|핵무기|사망|인명|취약점|랜섬|해킹|개인정보|국가안보|clinical|patient|warfare|vulnerability', re.I)
+# Both short routes must respect these exclusions, including when no benchmark
+# or publication noun is present to classify the article as complex first.
+RESEARCH_CONFLICT = re.compile(r'contamin|오염|상충|contradict|conflicting|mixed findings',re.I)
+AGENT_CONTROL = re.compile(r'우회|bypass|기만|decept|unauthoriz|무단|정보 유출',re.I)
+# Partial medical, security and legal material retains the established role
+# path, even when its title/URL uses different words from SENSITIVE.
+PARTIAL_RESTRICTED = re.compile(
+    r'진단|진료|치료|수술|병리|예후|건강|생의학|보안|공격|침투|하이재킹|소송|제소|위법|'
+    r'pubmed|biomed|diagnos|cancer|carcinoma|histopath|surg|radiogra|blood|health|'
+    r'security|cyber|attack|hijack|lawsuit|litigation|court', re.I)
+
+
+def partial_excerpt_eligible(enrichment):
+    evidence=enrichment['evidence']
+    return (any(e.get('origin')=='telegram_excerpt' and str(e.get('text') or '').strip() for e in evidence)
+            and not PARTIAL_RESTRICTED.search(' '.join(
+                str(e.get(key) or '') for e in evidence for key in ('text','title','url'))))
 
 
 # Publication nouns alone do not imply comparative scientific findings.
@@ -18,8 +35,10 @@ FINDINGS = re.compile(r'실험|평가|성능|정확|비교|능가|향상|개선|
 
 def content_route(evidence):
     text = ' '.join(e.get('text', '') for e in evidence)
-    if SENSITIVE.search(text):
+    if SENSITIVE.search(text) or AGENT_CONTROL.search(text):
         return 'sensitive'
+    if RESEARCH_CONFLICT.search(text):
+        return 'complex_evidence'
     if not COMPLEX.search(text):
         return 'simple_document'
     # Only relax publication nouns; every other existing exclusion still wins.
@@ -36,15 +55,13 @@ def eligible(snapshot, request, enrichment):
     # A failed link adds no evidence for more analyst roles to inspect. A
     # retained Telegram excerpt can still support a bounded ordinary-news
     # report; generation/review keep the actual failed-source coverage.
-    available_excerpt = any(e.get('origin') == 'telegram_excerpt' and str(e.get('text') or '').strip()
-                            for e in enrichment['evidence'])
     return (request.get('analysis_mode') in (VERSION,'adaptive-v2') and len(snapshot) == 1
             and request.get('completion_attempt', 1) <= 1
             and not request.get('question') and not request.get('terms')
             and not (request.get('improvement_context') or {}).get('review_issues')
             and not (request.get('improvement_context') or {}).get('followup_tasks')
             and not (request.get('active_rules') or {}).get('rules')
-            and (not enrichment['coverage'].get('failed_urls') or available_excerpt)
+            and (not enrichment['coverage'].get('failed_urls') or partial_excerpt_eligible(enrichment))
             and all(e.get('origin') in ('telegram_excerpt', 'fetched_url_excerpt') for e in enrichment['evidence'])
             and sum(len(e.get('text', '')) for e in enrichment['evidence']) <= 8000
             and content_route(enrichment['evidence']) in ('simple_document', 'simple_publication_announcement'))

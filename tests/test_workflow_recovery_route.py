@@ -24,7 +24,7 @@ def test_operational_feedback_never_overrides_content_exclusions(text):
     assert select([e['evidence'][0]],request(),e)['path']=='multi-role'
 
 
-def test_unknown_review_or_custom_task_retry_source_failure_keep_full_path():
+def test_unknown_review_or_custom_task_retry_keep_full_path():
     e=dict(evidence=[dict(id='e',origin='telegram_excerpt',text='일반 연구 비교 결과')],coverage={})
     for mutate in (
         lambda r:r['improvement_context']['review_issues'].append('위험 시나리오 누락'),
@@ -34,8 +34,18 @@ def test_unknown_review_or_custom_task_retry_source_failure_keep_full_path():
     ):
         r=request();mutate(r)
         assert select([e['evidence'][0]],r,e)['path']=='multi-role'
-    e['coverage']['failed_urls']=['https://example.com']
-    assert select([e['evidence'][0]],request(),e)['path']=='multi-role'
+
+
+def test_partial_sources_allow_only_exact_operational_feedback_and_keep_saved_path():
+    r=request();prior=copy.deepcopy(r)
+    e=dict(evidence=[dict(id='e',origin='telegram_excerpt',text='벤치마크 실험 결과')],
+           coverage={'failed_urls':['https://example.com']})
+    assert select([e['evidence'][0]],r,e)['path']=='parallel-drafts-v1'
+    assert r==prior
+    saved=dict(path='multi-role',reason='source_unavailable',routing_version='adaptive-v7')
+    assert select([e['evidence'][0]],r,e,previous=saved)==saved
+    r['improvement_context']['review_issues'].append('반대 근거 누락')
+    assert select([e['evidence'][0]],r,e)['path']=='multi-role'
 
 
 def test_operational_retry_revalidates_without_full_role_reentry():
