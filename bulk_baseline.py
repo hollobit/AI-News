@@ -54,13 +54,17 @@ ANALYSIS_SCHEMA=obj({'documents':{'type':'array','items':RECORD}})
 REVIEW_SCHEMA=obj({'reviews':{'type':'array','items':obj({'document_id':STR,'accepted':{'type':'boolean'},'issues':STRS,'checked_evidence_ids':STRS})}})
 
 
+def source_excerpt_text(source):
+    return str(source.get('text') or '')[:600] if source.get('status')=='fetched' else ''
+
+
 def freeze_item(item):
     from improvement_selection import content_identity
     item=dict(item)
     identity=content_identity(item)
     text='\n'.join(str(item.get(k) or '') for k in ('title','summary','text','description')).strip()[:1500]
     source=item.get('source_context') or {}
-    source_text=str(source.get('text') or '')[:600] if source.get('status')=='fetched' else ''
+    source_text=source_excerpt_text(source)
     evidence=[]
     for origin,value in [('telegram_excerpt',text),('fetched_url_excerpt',source_text)]:
         if value:
@@ -301,7 +305,7 @@ class BulkBaselineService:
             preparation=threading.Thread(target=self._preprocess,args=(run_id,),daemon=True,name='news-baseline-morphology');preparation.start()
             self._status(run_id,'running')
             futures=set()
-            next_check=0;changed_token=None
+            next_check=0;changed_token=None;changed_sources=[]
             with ThreadPoolExecutor(max_workers=settings['workers'],thread_name_prefix='news-baseline-agent') as pool:
                 while True:
                     if settings.get('realtime_inputs') and time.monotonic()>=next_check and not self.stop.is_set():
@@ -320,6 +324,11 @@ class BulkBaselineService:
                                 target=choose_batch_size(rows,settings)
                                 rows=select_rows(rows,settings)
                                 if not settings.get('micro_batches') and len(rows)<target and preparation.is_alive():rows=[]
+                                if rows and settings.get('realtime_inputs') and settings.get('extraction_token'):
+                                    from baseline_handoff import changed_source_documents
+                                    changed_sources=changed_source_documents(db,rows)
+                                    if changed_sources:
+                                        changed_token=settings['extraction_token'];self.stop.set();rows=[]
                                 if rows:
                                     db.executemany("UPDATE bulk_baseline_documents SET status='running',attempts=attempts+1 WHERE run_id=? AND document_id=?",[(run_id,r['document_id']) for r in rows])
                             if not rows:break
@@ -337,7 +346,7 @@ class BulkBaselineService:
                 preparation.join()
             if self.stop.is_set() or self.closed:
                 from baseline_handoff import request_handoff
-                handoff=changed_token and not self.closed and request_handoff(self,run_id,changed_token)
+                handoff=changed_token and not self.closed and request_handoff(self,run_id,changed_token,changed_sources=changed_sources)
                 self._status(run_id,'paused','new_input_handoff' if handoff else '')
             else:
                 metrics=self.get(run_id)['metrics'];self._status(run_id,'complete' if metrics['verified']==metrics['total'] else 'requires_review')

@@ -9,6 +9,30 @@ def extraction_token(db):
     return value.get('extracted_at') if value.get('status')=='complete' else None
 
 
+def changed_source_documents(db, rows):
+    """Check only the source text consumed by these frozen, unclaimed inputs."""
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE name='source_excerpts'").fetchone():return []
+    from link_groups import canonical_url
+    from source_enrichment import source_map
+    from bulk_baseline import source_excerpt_text
+    snapshots=[json.loads(row['snapshot_json']) for row in rows]
+    targets=[]
+    for snapshot in snapshots:
+        urls={canonical_url(e.get('url') or '') for e in snapshot['evidence']}
+        urls.discard('')
+        # Automatic corpus entries have a single primary URL. Other selectors
+        # keep their own frozen evidence contract.
+        if len(urls)==1:targets.append((snapshot,urls.pop()))
+    sources=source_map(db,[url for _,url in targets])
+    changed=[]
+    for snapshot,url in targets:
+        source=sources.get(url,{})
+        text=source_excerpt_text(source)
+        frozen=[e['text'] for e in snapshot['evidence'] if e.get('origin')=='fetched_url_excerpt']
+        if frozen!=([text] if text else []):changed.append(snapshot['document_id'])
+    return changed
+
+
 def can_carry(db, run):
     """Content rejections may wait separately; operator/engine pauses may not."""
     if run['status']=='requires_review':return True
@@ -43,12 +67,14 @@ def prior_rows(db, identity):
         WHERE d.run_id=?''',(identity,))}
 
 
-def request_handoff(service, run_id, token):
+def request_handoff(service, run_id, token, *, changed_sources=None):
     """Only after already-running batches finish; pauses/errors take precedence."""
     from bulk_baseline import now,js
     with service.db() as db:
         row=db.execute("SELECT seq,stage FROM bulk_baseline_events WHERE run_id=? AND stage IN ('user_pause_requested','engine_paused','execution_resumed') ORDER BY seq DESC LIMIT 1",(run_id,)).fetchone()
         if row and row['stage']!='execution_resumed':return False
+        detail={'extracted_at':token,'preserve_attempts':True}
+        if changed_sources:detail.update(reason='source_changed',documents=changed_sources)
         db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES(?,?,?,?)',
-                   (run_id,'input_handoff',js({'extracted_at':token,'preserve_attempts':True}),now()))
+                   (run_id,'input_handoff',js(detail),now()))
     return True
