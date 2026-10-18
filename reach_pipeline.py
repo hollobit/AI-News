@@ -40,11 +40,17 @@ class ReachPipeline:
             CREATE TABLE IF NOT EXISTS reach_subscriptions(id TEXT PRIMARY KEY,url TEXT UNIQUE,label TEXT,keywords TEXT,mode TEXT,interval_seconds INTEGER,enabled INTEGER,next_at REAL,last_checked TEXT,last_success TEXT,error TEXT);
             CREATE TABLE IF NOT EXISTS reach_observations(url TEXT PRIMARY KEY,title TEXT,text TEXT,published_at TEXT,observed_at TEXT,subscription TEXT);
             ''')
+            # Recovery reads and subsequent writes share one reserved snapshot.
+            # A concurrent collector commit must not make a deferred read-to-write
+            # upgrade fail with SQLITE_BUSY_SNAPSHOT during server startup.
+            db.execute('BEGIN IMMEDIATE')
             from strategic_jobs import alive
             for row in db.execute("SELECT id,owner FROM reach_tasks WHERE status='running'"):
                 if not alive(row['owner']):db.execute("UPDATE reach_tasks SET status='queued',owner=NULL WHERE id=?",(row['id'],))
             if db.execute("SELECT 1 FROM sqlite_master WHERE name='source_excerpts'").fetchone():
-                for url,payload,updated in db.execute('SELECT canonical_url,result_json,updated_at FROM source_excerpts'):
+                for url,payload,updated in db.execute('''SELECT s.canonical_url,s.result_json,s.updated_at
+                    FROM source_excerpts s WHERE NOT EXISTS
+                    (SELECT 1 FROM source_health h WHERE h.url=s.canonical_url)'''):
                     value=json.loads(payload);stamp=value.get('fetched_at') or updated;ok=value.get('status')=='fetched'
                     db.execute('INSERT OR IGNORE INTO source_health VALUES (?,?,?,?,?,?,?,?,?,?,?)',(url,stamp,stamp if ok else '',value.get('status','failed'),value.get('error',''),error_kind(value),0 if ok else 1,'','',value.get('evidence_scope',''),value.get('reader') or ''))
             db.execute('CREATE TABLE IF NOT EXISTS reach_scope_repairs(url TEXT,hash TEXT,prior_run TEXT,reason TEXT,at TEXT,PRIMARY KEY(url,hash))')

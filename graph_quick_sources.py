@@ -18,6 +18,9 @@ def cold_answer(path, question, ids, params, budget=2, *, limit=6, ranked=False,
     for label, aliases in {**PHRASES,**ALIASES}.items():
         if 'concept:'+label.casefold() in query:words.update(a.casefold() for a in aliases)
     words=sorted(words,key=lambda w:(-len(w),w))[:24]
+    from question_subject import subject, matches
+    named=subject(question)
+    if named:words=[named]
     if not words:return None
     clauses=[];values=[]
     for key,value in params.items():
@@ -34,19 +37,24 @@ def cold_answer(path, question, ids, params, budget=2, *, limit=6, ranked=False,
         if indexed and searchable:
             source='graph_source_search JOIN articles a ON a.rowid=graph_source_search.rowid'
             clauses.append('graph_source_search MATCH ?')
-            values.append(' OR '.join('"'+w.replace('"','""')+'"' for w in searchable))
+            if named:
+                from question_subject import expression
+                values.append(expression(named))
+            else:values.append(' OR '.join('"'+w.replace('"','""')+'"' for w in searchable))
         else:
             text="lower(COALESCE(a.title,'')||' '||COALESCE(a.excerpt,'')||' '||COALESCE(a.text,''))"
-            clauses.append('('+' OR '.join(text+" LIKE ?" for _ in words)+')')
-            values += ['%'+w+'%' for w in words]
+            parts=named.split() if named else words
+            clauses.append('('+(' AND ' if named else ' OR ').join(text+" LIKE ?" for _ in parts)+')')
+            values += ['%'+w+'%' for w in parts]
         order='rank' if ranked and indexed and searchable else 'a.rowid DESC'
         rows=db.execute('SELECT a.rowid AS search_rowid,a.*,n.channel FROM '+source+' JOIN news n ON a.chat_id=n.chat_id AND a.message_id=n.message_id WHERE '+' AND '.join(clauses)+' ORDER BY '+order+' LIMIT 300',values)
         for row in rows:
             if time.monotonic()-started>budget:break
             item=dict(row);body=(item.get('text') or item.get('excerpt') or '')[:6000]
+            if named and not matches(named,item.get('title'),body):continue
             tokens=set(terms((item.get('title') or '')+' '+body))
             overlap=tokens&query
-            if not overlap or anchors and not anchors&tokens:continue
+            if not overlap or not named and anchors and not anchors&tokens:continue
             candidates.append((len(overlap)+2*len(set(terms(item.get('title')))&query),item,body))
     except sqlite3.OperationalError:
         # An interrupted query may still have yielded valid source rows.

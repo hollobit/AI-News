@@ -51,7 +51,7 @@ def passage(evidence,question,limit=500):
 def quick_answer(graph,question,ids):
     if hasattr(graph, 'workspace_store'):
         from context_index import materialize
-        graph = materialize(graph, question)
+        graph = materialize(graph, question,named_scope=not ids)
     retrieval=build_retrieval(graph,question,ids)
     evidence=retrieval['evidence'][:6];refs={e['id'] for e in evidence}
     claims=[{'text':passage(e,question),'evidence_ids':[e['id']],'kind':'source_excerpt'} for e in evidence[:4]]
@@ -349,7 +349,7 @@ class GraphQuestions:
                 from context_index import materialize_many
                 plan=planned.result()
                 if self.closed:return
-                graph=materialize_many(graph,searches_for(request['question'],plan))
+                graph=materialize_many(graph,searches_for(request['question'],plan),named_scope=not request['node_ids'])
             result=quick_answer(graph,request['question'],request['node_ids'])
             retrieval_ms=round((time.monotonic()-begun)*1000,2)
             retrieval_cpu_ms=round((time.thread_time()-cpu_started)*1000,2)

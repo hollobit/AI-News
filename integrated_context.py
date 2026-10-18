@@ -65,7 +65,7 @@ def category(node):
 def dossier(graph,query='',focus='',limit=8):
     if hasattr(graph, 'workspace_store'):
         from context_index import materialize
-        graph = materialize(graph, query)
+        graph = materialize(graph, query,named_scope=not focus)
     from graph_retrieval import get_index
     index,_=get_index(graph)
     scores=index.lexical.search(query) if query else {}

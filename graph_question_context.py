@@ -30,12 +30,18 @@ def searches_for(question,plan):
     return [query+' '+expansions if expansions else query for query in queries]
 
 
-def focused_candidates(items, question, facets):
+def focused_candidates(items, question, facets, *, named_scope=True):
     """Prefer the requested subject/facet over an incidental topic mention.
 
     Keep two broader contextual sources per axis; do not silently replace an
     unsupported axis with a full budget of generic articles.
     """
+    from question_subject import subject, matches
+    named = subject(question) if named_scope else None
+    if named:
+        # The named paper's introduction/qualifications need not repeat the
+        # generic words "dataset" or "benchmark" to be relevant evidence.
+        return [item for item in items if matches(named,item.get('title'),item.get('text'))]
     if not facets:return items
     anchors=query_anchors(question)
     primary=[];context=[]
@@ -58,11 +64,11 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
     searches = searches_for(question,plan)
     if hasattr(graph, 'workspace_store'):
         from context_index import materialize_many
-        graph = materialize_many(graph, searches)
+        graph = materialize_many(graph, searches,named_scope=not ids)
     budget = budget_for(axes_for(question, plan, facets))
     candidate_limit = candidate_limit_for(budget)
     groups = [build_retrieval(graph, query, ids, evidence_limit=candidate_limit) for query in searches]
-    groups = [dict(g,evidence=focused_candidates(g['evidence'],question,facets)) for g in groups]
+    groups = [dict(g,evidence=focused_candidates(g['evidence'],question,facets,named_scope=not ids)) for g in groups]
     selected, selection, axes, candidates = select(groups, question, plan, facets, document, normalized)
     selected_documents = {document(e) for e in selected.values()}
     supplements = [e for e in candidates if document(e) in selected_documents and e['id'] not in selected]
@@ -75,6 +81,18 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
             allowed = {e.get('source_url', '') for e in selected.values()} if ids or scoped else None
             supplements = search(db, question, limit=budget['passages'], urls=allowed) + supplements
             if not ids and not scoped: supplements += retrieve(db, question, limit=1)
+    from question_subject import subject, matches
+    named=subject(question) if not ids else None
+    if named:
+        # Retrieval returns one representative per canonical document. A named
+        # paper's already admitted full-text passages must still be considered
+        # alongside its abstract, even if all query axes chose that abstract.
+        index=getattr(graph,'prepared_index',None)
+        if index is not None:
+            supplements += [e for e in index.evidence.values()
+                            if e['id'] not in selected and document(e) in selected_documents]
+        supplements=[e for e in supplements if document(e) in selected_documents
+                     or matches(named,e.get('title'),e.get('text'))]
     # Source-store/wiki lookups can discover documents outside the first graph
     # search. Count every inspected candidate once, including budget exclusions;
     # otherwise selected documents can exceed the displayed candidate total.
@@ -92,7 +110,8 @@ def compose(graph, question, ids, plan, path=None, scoped=False):
     anchors=query_anchors(question)
     def relevance(item):
         text=item.get('text', '')
-        return (bool(set(terms(item.get('title',''))) & anchors),
+        return (bool(named and document(item) in selected_documents and item.get('evidence_origin')=='arxiv_html_excerpt'),
+                bool(set(terms(item.get('title',''))) & anchors),
                 sum(bool(pattern.search(text)) for pattern,_ in facets),
                 len(set(terms(text)) & query_terms), min(len(text), 1600))
     replacements = {}

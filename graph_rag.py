@@ -725,7 +725,7 @@ def build_retrieval(graph: dict[str, Any], question: str,
     """Retrieve relevant admitted source excerpts before expanding graph context."""
     if hasattr(graph, 'workspace_store'):
         from context_index import materialize
-        graph = materialize(graph, question)
+        graph = materialize(graph, question,named_scope=not node_ids)
     from graph_retrieval import retrieve
     return retrieve(graph, question, node_ids, evidence_limit=evidence_limit)
 

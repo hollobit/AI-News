@@ -212,23 +212,32 @@ def expressions(question):
     return ' OR '.join('"' + w.replace('"', '""') + '"' for w in long), short
 
 
-def materialize(graph, question):
-    return materialize_many(graph,[question])
+def materialize(graph, question, *, named_scope=True):
+    return materialize_many(graph,[question],named_scope=named_scope)
 
 
-def candidate_ids(store, questions):
+def candidate_ids(store, questions, *, named_scope=True):
     """Rank each query once, preserving the independent quota for every kind."""
+    from question_subject import subject, expression as literal, matches
+    questions=tuple(questions)
+    named = subject(questions[0]) if questions and named_scope else None
     identities=set()
     for question in questions:
         expression,short=expressions(question)
+        if named:
+            expression=literal(named)+' AND ('+expression+')' if expression else literal(named)
+            short=[]
         if expression:
             counts={kind:0 for kind in KINDS}
             # BM25 scores use the same full FTS corpus for all source kinds.
             # One globally ordered cursor has the same per-kind subsequences
             # as seven separately ranked queries, including deterministic ties.
-            for identity,kind in store.execute('''SELECT s.id,s.kind FROM search JOIN sources s ON s.id=search.rowid
+            fields='s.id,s.kind,s.title,s.text' if named else 's.id,s.kind'
+            for row in store.execute('SELECT '+fields+''' FROM search JOIN sources s ON s.id=search.rowid
                 WHERE search MATCH ? ORDER BY bm25(search,3,1),s.id''',(expression,)):
                 checkpoint()
+                identity,kind=row[:2]
+                if named and not matches(named,*row[2:]):continue
                 if kind in counts and counts[kind]<48:
                     identities.add(identity);counts[kind]+=1
                 if all(count>=48 for count in counts.values()):break
@@ -242,10 +251,10 @@ def candidate_ids(store, questions):
     return identities
 
 
-def materialize_many(graph, questions):
+def materialize_many(graph, questions, *, named_scope=True):
     """Reserve candidates per query/kind, build their shared graph only once."""
     questions=tuple(dict.fromkeys(questions))
-    question=questions
+    question=(questions,named_scope)
     with graph.workspace_lock:
         cached=graph.workspace_cache.get(question)
     if cached is not None and getattr(graph,'workspace_source_path',None):
@@ -260,7 +269,7 @@ def materialize_many(graph, questions):
         future = graph.workspace_flights.setdefault(question, Future())
     if not owner: return future.result()
     try:
-        result = _materialize(graph, questions)
+        result = _materialize(graph, questions,named_scope=named_scope)
         with graph.workspace_lock:
             graph.workspace_cache[question] = result
             while len(graph.workspace_cache)>1 and (len(graph.workspace_cache)>8 or
@@ -275,7 +284,7 @@ def materialize_many(graph, questions):
         with graph.workspace_lock: graph.workspace_flights.pop(question, None)
 
 
-def _materialize(graph, questions):
+def _materialize(graph, questions, *, named_scope=True):
     from graph_rag import merge_sources
     from graph_retrieval import RetrievalIndex
     from integrated_context import enrich_sources
@@ -284,7 +293,7 @@ def _materialize(graph, questions):
     # One connection/SQLite page cache for the query batch; fetch large source
     # bodies only once, after selecting the union of per-axis candidate IDs.
     with closing(sqlite3.connect(Path(graph.workspace_store.path).as_uri()+'?mode=ro',uri=True,timeout=2)) as store:
-        identities=candidate_ids(store,questions)
+        identities=candidate_ids(store,questions,named_scope=named_scope)
         ordered=sorted(identities)
         for offset in range(0,len(ordered),400):
             batch=ordered[offset:offset+400]
@@ -320,7 +329,7 @@ def _materialize(graph, questions):
     result['coverage'].update(scope='질문별 관련 자료의 연결 분석', selected_source_records=len(sources),
                               searched_source_records=len(identities))
     result['limitations'][0] = '분야별 검색 상위 후보의 인용·관계를 종합합니다. 자료 전체를 전수 독해하거나 모든 관계를 열거한 결과가 아닙니다.'
-    result.search_key = content_digest([graph.search_key, questions, VERSION,'query-batch-v1',current_dependencies])
+    result.search_key = content_digest([graph.search_key, questions, VERSION,'query-batch-v2-subject',named_scope,current_dependencies])
     result.prepared_index = RetrievalIndex(result)
     result.workspace_dependencies=current_dependencies
     result.workspace_dependency_refs=dependency_refs

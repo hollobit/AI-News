@@ -91,7 +91,10 @@ def retrieve(graph, question, node_ids=None, *, evidence_limit=None):
         for ref in refs:
             checkpoint()
             if ref in index.evidence:es[ref] = es.get(ref,0)+contribution
-    candidates = sorted(es,key=lambda i:(-es[i],i))[:160]
+    from question_subject import subject, matches
+    named=subject(question) if not requested else None
+    eligible = (i for i in es if not named or matches(named,index.evidence[i].get('title'),index.evidence[i].get('text')))
+    candidates = sorted(eligible,key=lambda i:(-es[i],i))[:160]
     chosen = []
     documents = set()
     publishers = defaultdict(int)
@@ -102,7 +105,7 @@ def retrieve(graph, question, node_ids=None, *, evidence_limit=None):
     token_sets = {i:{term for term in query_terms if ('e',i) in index.lexical.postings.get(term,{})}
                   for i in candidates}
     anchors = query_anchors(question)
-    if anchors:
+    if anchors and not named:
         # A rare incidental word such as "cost" must not replace the subject of
         # a question about sovereign AI. Return fewer sources when support is thin.
         interpreted = {ref for identity in ns
