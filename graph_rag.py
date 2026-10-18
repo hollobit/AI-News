@@ -246,9 +246,13 @@ def validated_workflow_content(payload: dict, run_id: str) -> dict:
 def _analysis_sources(db: sqlite3.Connection, selected=None,baseline_items=None) -> tuple[list[dict[str, Any]], dict[str, int]]:
     sources: list[dict[str, Any]] = []
     current_sources = None
-    if db.execute("SELECT 1 FROM sqlite_master WHERE name='source_excerpts'").fetchone():
-        current_sources = {canonical_url(row[0]):(_json(row[1]) or {}) for row in
-                           db.execute('SELECT canonical_url,result_json FROM source_excerpts')}
+    if (selected is None or selected.get('workflow') or selected.get('external')) and db.execute("SELECT 1 FROM sqlite_master WHERE name='source_excerpts'").fetchone():
+        if selected is None:
+            current_sources = {canonical_url(row[0]):(_json(row[1]) or {}) for row in
+                               db.execute('SELECT canonical_url,result_json FROM source_excerpts')}
+        else:
+            from graph_source_lookup import CurrentSources
+            current_sources=CurrentSources(db,_json)
     graph_rows = _table_rows(db, "graph_analysis") if selected is None or selected.get('graph') else []
     if selected is not None:graph_rows=[r for r in graph_rows if str(r.get('group_id')) in selected.get('graph',set())]
     completed_graphs = 0
@@ -314,11 +318,13 @@ def _analysis_sources(db: sqlite3.Connection, selected=None,baseline_items=None)
     sources.extend(baselines)
     # Public reads are raw source observations, never pre-verified analytical claims.
     if current_sources:
-        for url, excerpt in current_sources.items():
+        urls=current_sources if selected is None else current_sources.selected_external(selected.get('external',set()))
+        for url in urls:
             checkpoint()
-            if excerpt.get('status')!='fetched' or not excerpt.get('reader') or not excerpt.get('text'):continue
             identity='reach:'+hashlib.sha256(url.encode()).hexdigest()[:24]
             if selected is not None and identity not in selected.get('external',set()):continue
+            excerpt=current_sources[url]
+            if excerpt.get('status')!='fetched' or not excerpt.get('reader') or not excerpt.get('text'):continue
             evidence=dict(id=identity,title=excerpt.get('title') or url,text=excerpt['text'],
                 source_url=url,day='',origin='public_source_excerpt',reader=excerpt['reader'],
                 evidence_scope=excerpt.get('evidence_scope',''),fetched_at=excerpt.get('fetched_at',''))

@@ -12,7 +12,7 @@ _CORPUS=OrderedDict()
 _LOCK=threading.RLock()
 
 
-def corpus(db):
+def corpus(db, *, input_hashes=None):
     """Reuse only a committed source generation inside our read transaction."""
     from improvement_selection import all_corpus_items
     from verified_cache import policy
@@ -25,10 +25,22 @@ def corpus(db):
     path=Path(filename).resolve();stat=path.stat()
     key=(str(path),stat.st_dev,stat.st_ino,tuple(row),db.execute('PRAGMA schema_version').fetchone()[0],policy())
     with _LOCK:
-        if key not in _CORPUS:_CORPUS[key]=all_corpus_items(db)
+        if key not in _CORPUS:_CORPUS[key]={'items':all_corpus_items(db),'inputs':None}
         _CORPUS.move_to_end(key)
         while len(_CORPUS)>2:_CORPUS.popitem(last=False)
-        return _CORPUS[key]
+        entry=_CORPUS[key]
+        if input_hashes is None:return entry['items']
+        if entry['inputs'] is None:
+            from bulk_baseline import freeze_item
+            from task_lifecycle import checkpoint
+            inputs={}
+            for item in entry['items']:
+                checkpoint()
+                inputs[freeze_item(item)['input_hash']]=item
+            # Publish only a complete lookup. Cancellation cannot leave a partial
+            # generation, and values share the original items rather than copies.
+            entry['inputs']=inputs
+        return [entry['inputs'][key] for key in sorted(input_hashes) if key in entry['inputs']]
 
 
 def identity(source):
@@ -53,7 +65,8 @@ def load(db,keys):
     selected=defaultdict(set)
     for key in keys:
         kind,record,_=json.loads(key);selected[kind].add(record)
-    sources,_=_analysis_sources(db,selected=selected,baseline_items=corpus(db) if selected.get('baseline') else [])
+    sources,_=_analysis_sources(db,selected=selected,
+        baseline_items=corpus(db,input_hashes=selected['baseline']) if selected.get('baseline') else [])
     if selected.get('wiki'):sources+=enrich_sources(db,[])
     current=[]
     wanted=set(keys)
