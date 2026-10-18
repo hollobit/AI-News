@@ -58,6 +58,12 @@ def test_waiting_between_batches_and_old_complete_extraction_are_normal(tmp_path
     for name in ['collection','risks']:
         (tmp_path/f'scheduled-{name}.json').write_text(json.dumps({'stage':'running','checked_at':when}))
     assert snapshot(path,tmp_path,stamp)['problems'] == []
+    waiting={'stage':'waiting_for_sources','checked_at':when,'source_coalescing':{
+        'documents':16,'ready_documents':7,'pending_documents':9,'remaining_seconds':12}}
+    (tmp_path/'scheduled-collection.json').write_text(json.dumps(waiting))
+    health=snapshot(path,tmp_path,stamp)
+    assert health['schedulers']['collection']['source_coalescing']==waiting['source_coalescing']
+    assert health['problems']==[]
     with sqlite3.connect(path) as db:
         db.execute("UPDATE rsi_cycles SET status='running'")
     problems = snapshot(path,tmp_path,stamp)['problems']

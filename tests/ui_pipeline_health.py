@@ -22,6 +22,8 @@ async def main():
   await page.screenshot(path='.runtime/verification/pipeline-health-mobile.png',full_page=True)
   response=await page.request.get('http://127.0.0.1:8001/api/operations/health')
   fixture=await response.json()
+  fixture['schedulers']['collection'].update(stage='waiting_for_sources',source_coalescing={
+   'documents':16,'ready_documents':7,'pending_documents':9,'remaining_seconds':12})
   fixture['incidents']=[dict(id=999999,message='검증용 지연',action='검증용 조치',opened_at=fixture['checked_at'],last_seen_at=fixture['checked_at'],resolved_at=None,acknowledged_at=None,notification_status='requested')]
   await page.route('**/api/operations/health',lambda route:route.fulfill(json=fixture))
   async def ack(route):
@@ -29,6 +31,11 @@ async def main():
    await route.fulfill(json={'acknowledged':True})
   await page.route('**/api/operations/incidents/999999/ack',ack)
   await page.locator('[data-pipeline-refresh]').click()
+  await expect(page.locator('[data-pipeline-schedulers]')).to_contain_text('원문 합류 대기 · 7/16건 처리 · 원문 대기 최대 12초')
+  for width in [390,320]:
+   await page.set_viewport_size({'width':width,'height':844})
+   assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),width
+  await page.locator('[data-pipeline-schedulers]').screenshot(path='.runtime/verification/source-window-monitor.png')
   await expect(page.locator('[data-pipeline-incidents]')).to_contain_text('검증용 지연')
   await page.get_by_role('button',name='확인했습니다').click()
   await expect(page.locator('[data-pipeline-incidents]')).to_contain_text('확인함 · 미해소')

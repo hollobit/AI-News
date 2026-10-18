@@ -42,6 +42,25 @@ def test_empty_store_has_unknown_not_fake_complete(tmp_path):
     assert result['stages'][0]['status']=='delayed'
 
 
+@pytest.mark.parametrize('state',['live','stale','orphan'])
+def test_source_coalescing_is_visible_without_faking_a_running_analysis(tmp_path,state):
+    import json,os
+    from datetime import timedelta
+    directory=tmp_path/'data';directory.mkdir();path=directory/'news.sqlite3'
+    sqlite3.connect(path).close()
+    runtime=tmp_path/'.runtime';runtime.mkdir()
+    stamp=datetime.now(timezone.utc)-timedelta(seconds=20 if state=='stale' else 0)
+    (runtime/'scheduled-collection.json').write_text(json.dumps({
+        'stage':'waiting_for_sources','checked_at':stamp.isoformat(),'source_coalescing':{
+            'documents':17,'ready_documents':8,'remaining_seconds':20,'owner_pid':None if state=='orphan' else os.getpid()}}))
+    baseline=next(s for s in snapshot(path)['stages'] if s['id']=='baseline')
+    assert baseline['status']=='unknown' and baseline['percent'] is None
+    if state=='live':
+        assert baseline['source_coalescing']['documents']==17
+        assert '8/17건 처리' in baseline['note']
+    else:assert 'source_coalescing' not in baseline
+
+
 @pytest.mark.parametrize('legacy',[False,True])
 def test_flow_reports_requested_speed_without_assuming_provider_delivery(tmp_path,legacy):
     import os,time

@@ -1,6 +1,6 @@
 """Dispatch baseline analysis after successful Telegram extraction."""
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import fcntl
 import json
 from pathlib import Path
@@ -98,7 +98,8 @@ def inspect(db):
     return states, dict(latest) if latest else None, any(owner_alive(r['owner_pid']) for r in active)
 
 
-def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVERY, check_models=None):
+def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVERY, check_models=None,
+             coalesce=True, progress=None):
     now = now or datetime.now(timezone.utc)
     states, latest, active = inspect(db)
     extraction = json.loads(states.get('collector_corpus_snapshot', '{}'))
@@ -120,20 +121,32 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
             return dict(summary, baseline_status=latest['status'],
                         **recover_baseline(db, latest, request, now, check_engine, recovery_path))
     snapshots = {s['document_id']: s for s in map(freeze_item, all_corpus_items(db))}
-    pending = 0
+    pending = set()
     for snapshot in snapshots.values():
         cached = db.execute('SELECT result_json FROM bulk_baseline_cache WHERE input_hash=?',
                             (snapshot['input_hash'],)).fetchone()
         if not cached or not BulkBaselineService._valid_cached(json.loads(cached[0]), snapshot):
-            pending += 1
-    summary.update(total_unique=len(snapshots), pending_current_inputs=pending)
+            pending.add(snapshot['document_id'])
+    summary.update(total_unique=len(snapshots), pending_current_inputs=len(pending))
+    old={r[0]:r[1] for r in db.execute('SELECT document_id,input_hash FROM bulk_baseline_documents WHERE run_id=?',(latest['id'],))} if latest else {}
     if carry:
-        old={r[0]:r[1] for r in db.execute('SELECT document_id,input_hash FROM bulk_baseline_documents WHERE run_id=?',(latest['id'],))}
         new=sum(old.get(identity)!=snapshot['input_hash'] for identity,snapshot in snapshots.items())
         summary['new_or_changed_inputs']=new
         if not new:return dict(summary,stage='baseline_attention_required',baseline_status=latest['status'])
     if not pending:
         return dict(summary, stage='up_to_date')
+    if coalesce:
+        from baseline_source_window import wait_for_sources
+        def waiting(detail):
+            if progress:progress(dict(summary,stage='waiting_for_sources',source_coalescing=detail,
+                                      checked_at=datetime.now(timezone.utc).isoformat()))
+        waited=wait_for_sources(db,snapshots,pending,old,extraction,now,progress=waiting)
+        if waited:
+            # Re-read current snapshots and every pause/owner/model gate. The
+            # eventual run freezes the fetched input once, never patches a run.
+            result=dispatch(db,request,now+timedelta(seconds=waited['elapsed_seconds']),check_engine,
+                            recovery_path,check_models,coalesce=False,progress=progress)
+            return dict(result,source_coalescing=waited)
     from model_access import ensure_model_access
     access=(check_models or ensure_model_access)()
     if not access['ready']:
@@ -170,7 +183,7 @@ def main():
                               latest_status=latest['status'] if latest else None, collector=states)
             else:
                 try:
-                    result = dispatch(db)
+                    result = dispatch(db,progress=lambda value:save_json(STATE,value))
                 except Exception as error:
                     # Exception text can include URLs or inputs; retain only the type.
                     result = dict(stage='dispatch_error', error_type=type(error).__name__,

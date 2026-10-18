@@ -120,6 +120,15 @@ def snapshot(path,index=None):
         dispatch=json.loads((runtime_dir/'scheduled-risks.json').read_text())
         schedule.update(stage=dispatch.get('stage'),checked_at=dispatch.get('checked_at'))
     except (OSError,ValueError):pass
+    try:
+        baseline_dispatch=json.loads((runtime_dir/'scheduled-collection.json').read_text())
+        detail=baseline_dispatch.get('source_coalescing') or {}
+        if (baseline_dispatch.get('stage')=='waiting_for_sources'
+                and 0<=age(baseline_dispatch.get('checked_at'),stamp)<5 and alive(detail.get('owner_pid'))):
+            baseline_stage=next(s for s in stages if s['id']=='baseline')
+            baseline_stage['source_coalescing']=detail
+            baseline_stage['note']+=f" 새 입력 원문 합류 대기: {detail['ready_documents']}/{detail['documents']}건 처리, 대기 상한 {detail['remaining_seconds']}초. 기존 원장의 완료·검토 상태와 별도입니다."
+    except (OSError,ValueError,KeyError,TypeError):pass
     marker=runtime_dir/'public-site.publication.json'
     published=None
     try:

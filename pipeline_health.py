@@ -90,7 +90,7 @@ def snapshot(path, runtime=None, stamp=None):
                     problem(kind + '_stalled', name + '에서 30분 이상 진행 신호가 없습니다.', '현재 모델 호출·작업자 상태와 제한 대기를 확인하세요.')
         for name in ('collection', 'risks'):
             scheduled = read_json(runtime / ('scheduled-' + name + '.json'))
-            result.setdefault('schedulers', {})[name] = {k: scheduled.get(k) for k in ('stage', 'checked_at', 'pending_current_inputs', 'error_code', 'error_type')}
+            result.setdefault('schedulers', {})[name] = {k: scheduled.get(k) for k in ('stage', 'checked_at', 'pending_current_inputs', 'error_code', 'error_type','source_coalescing')}
             if age(scheduled.get('checked_at'), stamp) > 900:
                 problem(name + '_scheduler', name + ' 정기 실행 기록이 15분 이상 갱신되지 않았습니다.', 'macOS 로그인 상태와 LaunchAgent 등록·오류 로그를 확인하세요.')
             elif scheduled.get('stage') in ('model_access_blocked', 'model_access_required', 'engine_unavailable', 'recovery_exhausted', 'recovery_limit', 'attention_required', 'review_required', 'disabled', 'baseline_attention_required', 'engine_probe_failed', 'dispatch_error'):

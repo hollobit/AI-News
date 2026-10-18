@@ -68,10 +68,14 @@
       host.querySelector('[data-pipeline-schedulers]').textContent = Object.entries(
         data.schedulers || {}
       )
-        .map(
-          ([key, value]) =>
-            `${key === 'collection' ? '기본 분석 예약' : '상세 분석 예약'}: ${value.stage || '기록 없음'}${value.error_code ? ' · ' + value.error_code : ''} (${date(value.checked_at)})`
-        )
+        .map(([key, value]) => {
+          const wait = value.source_coalescing;
+          const state =
+            value.stage === 'waiting_for_sources' && wait
+              ? `원문 합류 대기 · ${wait.ready_documents}/${wait.documents}건 처리 · 원문 대기 최대 ${wait.remaining_seconds}초, 이후 분석 요건 재확인`
+              : value.stage || '기록 없음';
+          return `${key === 'collection' ? '기본 분석 예약' : '상세 분석 예약'}: ${state}${value.error_code ? ' · ' + value.error_code : ''} (${date(value.checked_at)})`;
+        })
         .join(' / ');
       try {
         const usage = await Workspace.request('/api/runtime/analysis', { timeout: 15000 });
