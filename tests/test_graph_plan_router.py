@@ -146,15 +146,16 @@ def test_provider_failure_falls_back_and_shares_cooldown(tmp_path,monkeypatch,ru
     assert b'must-not-log' not in system_one.db_path(path).read_bytes()
 
 
-def test_busy_decision_is_not_queued_and_admission_recovers(tmp_path,monkeypatch,runtime):
+def test_busy_provider_has_bounded_wait_then_existing_fallback(tmp_path,monkeypatch,runtime):
+    import fcntl
     sol=Mock(return_value=copy.deepcopy(FALLBACK));monkeypatch.setattr('semantic.run_structured',sol)
-    assert system_one.PENDING.acquire(blocking=False)
-    try:
+    with system_one.db_path(tmp_path/'a').with_suffix('.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
         updates=[]
         assert prepare(TREND,tmp_path/'a',report=updates.append)[0]==FALLBACK
         assert updates[-1]['reason']=='busy'
         runtime.assert_not_called()
-    finally:system_one.PENDING.release()
+        assert sol.call_count==1
     assert prepare(PRIORITY,tmp_path/'b')[0]['queries'][0]==PRIORITY
     assert runtime.call_count==1
 

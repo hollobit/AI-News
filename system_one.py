@@ -22,6 +22,7 @@ VERSION = 'system-one-scoped-plan-v3'
 ENDPOINT = 'https://api.typesafe.ai/v1/systemone'
 DEFAULT_MODEL = 'jev-1.14.0'
 TIMEOUT = 2.0
+PLAN_ADMISSION_SECONDS = .25
 POOL = ThreadPoolExecutor(max_workers=1, thread_name_prefix='decision-shadow')
 PENDING = threading.BoundedSemaphore(1)
 
@@ -105,6 +106,33 @@ def retry_after(value, stamp):
         except (ValueError,TypeError,OverflowError):return 60
 
 
+def _cached(path, key, questions, model, stamp):
+    """Exact, validated local decisions need no provider execution slot."""
+    target=db_path(path).resolve()
+    if not target.exists():return None
+    try:
+        from contextlib import closing
+        with closing(sqlite3.connect(target.as_uri()+'?mode=ro',uri=True,timeout=.01)) as db:
+            row=db.execute("SELECT result FROM decisions WHERE key=? AND status='complete' AND created_at>?",
+                           (key,stamp-7*86400)).fetchone()
+        if row:return dict(status='complete',cached=True,**validate(json.loads(row[0]),questions,model))
+    except sqlite3.Error:
+        # Missing/locked storage is not permission to trust a stale decision.
+        # Continue through normal locked admission and provider cooldown checks.
+        return None
+
+
+def _admit(lock, deadline):
+    while True:
+        try:
+            fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            return True
+        except BlockingIOError:
+            remaining=deadline-time.monotonic() if deadline is not None else 0
+            if remaining<=0:return False
+            time.sleep(min(.01,remaining))
+
+
 def _evaluate(path,purpose,state,questions,baseline=None,*,caller=None):
     settings=config()
     if not settings['enabled']:return dict(status='disabled',**settings)
@@ -114,11 +142,14 @@ def _evaluate(path,purpose,state,questions,baseline=None,*,caller=None):
     if len(body)>64000 or not 1<=len(questions)<=24:return {'status':'input_limit'}
     key=hashlib.sha256(VERSION.encode()+body).hexdigest()
     started=time.monotonic();stamp=time.time()
+    deadline=started+PLAN_ADMISSION_SECONDS if purpose=='question_plan' else None
     try:
+        cached=_cached(path,key,questions,settings['model'],stamp)
+        if cached:return cached
         with db_path(path).with_suffix('.lock').open('a') as lock:
-            try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-            except BlockingIOError:return {'status':'busy'}
+            if not _admit(lock,deadline):return {'status':'busy'}
             with connect(path) as db:
+                # A decision may have completed while we waited for ownership.
                 row=db.execute('SELECT result FROM decisions WHERE key=? AND status=\'complete\' AND created_at>?',(key,stamp-7*86400)).fetchone()
                 if row:return dict(status='complete',cached=True,**validate(json.loads(row[0]),questions,settings['model']))
                 wait=db.execute('SELECT until,reason FROM provider_wait WHERE id=1').fetchone()
@@ -154,12 +185,15 @@ def evaluate(path,purpose,state,questions,baseline=None,*,caller=None,subject=No
 
 
 def decide(path,purpose,state,questions,baseline=None,*,subject=None):
-    """Synchronous planning shares shadow admission, lock and provider cooldown.
+    """Synchronous plans share the exact cache, provider lock and cooldown.
 
-    Never queue behind another decision or retry a failed provider call.
-    The caller must fall back to its existing planner on any noncomplete result.
+    Question plans can read exact cached decisions during shadow work, or wait
+    at most 250ms for the same cross-process provider lock. No provider retries.
+    Other decisions keep immediate fallback; any noncomplete plan uses Sol.
     """
     if not path or not config()['enabled']:return {'status':'disabled'}
+    if purpose=='question_plan':
+        return evaluate(path,purpose,state,questions,baseline,subject=subject)
     if not PENDING.acquire(blocking=False):
         skipped(path,purpose,'pending_limit',subject)
         return {'status':'busy'}
