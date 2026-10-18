@@ -63,10 +63,12 @@ def test_publication_ignores_internal_cache_and_collector_heartbeat(tmp_path):
     with sqlite3.connect(path) as db:
         db.execute('CREATE TABLE state(key TEXT PRIMARY KEY,value TEXT)')
         db.execute('CREATE TABLE completion_report_digests(run_id TEXT,digest TEXT)')
+        db.execute('CREATE TABLE paper_analysis_checkpoints(paper_id TEXT,input_hash TEXT,state_json TEXT)')
     before=signature(path,tmp_path)
     with sqlite3.connect(path) as db:
         db.execute("INSERT INTO state VALUES('collector_last_success','now')")
         db.execute("INSERT INTO completion_report_digests VALUES('run','hash')")
+        db.execute("INSERT INTO paper_analysis_checkpoints VALUES('paper','hash','{}')")
     assert signature(path,tmp_path)==before
     with sqlite3.connect(path) as db:db.execute("INSERT INTO state VALUES('demo','1')")
     assert signature(path,tmp_path)!=before

@@ -32,6 +32,8 @@ class PaperAnalysisTests(unittest.TestCase):
         data=json.loads(prompt.split('DATA:\n')[1]);ids=[e['id'] for e in data['evidence']]
         if prompt.startswith('ROLE: paper_verification'):
             return {'accepted':True,'issues':[],'checked_evidence_ids':ids,'limitations':['초록과 발췌 범위']}
+        if 'changes' in schema['properties']:
+            return dict(changes=[],additions=[],summary=None,limitations=None)
         return {'summary':'저자가 보고한 로봇 연구','claims':[{'category':'problem','title':'로봇 강건성','detail':'초록은 로봇 정책의 강건성을 다룹니다.',
                    'evidence_ids':[ids[0]],'uncertainty':'전체 실험 조건 미확인'}],'limitations':['PDF 전체는 읽지 않았습니다.']}
 

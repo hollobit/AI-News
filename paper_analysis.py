@@ -103,6 +103,8 @@ class PaperAnalysisService:
                     db.execute("UPDATE arxiv_paper_analyses SET status='paused',owner_pid=NULL WHERE paper_id=?",(row['paper_id'],))
             from paper_recovery import setup
             setup(db)
+            from paper_revision import setup as revision_setup
+            revision_setup(db)
         self.thread = threading.Thread(target=self._worker, daemon=True, name='news-paper-analysis')
         if start_worker:
             self.thread.start()
@@ -170,6 +172,22 @@ class PaperAnalysisService:
                 if current and current['result_json']:
                     db.execute('INSERT OR REPLACE INTO arxiv_paper_analysis_history VALUES (?,?,?,?)',
                                (identity,current['input_hash'],current['result_json'],current['updated_at']))
+                if current and current['input_hash']==signature and current['status']=='needs_review':
+                    from paper_revision import resume_state, save
+                    state=resume_state(current)
+                    if state is not None:
+                        # Preserve the draft and rejection; only a current
+                        # review can skip directly to correction. Automatic
+                        # scheduling leaves semantic rejections on hold.
+                        save(db,current,state)
+                        db.execute("UPDATE arxiv_paper_analyses SET status='queued',error='',owner_pid=NULL,updated_at=? WHERE paper_id=?",
+                                   (now(),identity))
+                        import time
+                        db.execute('INSERT INTO paper_analysis_events(paper_id,input_hash,stage,error_code,attempt,created_at) VALUES(?,?,?,?,?,?)',
+                                   (identity,signature,'review_resume_requested','',len(state['history']),time.time()))
+                        queued.append(identity)
+                        continue
+                db.execute('DELETE FROM paper_analysis_checkpoints WHERE paper_id=? AND input_hash=?',(identity,signature))
                 stamp=now()
                 db.execute('''INSERT OR REPLACE INTO arxiv_paper_analyses
                     (paper_id,input_hash,snapshot_json,status,result_json,error,created_at,updated_at,owner_pid,evidence_json,draft_json)
@@ -279,6 +297,7 @@ class PaperAnalysisService:
         return render(role,item,bundle,keywords,report)
 
     def _analyze(self,row):
+        from paper_revision import load, save, checkpoint, prompt as repair_prompt, schema as repair_schema, apply as apply_repair
         item=json.loads(row['snapshot_json'])
         bundle=json.loads(row['evidence_json']) if row.get('evidence_json') else self._evidence(item)
         with self.db() as db:
@@ -290,12 +309,23 @@ class PaperAnalysisService:
         with self.db() as db:
             db.execute('UPDATE arxiv_paper_analyses SET draft_json=? WHERE paper_id=? AND input_hash=?',
                        (json.dumps(report,ensure_ascii=False),row['paper_id'],row['input_hash']))
-        if self.closed:
-            with self.db() as db:
-                db.execute("UPDATE arxiv_paper_analyses SET status='paused',owner_pid=NULL WHERE paper_id=?",(row['paper_id'],))
-            return
-        revision_history=[]
-        for revision in range(2):
+            state=load(db,row,report,bundle['evidence'])
+            save(db,row,state)
+        while True:
+            if self.closed:
+                with self.db() as db:
+                    db.execute("UPDATE arxiv_paper_analyses SET status='paused',owner_pid=NULL WHERE paper_id=?",(row['paper_id'],))
+                return
+            if state['stage']=='repair':
+                issues=state['history'][-1]['verification']['issues']
+                patch=self.analyzer(repair_prompt(item,bundle,keywords,report,issues),repair_schema(report))
+                report=apply_repair(report,patch,bundle['evidence'],keywords)
+                state=checkpoint(report,bundle['evidence'],history=state['history'],repairs=1)
+                with self.db() as db:
+                    db.execute('UPDATE arxiv_paper_analyses SET draft_json=? WHERE paper_id=? AND input_hash=?',
+                               (json.dumps(report,ensure_ascii=False),row['paper_id'],row['input_hash']))
+                    save(db,row,state)
+                continue
             audit=self.analyzer(self._prompt('verification',item,bundle,keywords,report),AUDIT_SCHEMA)
             ids={e['id'] for e in bundle['evidence']}
             refs={ref for c in report['claims'] for ref in c['evidence_ids']}
@@ -307,17 +337,14 @@ class PaperAnalysisService:
             if not refs<=set(audit['checked_evidence_ids']):
                 audit['issues'].append('모든 주장 인용 근거를 대조하지 않았습니다.')
             audit['accepted']=audit['accepted'] and not audit['issues']
-            audit.update(report_hash=digest(report),evidence_hash=digest(bundle['evidence']))
-            if audit['accepted'] or revision==1 or self.closed:break
-            revision_history.append({'report':report,'verification':dict(audit)})
-            correction=self._prompt('analysis',item,bundle,keywords,report)
-            # Feedback is separate from original evidence; preserve all citation gates.
-            correction=correction.replace('\nDATA:\n','\n이전 보고서는 수정 대상이다. 독립 검토의 지적을 근거에 맞춰 수정하고 뒷받침되지 않는 주장은 제거한다.\n검토 지적: '+json.dumps(audit['issues'],ensure_ascii=False)+'\nDATA:\n')
-            report=validate_report(self.analyzer(correction,REPORT_SCHEMA),bundle['evidence'],keywords)
+            from paper_prompts import REVIEW_VERSION
+            audit.update(report_hash=digest(report),evidence_hash=digest(bundle['evidence']),review_policy=REVIEW_VERSION)
+            if audit['accepted'] or state['repairs']==1:break
+            state['history'].append({'report':report,'verification':dict(audit)})
+            state['stage']='repair'
             with self.db() as db:
-                db.execute('UPDATE arxiv_paper_analyses SET draft_json=? WHERE paper_id=? AND input_hash=?',
-                           (json.dumps(report,ensure_ascii=False),row['paper_id'],row['input_hash']))
-        result=dict(bundle,report=report,revision_history=revision_history,verification=audit,verified=audit['accepted'],paper_id=item['paper_id'],version=item.get('metadata_version'),
+                save(db,row,state)
+        result=dict(bundle,report=report,revision_history=state['history'],verification=audit,verified=audit['accepted'],paper_id=item['paper_id'],version=item.get('metadata_version'),
                     input_hash=row['input_hash'],keywords=keywords,analyzed_at=now())
         with self.db() as db:
             db.execute('UPDATE arxiv_paper_analyses SET status=?,result_json=?,error=?,owner_pid=NULL,updated_at=? WHERE paper_id=? AND input_hash=?',

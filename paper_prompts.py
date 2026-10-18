@@ -1,6 +1,8 @@
 """Source-scoped paper explanations without category quotas or duplicate claims."""
 import json
 
+REVIEW_VERSION = 'paper-explanation-v1'
+
 
 WRITING = (
     'claims는 근거와 설명 가치에 따라 필요한 개수만 작성한다(보통3~6개, 중요한 내용이 많으면 최대14개). '
