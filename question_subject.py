@@ -27,6 +27,14 @@ def normalize(value):
     return ' '.join(unicodedata.normalize('NFKC', str(value or '')).split())
 
 
+def broad_topic(name):
+    from morphology import PHRASES
+    from evidence_search import ALIASES
+    return normalize(name).casefold() in {
+        normalize(v).casefold() for label, aliases in {**PHRASES, **ALIASES}.items()
+        for v in (label, *aliases)}
+
+
 def subject(question):
     text = normalize(question)
     match = PREFIX.match(text)
@@ -37,12 +45,8 @@ def subject(question):
     remainder=[word for word in terms(text[match.end():]) if not word.startswith('concept:')]
     if any(SUFFIX.sub('',word).casefold() not in FACET_WORDS and word.casefold() not in FACET_WORDS
            for word in remainder):return None
-    from morphology import PHRASES
-    from evidence_search import ALIASES
     # A curated topic must retain all of its Korean/English aliases.
-    generic = {normalize(v).casefold() for label, aliases in {**PHRASES, **ALIASES}.items()
-               for v in (label, *aliases)}
-    if name.casefold() in generic or name.split()[0].casefold() in {'what', 'how', 'tell', 'explain', 'compare'}:
+    if broad_topic(name) or name.split()[0].casefold() in {'what', 'how', 'tell', 'explain', 'compare'}:
         return None
     return name
 

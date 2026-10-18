@@ -42,6 +42,8 @@ def runtime(monkeypatch):
 
 @pytest.mark.parametrize('question,intent',[(TREND,'trend'),(PRIORITY,'priority'),
     ('최근 Physical AI 관련 벤치마크 방법 연구 현황과 데이터세트 종류, 이슈는 ?', 'research'),
+    ('PhysAI-Bench의 연구 현황에서 평가 방법과 데이터세트 구성, 성능 해석의 한계는 무엇인가요?', 'research'),
+    ('Physical AI Smart Spaces의 연구 현황에서 평가 방법과 데이터세트 구성, 해석의 한계는 무엇인가요?', 'research'),
     ('최근 Physical AI 벤치마크 연구 현황에서 주요 평가 방법과 데이터세트 유형, 비교할 때의 한계를 설명해주세요.', 'research'),
     (COMPARISON,'benchmark_comparison'),
     ('Physical AI 벤치마크별 평가 방식과 데이터세트 구성은 어떻게 다르며 성능 수치를 어떻게 해석해야 하나요?', 'benchmark_comparison')])
@@ -91,6 +93,9 @@ def test_uncertain_or_mismatched_choice_runs_existing_sol_once(tmp_path,monkeypa
     'AI 벤치마크 연구 현황과 데이터세트 유형, 특정 조건에서 비교할 때의 한계는?',
     'AI 벤치마크 연구 현황과 데이터세트 유형, 한국을 제외하고 비교할 때의 한계는?',
     'AI 뉴스의 공통 변화와 쟁점에서 비교할 때의 한계는?',
+    'PhysAI-Bench의 연구 현황에서 평가 방법과 데이터세트 구성, 해석의 한계와 치료 결정은?',
+    'PhysAI-Bench의 연구 현황에서 평가 방법과 데이터세트 구성, 해석의 한계와 구매 판단은?',
+    'PhysAI-Bench의 연구 현황에서 평가 방법과 데이터세트 구성, 해석의 한계와 OtherBench의 결과는?',
 ])
 def test_custom_questions_skip_jev_and_preserve_full_question_for_sol(tmp_path,monkeypatch,runtime,question):
     sol=Mock(return_value=copy.deepcopy(FALLBACK));monkeypatch.setattr('semantic.run_structured',sol)
@@ -161,6 +166,12 @@ def test_simple_news_lookup_still_needs_zero_model_calls(tmp_path,monkeypatch,ru
     plan,_=prepare('최근 Physical AI 뉴스 알려줘',tmp_path/'news')
     assert plan['queries'][0]=='Physical AI'
     runtime.assert_not_called();sol.assert_not_called()
+
+
+def test_curated_topic_retains_broad_research_template():
+    question='Physical AI의 연구 현황에서 평가 방법과 데이터세트 구성, 해석의 한계는 무엇인가요?'
+    intent,plan=candidate(question)
+    assert intent=='research' and plan['queries'][0]==question and plan['axes'][0]==question
 
 
 @pytest.mark.parametrize('failure',['timeout','rate_limit','invalid'])
