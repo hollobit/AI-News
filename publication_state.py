@@ -38,7 +38,8 @@ def signature(db_path, root):
         if changed:db.execute('UPDATE publication_revision SET revision=revision+1 WHERE id=1')
         version=db.execute('SELECT revision FROM publication_revision WHERE id=1').fetchone()[0]
         schema=db.execute('PRAGMA schema_version').fetchone()[0]
-    inputs=[str(Path(db_path).resolve()),version,schema,policy('publication')]
+    from public_site import remote_connection
+    inputs=[str(Path(db_path).resolve()),version,schema,policy('publication'),remote_connection(root)]
     # Hash exact assets and saved observations without building views or graphs.
     for path in sorted((Path(root)/'static').glob('*')):
         if path.is_file():inputs.append((path.name,hashlib.sha256(path.read_bytes()).hexdigest()))

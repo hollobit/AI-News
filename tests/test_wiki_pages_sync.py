@@ -74,3 +74,31 @@ def test_preflight_skips_export_only_for_matching_remote_head(tmp_path,monkeypat
     monkeypatch.setattr(publish,'api',lambda *a,**kw:{'commit':{'sha':'other'}})
     publish.sync(path,output)
     assert len(calls)==3
+
+
+def test_preflight_republishes_rotated_remote_origin_without_data_changes(tmp_path, monkeypatch):
+    import sqlite3
+    path = tmp_path / 'news.sqlite'
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE articles(title TEXT)')
+    output = tmp_path / 'site'
+    output.mkdir()
+    config = tmp_path / '.runtime/remote-access/public.json'
+    config.parent.mkdir(parents=True)
+    monkeypatch.setattr(publish, '__file__', str(tmp_path / 'sync_wiki_pages.py'))
+    monkeypatch.setattr(publish, 'api', lambda *a, **kw: {'commit': {'sha': 'head'}})
+    calls = []
+    monkeypatch.setattr(publish, '_sync', lambda *a: (calls.append('export') or {'status': 'published', 'commit': 'head'}))
+
+    config.write_text(json.dumps({'origin': 'https://first.trycloudflare.com'}))
+    assert publish.sync(path, output)['status'] == 'published'
+    assert publish.sync(path, output)['preflight'] is True
+    config.write_text(json.dumps({'origin': 'https://second.trycloudflare.com'}))
+    assert publish.sync(path, output)['status'] == 'published'
+    config.write_text(json.dumps({'origin': 'https://second.trycloudflare.com', 'password': 'private', 'pid': 123}))
+    assert publish.sync(path, output)['preflight'] is True
+    config.unlink()
+    assert publish.sync(path, output)['status'] == 'published'
+    config.write_text(json.dumps({'origin': 'https://user:private@example.org'}))
+    assert publish.sync(path, output)['preflight'] is True
+    assert len(calls) == 3
