@@ -6,22 +6,19 @@ import math
 import sqlite3
 import threading
 
-from strategic_store import init_store, sync_store, query_store, mutate_store, get_document
-from strategic_records import (init_records, now, digest, get_record, list_records, record_history,
+from strategic_store import init_store, query_store, mutate_store, get_document
+from strategic_records import (init_records, get_record, list_records, record_history,
     save_record, decision_value, scenario_value, refresh_record, text, strings)
-from strategic_assessments import (init_assessments, sync_assessments, score_document, profile_value,
-    default_profile, risk_timeline, apply_profile)
+from strategic_assessments import (init_assessments, score_document, profile_value,
+    default_profile, apply_profile)
 from strategic_jobs import StrategicJobs
 from strategic_research import research_view, milestone
+from strategic_projection import entities
 
 
 def one(params,key,default=''):
     value=params.get(key,default)
     return value[0] if isinstance(value,list) and value else value
-
-
-def entities(db,kind):
-    return [json.loads(r[0]) for r in db.execute('SELECT payload_json FROM intel_entities WHERE kind=?',(kind,))]
 
 
 def paginate(items,params):
@@ -61,44 +58,36 @@ class StrategicHub:
     def db(self):
         db=sqlite3.connect(self.path,timeout=30);db.row_factory=sqlite3.Row;return db
 
-    def _token(self,db):
-        from evidence_corrections import correction_token
-        tables={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-        revision=list(map(tuple,db.execute('SELECT * FROM projection_revisions'))) if 'projection_revisions' in tables else None
-        operations=db.execute("SELECT COALESCE(max(seq),0) FROM intel_history WHERE id IN (SELECT id FROM intel_entities WHERE kind='operation')").fetchone()[0]
-        return digest([revision,correction_token(db),operations,date.today().isoformat()]) if revision else None
-
     def _loop(self):
         while not self.stop.is_set():
-            try:self.sync()
+            try:self._background_sync()
             except Exception as error:
+                if self.stop.is_set():break
                 self.runtime.update(status='retrying',error=type(error).__name__+' — 전략 자료 갱신을 다시 시도합니다.')
             self.wake.wait(60);self.wake.clear()
 
-    def sync(self,items=None,force=False):
-        with self.lock,self.db() as db:
-            token=self._token(db)
-            if items is None and not force and token and token==self.last_token:
-                self._refresh_records(db)
-                return dict(self.runtime)
+    def _background_sync(self):
+        from projection_worker import prepare
+        from task_lifecycle import cancellation_scope
+        with self.lock,cancellation_scope(self.stop):
             self.runtime.update(status='updating',error=None)
-            result=sync_store(db,items)
-            documents=entities(db,'document');claims=entities(db,'claim')
-            from risk_views import _all_risks
-            risks=_all_risks(db)['risks']
-            result['changed_assessments']=sync_assessments(db,documents,claims,risks)
-            result['changed_risk_observations']=risk_timeline(db,risks)
-            self._refresh_records(db)
-            self.runtime.update(status='ready',last_success=now(),error=None,changes=result)
-            db.execute('INSERT OR REPLACE INTO intel_runtime VALUES (?,?)',('status',json.dumps(self.runtime,ensure_ascii=False)))
-            self.last_token=token
+            # CPU-heavy source/claim decoding must not hold the HTTP interpreter.
+            # This child constructs no model services and recovers no analysis jobs.
+            prepare('intelligence',self.path,self.last_token or '')
+            with self.db() as db:
+                rows=dict(db.execute("SELECT key,payload_json FROM intel_runtime WHERE key IN ('status','projection_token')"))
+            self.runtime.update(json.loads(rows['status']))
+            self.last_token=json.loads(rows['projection_token'])
             return dict(self.runtime)
 
-    def _refresh_records(self,db):
-        docs={d['id']:d for d in entities(db,'document')};topics={t['id']:t for t in entities(db,'topic')}
-        for row in db.execute("SELECT payload_json FROM intel_records WHERE kind IN ('decision','scenario')").fetchall():
-            item=json.loads(row[0]);topic=topics.get(item.get('topic_id'),{})
-            refresh_record(db,item,docs.get,topic.get('document_ids',[]))
+    def sync(self,items=None,force=False):
+        from strategic_projection import refresh
+        with self.lock,self.db() as db:
+            previous=dict(self.runtime)
+            self.runtime.update(status='updating',error=None)
+            self.last_token,runtime=refresh(db,previous_token=self.last_token,items=items,force=force,runtime=previous)
+            self.runtime.update(runtime)
+            return dict(self.runtime)
 
     def _current_evidence(self,ids):
         with self.db() as db:return [doc for identity in ids if (doc:=get_document(db,identity)) and doc.get('status')=='current']

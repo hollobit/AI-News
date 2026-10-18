@@ -36,4 +36,7 @@ if __name__=='__main__':
             temporary=file.with_suffix('.worker.tmp')
             temporary.write_text(json.dumps({'window':window,'expanded':expanded,'data':result},ensure_ascii=False))
             temporary.replace(file)
+        elif mode=='intelligence':
+            from strategic_projection import prepare as prepare_intelligence
+            prepare_intelligence(db,args[0] or None)
         else:raise SystemExit('Unknown projection mode')

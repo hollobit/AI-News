@@ -409,13 +409,20 @@ class GraphQuestions:
             with self.lock:self.active.discard(identity)
 
     def get(self,identity):
+        started=time.monotonic();cpu_started=time.thread_time()
         result=self._get(identity)
         if result:
+            read_ms=round((time.monotonic()-started)*1000,2)
+            progress_started=time.monotonic()
             from question_progress import view
             with self.db() as db:
                 row=db.execute('SELECT created_at FROM graph_question_jobs WHERE id=?',(identity,)).fetchone()
                 progress=view(db,identity,result['status'],row[0]) if row else None
             if progress:result['progress']=progress
+            result['response_timing']=dict(result_ms=read_ms,
+                progress_ms=round((time.monotonic()-progress_started)*1000,2),
+                total_ms=round((time.monotonic()-started)*1000,2),
+                thread_cpu_ms=round((time.thread_time()-cpu_started)*1000,2))
         return result
 
     def _get(self,identity):
