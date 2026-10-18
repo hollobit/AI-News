@@ -144,7 +144,11 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
         if waited:
             # Re-read current snapshots and every pause/owner/model gate. The
             # eventual run freezes the fetched input once, never patches a run.
-            result=dispatch(db,request,now+timedelta(seconds=waited['elapsed_seconds']),check_engine,
+            waited['extracted_at']=extraction['extracted_at']
+            def record_window(path,payload):
+                if path=='/api/baseline':payload=dict(payload,source_coalescing=waited)
+                return request(path,payload)
+            result=dispatch(db,record_window,now+timedelta(seconds=waited['elapsed_seconds']),check_engine,
                             recovery_path,check_models,coalesce=False,progress=progress)
             return dict(result,source_coalescing=waited)
     from model_access import ensure_model_access

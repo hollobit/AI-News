@@ -158,6 +158,8 @@ def test_dispatch_rereads_sources_and_all_admission_gates_after_wait(db,stop):
     if stop=='none':
         assert result['stage']=='baseline_started' and len(calls)==1
         assert calls[0][1]['carry_forward_run']=='old'
+        assert calls[0][1]['source_coalescing']==result['source_coalescing']
+        assert calls[0][1]['source_coalescing']['extracted_at']==STAMP.isoformat()
         assert selections[-1][0]['source_context']['status']=='fetched'
         assert freeze_item(selections[-1][0])['input_hash']!=freeze_item(selections[0][0])['input_hash']
     else:
