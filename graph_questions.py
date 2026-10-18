@@ -24,7 +24,10 @@ def answer_day():
 
 def answer_key(revision,request):
     from graph_evidence_selection import VERSION as selection_policy
-    values=[PIPELINE,selection_policy,revision,request]
+    from verified_cache import policy
+    # The source index can survive writer edits; a saved answer still uses the
+    # complete question/validation policy and the existing current-result gates.
+    values=[PIPELINE,selection_policy,policy(),revision,request]
     if request['params'].get('workspace')==['1']:values.append(answer_day())
     return content_digest(values)
 

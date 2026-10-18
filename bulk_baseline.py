@@ -221,16 +221,29 @@ class BulkBaselineService:
         self._status(run_id,'finishing' if run['metrics']['active_workers'] else 'paused')
         return self.get(run_id)
 
-    def resume(self,run_id,settings=None):
+    def resume(self,run_id,settings=None,*,handoff_token=None):
         with self.lock:
             self._available();run=self.get(run_id)
             if not run:raise ValueError('기본 분석 실행을 찾을 수 없습니다.')
-            if run['status']=='complete':return run
+            if run['status']=='complete' and handoff_token is None:return run
             from baseline_execution import update_profile
             revised=update_profile(run['settings'],settings or {})
+            current={s['document_id']:s['input_hash'] for s in map(freeze_item,self.selector())} if handoff_token is not None else None
             with self.db() as db:
+                if handoff_token is not None:
+                    from baseline_handoff import can_resume_handoff
+                    # Serialize the final pause/token/attempt checks with admission.
+                    # A pause after this transaction is honored by the worker watcher.
+                    db.execute('BEGIN IMMEDIATE')
+                    run=db.execute('SELECT * FROM bulk_baseline_runs WHERE id=?',(run_id,)).fetchone()
+                    frozen=dict(db.execute('SELECT document_id,input_hash FROM bulk_baseline_documents WHERE run_id=?',(run_id,)))
+                    if not can_resume_handoff(db,run,handoff_token) or current!=frozen:
+                        raise ValueError('입력 인계 상태가 바뀌었으므로 다음 수집 점검에서 다시 확인합니다.')
+                    run=dict(run,settings=json.loads(run['settings_json']))
+                    revised=update_profile(run['settings'],settings or {})
+                    revised['extraction_token']=handoff_token
                 db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES (?,?,?,?)',
-                           (run_id,'execution_resumed','{}',now()))
+                           (run_id,'execution_resumed',js({'automatic_handoff':True,'extracted_at':handoff_token}) if handoff_token is not None else '{}',now()))
                 if revised!=run['settings']:
                     db.execute('UPDATE bulk_baseline_runs SET settings_json=? WHERE id=?',(js(revised),run_id))
                     db.execute('INSERT INTO bulk_baseline_events(run_id,stage,detail,created_at) VALUES (?,?,?,?)',

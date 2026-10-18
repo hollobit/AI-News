@@ -70,6 +70,11 @@ class BaselineJobs:
         update_profile(self.get(run_id)['settings'],settings or {})
         with self.lock:return self._launch('resume',run_id,settings=settings)
 
+    def handoff(self,run_id,extracted_at):
+        if not isinstance(extracted_at,str) or not extracted_at:
+            raise ValueError('입력 인계의 추출 완료 시각이 필요합니다.')
+        with self.lock:return self._launch('handoff',run_id,settings={'extracted_at':extracted_at})
+
     def pause(self,run_id):
         with self.reader.db() as db:
             row=db.execute('SELECT owner_pid,status FROM bulk_baseline_runs WHERE id=?',(run_id,)).fetchone()

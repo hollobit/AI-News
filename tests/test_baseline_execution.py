@@ -167,4 +167,8 @@ def test_live_new_input_handoff_preserves_completed_batch_and_old_scope():
         assert paused['error']=='new_input_handoff'
         assert paused['metrics']['total']==7 and paused['metrics']['verified']==1
         with service.db() as db:assert can_carry(db,paused)
+        resumed=case.done(service,service.resume(run['id'],handoff_token='new')['id'])
+        assert resumed['id']==run['id'] and resumed['status']=='complete'
+        assert resumed['metrics']['verified']==7
+        assert resumed['settings']['extraction_token']=='new'
     finally:release.set();case.tearDown()

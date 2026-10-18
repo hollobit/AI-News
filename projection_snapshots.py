@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import threading
 from task_lifecycle import checkpoint
-from verified_cache import policy
+from verified_cache import admission_policy as policy
 
 NAMESPACES = {'integrated_graph','graph_analysis_sources','risk-page-v1'}
 MAX_DISK_BYTES = 512 * 1024 * 1024

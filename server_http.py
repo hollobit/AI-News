@@ -66,7 +66,7 @@ def make_handler(context):
             is_topic = route.path == '/api/strategy/topics'
             topic_action = re.fullmatch('/api/strategy/topics/([^/]+)/(exclude|restore)', route.path)
             is_baseline = route.path == '/api/baseline'
-            baseline_action = re.fullmatch('/api/baseline/([a-zA-Z0-9_-]+)/(pause|resume)', route.path)
+            baseline_action = re.fullmatch('/api/baseline/([a-zA-Z0-9_-]+)/(pause|resume|handoff)', route.path)
             is_paper_refresh = route.path in ('/api/papers/refresh', '/api/papers/pipeline')
             is_paper_analysis = route.path == '/api/papers/analyze'
             paper_action = re.fullmatch('/api/papers/(.+)/analyze', route.path)

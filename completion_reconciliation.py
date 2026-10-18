@@ -5,7 +5,7 @@ lock. Missing cache entries or any changed input always take the original path.
 """
 import hashlib
 import json
-from verified_cache import policy
+from verified_cache import admission_policy as policy
 
 
 class AdmissionChecks:

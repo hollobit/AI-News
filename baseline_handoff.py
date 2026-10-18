@@ -18,6 +18,20 @@ def can_carry(db, run):
     return not db.execute("SELECT 1 FROM bulk_baseline_events WHERE run_id=? AND seq>? AND stage IN ('user_pause_requested','engine_paused')",(run['id'],event[0])).fetchone()
 
 
+def can_resume_handoff(db, run, token):
+    """Resume only unfinished work from the latest automatic input handoff."""
+    from recursive_improvement import owner_alive
+    latest=db.execute('SELECT id FROM bulk_baseline_runs ORDER BY created_at DESC LIMIT 1').fetchone()
+    if (not run or not token or not latest or latest[0]!=run['id'] or
+            run['status']!='paused' or run['error']!='new_input_handoff' or
+            owner_alive(run['owner_pid']) or not can_carry(db,run) or extraction_token(db)!=token):
+        return False
+    return bool(db.execute('''SELECT 1 FROM bulk_baseline_documents d
+        LEFT JOIN baseline_retry_budgets b ON b.run_id=d.run_id AND b.document_id=d.document_id
+        WHERE d.run_id=? AND d.status IN ('pending','retry') AND d.attempts<COALESCE(b.attempt_limit,2)
+        LIMIT 1''',(run['id'],)).fetchone())
+
+
 def prior_rows(db, identity):
     from recursive_improvement import owner_alive
     run=db.execute('SELECT * FROM bulk_baseline_runs WHERE id=?',(identity,)).fetchone()

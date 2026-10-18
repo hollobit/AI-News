@@ -16,7 +16,7 @@ _LOCK=threading.RLock()
 def corpus(db, *, input_hashes=None):
     """Reuse only a committed source generation inside our read transaction."""
     from improvement_selection import all_corpus_items
-    from verified_cache import policy
+    from verified_cache import admission_policy as policy
     tables={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     filename=next((r[2] for r in db.execute('PRAGMA database_list') if r[1]=='main'),'')
     if not filename or db.total_changes or not db.in_transaction or not {'news','articles','projection_revisions'}<=tables:

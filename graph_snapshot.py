@@ -34,12 +34,13 @@ def revision(path,params):
         db.row_factory=sqlite3.Row
         token=revision_token(db)
         if token is None:raise RuntimeError('근거 저장소 갱신 중')
-        from verified_cache import policy
+        from verified_cache import policy,admission_policy
         wiki=None
         if filters(params).get('workspace')==['1']:
             from context_index import wiki_revision
             wiki=wiki_revision(db)
-        return content_digest([FORMAT,policy(),token,correction_token(db),filters(params),wiki])
+        version=admission_policy() if filters(params).get('workspace')==['1'] else policy()
+        return content_digest([FORMAT,version,token,correction_token(db),filters(params),wiki])
 
 def export_graph(graph):
     index=graph.prepared_index
@@ -169,7 +170,7 @@ class GraphSnapshots:
     def available_workspace(self):
         """A recent consistent selection; callers must refresh/validate its sources."""
         from context_index import previous_index,read
-        from verified_cache import policy
+        from verified_cache import admission_policy as policy
         file=previous_index(self.directory)
         if not file:return None
         try:

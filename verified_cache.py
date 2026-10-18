@@ -17,6 +17,11 @@ MAX_BYTES = 256 * 1024 * 1024
 from code_policy import policy
 
 
+def admission_policy():
+    """Evidence gates; question-answer publication uses policy() in full."""
+    return policy('admission')
+
+
 @contextmanager
 def measurement():
     """Optional numeric diagnostics for one thread; never record cached content."""
@@ -116,7 +121,7 @@ def read(db, namespace, key, builder):
     metrics=getattr(_LOCAL,'metrics',None)
     started=time.monotonic() if metrics is not None else 0
     try:
-        row = connection.execute('SELECT value FROM validations WHERE namespace=? AND key=? AND policy=?',(namespace,str(key),policy())).fetchone()
+        row = connection.execute('SELECT value FROM validations WHERE namespace=? AND key=? AND policy=?',(namespace,str(key),admission_policy())).fetchone()
         if row:
             value=json.loads(zlib.decompress(row[0]))
             if metrics is not None:metrics['hits']+=1
@@ -133,7 +138,7 @@ def read(db, namespace, key, builder):
         if len(body) <= 4 * 1024 * 1024:
             started=time.monotonic() if metrics is not None else 0
             try:
-                connection.execute('INSERT OR REPLACE INTO validations VALUES(?,?,?,?,?)',(namespace,str(key),policy(),body,time.time()))
+                connection.execute('INSERT OR REPLACE INTO validations VALUES(?,?,?,?,?)',(namespace,str(key),admission_policy(),body,time.time()))
                 if metrics is not None:metrics['writes']+=1
                 # Bound lock tenure during full archive builds.
                 if connection.total_changes % 64 == 0: connection.commit()

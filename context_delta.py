@@ -28,7 +28,7 @@ def position(db):
     from projection_cache import revision_token
     from context_index import wiki_revision
     from evidence_corrections import correction_token
-    from verified_cache import policy
+    from verified_cache import admission_policy as policy
     token=revision_token(db) if not db.in_transaction else None
     if not db.execute("SELECT 1 FROM sqlite_master WHERE name='baseline_search_changes'").fetchone():return None
     if not token and not db.in_transaction:return None

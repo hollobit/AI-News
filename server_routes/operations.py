@@ -105,14 +105,17 @@ def post(self, route, payload):
     is_workflow = route.path == '/api/workflows'
     is_improvement = route.path == '/api/improvement'
     is_baseline = route.path == '/api/baseline'
-    baseline_action = re.fullmatch('/api/baseline/([a-zA-Z0-9_-]+)/(pause|resume)', route.path)
+    baseline_action = re.fullmatch('/api/baseline/([a-zA-Z0-9_-]+)/(pause|resume|handoff)', route.path)
     improvement_action = re.fullmatch('/api/improvement/([a-zA-Z0-9_-]+)/(pause|resume)', route.path)
     workflow_resume = re.fullmatch('/api/workflows/([a-zA-Z0-9_-]+)/resume', route.path)
     if is_baseline or baseline_action:
         try:
             if baseline_action:
                 run_id, action = baseline_action.groups()
-                result = self.services.baseline_service.resume(run_id, settings=payload) if action=='resume' and payload else getattr(self.services.baseline_service, action)(run_id)
+                if action=='handoff':
+                    result=self.services.baseline_service.handoff(run_id,payload.get('extracted_at'))
+                else:
+                    result = self.services.baseline_service.resume(run_id, settings=payload) if action=='resume' and payload else getattr(self.services.baseline_service, action)(run_id)
             else:
                 result = self.services.baseline_service.start(payload)
             self.send_json({'run': result}, 202)

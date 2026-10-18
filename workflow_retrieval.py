@@ -4,7 +4,7 @@ import sqlite3
 import time
 from contextlib import closing
 from pathlib import Path
-from verified_cache import policy
+from verified_cache import admission_policy as policy
 from graph_quick_sources import cold_answer
 from graph_rag import GraphResult, _workflow_graph, build_retrieval
 from completion_quality import document_admission
@@ -72,7 +72,7 @@ def retrieve(path, question):
 
 def input_revision(db):
     from projection_cache import revision_token
-    from verified_cache import policy
+    from verified_cache import admission_policy as policy
     token=revision_token(db)
     # Unknown revisions are never reusable checkpoints.
     return ['workflow-source-first-v1',policy(),token if token is not None else time.time_ns(),correction_token(db)]

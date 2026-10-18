@@ -22,7 +22,12 @@ def run(path, action, run_id, settings, ready):
             initial_seq=db.execute('SELECT COALESCE(MAX(seq),0) FROM bulk_baseline_events').fetchone()[0]
         for sig in (signal.SIGINT,signal.SIGTERM):
             signal.signal(sig,lambda *_:service.stop.set())
-        result=service.start(settings) if action=='start' else service.resume(run_id,settings=settings)
+        if action=='handoff':
+            token=settings.get('extracted_at')
+            if not isinstance(token,str) or not token:raise ValueError('Missing handoff token')
+            result=service.resume(run_id,handoff_token=token)
+        else:
+            result=service.start(settings) if action=='start' else service.resume(run_id,settings=settings)
         ready.write_text(json.dumps({'run':result}))
         done=threading.Event()
         def watch_pause():
@@ -50,7 +55,7 @@ if __name__=='__main__':
     load_local_env()
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--db',required=True)
-    parser.add_argument('--action',choices=['start','resume'],required=True)
+    parser.add_argument('--action',choices=['start','resume','handoff'],required=True)
     parser.add_argument('--run-id',default='')
     parser.add_argument('--settings',default='{}')
     parser.add_argument('--ready',required=True)

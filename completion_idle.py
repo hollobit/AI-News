@@ -6,7 +6,7 @@ def token(db):
     from projection_cache import revision_token
     from context_workflow_delta import position
     from evidence_corrections import correction_token
-    from verified_cache import policy
+    from verified_cache import admission_policy as policy
     source=revision_token(db,('source',))
     workflow=position(db)
     if source is None or workflow is None:return None

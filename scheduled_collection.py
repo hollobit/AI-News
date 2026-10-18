@@ -134,7 +134,20 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
     if carry:
         new=sum(old.get(identity)!=snapshot['input_hash'] for identity,snapshot in snapshots.items())
         summary['new_or_changed_inputs']=new
-        if not new:return dict(summary,stage='baseline_attention_required',baseline_status=latest['status'])
+        if not new:
+            from baseline_handoff import can_resume_handoff
+            token=extraction.get('extracted_at')
+            if not can_resume_handoff(db,latest,token):
+                return dict(summary,stage='baseline_attention_required',baseline_status=latest['status'])
+            from model_access import ensure_model_access
+            access=(check_models or ensure_model_access)()
+            if not access['ready']:return dict(summary,stage='model_access_required',model_access=access)
+            _,current,active=inspect(db)
+            if active or not current or current['id']!=latest['id'] or not can_resume_handoff(db,current,token):
+                return dict(summary,stage='handoff_admission_changed')
+            result=request('/api/baseline/'+latest['id']+'/handoff',{'extracted_at':token})['run']
+            return dict(summary,stage='baseline_resumed',baseline_run=result['id'],
+                        baseline_status=result['status'],metrics=result['metrics'],automatic_handoff=True)
     if not pending:
         return dict(summary, stage='up_to_date')
     if coalesce:
