@@ -228,3 +228,78 @@ def test_draft_provider_contention_is_bounded_without_network_retries(candidate_
         result=actual_decide(path,'question_draft',{'question':QUESTION},{'scope':{'irrelevant':'lock precedes validation'}})
         assert result['status']=='busy' and .2<=time.monotonic()-start<1
     transport.assert_not_called()
+
+
+def add_candidate(fixture, identity, question, age=1, result=None):
+    path, saved, request, *_ = fixture
+    request=dict(request,question=question)
+    with sqlite3.connect(path) as db:
+        db.execute('INSERT INTO graph_question_jobs VALUES(?,?,?,?,?)',
+            (identity,json.dumps(request),json.dumps(saved if result is None else result),'complete',time.time()-age))
+
+
+def scope_result(choice='equivalent',confidence=.98):
+    return dict(choice=choice,confidence=confidence,
+        probabilities={name:confidence if name==choice else (1-confidence)/2
+                       for name in ('equivalent','different','uncertain')})
+
+
+def test_older_identical_question_is_not_hidden_by_newer_different_task(candidate_db):
+    add_candidate(candidate_db,'exact',QUESTION)
+    selected,metadata=choose(candidate_db)
+    assert selected and metadata['source_job_id']=='exact'
+    assert metadata['selection_method']=='exact_question'
+    candidate_db[-1].assert_not_called()
+
+
+def test_identical_question_still_needs_current_cited_sources(candidate_db):
+    saved=deepcopy(candidate_db[1]);saved['evidence'][0]['text']='과거 입력'
+    add_candidate(candidate_db,'changed',QUESTION,result=saved)
+    candidate_db[-1].return_value['answers']['scope']=scope_result('different')
+    selected,metadata=choose(candidate_db)
+    assert selected is None and not metadata['selected']
+    assert metadata['source_job_id']=='old' and candidate_db[-1].call_count==1
+
+
+def test_one_batch_can_select_older_equivalent_question_after_different_task(candidate_db):
+    question='최근 '+PRIOR
+    add_candidate(candidate_db,'older',question)
+    add_candidate(candidate_db,'duplicate',question,age=2)
+    decision=candidate_db[-1]
+    decision.return_value=dict(status='complete',answers={
+        'scope_0':scope_result('different'),'scope_1':scope_result()})
+    selected,metadata=choose(candidate_db)
+    assert selected and metadata['source_job_id']=='older'
+    assert decision.call_count==1 and metadata['candidate_questions']==2
+    state=decision.call_args.args[2];questions=decision.call_args.args[3]
+    assert state['previous_questions']==[PRIOR,question]
+    assert len(questions)==2
+    assert 'state.previous_questions[1]' in questions['scope_1']['instructions']
+
+
+@pytest.mark.parametrize('outcome',['different','uncertain','low_confidence','incomplete','busy'])
+def test_multi_candidate_decision_never_retries_or_trusts_partial_results(candidate_db,outcome):
+    add_candidate(candidate_db,'older','최근 '+PRIOR)
+    decision=candidate_db[-1]
+    answers={'scope_0':scope_result('different'),'scope_1':scope_result(outcome if outcome in ('different','uncertain') else 'equivalent')}
+    if outcome=='low_confidence':answers['scope_1']['confidence']=.94
+    if outcome=='incomplete':answers.pop('scope_0')
+    decision.return_value=dict(status='busy' if outcome=='busy' else 'complete',answers=answers)
+    assert choose(candidate_db)[0] is None
+    assert decision.call_count==1
+    assert len(decision.call_args.args[3])==2
+
+
+def test_exact_question_lookup_precedes_semantic_candidate_bound(candidate_db):
+    from graph_draft_reuse import MAX_SCOPE_CANDIDATES
+    for i in range(MAX_SCOPE_CANDIDATES+2):
+        add_candidate(candidate_db,'q'+str(i),chr(65+i)+' '+PRIOR,age=i+1)
+    add_candidate(candidate_db,'exact',QUESTION,age=20)
+    selected,metadata=choose(candidate_db)
+    assert selected and metadata['source_job_id']=='exact'
+    candidate_db[-1].assert_not_called()
+    with sqlite3.connect(candidate_db[0]) as db:db.execute("DELETE FROM graph_question_jobs WHERE id='exact'")
+    candidate_db[-1].return_value=dict(status='busy')
+    assert choose(candidate_db)[0] is None
+    assert len(candidate_db[-1].call_args.args[2]['previous_questions'])==MAX_SCOPE_CANDIDATES
+    assert candidate_db[-1].call_count==1

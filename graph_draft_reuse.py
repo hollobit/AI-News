@@ -49,8 +49,9 @@ def recover(candidate):
 
 # These are draft admission guards, not evidence or explanation approval.
 # A selected draft always receives a new full independent question review.
-VERSION = 'question-draft-reuse-v1'
+VERSION = 'question-draft-reuse-v2-candidates'
 MIN_CONFIDENCE = .95
+MAX_SCOPE_CANDIDATES = 8
 SOURCE_FIELDS = ('id','title','text','day','date_basis','source_url','source_kind',
                  'evidence_origin','content_hash','source_text_hash')
 RUBRIC = ('Compare the requested meaning of state.question and state.previous_question. '
@@ -61,7 +62,7 @@ RUBRIC = ('Compare the requested meaning of state.question and state.previous_qu
 
 
 def select(path, question, plan, evidence, *, job_id=None):
-    """One bounded prior draft and decision; no prior review verdict is trusted."""
+    """Find compatible drafts with one bounded decision; every use needs new review."""
     import json
     import sqlite3
     import time
@@ -93,7 +94,8 @@ def select(path, question, plan, evidence, *, job_id=None):
                 ORDER BY created_at DESC LIMIT 24""",(time.time()-86400,time.time())).fetchall()
     except sqlite3.Error:
         return None,dict(selected=False,reason='storage_unavailable')
-    selected=None
+    candidates=[]
+    seen_questions=set()
     for identity,request_json,result_json in rows:
         try:
             request=json.loads(request_json);result=json.loads(result_json)
@@ -110,22 +112,44 @@ def select(path, question, plan, evidence, *, job_id=None):
             validate_answer(core,evidence)
             authored=recover(core)
             if authored is None:continue
-            selected=(identity,request['question'],authored);break
+            if request['question'] not in seen_questions:
+                candidates.append((identity,request['question'],authored))
+                seen_questions.add(request['question'])
         except (AttributeError,ValueError,KeyError,TypeError,RuntimeError):continue
-    if not selected:return None,dict(selected=False,reason='no_compatible_draft')
-    identity,previous_question,authored=selected
-    questions={'scope':choice(RUBRIC,dict(equivalent='The same complete request, expressed differently',
+    if not candidates:return None,dict(selected=False,reason='no_compatible_draft')
+    # Search every eligible row for the identical question before applying the
+    # semantic-candidate bound. Recency of a different task cannot hide it.
+    exact=next((entry for entry in candidates if entry[1]==question),None)
+    if exact:
+        return exact[2],dict(selected=True,reason='draft_selected',source_job_id=exact[0],
+            selection_method='exact_question',candidate_questions=len(candidates))
+    candidates=candidates[:MAX_SCOPE_CANDIDATES]
+    criteria=dict(equivalent='The same complete request, expressed differently',
         different='Any substantive difference in scope, task or required detail',
-        uncertain='Not enough confidence to establish the same complete request'))}
-    decision=decide(path,'question_draft',dict(version=VERSION,question=question,previous_question=previous_question),
+        uncertain='Not enough confidence to establish the same complete request')
+    if len(candidates)==1:
+        state=dict(version=VERSION,question=question,previous_question=candidates[0][1])
+        questions={'scope':choice(RUBRIC,criteria)}
+    else:
+        state=dict(version=VERSION,question=question,previous_questions=[entry[1] for entry in candidates])
+        questions={f'scope_{i}':choice(RUBRIC.replace('state.previous_question',f'state.previous_questions[{i}]'),criteria)
+                   for i in range(len(candidates))}
+    decision=decide(path,'question_draft',state,
                     questions,subject=context('question',job_id,question,evidence))
-    answer=decision.get('answers',{}).get('scope',{});probabilities=answer.get('probabilities',{})
-    confidence=answer.get('confidence');selected_probability=probabilities.get('equivalent')
-    accepted=(decision.get('status')=='complete' and answer.get('choice')=='equivalent'
-        and type(confidence) in (float,int) and confidence>=MIN_CONFIDENCE
-        and type(selected_probability) in (float,int) and selected_probability>=MIN_CONFIDENCE
-        and selected_probability-max((p for k,p in probabilities.items() if k!='equivalent'),default=0)>=.5)
+    answers=decision.get('answers',{})
+    selected=None
+    if decision.get('status')=='complete' and set(answers)==set(questions):
+        for entry,key in zip(candidates,questions):
+            answer=answers[key];probabilities=answer.get('probabilities',{})
+            confidence=answer.get('confidence');selected_probability=probabilities.get('equivalent')
+            if (answer.get('choice')=='equivalent'
+                    and type(confidence) in (float,int) and confidence>=MIN_CONFIDENCE
+                    and type(selected_probability) in (float,int) and selected_probability>=MIN_CONFIDENCE
+                    and selected_probability-max((p for k,p in probabilities.items() if k!='equivalent'),default=0)>=.5):
+                selected=entry;break
+    accepted=selected is not None
     reason='draft_selected' if accepted else 'uncertain' if decision.get('status')=='complete' else decision.get('status','unavailable')
     safely(application,path,decision.get('observation_id'),applied=accepted,reason=reason,scope='question_draft')
-    return (authored if accepted else None),dict(selected=accepted,reason=reason,source_job_id=identity,
+    return (selected[2] if accepted else None),dict(selected=accepted,reason=reason,
+        source_job_id=(selected or candidates[0])[0],selection_method='jev',candidate_questions=len(candidates),
         model=settings['model'],decision_cached=bool(decision.get('cached')),decision_ms=decision.get('elapsed_ms'))
