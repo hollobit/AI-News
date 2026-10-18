@@ -100,6 +100,9 @@ def load_risk_graph(db, params: dict[str, Any] | None = None) -> dict[str, Any]:
 
     nodes, edges, edge_keys = [], [], set()
     risk_evidence_sets = {}
+    risk_graph_refs = {}
+    risks_by_graph_ref = defaultdict(set)
+    node_ids = set()
     matched_graph_evidence = set()
     def add_edge(source, target, relation, score=None, evidence_ids=None, meaning=""):
         key = (source, target, relation)
@@ -109,7 +112,7 @@ def load_risk_graph(db, params: dict[str, Any] | None = None) -> dict[str, Any]:
                       "meaning": meaning, "similarity": score,
                       "evidence_ids": sorted(evidence_ids or [])})
 
-    for risk in risks:
+    for risk_index, risk in enumerate(risks):
         scenario = bool(_clean(risk.get("scenario")))
         nodes.append({"id": risk["id"], "label": risk["title"], "name": risk["title"],
                       "type": "ConditionalScenario" if scenario else "RiskAssessment",
@@ -119,22 +122,28 @@ def load_risk_graph(db, params: dict[str, Any] | None = None) -> dict[str, Any]:
                       "days": sorted({str(day)[:10] for evidence in (risk.get("evidence") or []) for day in (evidence.get("days") or [evidence.get("day")]) if day}),
                       "workflow_run_id": risk.get("workflow_run_id"),
                       "summary": _clean(risk.get("scenario") or risk.get("current_basis"))[:280]})
+        node_ids.add(risk['id'])
         refs = set()
+        relevant = set()
         for raw in risk.get("raw_evidence") or risk.get("evidence", []):
             url = canonical_url(raw.get("url") or raw.get("source_url") or "")
             title = _clean(raw.get("title"))
             matched = set(by_url.get(url, ())) | set(by_title.get(_norm(title), ()))
+            relevant.update(matched)
             evidence_key = url or _norm(title) or _clean(raw.get("id"))
             evidence_id = _node_id("risk-evidence", evidence_key)
             refs.add(evidence_id)
-            if not any(item["id"] == evidence_id for item in nodes):
+            if evidence_id not in node_ids:
                 nodes.append({"id": evidence_id, "label": title or url or "검토 근거", "name": title or url or "검토 근거",
                               "type": "SourceDocument", "kind": "evidence", "source_url": url,
                               "day": raw.get("day") or raw.get("published_at") or "",
                               "summary": _clean(raw.get("text") or raw.get("excerpt"))[:280]})
+                node_ids.add(evidence_id)
             add_edge(risk["id"], evidence_id, "검토 근거", 1.0, matched, "위험·시나리오 평가가 인용한 검토 근거")
             matched_graph_evidence.update(matched)
         risk_evidence_sets[risk["id"]] = refs
+        risk_graph_refs[risk_index] = relevant
+        for ref in relevant:risks_by_graph_ref[ref].add(risk_index)
 
     # Risk-to-risk similarity is only shared reviewed source material, never causality.
     risk_ids = list(risk_evidence_sets)
@@ -153,13 +162,13 @@ def load_risk_graph(db, params: dict[str, Any] | None = None) -> dict[str, Any]:
         nodes.append({"id": node_id, "label": item.get("name") or item["id"], "name": item.get("name") or item["id"],
                       "type": item.get("type") or "Concept", "kind": "graphrag", "summary": item.get("summary", "")})
         refs = set(item.get("evidence_ids", [])) & matched_graph_evidence
-        for risk in risks:
-            relevant = set()
-            for raw in risk.get("raw_evidence") or risk.get("evidence", []):
-                url = canonical_url(raw.get("url") or raw.get("source_url") or "")
-                title = _norm(raw.get("title"))
-                relevant |= by_url.get(url, set()) | by_title.get(title, set())
-            shared = refs & relevant
+        # Normalize each risk's sources once. Only risks sharing this node's
+        # evidence can connect; sorting preserves the original risk/edge order
+        # and therefore the exact edge-limit prefix.
+        candidates=set().union(*(risks_by_graph_ref[ref] for ref in refs))
+        for risk_index in sorted(candidates):
+            risk=risks[risk_index]
+            shared = refs & risk_graph_refs[risk_index]
             if shared:
                 add_edge(risk["id"], node_id, "GraphRAG 근거 연결", 1.0, shared,
                          "위험 평가 근거와 GraphRAG 노드가 같은 문서에 연결됨")

@@ -42,6 +42,21 @@ def test_empty_store_has_unknown_not_fake_complete(tmp_path):
     assert result['stages'][0]['status']=='delayed'
 
 
+@pytest.mark.parametrize('state,healthy,status',[('coalescing',True,'queued'),('publishing',True,'running'),('retry_wait',True,'waiting'),('watching',True,'recorded'),('publishing',False,'owner_missing')])
+def test_publisher_progress_never_claims_remote_deployment(tmp_path,state,healthy,status):
+    import json,os,time
+    directory=tmp_path/'data';directory.mkdir();path=directory/'news.sqlite3';sqlite3.connect(path).close()
+    runtime=tmp_path/'.runtime';runtime.mkdir()
+    (runtime/'public-site.publisher.json').write_text(json.dumps(dict(state=state,pid=os.getpid(),checked_at=time.time()-(0 if healthy else 30),remaining_seconds=7)))
+    (runtime/'public-site.publication-result.json').write_text(json.dumps(dict(commit='a'*40,submitted_at=100,checked_at=200)))
+    stage=next(s for s in snapshot(path)['stages'] if s['id']=='publication')
+    assert stage['status']==status and stage['percent'] is None
+    assert stage['publication']['commit']=='a'*12
+    assert stage['publisher']['state']==(state if healthy else 'unavailable')
+    assert 'checked_at' not in stage['publisher']
+    if state=='coalescing':assert '7초' in stage['note'] and '별도' in stage['note']
+
+
 @pytest.mark.parametrize('health,state', [('observed','coalescing'), ('unresponsive','coalescing'), ('observed','disabled')])
 def test_wiki_input_wait_is_not_analysis_completion(tmp_path, monkeypatch, health, state):
     import background_jobs

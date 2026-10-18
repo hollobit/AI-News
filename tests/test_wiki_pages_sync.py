@@ -2,6 +2,24 @@ import json
 import pytest
 import sync_wiki_pages as publish
 
+
+def test_submission_record_is_kept_even_when_inputs_change_during_publish(tmp_path,monkeypatch):
+    import sqlite3
+    from publication_state import result_path,state_path
+    path=tmp_path/'db';output=tmp_path/'site'
+    with sqlite3.connect(path) as db:db.execute('CREATE TABLE articles(title TEXT)')
+    commit='a'*40
+    def change(*args):
+        with sqlite3.connect(path) as db:db.execute("INSERT INTO articles VALUES('new input during export')")
+        return dict(status='published',commit=commit)
+    monkeypatch.setattr(publish,'_sync',change)
+    publish.sync(path,output)
+    result=json.loads(result_path(output).read_text())
+    assert result['commit']==commit and result['submitted_at'] and not state_path(output).exists()
+    monkeypatch.setattr(publish,'_sync',lambda *a:dict(status='unchanged',commit=commit))
+    publish.sync(path,output)
+    assert json.loads(result_path(output).read_text())['submitted_at']==result['submitted_at']
+
 def test_fingerprint_ignores_only_export_time():
     a={'knowledge.json':json.dumps({'exported_at':'one','pages':[1]}),'index.html':'site'}
     b={**a,'knowledge.json':json.dumps({'exported_at':'two','pages':[1]})}

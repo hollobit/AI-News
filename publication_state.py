@@ -8,7 +8,7 @@ from code_policy import policy
 
 INTERNAL = {'evidence_blob_migrations','completion_report_digests','completion_admission_checks',
             'projection_revisions','projection_source_meanings','source_changes','source_change_state','morphology_cache',
-            'wiki_input_revision','paper_analysis_checkpoints'}
+            'wiki_input_revision','paper_analysis_checkpoints','publication_input_revision'}
 
 
 def signature(db_path, root):
@@ -52,3 +52,27 @@ def signature(db_path, root):
 def state_path(output):
     p=Path(output).absolute()
     return p.parent/(p.name+'.publication.json')
+
+
+def result_path(output):
+    p=Path(output).absolute()
+    return p.parent/(p.name+'.publication-result.json')
+
+
+def record_result(output,result):
+    """Record actual GitHub submission even when newer DB writes follow it.
+
+    The separate preflight marker may only advance for an unchanged input
+    signature. Neither record asserts that GitHub Pages deployment succeeded.
+    """
+    import re
+    import time
+    from worker_health import write_state
+    commit=result.get('commit');status=result.get('status')
+    if status not in ('published','unchanged') or not re.fullmatch('[0-9a-f]{40}',str(commit or '')):return
+    path=result_path(output)
+    try:previous=json.loads(path.read_text())
+    except (OSError,ValueError):previous={}
+    stamp=time.time()
+    submitted=stamp if status=='published' else previous.get('submitted_at') if previous.get('commit')==commit else None
+    write_state(path,dict(commit=commit,status=status,checked_at=stamp,submitted_at=submitted))

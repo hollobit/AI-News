@@ -122,7 +122,7 @@ def git_publish(files, parent, *, root=None, expected_remote=None):
 def sync(db, output):
     from export_staging import output_lock
     with output_lock(output):
-        from publication_state import signature, state_path
+        from publication_state import signature, state_path, record_result
         marker=state_path(output)
         before=signature(db,Path(__file__).resolve().parent)
         try: previous=json.loads(marker.read_text())
@@ -130,8 +130,11 @@ def sync(db, output):
         if before and previous.get('signature')==before and Path(output).exists():
             head=api('branches/'+BRANCH)['commit']['sha']
             if head==previous.get('commit'):
-                return dict(status='unchanged',commit=head,preflight=True,output=str(output))
+                result=dict(status='unchanged',commit=head,preflight=True,output=str(output))
+                record_result(output,result)
+                return result
         result=_sync(db, output)
+        record_result(output,result)
         after=signature(db,Path(__file__).resolve().parent)
         if before and before==after and result.get('commit'):
             temporary=marker.with_suffix('.tmp')
@@ -224,20 +227,21 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--db',default='data/news.sqlite3')
     parser.add_argument('--output',default='.runtime/wiki-site')
-    parser.add_argument('--watch',action='store_true',help='Sync changed reviewed output every five minutes while running.')
+    parser.add_argument('--watch',action='store_true',help='Watch committed content changes; retain five-minute fallback checks.')
     parser.add_argument('--child',action='store_true',help=argparse.SUPPRESS)
     args=parser.parse_args()
     with open('.runtime/wiki-pages-sync.lock','a+') as lock:
         if not args.child: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        while True:
-            try:
-                if args.watch:
-                    import sys
-                    subprocess.run([sys.executable,__file__,'--db',args.db,'--output',args.output,'--child'],check=True)
-                else:
-                    print(json.dumps(sync(args.db,args.output),ensure_ascii=False),flush=True)
+        if args.watch:
+            import signal
+            import threading
+            from publication_wakeup import watch
+            stop=threading.Event()
+            signal.signal(signal.SIGTERM,lambda *_:stop.set())
+            signal.signal(signal.SIGINT,lambda *_:stop.set())
+            watch(args.db,args.output,stop=stop)
+        else:
+            try:print(json.dumps(sync(args.db,args.output),ensure_ascii=False),flush=True)
             except Exception as error:
                 print(json.dumps({'status':'error','type':type(error).__name__,'message':str(error)},ensure_ascii=False),flush=True)
-                if not args.watch:raise SystemExit(1)
-            if not args.watch:break
-            time.sleep(300)
+                raise SystemExit(1)

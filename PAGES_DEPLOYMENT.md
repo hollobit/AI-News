@@ -24,7 +24,7 @@
 - 저장소: hollobit/AI-News, 게시 브랜치 `gh-pages`, 루트 `/`.
 - 기존 `master`는 변경·삭제하지 않는다. 웹 파일은 `gh-pages`만 갱신한다.
 - 수동 동기화: `.venv/bin/python sync_wiki_pages.py --output .runtime/public-site`
-- 지속 동기화: `.venv/bin/python sync_wiki_pages.py --output .runtime/public-site --watch` (5분 간격, 중복 실행 잠금).
+- 지속 동기화: `.venv/bin/python sync_wiki_pages.py --output .runtime/public-site --watch` (변경 감지 2초, 마지막 변경 후 10초·첫 감지 후 최대 45초에 게시 확인, 5분 보조 점검, 중복 실행 잠금). 진행 중 게시가 있으면 마친 뒤 다음 변경을 처리하고, 실패는 5분 뒤 재시도한다. 이 시간은 게시 시작까지이며 생성·전송·GitHub Pages 배포 시간은 별도다.
 - macOS LaunchAgent `com.hollobit.ai-news.pages`가 로그인 후 자동 시작하고 프로세스 종료 시 재시작한다. 컴퓨터가 꺼져 있거나 로그인 전에는 새 자료 동기화가 안 된다. Pages의 마지막 게시본은 계속 제공된다.
 - 5분 점검 `com.hollobit.ai-news.health`는 `.runtime/verification/operations-health.json`에 수집 지연·분석 중단·검토 대기를 기록한다. 외부 알림 전송은 하지 않는다. 로그는 `.runtime/pages-sync*.log`, `.runtime/operations-health*.log`에 있다. plist 원본은 `ops/`에 있다.
 - 관리 중에는 수동 `--watch`를 중복 실행하지 않는다. 서비스 중지는 `launchctl bootout gui/501/com.hollobit.ai-news.pages` 및 `launchctl bootout gui/501/com.hollobit.ai-news.health`. 자동 시작을 영구 해제하려면 해당 두 plist만 LaunchAgents에서 별도 보관한다.

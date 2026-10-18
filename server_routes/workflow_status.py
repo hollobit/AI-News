@@ -146,13 +146,29 @@ def snapshot(path,index=None):
             baseline_stage['source_coalescing']=detail
             baseline_stage['note']+=f" 새 입력 원문 합류 대기: {detail['ready_documents']}/{detail['documents']}건 처리, 대기 상한 {detail['remaining_seconds']}초. 기존 원장의 완료·검토 상태와 별도입니다."
     except (OSError,ValueError,KeyError,TypeError):pass
-    marker=runtime_dir/'public-site.publication.json'
+    from publication_state import result_path
+    output=runtime_dir/'public-site'
+    marker=result_path(output)
+    if not marker.exists():marker=runtime_dir/'public-site.publication.json'
     published=None
     try:
-        raw=json.loads(marker.read_text());published={'commit':str(raw.get('commit',''))[:12],'recorded_at':datetime.fromtimestamp(marker.stat().st_mtime,timezone.utc).isoformat()}
+        raw=json.loads(marker.read_text());published={'commit':str(raw.get('commit',''))[:12],'recorded_at':datetime.fromtimestamp(raw.get('submitted_at') or raw.get('checked_at') or marker.stat().st_mtime,timezone.utc).isoformat()}
     except (OSError,ValueError):pass
-    stage('publication','공개 사이트 게시',status='recorded' if published else 'unknown',updated_at=published['recorded_at'] if published else None,
-          note='마지막 게시 도구 기록입니다. 원격 배포 성공이나 현재 전체 분석 완료를 뜻하지 않습니다.',href='/wiki',unit='게시 기록',publication=published)
+    from publication_wakeup import view as publisher_view
+    publisher=publisher_view(output,stamp)
+    note='마지막 GitHub 커밋 확인 기록입니다. 원격 배포 성공이나 현재 전체 분석 완료를 뜻하지 않습니다.'
+    status='recorded' if published else 'unknown'
+    if publisher:
+        state=publisher['state']
+        status={'publishing':'running','coalescing':'queued','retry_wait':'waiting','unavailable':'owner_missing'}.get(state,status)
+        note={'publishing':'검토된 현재 자료로 공개본을 생성·전송하고 있습니다. GitHub Pages 배포 완료와는 별도입니다.',
+              'coalescing':f"변경을 모아 약 {publisher.get('remaining_seconds',0)}초 후 게시를 확인합니다. 생성·전송·원격 배포 시간은 별도입니다.",
+              'retry_wait':f"게시 실패 후 약 {publisher.get('remaining_seconds',0)}초 뒤 재시도합니다. 마지막 게시 기록은 유지합니다.",
+              'watching':'자료 변경을 감지하고 있습니다. 마지막 GitHub 커밋 기록은 원격 배포 완료와 별도입니다.',
+              'unavailable':'게시 작업자의 현재 상태를 확인할 수 없습니다. 마지막 기록을 완료 상태로 해석하지 않습니다.'}[state]
+    stage('publication','공개 사이트 게시',status=status,updated_at=published['recorded_at'] if published else None,
+          note=note,href='/wiki',unit='게시 기록',publication=published,publisher=publisher,
+          owner_alive=bool(publisher and publisher['state']!='unavailable'))
     calls=[];limit=None;runtime_error=False;call_counts={'running':0,'queued':0}
     runtime=Path(path).parent/'llm_runtime.sqlite3'
     if runtime.exists():

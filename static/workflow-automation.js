@@ -32,7 +32,7 @@
     sources: '원문 보강',
     papers: '논문 분석',
     wiki: '위키 편찬',
-    publication: '공개 게시 기록',
+    publication: '공개 게시',
     index: '검토 자료 검색 반영',
     questions: '종합 질의 · 검토',
   };
@@ -87,6 +87,12 @@
     received = 0,
     changes = [];
   function describe(s) {
+    if (s.publisher?.state === 'publishing') return '공개본 생성·전송 중';
+    if (s.publisher?.state === 'coalescing')
+      return `변경 모으는 중 · 약 ${num(s.publisher.remaining_seconds)}초 후 게시 확인`;
+    if (s.publisher?.state === 'retry_wait') return '게시 재시도 대기';
+    if (s.publisher?.state === 'unavailable') return '게시 작업자 확인 필요';
+    if (s.publisher?.state === 'watching') return '게시 자료 변경 감지 중';
     if (s.id === 'index' && s.status === 'complete') return '검토 자료 검색 준비 완료';
     if (s.id === 'collector')
       return s.status === 'live' ? '정기 확인 정상 · 새 메시지 대기' : state(s.status);
@@ -176,7 +182,7 @@
       el(
         'small',
         s.id === 'publication'
-          ? '배포 도구의 마지막 기록'
+          ? '원격 배포 완료와 별도'
           : s.id === 'collector'
             ? '확인 시각 기준 · 완료율 없음'
             : s.unit,

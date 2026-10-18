@@ -7,10 +7,11 @@ from export_wiki_site import public_url
 
 
 def test_display_policy_does_not_invalidate_evidence(tmp_path):
-    for name in ('source_titles','news_repository','strategic_workflow'):
+    for name in ('source_titles','publication_wakeup','news_repository','strategic_workflow'):
         (tmp_path/(name+'.py')).write_text('old')
     before={s:digest(s,tmp_path) for s in ('source','validation','publication')}
     (tmp_path/'source_titles.py').write_text('display edit')
+    (tmp_path/'publication_wakeup.py').write_text('watch scheduling edit')
     assert digest('source',tmp_path)==before['source']
     assert digest('validation',tmp_path)==before['validation']
     assert digest('publication',tmp_path)!=before['publication']

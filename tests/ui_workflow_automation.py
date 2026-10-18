@@ -47,6 +47,24 @@ async def main():
         await page.goto('http://test.local/workflow')
         await expect(page.locator('#control-title')).to_have_text(a['title'])
         await expect(page.locator('.auto-stage')).to_have_count(10)
+        publication=next(s for s in stages if s['id']=='publication')
+        publication.update(counts={},total=0,complete=0,percent=None,unit='게시 기록')
+        for publisher,status,activity,label in (
+            ('coalescing','queued','idle','약 8초 후 게시 확인'),
+            ('publishing','running','running','공개본 생성·전송 중'),
+            ('retry_wait','waiting','idle','게시 재시도 대기'),
+            ('unavailable','owner_missing','attention','게시 작업자 확인 필요'),
+            ('watching','recorded','idle','게시 자료 변경 감지 중')):
+            publication.update(status=status,owner_alive=publisher!='unavailable',
+                publisher=dict(state=publisher,remaining_seconds=8),
+                note='생성·전송 상태입니다. GitHub Pages 배포 완료와는 별도입니다.')
+            await page.locator('#refresh').click()
+            tile=page.locator('[data-auto-stage="publication"]')
+            await expect(tile).to_contain_text(label)
+            await expect(tile).to_have_attribute('data-activity',activity)
+            await expect(tile).to_contain_text('원격 배포 완료와 별도')
+            if await tile.get_attribute('aria-pressed')!='true':await tile.click()
+            await expect(page.locator('#auto-stage-note')).to_contain_text('배포 완료와는 별도')
         wiki=next(s for s in stages if s['id']=='wiki')
         wiki['source_updates']=dict(state='coalescing',remaining_seconds=7)
         wiki['note']='약 7초 후 갱신을 확인합니다. 생성·검토 완료 예상 시간은 아닙니다.'
