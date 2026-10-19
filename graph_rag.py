@@ -763,7 +763,7 @@ def answer_question(graph: dict[str, Any], question: str,
                 "selected_nodes": [], "selected_edges": [], "evidence": [],
                 "retrieval": dict(retrieval.get('retrieval',{}),cited_documents=0,cited_passages=0)}
     from semantic import run_structured
-    from model_policy import question_draft_role
+    from model_policy import question_draft_role, question_draft_effort
     from graph_answer_cache import reuse_answer
     from graph_answer_quality import PROFILE, repair_prompt, sufficient, local_repair_targets
     import copy
@@ -849,6 +849,7 @@ DATA:
     stage_times=[]
     draft_status={}
     draft_role=question_draft_role(question,analysis_plan,evidence=original_evidence) if detailed else 'graph_answer'
+    draft_effort=question_draft_effort(draft_role,evidence=original_evidence) if detailed else 'low'
     def generate():
         if progress:progress('synthesis')
         prior_payload=None
@@ -869,7 +870,7 @@ DATA:
                 raw=generated=copy.deepcopy(prior_payload)
                 stage_times.append(dict(stage='draft_reuse',attempt=1,milliseconds=draft_status['selection_ms']))
             else:
-                raw=run_structured(current_prompt,current_schema,role=draft_role if not attempt else 'graph_answer',timeout=150 if detailed else 75,queue_timeout=30 if detailed else 15,reasoning_effort='medium' if detailed else 'low')
+                raw=run_structured(current_prompt,current_schema,role=draft_role if not attempt else 'graph_answer',timeout=150 if detailed else 75,queue_timeout=30 if detailed else 15,reasoning_effort='medium' if attempt else draft_effort)
                 generated=restore(raw,current_aliases)
                 stage_times.append(dict(stage=('generation_repair' if format_repair else 'repair') if attempt else 'generation',attempt=attempt+1,milliseconds=round((time.monotonic()-generated_at)*1000,2),**call_metrics(raw)))
             patch_info=None
@@ -926,7 +927,7 @@ DATA:
         return result
     # Include full review context: even a changed qualification outside the
     # generation excerpt invalidates the reviewed answer.
-    key=content_digest({'pipeline':PIPELINE,'data':data,'draft_role':draft_role,'review_evidence':original_evidence}) if getattr(graph,'search_key',None) is not None else None
+    key=content_digest({'pipeline':PIPELINE,'data':data,'draft_role':draft_role,'draft_effort':draft_effort,'review_evidence':original_evidence}) if getattr(graph,'search_key',None) is not None else None
     persistent_hit=False
     def retained(current_key):
         nonlocal persistent_hit

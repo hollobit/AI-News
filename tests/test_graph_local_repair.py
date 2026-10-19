@@ -67,8 +67,9 @@ def test_local_scope_is_enforced_even_if_provider_ignores_schema(tamper):
         apply_patch(original, patch, [1], targets=[1])
 
 
+@pytest.mark.parametrize('extended', [True, False])
 @pytest.mark.parametrize('final_passes', [True, False])
-def test_local_repair_keeps_approved_claim_and_full_originals_in_final_review(monkeypatch, final_passes):
+def test_local_repair_keeps_approved_claim_and_full_originals_in_final_review(monkeypatch, final_passes, extended):
     good=claim('시뮬레이션 평가 결과이다.')
     bad=claim('현실 환경의 평가가 전혀 없다.')
     fixed=claim('실제 창고 평가가 있으나 다른 현장 일반화는 미확인이다.')
@@ -85,14 +86,19 @@ def test_local_repair_keeps_approved_claim_and_full_originals_in_final_review(mo
         dict(changes=[dict(claim_index=1,replacement=fixed)],additions=[],paragraphs=[[0],[1]],limitations=[1]), final]
     calls=[]
     def runner(prompt,schema,**kwargs):
-        calls.append((prompt,schema));return copy.deepcopy(responses.pop(0))
+        calls.append((prompt,schema,kwargs));return copy.deepcopy(responses.pop(0))
     monkeypatch.setattr('semantic.run_structured',runner)
     originals=[dict(id='a',text='시뮬레이션 평가 결과이다.'),
                dict(id='b',text='실제 창고에서 평가했다. 다른 현장 일반화는 확인되지 않았다.')]
-    result=answer_question(GraphResult(),'평가 방법과 데이터 차이는?',detailed=True,
+    if extended:originals[0]['text']+=' 원문 조건.'*9000
+    result=answer_question(GraphResult(),'벤치마크 연구 현황과 데이터세트 종류는?',detailed=True,
         retrieval=dict(nodes=[],edges=[],evidence=originals,no_hits=False),
         analysis_plan={'axes':['방법','데이터']})
     assert len(calls)==4 and sufficient(result)==final_passes
+    assert [(c[2]['role'],c[2]['reasoning_effort']) for c in calls]==[
+        ('graph_draft','high' if extended else 'medium'),
+        ('strategic_question_verification','medium'),
+        ('graph_answer','medium'),('strategic_question_verification','medium')]
     repair=json.loads(calls[2][0].split('\nDATA:\n',1)[1])
     recheck=json.loads(calls[3][0].split('\n',1)[1])
     assert [e['text'] for e in repair['evidence']]==[e['text'] for e in originals]

@@ -26,15 +26,25 @@ def question_draft_role(question, plan=None, *, evidence=None):
     focused=re.search(r'차이|비교|작동\s*(?:방식|원리)|벤치마크|데이터세트|데이터셋|\b(?:compare|comparison|benchmark|dataset)',question,re.I)
     broad=re.search(r'대응|전략|예측|전망|추천|정책|국제|\b(?:strategy|forecast|recommend|policy)',question,re.I)
     if not focused or broad or not 1<=len(axes)<=4 or len(question)>250:return 'graph_answer'
-    if evidence is not None and (len(evidence)>24 or sum(len(e.get('text') or '') for e in evidence)>48000):
+    extended=_extended_question_evidence(evidence)
+    if evidence is not None and (len(evidence)>32 or sum(len(e.get('text') or '') for e in evidence)>64000):
         return 'graph_answer'
-    if len(axes)<=3:return 'graph_draft'
+    if len(axes)<=3 and not extended:return 'graph_draft'
     # Four-facet overviews often include an added integration axis. Explicit
     # interpretation/causality questions retain Sol: those drafts needed extra
     # repair in evaluation. Never discard an axis to make a question eligible.
     interpret=re.search(r'해석|원인|인과|왜|타당|우열|효과|\b(?:interpret|causal|causation|why|validity|trade.?offs?|justify)',question,re.I)
     overview=re.search(r'현황|종류|목록|유형|\b(?:overview|types|list|survey)',question,re.I)
     return 'graph_draft' if evidence and overview and not interpret else 'graph_answer'
+
+
+def _extended_question_evidence(evidence):
+    return evidence is not None and (len(evidence)>24 or sum(len(e.get('text') or '') for e in evidence)>48000)
+
+
+def question_draft_effort(role, *, evidence=None):
+    """Larger overview bundles need more draft reasoning to avoid repair calls."""
+    return 'high' if role=='graph_draft' and _extended_question_evidence(evidence) else 'medium'
 
 
 class StructuredResult(dict):

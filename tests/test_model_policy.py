@@ -84,8 +84,8 @@ def test_four_axis_overviews_are_bounded_and_interpretation_remains_sol():
         assert question_draft_role(question,plan,evidence=evidence)=='graph_answer'
     assert question_draft_role(overview,plan)=='graph_answer'
     assert question_draft_role(overview,plan,evidence=[])=='graph_answer'
-    assert question_draft_role(overview,plan,evidence=evidence+[dict(text='x')])=='graph_answer'
-    assert question_draft_role(overview,plan,evidence=[dict(text='x'*48001)])=='graph_answer'
+    assert question_draft_role(overview,plan,evidence=evidence+[dict(text='x')])=='graph_draft'
+    assert question_draft_role(overview,plan,evidence=[dict(text='x'*48001)])=='graph_draft'
     assert question_draft_role(overview,{'axes':['축']*5},evidence=evidence)=='graph_answer'
 
 
@@ -251,3 +251,18 @@ def test_fast_mode_failure_never_retries_on_different_tier_or_model(monkeypatch,
     row=runtime_status()['recent'][0]
     assert row['status']=='failed' and row['error_code']=='rate_limit'
     assert row['service_tier_requested']=='fast'
+
+
+@pytest.mark.parametrize('count,characters,expected',[(24,48000,'medium'),(25,48000,'high'),(24,48001,'high'),(32,64000,'high'),(33,64000,None),(32,64001,None)])
+def test_extended_overview_capacity_and_effort(count,characters,expected):
+    from model_policy import question_draft_role, question_draft_effort
+    evidence=[{'text':''} for _ in range(count)]
+    evidence[0]['text']='x'*characters
+    question='벤치마크 연구 현황과 데이터세트 종류는?'
+    role=question_draft_role(question,{'axes':['방법','종류','이슈']},evidence=evidence)
+    assert role==('graph_draft' if expected else 'graph_answer')
+    assert question_draft_effort(role,evidence=evidence)==(expected or 'medium')
+    if expected=='high':
+        for suffix in (' 해석은?', ' 왜 차이가 나는가?', ' 대응 전략은?'):
+            assert question_draft_role(question+suffix,{'axes':['방법','종류','이슈']},evidence=evidence)=='graph_answer'
+    assert question_draft_effort('graph_answer',evidence=evidence)=='medium'
