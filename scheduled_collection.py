@@ -107,11 +107,10 @@ def dispatch(db, request=api, now=None, check_engine=probe, recovery_path=RECOVE
     extraction = json.loads(states.get('collector_corpus_snapshot', '{}'))
     summary = {'checked_at': now.isoformat(), 'last_telegram_check': states.get('collector_last_success'),
                'extraction': extraction, 'baseline_run': latest['id'] if latest else None}
-    heartbeat = states.get('collector_last_success')
-    if not heartbeat or (now - datetime.fromisoformat(heartbeat)).total_seconds() > 120:
-        return dict(summary, stage='waiting_for_collector')
-    if extraction.get('status') != 'complete':
-        return dict(summary, stage='waiting_for_extraction')
+    from collection_admission import admission
+    collection=admission(states,now.timestamp())
+    summary.update(collection)
+    if 'stage' in collection:return summary
     if active:
         return dict(summary, stage='baseline_running')
     # A new input generation can carry unchanged rejections without resetting

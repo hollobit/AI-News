@@ -89,7 +89,8 @@ def test_four_axis_overviews_are_bounded_and_interpretation_remains_sol():
     assert question_draft_role(overview,{'axes':['축']*5},evidence=evidence)=='graph_answer'
 
 
-def test_access_preflight_caches_failure_and_never_downgrades(tmp_path):
+def test_access_preflight_caches_failure_and_never_downgrades(tmp_path,monkeypatch):
+    monkeypatch.setenv("NEWS_LLM_RUNTIME_DB",str(tmp_path/"runtime.db"))
     from model_access import ensure_model_access
     from engine_errors import EngineError
     calls=[]
@@ -108,6 +109,7 @@ def test_access_preflight_caches_failure_and_never_downgrades(tmp_path):
 
 
 def test_cli_update_invalidates_cached_model_rejection(monkeypatch,tmp_path):
+    monkeypatch.setenv("NEWS_LLM_RUNTIME_DB",str(tmp_path/"runtime.db"))
     from model_access import ensure_model_access
     from engine_errors import EngineError
     version={'version':'old'}

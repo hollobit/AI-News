@@ -8,6 +8,7 @@ from model_policy import policy, VERSION
 
 ROOT=Path(__file__).resolve().parent
 STATE=ROOT/'.runtime/news-model-access.json'
+ACCESS_VERSION='model-access-shared-recovery-v2'
 
 
 def client_identity():
@@ -26,7 +27,7 @@ def client_identity():
     return {'version':version,'modified_ns':stat.st_mtime_ns,'size':stat.st_size}
 
 
-def ensure_model_access(*, force=False, state_path=STATE, caller=None, stamp=None):
+def ensure_model_access(*, force=False, state_path=STATE, caller=None, stamp=None, runtime=None):
     stamp=time.time() if stamp is None else stamp
     selected=[('engine_probe',False),('baseline_verification',False),('risk_verification',True)]
     expected=[policy(role,escalation=escalation)['model'] for role,escalation in selected]
@@ -37,8 +38,16 @@ def ensure_model_access(*, force=False, state_path=STATE, caller=None, stamp=Non
         except BlockingIOError:return {'ready':False,'stage':'checking_models','models':expected}
         try:prior=json.loads(state_path.read_text())
         except (OSError,ValueError):prior={}
+        from llm_runtime import LLMRuntime
+        from llm_recovery import synchronize, shared_probe
+        runtime=runtime or LLMRuntime()
+        recovery=synchronize(runtime)
+        generation=[recovery['failure_id'],recovery['success_at']]
         ttl=21600 if prior.get('ready') else 1800
-        if not force and prior.get('models')==expected and prior.get('client')==client and prior.get('policy_version')==VERSION and 0<=stamp-prior.get('checked_at',0)<ttl:return prior
+        if (not force and not recovery['blocked'] and prior.get('recovery_generation')==generation
+                and prior.get('access_version')==ACCESS_VERSION and prior.get('models')==expected
+                and prior.get('client')==client and prior.get('policy_version')==VERSION
+                and 0<=stamp-prior.get('checked_at',0)<ttl):return prior
         if caller is None:
             from app import load_local_env
             from semantic import run_structured
@@ -46,12 +55,30 @@ def ensure_model_access(*, force=False, state_path=STATE, caller=None, stamp=Non
         checks=[]
         schema={'type':'object','properties':{'ok':{'type':'boolean'}},'required':['ok'],'additionalProperties':False}
         from engine_errors import infrastructure_error
-        for (role,escalation),model in zip(selected,expected):
+        def check(role,escalation):
+            return caller('Return {"ok":true}. No tools or external facts.',schema,role=role,escalation=escalation,timeout=30,queue_timeout=10,reasoning_effort='low')
+        if recovery['blocked']:
+            # Use the same lease, cooldown and budget as analysis workers. A
+            # standalone successful access probe cannot repair their breaker.
+            recovered=shared_probe(runtime,lambda:check(*selected[0])=={'ok':True},automatic=not force)
+            recovery=synchronize(runtime)
+            if not recovered or recovery['blocked']:
+                result={'ready':False,'models':expected,'checks':[],
+                        'stage':'recovery_required','recovery':recovery,'checked_at':stamp,
+                        'policy_version':VERSION,'access_version':ACCESS_VERSION,'client':client,
+                        'recovery_generation':[recovery['failure_id'],recovery['success_at']]}
+                temporary=state_path.with_suffix('.tmp');temporary.write_text(json.dumps(result,ensure_ascii=False,indent=2));temporary.replace(state_path)
+                return result
+            # The successful recovery call already checked this exact model.
+            checks.append({'model':expected[0],'ok':True,'error_code':''})
+        for (role,escalation),model in list(zip(selected,expected))[len(checks):]:
             try:
-                result=caller('Return {"ok":true}. No tools or external facts.',schema,role=role,escalation=escalation,timeout=30,queue_timeout=10,reasoning_effort='low')
+                result=check(role,escalation)
                 checks.append({'model':model,'ok':result=={'ok':True},'error_code':'' if result=={'ok':True} else 'invalid_output'})
             except Exception as exc:checks.append({'model':model,'ok':False,'error_code':infrastructure_error(str(exc)) or 'request_failed'})
-        result={'ready':all(c['ok'] for c in checks),'models':expected,'checks':checks,'checked_at':stamp,'policy_version':VERSION,'client':client}
+        recovery=synchronize(runtime)
+        result={'ready':all(c['ok'] for c in checks) and not recovery['blocked'],'models':expected,'checks':checks,'checked_at':stamp,'policy_version':VERSION,'client':client,
+                'access_version':ACCESS_VERSION,'recovery_generation':[recovery['failure_id'],recovery['success_at']]}
         temporary=state_path.with_suffix('.tmp');temporary.write_text(json.dumps(result,ensure_ascii=False,indent=2));temporary.replace(state_path)
         return result
 

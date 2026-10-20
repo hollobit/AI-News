@@ -1,3 +1,13 @@
+## 2026-10-20 복구 차단과 수집·저장 자료 분석의 결합 해소
+
+- 공용 엔진 복구가3회 실패 후 차단된 동안 별도 모델 접근 점검은 Luna에26회 성공(합계144.98초)했지만, Sol/Astra는 공용 차단에서 막혀 실제 분석이 재개되지 않았다. 접근 확인을 공용 복구 lease·cooldown·시도 예산에 연결했다. 성공한 동일 점검을 재사용하고, 복구 세대가 바뀌거나 새 장애가 발생하면 접근 캐시도 무효화한다. 자동 점검은 인증/한도/시도 소진을 우회하지 않는다. model_access.py / tests/test_model_access_recovery.py.
+- 명시적 실제 복구에서 Luna·Sol·Astra 모두 접근 성공, 공용 차단 해제와 논문·위키·상세 분석 재개를 확인했다. 이후 새 rate_limit이 발생해 다시 중단됐다. 한도 차단 상태에서 접근 점검2회를 실행해 새 LLM 호출0회를 확인했다. 이전 실패/복구 이벤트·문서 시도/검토 이력은 보존했다. access-recovery-live.json / access-recovery-budget-live.json / access-recovery-operating.json.
+- Telegram 마지막 성공이 오래됐다는 이유만으로 이미 저장·추출 완료된 자료까지 기다리던 결합을 제거했다. 완료 상태, 유효한 확인/추출 시각, 고유 수를 가진 저장 배치는 현재 입력 해시를 다시 확인하며 처리할 수 있다. 최신 수집 성공으로 표시하지 않고 input_mode=stored_extraction / collector_current=false와 자료 시점을 기록한다. 누락/미완료/미래 시각 자료와 사용자 중지·기존 owner·검토 실패의 제약은 유지한다. 기본·위험 분석 스케줄러가 같은 판정을 사용한다. collection_admission.py.
+- 실제 stale 수집 상태에서 상세 작업이 started/stored_extraction으로 재개됐다. 기본 분석도 저장 자료10,428개 중 현재 입력 대기173개(변경169+기존 검토대기4)를 확인한 뒤 새 사용량 제한에서 차단됐다. Telegram endpoint는 ConnectionResetError(errno54), 기존 수집기는 재시도 중이다. 마지막 성공2026-10-20 12:42:46 KST, 추출12:01:41 KST를 새 성공으로 바꾸지 않았다. 외부 연결/한도를 우회하지 않는다.
+- 최종 전체1,721 tests+56 subtests(46.90초), 집중44개, diff 검사 통과. 웹47426/작업자59213/수집기59209로 반영했다. 작업자 검증 스크립트는 별도 수집기 교체와 겹쳐 PID 불변 검사에서 실패했지만, 테이블 비교는 통과했고 재실행 없이 실제 새 owner·준비 상태·모니터 실패0·단일 수집기·offset861979856 보존을 재확인했다. 수집 heartbeat는 아직 갱신되지 않았다.
+- 최종 기본 run `8174ba03e4154a26b2426b0fd573bdc8`: verified10,295/검토대기4. 심층 cycle `d4686920261a4380bd467ed4ae1c6bda`: paused, complete10,272/pending148/running표시 체크포인트20, 실제 LLM0·owner없음. 논문 complete1,214/failed3, 위키 failed9 상태이며 완료로 보고하지 않는다. 기존 논문 공식 API3회 실패 대기 유지. 전체 실시간 목표는 미완료이며 현재 외부 차단과 잔여 처리 재검증이 필요하다. access-recovery-final-runtime.json.
+- 인증 원격 관제20회 갱신, 현재 자산,390/320px, JS오류0·추가 분석POST0 확인. access-recovery-operations-ui.json. 모델/검토 품질 기준은 그대로다.
+
 ## 2026-10-19 큰 기술 현황 질의의 작성 모델·추론 배정
 
 - 기존 24발췌/48,000자를 넘는 기술 현황 질의는 최대32발췌/64,000자까지 Luna high 작성으로 배정한다. 실제 질문의 축(최대4개)을 보존하고, 명시적인 해석·인과·전략 질의 및 상한 초과는 Sol을 유지한다. 기존 작은 자료의 배정과 medium 추론은 그대로다. 독립 검토와 보완은 Sol medium이며 보완 한도1회·인용·현재 입력 검증을 유지한다. 답변 캐시 키에도 실제 작성 추론 수준을 포함한다.

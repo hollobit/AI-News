@@ -82,10 +82,9 @@ def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=
             cycle['pause_requested']=0
         if cycle['pause_requested']:return {'stage':'user_paused','cycle':identity}
         states=dict(db.execute("SELECT key,value FROM state WHERE key IN ('collector_last_success','collector_corpus_snapshot')"))
-        heartbeat=states.get('collector_last_success')
-        if not heartbeat or stamp-datetime.fromisoformat(heartbeat).timestamp()>120:return {'stage':'waiting_for_collector'}
-        extraction=json.loads(states.get('collector_corpus_snapshot','{}'))
-        if extraction.get('status')!='complete':return {'stage':'waiting_for_extraction'}
+        from collection_admission import admission
+        collection=admission(states,stamp)
+        if 'stage' in collection:return collection
         db.commit()
         if cycle['status']=='complete' and not resume:
             from completion_idle import unchanged
@@ -130,7 +129,7 @@ def dispatch(path, *, enable=False, resume=False, launcher=launch, check_engine=
         pid=launcher(path,identity)
         db.execute('UPDATE risk_schedule SET launched_pid=? WHERE id=1',(pid,))
         event(db,identity,'launched',{'pid':pid,'workers':20,'batch_size':1,'max_rounds':0,'window_seconds':1800,'continuous':True,'adaptive_workers':True,'recent_first':True})
-        return {'stage':'started','cycle':identity,'pid':pid,'verified_before':verified}
+        return {'stage':'started','cycle':identity,'pid':pid,'verified_before':verified,**collection}
 
 
 def main():
