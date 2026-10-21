@@ -6,9 +6,40 @@ mismatch means the saved excerpt is not the current selected source context.
 import hashlib
 import json
 from collections import defaultdict
+from contextvars import ContextVar
+from functools import wraps
 from datetime import date
 from link_groups import canonical_url
 from projection_cache import cached_read, revision_token
+
+_READ_SCOPE=ContextVar('risk_source_read_scope',default=None)
+
+
+def source_read_scope(function):
+    """Share one index only inside a caller's existing read transaction.
+
+    No state survives the call or crosses connections. Writes disable reuse;
+    normal callers retain the revision-aware cache and its invalidation rules.
+    """
+    @wraps(function)
+    def wrapped(db,*args,**kwargs):
+        if not db.in_transaction or db.total_changes:return function(db,*args,**kwargs)
+        token=_READ_SCOPE.set({'db':db,'index':None,'revision':None})
+        try:return function(db,*args,**kwargs)
+        finally:_READ_SCOPE.reset(token)
+    return wrapped
+
+
+def _index_for_read(db):
+    scope=_READ_SCOPE.get()
+    if scope is not None and scope['db'] is db and db.in_transaction and not db.total_changes:
+        revision=(db.execute('PRAGMA data_version').fetchone()[0],db.execute('PRAGMA schema_version').fetchone()[0])
+        if scope['index'] is None or scope['revision']!=revision:
+            scope['index']=_current_index(db)
+            scope['revision']=revision
+        return scope['index']
+    token=revision_token(db,('source',))
+    return cached_read(db,'risk-source-index',token,lambda:_current_index(db),copy_result=False)
 
 
 def evidence_index_key(evidence):
@@ -65,8 +96,7 @@ def evidence_source_states(db,evidence):
     Consumers must keep unknown/stale dates separate and must not encode missing
     confirmation as a zero/low risk score.
     """
-    token=revision_token(db,('source',))
-    index=cached_read(db,'risk-source-index',token,lambda:_current_index(db),copy_result=False)
+    index=_index_for_read(db)
     result={}
     for item in evidence:
         key=evidence_index_key(item)

@@ -204,3 +204,42 @@ def test_baseline_priority_keeps_reviews_finish_fifo_and_aged_work_ahead():
     assert [r['role'] for r in sorted(rows,key=lambda row:queue_key(row,100,INTERACTIVE_ROLES))]==[
         'wiki_compile','graph_answer','baseline_verification','verification',
         'synthesis','baseline_analysis','risk_patch','national']
+
+
+def test_wall_clock_jump_does_not_expire_a_live_queue_waiter(tmp_path,monkeypatch):
+    import os
+    import llm_runtime as module
+    runtime=LLMRuntime(tmp_path/'clock.db',limit=1,queue_timeout=1)
+    with runtime.db() as db:
+        blocker=db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,started_at,input_chars,schema_chars) VALUES ('analysis','running',?,1000,1000,1,1)",(os.getpid(),)).lastrowid
+    wall=[1000.0];elapsed=[0.0]
+    def wall_time():
+        value=wall[0];wall[0]=15000.0;return value
+    def release(_):
+        elapsed[0]+=.01
+        with runtime.db() as db:db.execute("UPDATE llm_calls SET status='complete',finished_at=15000 WHERE id=?",(blocker,))
+    monkeypatch.setattr(module.time,'time',wall_time)
+    monkeypatch.setattr(module.time,'monotonic',lambda:elapsed[0])
+    monkeypatch.setattr(module.time,'sleep',release)
+    with runtime.slot('baseline_analysis',1,1) as ticket:identity=ticket.id
+    with runtime.db() as db:
+        row=db.execute('SELECT status,wait_ms,error_code FROM llm_calls WHERE id=?',(identity,)).fetchone()
+        assert row['status']=='complete' and row['wait_ms']==14000000 and not row['error_code']
+
+
+def test_monotonic_queue_deadline_still_expires_when_wall_time_is_fixed(tmp_path,monkeypatch):
+    import os
+    import pytest
+    import llm_runtime as module
+    runtime=LLMRuntime(tmp_path/'clock.db',limit=1,queue_timeout=.015)
+    with runtime.db() as db:
+        db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,started_at,input_chars,schema_chars) VALUES ('analysis','running',?,1000,1000,1,1)",(os.getpid(),))
+    elapsed=[0.0]
+    monkeypatch.setattr(module.time,'time',lambda:1000.0)
+    monkeypatch.setattr(module.time,'monotonic',lambda:elapsed[0])
+    monkeypatch.setattr(module.time,'sleep',lambda _:elapsed.__setitem__(0,elapsed[0]+.01))
+    with pytest.raises(RuntimeError,match='대기 시간이 초과'):
+        with runtime.slot('baseline_analysis',1,1):pytest.fail('No slot available')
+    with runtime.db() as db:
+        assert db.execute("SELECT error_code FROM llm_calls WHERE role='baseline_analysis'").fetchone()[0]=='queue_timeout'
+        assert db.execute("SELECT count(*) FROM llm_calls WHERE status='running'").fetchone()[0]==1

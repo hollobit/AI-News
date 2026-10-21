@@ -122,6 +122,7 @@ class LLMRuntime:
         if not re.fullmatch(r'[a-z_]{1,48}', role):
             role = 'structured_analysis'
         queued = time.time()
+        wait_started = time.monotonic()
         with self.db() as db:
             identity = db.execute("INSERT INTO llm_calls(role,status,owner_pid,queued_at,input_chars,schema_chars,model,reasoning_effort,service_tier_requested) VALUES (?,'queued',?,?,?,?,?,?,?)",
                                   (role, os.getpid(), queued, int(input_chars), int(schema_chars), model, reasoning_effort,service_tier_requested)).lastrowid
@@ -167,7 +168,9 @@ class LLMRuntime:
                         db.execute("UPDATE llm_calls SET status='running',started_at=?,lease_until=?,wait_ms=? WHERE id=?",
                                    (stamp, stamp+max_run_seconds+60, round((stamp-queued)*1000), identity))
                 if started is None:
-                    if stamp-queued >= self.queue_timeout:
+                    # Wall-clock jumps must not expire an otherwise live waiter.
+                    # Keep wall timestamps for cross-process ordering/telemetry.
+                    if time.monotonic()-wait_started >= self.queue_timeout:
                         ticket.error_code = 'queue_timeout'
                         raise RuntimeError('모델 실행 대기 시간이 초과되었습니다. 현재 실행이 끝난 뒤 재개해 주세요.')
                     time.sleep(self.poll_seconds)

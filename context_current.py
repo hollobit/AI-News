@@ -8,6 +8,7 @@ from collections import defaultdict,OrderedDict
 from contextlib import closing
 
 from projection_cache import content_digest
+from risk_source_state import source_read_scope
 
 _CORPUS=OrderedDict()
 _LOCK=threading.RLock()
@@ -78,6 +79,7 @@ def normalized(source,final=None):
     return source
 
 
+@source_read_scope
 def load(db,keys,timing=None):
     """Same publication gates as the index, applied only to selected records."""
     from graph_rag import _analysis_sources
