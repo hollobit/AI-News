@@ -5,6 +5,7 @@ import subprocess
 import sys
 import threading
 import time
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -77,10 +78,19 @@ def test_short_cross_process_contention_does_not_invoke_sol(tmp_path,monkeypatch
 def test_long_contention_returns_once_without_provider_retries(tmp_path,monkeypatch):
     path=tmp_path/'news';transport=Mock(side_effect=response);sol=Mock(return_value=FALLBACK)
     monkeypatch.setattr(system_one,'transport',transport);monkeypatch.setattr('semantic.run_structured',sol)
+    # Keep the real cross-process lock; control only the admission clock so
+    # database setup and CI scheduling cannot turn this into a speed benchmark.
+    clock=[0.0];sleeps=[]
+    def advance(seconds):
+        assert 0<seconds<=.01
+        sleeps.append(seconds);clock[0]+=seconds
+        assert clock[0]<=system_one.PLAN_ADMISSION_SECONDS+1e-9
+    monkeypatch.setattr(system_one,'time',SimpleNamespace(time=time.time,
+        monotonic=lambda:clock[0],sleep=advance))
     with provider_lock(path):
-        started=time.monotonic();updates=[]
+        updates=[]
         assert prepare(TREND,path,report=updates.append)[0]==FALLBACK
-        assert .20<=time.monotonic()-started<1
+        assert sleeps and clock[0]==pytest.approx(system_one.PLAN_ADMISSION_SECONDS)
     assert transport.call_count==0 and sol.call_count==1 and updates[-1]['reason']=='busy'
 
 
